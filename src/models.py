@@ -3024,7 +3024,8 @@ class Locusdbentity(Dbentity):
             "paragraph": {
                 "date_edited": None
             },
-            "literature_overview": self.literature_overview_to_dict()
+            "literature_overview": self.literature_overview_to_dict(),
+            "ecnumbers":[]
         }
 
         if self.genetic_position:
@@ -3066,10 +3067,15 @@ class Locusdbentity(Dbentity):
             if alias.alias_type == "EC number":
                 # generate URL to internal page, not expasy
                 internal_url = "/ecnumber/EC:" + alias.display_name
+                obj["ecnumbers"].append({
+                    "display_name": alias.display_name,
+                    "link": internal_url
+                })
+                '''
                 obj["ecnumber"] = {
                     "display_name": alias.display_name,
                     "link": internal_url
-                }
+                } '''
 
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
