@@ -3071,11 +3071,6 @@ class Locusdbentity(Dbentity):
                     "display_name": alias.display_name,
                     "link": internal_url
                 })
-                '''
-                obj["ecnumber"] = {
-                    "display_name": alias.display_name,
-                    "link": internal_url
-                } '''
 
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
