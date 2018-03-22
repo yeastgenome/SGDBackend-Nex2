@@ -206,6 +206,46 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON nex.colleague_url TO curator;
 GRANT SELECT ON nex.colleague_url TO PUBLIC;
 GRANT SELECT ON nex.colleague_url TO DBSELECT;
 
+-- Set privilege on TABLE COMPLEXDBENTITY                                                      
+ALTER TABLE nex.complexdbentity OWNER TO nex;
+GRANT ALL ON nex.complexdbentity TO nex;
+REVOKE ALL ON nex.complexdbentity FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.complexdbentity TO curator;
+GRANT SELECT ON nex.complexdbentity TO PUBLIC;
+GRANT SELECT ON nex.complexdbentity TO DBSELECT;
+
+-- Set privilege on TABLE COMPLEX_ALIAS                                                        
+ALTER TABLE nex.complex_alias OWNER TO nex;
+GRANT ALL ON nex.complex_alias TO nex;
+REVOKE ALL ON nex.complex_alias FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.complex_alias TO curator;
+GRANT SELECT ON nex.complex_alias TO PUBLIC;
+GRANT SELECT ON nex.complex_alias TO DBSELECT;
+
+-- Set privilege on TABLE COMPLEX_REFERENCE                                                    
+ALTER TABLE nex.complex_reference OWNER TO nex;
+GRANT ALL ON nex.complex_reference TO nex;
+REVOKE ALL ON nex.complex_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.complex_reference TO curator;
+GRANT SELECT ON nex.complex_reference TO PUBLIC;
+GRANT SELECT ON nex.complex_reference TO DBSELECT;
+
+-- Set privilege on TABLE COMPLEX_GO                                                           
+ALTER TABLE nex.complex_go OWNER TO nex;
+GRANT ALL ON nex.complex_go TO nex;
+REVOKE ALL ON nex.complex_go FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.complex_go TO curator;
+GRANT SELECT ON nex.complex_go TO PUBLIC;
+GRANT SELECT ON nex.complex_go TO DBSELECT;
+
+-- Set privilege on TABLE COMPLEXBINDINGANNOTATION                                             
+ALTER TABLE nex.complexbindingannotation OWNER TO nex;
+GRANT ALL ON nex.complexbindingannotation TO nex;
+REVOKE ALL ON nex.complexbindingannotation FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.complexbindingannotation TO curator;
+GRANT SELECT ON nex.complexbindingannotation TO PUBLIC;
+GRANT SELECT ON nex.complexbindingannotation TO DBSELECT;
+
 -- Set privilege on TABLE CONTIG
 ALTER TABLE nex.contig OWNER TO nex;
 GRANT ALL ON nex.contig TO nex;
@@ -653,6 +693,14 @@ REVOKE ALL ON nex.go_url FROM PUBLIC;
 GRANT SELECT,INSERT,UPDATE,DELETE ON nex.go_url TO curator;
 GRANT SELECT ON nex.go_url TO PUBLIC;
 GRANT SELECT ON nex.go_url TO DBSELECT;
+
+-- Set privilege on TABLE INTERACTOR                                                           
+ALTER TABLE nex.interactor OWNER TO nex;
+GRANT ALL ON nex.interactor TO nex;
+REVOKE ALL ON nex.interactor FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.interactor TO curator;
+GRANT SELECT ON nex.interactor TO PUBLIC;
+GRANT SELECT ON nex.interactor TO DBSELECT;
 
 -- Set privilege on TABLE JOURNAL
 ALTER TABLE nex.journal OWNER TO nex;

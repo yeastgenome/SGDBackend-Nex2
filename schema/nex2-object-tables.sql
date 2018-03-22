@@ -690,6 +690,45 @@ ALTER TABLE nex.goslim ADD CONSTRAINT goslim_name_ck CHECK (SLIM_NAME IN ('Macro
 CREATE INDEX goslim_source_fk_index ON nex.goslim (source_id);
 CREATE INDEX goslim_go_fk_index ON nex.goslim (go_id);
 
+
+DROP TABLE IF EXISTS nex.interactor CASCADE;
+CREATE TABLE nex.interactor (
+    interactor_id bigint NOT NULL DEFAULT nextval('object_seq'),
+    format_name varchar(100) NOT NULL,
+    display_name varchar(500) NOT NULL,
+    obj_url varchar(500),
+    source_id bigint NOT NULL,
+    locus_id bigint,
+    description varchar(500),
+    type_id bigint NOT NULL,
+    role_id bigint NOT NULL,
+    stoichiometry int,
+    residues text,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT interactor_pk PRIMARY KEY (interactor_id)
+) ;
+COMMENT ON TABLE nex.interactor IS 'Macromolecules that interact to form a complex.';
+COMMENT ON COLUMN nex.interactor.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.interactor.interactor_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.interactor.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.interactor.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.interactor.format_name IS 'Unique name to create download files. UniProtKB identifier.';
+COMMENT ON COLUMN nex.interactor.display_name IS 'Public display name. Interactor name as defined in IntAct.';
+COMMENT ON COLUMN nex.interactor.obj_url IS 'URL of the object (relative for local links or complete for external links).';
+COMMENT ON COLUMN nex.interactor.locus_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.interactor.description IS 'Interactor full name or description as defined in IntAct.';
+COMMENT ON COLUMN nex.interactor.type_id IS 'Interactor type. FK to PSIMI.PSIMI_ID.';
+COMMENT ON COLUMN nex.interactor.role_id IS 'Interactor biological role. FK to PSIMI.PSIMI_ID.';
+COMMENT ON COLUMN nex.interactor.stoichiometry IS 'Stoichiometry.';
+COMMENT ON COLUMN nex.interactor.residues IS 'Interactor protein sequence from UniProt.';
+ALTER TABLE nex.interactor ADD CONSTRAINT interactor_uk UNIQUE (format_name);
+CREATE INDEX interactor_source_fk_index ON nex.interactor (source_id);
+CREATE INDEX interactor_locus_fk_index ON nex.interactor (locus_id);
+CREATE INDEX interactor_type_fk_index ON nex.interactor (type_id);
+CREATE INDEX interactor_role_fk_index ON nex.interactor (role_id);
+
+
 DROP TABLE IF EXISTS nex.phenotype CASCADE;
 CREATE TABLE nex.phenotype (
 	phenotype_id bigint NOT NULL DEFAULT nextval('object_seq'),
