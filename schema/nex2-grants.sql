@@ -934,6 +934,38 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON nex.proteinsequence_detail TO curator;
 GRANT SELECT ON nex.proteinsequence_detail TO PUBLIC;
 GRANT SELECT ON nex.proteinsequence_detail TO DBSELECT;
 
+-- Set privilege on TABLE PSIMI                                                      
+ALTER TABLE nex.psimi OWNER TO nex;
+GRANT ALL ON nex.psimi TO nex;
+REVOKE ALL ON nex.psimi FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.psimi TO curator;
+GRANT SELECT ON nex.psimi TO PUBLIC;
+GRANT SELECT ON nex.psimi TO DBSELECT;
+
+-- Set privilege on TABLE PSIMI_ALIAS                                                
+ALTER TABLE nex.psimi_alias OWNER TO nex;
+GRANT ALL ON nex.psimi_alias TO nex;
+REVOKE ALL ON nex.psimi_alias FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.psimi_alias TO curator;
+GRANT SELECT ON nex.psimi_alias TO PUBLIC;
+GRANT SELECT ON nex.psimi_alias TO DBSELECT;
+
+-- Set privilege on TABLE PSIMI_RELATION                                             
+ALTER TABLE nex.psimi_relation OWNER TO nex;
+GRANT ALL ON nex.psimi_relation TO nex;
+REVOKE ALL ON nex.psimi_relation FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.psimi_relation TO curator;
+GRANT SELECT ON nex.psimi_relation TO PUBLIC;
+GRANT SELECT ON nex.psimi_relation TO DBSELECT;
+
+-- Set privilege on TABLE PSIMI_URL                                                  
+ALTER TABLE nex.psimi_url OWNER TO nex;
+GRANT ALL ON nex.psimi_url TO nex;
+REVOKE ALL ON nex.psimi_url FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.psimi_url TO curator;
+GRANT SELECT ON nex.psimi_url TO PUBLIC;
+GRANT SELECT ON nex.psimi_url TO DBSELECT;
+
 -- Set privilege on TABLE PSIMOD
 ALTER TABLE nex.psimod OWNER TO nex;
 GRANT ALL ON nex.psimod TO nex;
