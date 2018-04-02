@@ -556,6 +556,7 @@ CREATE INDEX pathwaysummaryreference_source_fk_index ON nex.pathwaysummary_refer
 DROP TABLE IF EXISTS nex.complexdbentity CASCADE;
 CREATE TABLE nex.complexdbentity (
     dbentity_id bigint NOT NULL DEFAULT nextval('object_seq'),
+    complex_accession varchar(20) NOT NULL,
     intact_id varchar(20) NOT NULL,
     systematic_name varchar(500) NOT NULL,
     eco_id varchar(40) NOT NULL,
@@ -565,12 +566,13 @@ CREATE TABLE nex.complexdbentity (
 ) ;
 COMMENT ON TABLE nex.complexdbentity IS 'A macromolecular complex. Inherits from DBENTITY';
 COMMENT ON COLUMN nex.complexdbentity.dbentity_id IS 'Unique identifier (serial number).';
-COMMENT ON COLUMN nex.complexdbentity.intact_id IS 'Unique identifier for a complex by IntAct (e.g., complexAc).';
+COMMENT ON COLUMN nex.complexdbentity.complex_accession IS 'Unique complex accession identifier (e.g., CPX-2262).';
+COMMENT ON COLUMN nex.complexdbentity.intact_id IS 'IntAct identifier (e.g., EBI-9010849).';
 COMMENT ON COLUMN nex.complexdbentity.systematic_name IS 'Name composed of all the complex participants from IntAct.';
 COMMENT ON COLUMN nex.complexdbentity.eco_id IS 'The protein complex evidence or confidence. FK to ECO.ECO_ID.';
 COMMENT ON COLUMN nex.complexdbentity.description IS 'Functional description of the macromolecular complex.';
 COMMENT ON COLUMN nex.complexdbentity.properties IS 'Properties associated with the macromolecular complex.';
-ALTER TABLE nex.complexdbentity ADD CONSTRAINT complexdbentity_uk UNIQUE (intact_id);
+ALTER TABLE nex.complexdbentity ADD CONSTRAINT complexdbentity_uk UNIQUE (complex_accession);
 CREATE INDEX complexdbentity_eco_fk_index ON nex.complexdbentity (eco_id);
 
 DROP TABLE IF EXISTS nex.complex_alias CASCADE;
