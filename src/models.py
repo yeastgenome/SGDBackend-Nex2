@@ -7158,6 +7158,7 @@ class Complexdbentity(Dbentity):
     eco_id = Column(ForeignKey(u'nex.eco.eco_id', ondelete=u'CASCADE'), nullable=False, index=True)
     description = Column(Text, nullable=True)   
     properties = Column(Text, nullable=True)
+    complex_accession = Column(String(40), nullable=False)
 
     eco = relationship(u'Eco')
 
