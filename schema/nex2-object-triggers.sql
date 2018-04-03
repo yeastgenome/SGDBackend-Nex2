@@ -2168,8 +2168,7 @@ BEGIN
         PERFORM nex.insertupdatelog('INTERACTOR'::text, 'ROLE_ID'::text, OLD.interactor_id, OLD.role_id::text, NEW.role_id::text, USER);
     END IF;
 
-    IF (((OLD.stoichiometry IS NULL) AND (NEW.stoichiometry IS NOT NULL)) OR ((OLD.stoichiometry IS NOT NULL) AND (NEW.stoichiometry IS NULL)) OR (OLD.stoichiometry != NEW.stoichiome\
-try)) THEN
+    IF (((OLD.stoichiometry IS NULL) AND (NEW.stoichiometry IS NOT NULL)) OR ((OLD.stoichiometry IS NOT NULL) AND (NEW.stoichiometry IS NULL)) OR (OLD.stoichiometry != NEW.stoichiometry)) THEN
        PERFORM nex.insertupdatelog('INTERACTOR'::text, 'STOICHIOMETRY'::text, OLD.interactor_id, OLD.stoichiometry::text, NEW.stoichiometry::text, USER);
     END IF;
 
