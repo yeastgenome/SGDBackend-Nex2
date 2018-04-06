@@ -103,22 +103,10 @@ def load_complexbindingannotation():
                     continue
 
                 ranges = lf.get('ranges')
-                range_start = None
-                range_end = None
-                if ranges[0] != '?-?':
-                    range_start = ranges[0].split("-")[0]
-                    range_end = ranges[0].split("-")[1]
-                    if range_start == 'n':
-                        range_start = None
-                    if range_end == 'n':
-                        range_end = None
                 
-                print "ranges:", ranges, range_start, range_end
+                (range_start, range_end) = cleanup_ranges(ranges)
 
-                # if range_start is not None and isinstance(range_start, int) is False:
-                #    range_start = None
-                # if range_end is not None and isinstance(range_end, int) is False:
-                #    range_end = None
+                print "ranges:", ranges, range_start, range_end
 
                 reference_id_list = complex_id_to_reference_id_list.get(complex_id)
                 if reference_id_list is None:
@@ -215,7 +203,25 @@ def update_annotations(nex_session, fw, complex_id, interactor_id, binding_inter
                 reference_id = None
             insert_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, reference_id, source_id, taxonomy_id, loaded)
             
-            
+
+
+def cleanup_ranges(ranges):
+
+    range_start = None
+    range_end = None
+    if ranges[0] != '?-?':
+        ranges[0] = ranges[0].replace(">", "").replace("<", "")
+        range_start = ranges[0].split("-")[0].split("..")[0]
+        range_end = ranges[0].split("-")[1].split("..")[0]
+
+        if range_start is not None and range_start in ['n', 'c', '?']:
+            range_start = None
+        if range_end is not None and range_end in ['n', 'c', '?']:
+            range_end = None
+
+    return (range_start, range_end)
+
+
 def get_json(url):
 
     print "get json:", url
