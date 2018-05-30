@@ -381,7 +381,7 @@ CREATE TABLE nex.dataset (
 	is_in_spell boolean NOT NULL,
 	is_in_browser boolean NOT NULL,
 	description varchar(4000),
-	date_created timestamp DEFAULT LOCALTIMESTAMP,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
 	CONSTRAINT dataset_pk PRIMARY KEY (dataset_id)
 ) ;
