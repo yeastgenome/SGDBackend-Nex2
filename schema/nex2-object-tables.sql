@@ -553,6 +553,8 @@ COMMENT ON COLUMN nex.datasetsample.dbxref_id IS 'GEO Sample identifier (GSM) or
 COMMENT ON COLUMN nex.datasetsample.sample_order IS 'Order to display the samples.';
 COMMENT ON COLUMN nex.datasetsample.dbxref_type IS 'Type of database cross reference (GEO, ArrayExpress).';
 COMMENT ON COLUMN nex.datasetsample.description IS 'Description or summary of the sample.';
+COMMENT ON COLUMN nex.datasetsample.biosample IS 'Biosample used in the experiment.';
+COMMENT ON COLUMN nex.datasetsample.strain_name IS 'Strain name used in the experiment.';
 COMMENT ON COLUMN nex.datasetsample.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.datasetsample.obj_url IS 'URL of the object (relative for local links or complete for external links).';
 COMMENT ON COLUMN nex.datasetsample.dbxref_url IS 'URL of the dbxref_id.';
