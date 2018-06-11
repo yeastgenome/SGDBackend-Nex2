@@ -30,7 +30,7 @@ AUTHOR_TYPE = 'Author'
 PMC_URL_TYPE = 'PMC full text'
 DOI_URL_TYPE = 'DOI full text'
 PMC_ROOT = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
-DOI_ROOT = 'http://dx.doi.org/'
+DOI_ROOT = 'https://doi.org/'
 
 def update_reference_data(log_file):
  

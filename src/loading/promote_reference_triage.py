@@ -10,7 +10,7 @@ from ..models import DBSession, Dbentity, Referencedbentity, Referencedocument, 
                    Journal, Locusdbentity
 from src.helpers import link_gene_names
 
-doi_root = 'http://dx.doi.org/'
+doi_root = 'https://doi.org/'
 pubmed_root = 'http://www.ncbi.nlm.nih.gov/pubmed/'
 pmc_root = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
 status = 'Published'

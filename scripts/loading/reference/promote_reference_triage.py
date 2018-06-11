@@ -9,7 +9,7 @@ from scripts.loading.database_session import get_session
 
 Entrez.email = "sweng@stanford.edu"
 
-doi_root = 'http://dx.doi.org/'
+doi_root = 'https://doi.org/'
 pubmed_root = 'http://www.ncbi.nlm.nih.gov/pubmed/'
 pmc_root = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
 status = 'Published'

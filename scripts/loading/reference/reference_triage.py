@@ -95,7 +95,7 @@ def load_references(log_file):
                     doi = id.replace(' [doi]', '')
                     break
             if doi:
-                doi_url = "/".join(['http://dx.doi.org', doi])
+                doi_url = "/".join(['https://doi.org', doi])
         title = record.get('TI', '')
         authors = record.get('AU', [])
         pubdate = record.get('DP', '')  # 'PubDate': '2012 Mar 20'  
