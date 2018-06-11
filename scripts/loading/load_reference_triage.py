@@ -91,7 +91,7 @@ def load_references():
                     doi = id.replace(' [doi]', '')
                     break
             if doi:
-                doi_url = "/".join(['http://dx.doi.org', doi])
+                doi_url = "/".join(['https://doi.org', doi])
         title = record.get('TI', '')
         authors = record.get('AU', [])
         pubdate = record.get('DP', '')  # 'PubDate': '2012 Mar 20'  
@@ -109,7 +109,7 @@ def load_references():
         # doi_url = ""
         # if record.get('DOI'):
         #     doi = record.get('DOI')
-        #     doi_url = "/".join(['http://dx.doi.org', doi])
+        #     doi_url = "/".join(['https://doi.org', doi])
         # title = record.get('Title', '')
         # authors = record.get('AuthorList', [])
         # pubdate = record.get('PubDate', '')  # 'PubDate': '2012 Mar 20'  

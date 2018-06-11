@@ -13,7 +13,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 __author___ = 'sweng66'
 
-doi_root = 'http://dx.doi.org/'
+doi_root = 'https://doi.org/'
 pubmed_root = 'http://www.ncbi.nlm.nih.gov/pubmed/'
 pmc_root = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
 status = 'Published'
