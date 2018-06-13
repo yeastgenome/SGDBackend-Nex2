@@ -982,7 +982,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON nex.proteinsequence_detail TO curator;
 GRANT SELECT ON nex.proteinsequence_detail TO PUBLIC;
 GRANT SELECT ON nex.proteinsequence_detail TO DBSELECT;
 
--- Set privilege on TABLE PSIMI                                                      
+-- Set privilege on TABLE PSIMI
 ALTER TABLE nex.psimi OWNER TO nex;
 GRANT ALL ON nex.psimi TO nex;
 REVOKE ALL ON nex.psimi FROM PUBLIC;
@@ -990,7 +990,7 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON nex.psimi TO curator;
 GRANT SELECT ON nex.psimi TO PUBLIC;
 GRANT SELECT ON nex.psimi TO DBSELECT;
 
--- Set privilege on TABLE PSIMI_ALIAS                                                
+-- Set privilege on TABLE PSIMI_ALIAS
 ALTER TABLE nex.psimi_alias OWNER TO nex;
 GRANT ALL ON nex.psimi_alias TO nex;
 REVOKE ALL ON nex.psimi_alias FROM PUBLIC;
@@ -1157,7 +1157,6 @@ REVOKE ALL ON nex.reservednametriage FROM PUBLIC;
 GRANT SELECT,INSERT,UPDATE,DELETE ON nex.reservednametriage TO curator;
 GRANT SELECT ON nex.reservednametriage TO PUBLIC;
 GRANT SELECT ON nex.reservednametriage TO DBSELECT;
-
 
 -- Set privilege on TABLE RO
 ALTER TABLE nex.ro OWNER TO nex;
