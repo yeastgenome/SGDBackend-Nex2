@@ -6015,6 +6015,17 @@ class Goslim(Base):
         else:
             return None
 
+    def to_snapshot_dict(self):
+        direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
+        return {
+            "descendant_annotation_gene_count": self.genome_count,
+            "display_name": self.display_name,
+            "format_name": self.format_name,
+            "link": self.obj_url,
+            "direct_annotation_gene_count": direct_annotation_gene_count,
+            "id": self.go_id
+        }
+
 
 class Goslimannotation(Base):
     __tablename__ = 'goslimannotation'
@@ -6706,6 +6717,16 @@ class Phenotype(Base):
     observable = relationship(u'Apo', primaryjoin='Phenotype.observable_id == Apo.apo_id')
     qualifier = relationship(u'Apo', primaryjoin='Phenotype.qualifier_id == Apo.apo_id')
     source = relationship(u'Source')
+
+    def to_snapshot_dict(self):
+        descendant_annotation_gene_count = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=self.phenotype_id).count()
+        return {
+            'descendant_annotation_gene_count': descendant_annotation_gene_count,
+            'display_name': self.display_name,
+            'format_name': self.format_name,
+            'link': self.obj_url,
+            'id': self.phenotype_id
+        }
 
     def to_main_dict(self):
         return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
