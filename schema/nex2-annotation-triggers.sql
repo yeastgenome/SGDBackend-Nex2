@@ -151,7 +151,7 @@ BEGIN
              OLD.interactor_id || '[:]' || OLD.binding_interactor_id || '[:]' ||
              OLD.source_id || '[:]' || coalesce(OLD.reference_id,0) || '[:]' ||
              OLD.taxonomy_id || '[:]' || OLD.binding_type_id || '[:]' ||
-             coalesce(OLD.range_start_id,0) || '[:]' || coalesce(OLD.range_end,0) || '[:]' ||
+             coalesce(OLD.range_start,0) || '[:]' || coalesce(OLD.range_end,0) || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 
            PERFORM nex.insertdeletelog('COMPLEXBINDINGANNOTATION'::text, OLD.annotation_id, v_row, USER);
