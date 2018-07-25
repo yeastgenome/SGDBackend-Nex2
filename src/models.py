@@ -7826,6 +7826,7 @@ class Complexdbentity(Dbentity):
     eco_id = Column(ForeignKey(u'nex.eco.eco_id', ondelete=u'CASCADE'), nullable=False, index=True)
     description = Column(Text, nullable=True)
     properties = Column(Text, nullable=True)
+    complex_accession = Column(String(40), nullable=False)
 
     eco = relationship(u'Eco')
 
@@ -7921,13 +7922,12 @@ class Interactor(Base):
     display_name = Column(String(500), nullable=False, index=True)
     obj_url = Column(String(500), nullable=False)
     source_id = Column(ForeignKey(u'nex.source.source_id', ondelete=u'CASCADE'), nullable=False, index=True)
-    intact_id = Column(String(20), nullable=False)
     locus_id = Column(ForeignKey(u'nex.locusdbentity.dbentity_id', ondelete=u'CASCADE'), nullable=True, index=True)
     description = Column(String(500))
     type_id = Column(ForeignKey(u'nex.psimi.psimi_id', ondelete=u'CASCADE'), nullable=False, index=True)
     role_id = Column(ForeignKey(u'nex.psimi.psimi_id', ondelete=u'CASCADE'), nullable=False, index=True)
     stoichiometry = Column(Integer)
-    protein_residues = Column(Text, nullable=False)
+    residues = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 

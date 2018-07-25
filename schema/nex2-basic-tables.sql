@@ -117,13 +117,13 @@ COMMENT ON COLUMN nex.sgdid.obj_url IS 'URL of the object (relative for local li
 COMMENT ON COLUMN nex.sgdid.display_name IS 'Public display name.';
 COMMENT ON COLUMN nex.sgdid.bud_id IS 'PK from BUD.DBXREF.DBXREF_NO.';
 COMMENT ON COLUMN nex.sgdid.sgdid_id IS 'Unique identifier (serial number).';
-COMMENT ON COLUMN nex.sgdid.subclass IS 'Type of dbentity assigned the SGDID (LOCUS, REFERENCE, STRAIN, FILE, PATHWAY).';
+COMMENT ON COLUMN nex.sgdid.subclass IS 'Type of dbentity assigned the SGDID (LOCUS, REFERENCE, STRAIN, FILE, PATHWAY, COMPLEX).';
 COMMENT ON COLUMN nex.sgdid.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.sgdid.sgdid_status IS 'State of the SGDID (Primary, Secondary, Deleted, Unassigned).';
 COMMENT ON COLUMN nex.sgdid.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.sgdid.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.sgdid.description IS 'Comment about or reason why the SGDID was deleted.';
 ALTER TABLE nex.sgdid ADD CONSTRAINT sgdid_uk UNIQUE (format_name);
-ALTER TABLE nex.sgdid ADD CONSTRAINT sgdid_subclass_ck CHECK (SUBCLASS IN ('LOCUS','FILE','STRAIN','REFERENCE','PATHWAY'));
+ALTER TABLE nex.sgdid ADD CONSTRAINT sgdid_subclass_ck CHECK (SUBCLASS IN ('LOCUS','FILE','STRAIN','REFERENCE','PATHWAY','COMPLEX'));
 ALTER TABLE nex.sgdid ADD CONSTRAINT sgdid_status_ck CHECK (SGDID_STATUS IN ('Primary','Secondary','Deleted','Unassigned'));
 CREATE INDEX sgdid_source_fk_index ON nex.sgdid (source_id);

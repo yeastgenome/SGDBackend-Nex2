@@ -2134,6 +2134,108 @@ BEFORE INSERT OR UPDATE ON nex.goslim FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_goslim_biur();
 
 
+DROP TRIGGER IF EXISTS interactor_audr ON nex.interactor CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_interactor_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.format_name != NEW.format_name) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'FORMAT_NAME'::text, OLD.interactor_id, OLD.format_name, NEW.format_name, USER);
+    END IF;
+
+    IF (OLD.display_name != NEW.display_name) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'DISPLAY_NAME'::text, OLD.interactor_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+    IF (((OLD.obj_url IS NULL) AND (NEW.obj_url IS NOT NULL)) OR ((OLD.obj_url IS NOT NULL) AND (NEW.obj_url IS NULL)) OR (OLD.obj_url != NEW.obj_url)) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'OBJ_URL'::text, OLD.interactor_id, OLD.obj_url, NEW.obj_url, USER);
+    END IF;
+
+    IF (OLD.source_id != NEW.source_id) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'SOURCE_ID'::text, OLD.interactor_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    IF (((OLD.locus_id IS NULL) AND (NEW.locus_id IS NOT NULL)) OR ((OLD.locus_id IS NOT NULL) AND (NEW.locus_id IS NULL)) OR (OLD.locus_id != NEW.locus_id)) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'LOCUS_ID'::text, OLD.interactor_id, OLD.locus_id::text, NEW.locus_id::text, USER);
+    END IF;
+
+    IF (((OLD.description IS NULL) AND (NEW.description IS NOT NULL)) OR ((OLD.description IS NOT NULL) AND (NEW.description IS NULL)) OR (OLD.description != NEW.description)) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'DESCRIPTION'::text, OLD.interactor_id, OLD.description, NEW.description, USER);
+    END IF;
+
+     IF (OLD.type_id != NEW.type_id) THEN
+        PERFORM nex.insertupdatelog('INTERACTOR'::text, 'TYPE_ID'::text, OLD.interactor_id, OLD.type_id::text, NEW.type_id::text, USER);
+    END IF;
+
+     IF (OLD.role_id != NEW.role_id) THEN
+        PERFORM nex.insertupdatelog('INTERACTOR'::text, 'ROLE_ID'::text, OLD.interactor_id, OLD.role_id::text, NEW.role_id::text, USER);
+    END IF;
+
+    IF (((OLD.residues IS NULL) AND (NEW.residues IS NOT NULL)) OR ((OLD.residues IS NOT NULL) AND (NEW.residues IS NULL)) OR (OLD.residues != NEW.residues)) THEN
+       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'RESIDUES'::text, OLD.interactor_id, OLD.residues, NEW.residues, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.interactor_id || '[:]' || OLD.format_name || '[:]' ||
+             OLD.display_name || '[:]' || coalesce(OLD.obj_url,'') || '[:]' ||
+             OLD.source_id || '[:]' ||
+             coalesce(OLD.locus_id,0) || '[:]' || coalesce(OLD.description,'') || '[:]' ||
+             OLD.type_id || '[:]' || OLD.role_id || '[:]' ||
+             coalesce(OLD.residues,'') || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+            PERFORM nex.insertdeletelog('INTERACTOR'::text, OLD.interactor_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER interactor_audr
+AFTER UPDATE OR DELETE ON nex.interactor FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_interactor_audr();
+
+DROP TRIGGER IF EXISTS interactor_biur ON nex.interactor CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_interactor_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.interactor_id != OLD.interactor_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER interactor_biur
+BEFORE INSERT OR UPDATE ON nex.interactor FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_interactor_biur();
+
+
 DROP TRIGGER IF EXISTS phenotype_audr ON nex.phenotype CASCADE;
 CREATE OR REPLACE FUNCTION trigger_fct_phenotype_audr() RETURNS trigger AS $BODY$
 DECLARE

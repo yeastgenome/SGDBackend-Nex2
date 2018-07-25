@@ -46,6 +46,10 @@ BEGIN
         PERFORM nex.insertupdatelog('APO'::text, 'IS_OBSOLETE'::text, OLD.apo_id, OLD.is_obsolete::text, NEW.is_obsolete::text, USER);
     END IF;
 
+    IF (OLD.is_in_slim != NEW.is_in_slim) THEN
+        PERFORM nex.insertupdatelog('APO'::text, 'IS_IN_SLIM'::text, OLD.apo_id, OLD.is_in_slim, NEW.is_in_slim, USER);
+    END IF;
+
     IF (((OLD.description IS NULL) AND (NEW.description IS NOT NULL)) OR ((OLD.description IS NOT NULL) AND (NEW.description IS NULL)) OR (OLD.description != NEW.description)) THEN
         PERFORM nex.insertupdatelog('APO'::text, 'DESCRIPTION'::text, OLD.apo_id, OLD.description, NEW.description, USER);
     END IF;
@@ -58,7 +62,8 @@ BEGIN
              OLD.display_name || '[:]' || OLD.obj_url || '[:]' ||
              OLD.source_id || '[:]' || OLD.apo_id || '[:]' || 
              OLD.apo_namespace || '[:]' || coalesce(OLD.namespace_group,'') || '[:]' || 
-             OLD.is_obsolete || '[:]' || coalesce(OLD.description,'') || '[:]' ||
+             OLD.is_obsolete || '[:]' || OLD.is_in_slim || '[:]' || 
+             coalesce(OLD.description,'') || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 
     PERFORM nex.insertdeletelog('APO'::text, OLD.apo_id, v_row, USER);
@@ -2518,6 +2523,333 @@ $BODY$ LANGUAGE 'plpgsql';
 CREATE TRIGGER obiurl_biur
 BEFORE INSERT OR UPDATE ON nex.obi_url FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_obiurl_biur();
+
+CREATE OR REPLACE FUNCTION trigger_fct_psimi_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.format_name != NEW.format_name) THEN
+        PERFORM nex.insertupdatelog('PSIMI'::text, 'FORMAT_NAME'::text, OLD.psimi_id, OLD.format_name, NEW.format_name, USER);
+    END IF;
+
+    IF (OLD.display_name != NEW.display_name) THEN
+    PERFORM nex.insertupdatelog('PSIMI'::text, 'DISPLAY_NAME'::text, OLD.psimi_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+    IF (OLD.obj_url != NEW.obj_url) THEN
+        PERFORM nex.insertupdatelog('PSIMI'::text, 'OBJ_URL'::text, OLD.psimi_id, OLD.obj_url, NEW.obj_url, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI'::text, 'SOURCE_ID'::text, OLD.psimi_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    IF (OLD.psimiid != NEW.psimiid) THEN
+        PERFORM nex.insertupdatelog('PSIMI'::text, 'PSIMIID'::text, OLD.psimi_id, OLD.psimiid, NEW.psimiid, USER);
+    END IF;
+
+    IF (OLD.is_obsolete != NEW.is_obsolete) THEN
+        PERFORM nex.insertupdatelog('PSIMI'::text, 'IS_OBSOLETE'::text, OLD.psimi_id, OLD.is_obsolete::text, NEW.is_obsolete::text, USER);
+    END IF;
+
+    IF (((OLD.description IS NULL) AND (NEW.description IS NOT NULL)) OR ((OLD.description IS NOT NULL) AND (NEW.description IS NULL)) OR (OLD.description != NEW.description)) THEN
+        PERFORM nex.insertupdatelog('PSIMI'::text, 'DESCRIPTION'::text, OLD.psimi_id, OLD.description, NEW.description, USER);
+    END IF;
+
+     RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.psimi_id || '[:]' || OLD.format_name || '[:]' ||
+             OLD.display_name || '[:]' || OLD.obj_url || '[:]' ||
+             OLD.source_id || '[:]' || OLD.psimiid || '[:]' ||
+             coalesce(OLD.description,'') || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('PSIMI'::text, OLD.psimi_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimi_audr
+AFTER UPDATE OR DELETE ON nex.psimi FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimi_audr();
+
+DROP TRIGGER IF EXISTS psimi_biur ON nex.psimi CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimi_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+              PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.psimi_id != OLD.psimi_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimi_biur
+BEFORE INSERT OR UPDATE ON nex.psimi FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimi_biur();
+
+DROP TRIGGER IF EXISTS psimialias_audr ON nex.psimi_alias CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimialias_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+    IF (TG_OP = 'UPDATE') THEN
+
+      IF (OLD.display_name != NEW.display_name)THEN
+          PERFORM nex.insertupdatelog('PSIMI_ALIAS'::text, 'DISPLAY_NAME'::text, OLD.alias_id, OLD.display_name, NEW.display_name, USER);
+      END IF;
+
+      IF (OLD.source_id != NEW.source_id) THEN
+      PERFORM nex.insertupdatelog('PSIMI_ALIAS'::text, 'SOURCE_ID'::text, OLD.alias_id, OLD.source_id::text, NEW.source_id::text, USER);
+     END IF;
+
+      IF (OLD.psimi_id != NEW.psimi_id) THEN
+     PERFORM nex.insertupdatelog('PSIMI_ALIAS'::text, 'PSIMI_ID'::text, OLD.alias_id, OLD.psimi_id::text, NEW.psimi_id::text, USER);
+      END IF;
+
+     IF (OLD.alias_type != NEW.alias_type) THEN
+     PERFORM nex.insertupdatelog('PSIMI_ALIAS'::text, 'ALIAS_TYPE'::text, OLD.alias_id, OLD.alias_type, NEW.alias_type, USER);
+     END IF;
+
+     RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+     v_row := OLD.alias_id || '[:]' || OLD.display_name || '[:]' ||
+              OLD.source_id || '[:]' || OLD.psimi_id || '[:]' ||
+              OLD.alias_type || '[:]' ||
+              OLD.date_created || '[:]' || OLD.created_by;
+
+              PERFORM nex.insertdeletelog('PSIMI_ALIAS'::text, OLD.alias_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimialias_audr
+AFTER UPDATE OR DELETE ON nex.psimi_alias FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimialias_audr();
+
+DROP TRIGGER IF EXISTS psimialias_biur ON nex.psimi_alias CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimialias_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.alias_id != OLD.alias_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimialias_biur
+BEFORE INSERT OR UPDATE ON nex.psimi_alias FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimialias_biur();
+
+DROP TRIGGER IF EXISTS psimirelation_audr ON nex.psimi_relation CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimirelation_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+     IF (OLD.source_id != NEW.source_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI_RELATION'::text, 'SOURCE_ID'::text, OLD.relation_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+     IF (OLD.parent_id != NEW.parent_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI_RELATION'::text, 'PARENT_ID'::text, OLD.relation_id, OLD.parent_id::text, NEW.parent_id::text, USER);
+    END IF;
+
+     IF (OLD.child_id != NEW.child_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI_RELATION'::text, 'CHILD_ID'::text, OLD.relation_id, OLD.child_id::text, NEW.child_id::text, USER);
+    END IF;
+
+    IF (OLD.ro_id != NEW.ro_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI_RELATION'::text, 'RO_ID'::text, OLD.relation_id, OLD.ro_id::text, NEW.ro_id::text, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.relation_id || '[:]' || OLD.source_id || '[:]' ||
+             OLD.parent_id || '[:]' ||
+             OLD.child_id || '[:]' || OLD.ro_id || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('PSIMI_RELATION'::text, OLD.relation_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimirelation_audr
+AFTER UPDATE OR DELETE ON nex.psimi_relation FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimirelation_audr();
+
+DROP TRIGGER IF EXISTS psimirelation_biur ON nex.psimi_relation CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimirelation_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.relation_id != OLD.relation_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimirelation_biur
+BEFORE INSERT OR UPDATE ON nex.psimi_relation FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimirelation_biur();
+
+DROP TRIGGER IF EXISTS psimiurl_audr ON nex.psimi_url CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimiurl_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.display_name != NEW.display_name) THEN
+        PERFORM nex.insertupdatelog('PSIMI_URL'::text, 'DISPLAY_NAME'::text, OLD.url_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+    IF (OLD.obj_url != NEW.obj_url) THEN
+        PERFORM nex.insertupdatelog('PSIMI_URL'::text, 'OBJ_URL'::text, OLD.url_id, OLD.obj_url, NEW.obj_url, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI_URL'::text, 'SOURCE_ID'::text, OLD.url_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    IF (OLD.psimi_id != NEW.psimi_id) THEN
+        PERFORM nex.insertupdatelog('PSIMI_URL'::text, 'PSIMI_ID'::text, OLD.url_id, OLD.psimi_id::text, NEW.psimi_id::text, USER);
+    END IF;
+
+    IF (OLD.url_type != NEW.url_type) THEN
+        PERFORM nex.insertupdatelog('PSIMI_URL'::text, 'URL_TYPE'::text, OLD.url_id, OLD.url_type, NEW.url_type, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.url_id || '[:]' || OLD.display_name || '[:]' ||
+             OLD.obj_url || '[:]' || OLD.source_id || '[:]' ||
+             OLD.psimi_id || '[:]' || OLD.url_type || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('PSIMI_URL'::text, OLD.url_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimiurl_audr
+AFTER UPDATE OR DELETE ON nex.psimi_url FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimiurl_audr();
+
+DROP TRIGGER IF EXISTS psimiurl_biur ON nex.psimi_url CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_psimiurl_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.url_id != OLD.url_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER psimiurl_biur
+BEFORE INSERT OR UPDATE ON nex.psimi_url FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_psimiurl_biur();
 
 
 DROP TRIGGER IF EXISTS psimod_audr ON nex.psimod CASCADE;

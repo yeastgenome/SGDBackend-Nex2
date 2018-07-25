@@ -100,6 +100,113 @@ BEFORE INSERT OR UPDATE ON nex.bindingmotifannotation FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_bindingmotifannotation_biur();
 
 
+DROP TRIGGER IF EXISTS complexbindingannotation_audr ON nex.complexbindingannotation CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexbindingannotation_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.complex_id != NEW.complex_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'COMPLEX_ID'::text, OLD.annotation_id, OLD.complex_id::text, NEW.complex_id::text, USER);
+    END IF;
+
+    IF (OLD.interactor_id != NEW.interactor_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'INTERACTOR_ID'::text, OLD.annotation_id, OLD.interactor_id::text, NEW.interactor_id::text, USER);
+    END IF;
+
+    IF (OLD.binding_interactor_id != NEW.binding_interactor_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'BINDING_INTERACTOR_ID'::text, OLD.annotation_id, OLD.binding_interactor_id::text, NEW.binding_interactor_id::text, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'SOURCE_ID'::text, OLD.annotation_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    IF (OLD.taxonomy_id != NEW.taxonomy_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'TAXONOMY_ID'::text, OLD.annotation_id, OLD.taxonomy_id::text, NEW.taxonomy_id::text, USER);
+    END IF;
+
+    IF (((OLD.reference_id IS NULL) AND (NEW.reference_id IS NOT NULL)) OR ((OLD.reference_id IS NOT NULL) AND (NEW.reference_id IS NULL)) OR (OLD.reference_id != NEW.reference_id)) THEN
+       PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'REFERENCE_ID'::text, OLD.interactor_id, OLD.reference_id::text, NEW.reference_id::text, USER);
+    END IF;
+
+    IF (OLD.binding_type_id != NEW.binding_type_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'BINDING_TYPE_ID'::text, OLD.annotation_id, OLD.binding_type_id::text, NEW.binding_type_id::text, USER);
+    END IF;
+
+    IF (((OLD.stoichiometry IS NULL) AND (NEW.stoichiometry IS NOT NULL)) OR ((OLD.stoichiometry IS NOT NULL) AND (NEW.stoichiometry IS NULL)) OR (OLD.stoichiometry != NEW.stoichiometry)) THEN
+       PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'STOICHIOMETRY'::text, OLD.annotation_id, OLD.stoichiometry::text, NEW.stoichiometry::text, USER);
+    END IF;
+
+    IF (((OLD.range_start IS NULL) AND (NEW.range_start IS NOT NULL)) OR ((OLD.range_start IS NOT NULL) AND (NEW.range_start IS NULL)) OR (OLD.range_start != NEW.range_start)) THEN
+       PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'RANGE_START'::text, OLD.annotation_id, OLD.range_start::text, NEW.range_start::text, USER);
+    END IF;
+
+    IF (((OLD.range_end IS NULL) AND (NEW.range_end IS NOT NULL)) OR ((OLD.range_end IS NOT NULL) AND (NEW.range_end IS NULL)) OR (OLD.range_end != NEW.range_end)) THEN
+       PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'RANGE_END'::text, OLD.annotation_id, OLD.range_end::text, NEW.range_end::text, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.annotation_id || '[:]' || OLD.complex_id || '[:]' ||
+             OLD.interactor_id || '[:]' || OLD.binding_interactor_id || '[:]' ||
+             OLD.source_id || '[:]' || coalesce(OLD.reference_id,0) || '[:]' ||
+             OLD.taxonomy_id || '[:]' || OLD.binding_type_id || '[:]' ||
+             coalesce(OLD.stoichiometry,0) || '[:]' || 
+             coalesce(OLD.range_start,0) || '[:]' || coalesce(OLD.range_end,0) || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+           PERFORM nex.insertdeletelog('COMPLEXBINDINGANNOTATION'::text, OLD.annotation_id, v_row, USER);
+
+    RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexbindingannotation_audr
+AFTER UPDATE OR DELETE ON nex.complexbindingannotation FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexbindingannotation_audr();
+
+
+DROP TRIGGER IF EXISTS complexbindingannotation_biur ON nex.complexbindingannotation CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexbindingannotation_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.annotation_id != OLD.annotation_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexbindingannotation_biur
+BEFORE INSERT OR UPDATE ON nex.complexbindingannotation FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexbindingannotation_biur();
+
+
 DROP TRIGGER IF EXISTS diseaseannotation_audr ON nex.diseaseannotation CASCADE;
 CREATE OR REPLACE FUNCTION trigger_fct_diseaseannotation_audr() RETURNS trigger AS $BODY$
 DECLARE
