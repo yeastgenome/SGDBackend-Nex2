@@ -22,11 +22,14 @@ def main(global_config, **settings):
     config.add_route('search_sequence_objects', '/search_sequence_objects', request_method='GET')
     config.add_route('get_sequence_object', '/get_sequence_object/{id}', request_method='GET')
 
+    #genomesnapshot
+    config.add_route('genomesnapshot', '/genomesnapshot', request_method='GET')
+
     # nex2
     config.add_route('reserved_name', '/reservedname/{id}', request_method='GET')
-    
+
     config.add_route('strain', '/strain/{id}', request_method='GET')
-    
+
     config.add_route('reference_this_week', '/references/this_week', request_method='GET')
     config.add_route('reference', '/reference/{id}', request_method='GET')
 
@@ -41,7 +44,7 @@ def main(global_config, **settings):
 
     config.add_route('chemical', '/chemical/{format_name}', request_method='GET')
     config.add_route('chemical_phenotype_details', '/chemical/{id}/phenotype_details', request_method='GET')
-    
+
     config.add_route('phenotype', '/phenotype/{format_name}', request_method='GET')
     config.add_route('phenotype_locus_details', '/phenotype/{id}/locus_details', request_method='GET')
 
@@ -83,7 +86,7 @@ def main(global_config, **settings):
     config.add_route('domain','/domain/{format_name}', request_method='GET')
     config.add_route('domain_locus_details','/domain/{id}/locus_details', request_method='GET')
     config.add_route('domain_enrichment','/domain/{id}/enrichment', request_method='GET')
-    
+
     config.add_route('contig', '/contig/{format_name}', request_method='GET')
     config.add_route('contig_sequence_details', '/contig/{id}/sequence_details', request_method='GET')
 
@@ -95,22 +98,33 @@ def main(global_config, **settings):
 
     config.add_route('ecnumber', '/ecnumber/{id}', request_method='GET')
     config.add_route('ecnumber_locus_details', '/ecnumber/{id}/locus_details', request_method='GET')
+
+    config.add_route('primer3', '/primer3', request_method='POST')
     
     # curator interfaces
     config.add_route('account', '/account')
     config.add_route('sign_in', '/signin')
     config.add_route('db_sign_in', '/db_sign_in')
     config.add_route('sign_out', '/signout')
-    config.add_route('colleague_triage_all', '/colleagues/triage', request_method='GET')
+    config.add_route('colleague_update', '/colleagues/{id}', request_method='PUT')
+    config.add_route('new_colleague', '/colleagues', request_method='POST')
+    config.add_route('colleague_triage_index', '/colleagues/triage', request_method='GET')
+    config.add_route('colleague_triage_show', '/colleagues/triage/{id}', request_method='GET')
+    config.add_route('colleague_triage_update', '/colleagues/triage/{id}', request_method='PUT')
+    config.add_route('colleague_triage_promote', '/colleagues/triage/{id}/promote', request_method='PUT')
+    config.add_route('colleague_triage_delete', '/colleagues/triage/{id}', request_method='DELETE')
+
     # config.add_route('colleague_triage_accept', '/colleagues/triage/{id}', request_method='POST')
     # config.add_route('colleague_triage_update', '/colleagues/triage/{id}', request_method='PUT')
     # config.add_route('colleague_triage_delete', '/colleagues/triage/{id}', request_method='DELETE')
-    
+
     # config.add_route('colleague_create', '/colleagues', request_method='POST')
     # config.add_route('colleague_update', '/colleagues/{format_name}', request_method='PUT')
     config.add_route('colleague_get', '/colleagues/{format_name}', request_method='GET')
     config.add_route('refresh_homepage_cache', '/refresh_homepage_cache', request_method='POST')
 
+    config.add_route('get_new_reference_info', '/reference/confirm', request_method='POST')
+    config.add_route('new_reference', '/reference', request_method='POST')
     config.add_route('reference_triage_index', '/reference_triage', request_method='GET')
     config.add_route('reference_triage_promote', '/reference/triage/{id}/promote', request_method='PUT')
     config.add_route('reference_triage_id', '/reference/triage/{id}', request_method='GET')
@@ -120,17 +134,24 @@ def main(global_config, **settings):
     config.add_route('update_reference_tags', '/reference/{id}/tags', request_method='PUT')
 
     config.add_route('get_locus_curate', '/locus/{sgdid}/curate', request_method='GET')
-    config.add_route('locus_curate_update', '/locus/{sgdid}/curate', request_method='PUT')
+    config.add_route('locus_curate_summaries', '/locus/{sgdid}/curate', request_method='PUT')
+    config.add_route('locus_curate_basic', '/locus/{sgdid}/basic', request_method='PUT')
     
     config.add_route('formats', '/formats')
     config.add_route('topics', '/topics')
     config.add_route('extensions', '/extensions')
     config.add_route('upload', '/upload')
     config.add_route('upload_spreadsheet', '/upload_spreadsheet', request_method='POST')
-
+    config.add_route('reserved_name_index', '/reservations', request_method='GET')
+    config.add_route('reserved_name_curate_show', '/reservations/{id}', request_method='GET')
+    config.add_route('reserved_name_update', '/reservations/{id}', request_method='PUT')
+    config.add_route('reserved_name_standardize', '/reservations/{id}/standardize', request_method='POST')
+    config.add_route('extend_reserved_name', '/reservations/{id}/extend', request_method='PUT')
+    config.add_route('reserved_name_delete', '/reservations/{id}', request_method='DELETE')
+    config.add_route('reserved_name_promote', '/reservations/{id}/promote', request_method='PUT')
+    config.add_route('new_gene_name_reservation', '/reserve', request_method='POST')
     config.add_route('healthcheck', '/healthcheck')
-
     config.scan()
     config.add_static_view(name='assets', path='./build')
-    
+
     return config.make_wsgi_app()

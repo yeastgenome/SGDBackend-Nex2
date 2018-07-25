@@ -1,4 +1,4 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, ColleagueRelation, ColleagueReference, ColleagueUrl, Colleaguetriage, Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi
+from models import DBSession, Base, Colleague, ColleagueLocus, ColleagueRelation, FilePath, Filedbentity, FileKeyword, Path, ColleagueReference, ColleagueUrl, Colleaguetriage, Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi
 import os
 import requests
 
@@ -217,3 +217,173 @@ class ModelsHelper(object):
                     ]
                 }
             return None
+
+    def get_files_helper(self):
+
+        result = DBSession.query(Filedbentity).all()
+        obj = {}
+        for item in result:
+            res = item.to_dict()
+            if item.dbentity_id not in obj:
+                obj[item.dbentity_id] = []
+            obj[item.dbentity_id].append(res)
+        return obj
+
+
+    def get_filepath(self):
+        result = self.get_file_path_obj(self.set_file_dict(),
+                                        self.set_path_dict())
+        return result
+        '''obj = {}
+        result = DBSession.query(FilePath).all()
+        if result:
+            for item in result:
+                res = item.file_path_to_dict()
+
+                if item.file_id not in obj:
+                    obj[item.file_id] = []
+                obj[item.file_id].append(res)
+        return obj'''
+
+    def set_file_dict(self):
+        file_obj = DBSession.query(
+            Filedbentity, FilePath).join(FilePath).filter(
+                Filedbentity.dbentity_id == FilePath.file_id, Filedbentity.readme_file_id != None, Filedbentity.is_public, Filedbentity.s3_url != None).all()
+        obj = {}
+        if file_obj:
+            for item in file_obj:
+                if item[1].file_path_id not in obj:
+                    obj[item[1].file_path_id] = []
+                obj[item[1].file_path_id].append(item[0])
+
+        return obj
+
+
+    def set_path_dict(self):
+        path_obj = DBSession.query(Path, FilePath).join(FilePath).filter(Path.path_id == FilePath.path_id).all()
+        obj = {}
+        if path_obj:
+            for item in path_obj:
+                if item[1].file_path_id not in obj:
+                    obj[item[1].file_path_id] = []
+                obj[item[1].file_path_id].append(item[0])
+
+        return obj
+
+    def get_file_path_obj(self, file_data, path_data):
+        obj_container = []
+        if file_data and path_data:
+            for item_key, item_value in file_data.items():
+                obj = {"id": item_key, "_file": None, "_path": None}
+                if item_value:
+                    obj["_file"] = [x.to_dict() for x in item_value]
+                else:
+                    obj["_file"] = []
+
+                if item_key in path_data:
+                    obj["_path"] = [
+                        x.path_to_dict() for x in path_data.get(item_key)
+                    ]
+                else:
+                    obj["_path"] = []
+                obj_container.append(obj)
+
+        return obj_container
+
+
+    def convertBytes(self, numBytes, suffix='B'):
+        '''
+        Convert bytes to human readable unit
+        '''
+        if numBytes is not None or numBytes > 0:
+            units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']
+            for item in units:
+                if abs(numBytes) < 1024.0:
+                    return "%3.1f%s%s" % (numBytes, item, suffix)
+                numBytes /= 1024.0
+            return "%.1f%s%s" % (numBytes, 'Y', suffix)
+        return None
+
+    def get_id_list_by_path_id(self, path_id):
+        file_path_ids = DBSession.query(FilePath.file_id).filter(FilePath.path_id == path_id).all()
+        if file_path_ids is not None:
+            return file_path_ids
+        return None
+
+    def get_file_dbentity_keyword(self):
+        obj = {}
+        _data = DBSession.query(
+            Filedbentity, FileKeyword).join(FileKeyword).filter(
+                Filedbentity.dbentity_id == FileKeyword.file_id).all()
+        for item in _data:
+            if (item):
+                if item[0].dbentity_id not in obj:
+                    obj[item[0].dbentity_id] = []
+                obj[item[0].dbentity_id].append(item[1].keyword.display_name)
+
+        return obj
+
+    def get_files_by_status(self, ids_list, flag):
+        if(ids_list):
+            if(flag):
+                result = DBSession.query(Filedbentity).filter(
+                    Filedbentity.dbentity_id.in_(ids_list),
+                    Filedbentity.is_public == True, Filedbentity.s3_url != None,
+                    Filedbentity.readme_file_id != None,
+                    Filedbentity.dbentity_status == "Active").all()
+                return result
+            else:
+                result = DBSession.query(Filedbentity).filter(
+                    Filedbentity.dbentity_id.in_(ids_list),
+                    Filedbentity.is_public == True, Filedbentity.s3_url != None,
+                    Filedbentity.readme_file_id != None).all()
+                return result
+
+
+    def get_files_by_id_list(self, file_id_list, flag):
+        if file_id_list is not None:
+            ids_list = [int(y) for ys in file_id_list for y in ys]
+            file_res = self.get_files_by_status(ids_list, flag)
+            if file_res:
+                temp_files = []
+                for x in file_res:
+                    status = ''
+                    if (x.dbentity_status == "Active" or x.dbentity_status == "Archived"):
+                        if x.dbentity_status == "Active":
+                            status = "Active"
+                        else:
+                            status = "Archived"
+                    obj = {
+                        'name':
+                            x.display_name,
+                        'href':
+                            x.s3_url,
+                        'category':
+                            'download',
+                        'description':
+                            x.description,
+                        'format':
+                            str(x.format.display_name),
+                        'status':
+                            str(status),
+                        'file_size':
+                            str(self.convertBytes(x.file_size))
+                            if x.file_size is not None else x.file_size,
+                        'year':
+                            str(x.year),
+                        'readme_url':
+                            x.readme_file[0].s3_url
+                            if x.readme_file_id is not None else None
+                    }
+                    temp_files.append(obj)
+                return temp_files
+        return None
+
+    def get_files_by_path_id(self, path_id, flag):
+        file_ids = self.get_id_list_by_path_id(path_id)
+        if file_ids:
+            files = self.get_files_by_id_list(file_ids, flag)
+            if files:
+                return files
+
+        return None
