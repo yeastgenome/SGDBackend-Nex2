@@ -50,6 +50,7 @@ CREATE TABLE nex.complexbindingannotation (
     reference_id bigint,
     taxonomy_id bigint NOT NULL,
     binding_type_id bigint NOT NULL,
+    stoichiometry int,
     range_start int,
     range_end int,
     date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -65,6 +66,7 @@ COMMENT ON COLUMN nex.complexbindingannotation.complex_id IS 'FK to COMPLEXDBENT
 COMMENT ON COLUMN nex.complexbindingannotation.interactor_id IS 'FK to INTERACTOR.INTERACTOR_ID. Protein that contains the binding site.';
 COMMENT ON COLUMN nex.complexbindingannotation.binding_interactor_id IS 'FK to INTERACTOR.INTERACTOR_ID. Protein that binds to the Interactor.';
 COMMENT ON COLUMN nex.complexbindingannotation.binding_type_id IS 'FK to PSIMI.PSIMI_ID. Type of binding site.';
+COMMENT ON COLUMN nex.complexbindingannotation.stoichiometry IS 'Stoichiometry.';
 COMMENT ON COLUMN nex.complexbindingannotation.range_start IS 'Start of the binding site relative to the protein sequence.';
 COMMENT ON COLUMN nex.complexbindingannotation.range_end IS 'End of the binding site relative to the protein sequence.';
 COMMENT ON COLUMN nex.complexbindingannotation.date_created IS 'Date the record was entered into the database.';

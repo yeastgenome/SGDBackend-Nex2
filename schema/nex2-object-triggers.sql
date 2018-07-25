@@ -2168,10 +2168,6 @@ BEGIN
         PERFORM nex.insertupdatelog('INTERACTOR'::text, 'ROLE_ID'::text, OLD.interactor_id, OLD.role_id::text, NEW.role_id::text, USER);
     END IF;
 
-    IF (((OLD.stoichiometry IS NULL) AND (NEW.stoichiometry IS NOT NULL)) OR ((OLD.stoichiometry IS NOT NULL) AND (NEW.stoichiometry IS NULL)) OR (OLD.stoichiometry != NEW.stoichiometry)) THEN
-       PERFORM nex.insertupdatelog('INTERACTOR'::text, 'STOICHIOMETRY'::text, OLD.interactor_id, OLD.stoichiometry::text, NEW.stoichiometry::text, USER);
-    END IF;
-
     IF (((OLD.residues IS NULL) AND (NEW.residues IS NOT NULL)) OR ((OLD.residues IS NOT NULL) AND (NEW.residues IS NULL)) OR (OLD.residues != NEW.residues)) THEN
        PERFORM nex.insertupdatelog('INTERACTOR'::text, 'RESIDUES'::text, OLD.interactor_id, OLD.residues, NEW.residues, USER);
     END IF;
@@ -2185,7 +2181,7 @@ BEGIN
              OLD.source_id || '[:]' ||
              coalesce(OLD.locus_id,0) || '[:]' || coalesce(OLD.description,'') || '[:]' ||
              OLD.type_id || '[:]' || OLD.role_id || '[:]' ||
-             coalesce(OLD.stoichiometry,0) || '[:]' || coalesce(OLD.residues,'') || '[:]' ||
+             coalesce(OLD.residues,'') || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 
             PERFORM nex.insertdeletelog('INTERACTOR'::text, OLD.interactor_id, v_row, USER);

@@ -135,6 +135,10 @@ BEGIN
         PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'BINDING_TYPE_ID'::text, OLD.annotation_id, OLD.binding_type_id::text, NEW.binding_type_id::text, USER);
     END IF;
 
+    IF (((OLD.stoichiometry IS NULL) AND (NEW.stoichiometry IS NOT NULL)) OR ((OLD.stoichiometry IS NOT NULL) AND (NEW.stoichiometry IS NULL)) OR (OLD.stoichiometry != NEW.stoichiometry)) THEN
+       PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'STOICHIOMETRY'::text, OLD.annotation_id, OLD.stoichiometry::text, NEW.stoichiometry::text, USER);
+    END IF;
+
     IF (((OLD.range_start IS NULL) AND (NEW.range_start IS NOT NULL)) OR ((OLD.range_start IS NOT NULL) AND (NEW.range_start IS NULL)) OR (OLD.range_start != NEW.range_start)) THEN
        PERFORM nex.insertupdatelog('COMPLEXBINDINGANNOTATION'::text, 'RANGE_START'::text, OLD.annotation_id, OLD.range_start::text, NEW.range_start::text, USER);
     END IF;
@@ -151,6 +155,7 @@ BEGIN
              OLD.interactor_id || '[:]' || OLD.binding_interactor_id || '[:]' ||
              OLD.source_id || '[:]' || coalesce(OLD.reference_id,0) || '[:]' ||
              OLD.taxonomy_id || '[:]' || OLD.binding_type_id || '[:]' ||
+             coalesce(OLD.stoichiometry,0) || '[:]' || 
              coalesce(OLD.range_start,0) || '[:]' || coalesce(OLD.range_end,0) || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 

@@ -704,7 +704,6 @@ CREATE TABLE nex.interactor (
     description varchar(500),
     type_id bigint NOT NULL,
     role_id bigint NOT NULL,
-    stoichiometry int,
     residues text,
     date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
     created_by varchar(12) NOT NULL,
@@ -722,7 +721,6 @@ COMMENT ON COLUMN nex.interactor.locus_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
 COMMENT ON COLUMN nex.interactor.description IS 'Interactor full name or description as defined in IntAct.';
 COMMENT ON COLUMN nex.interactor.type_id IS 'Interactor type. FK to PSIMI.PSIMI_ID.';
 COMMENT ON COLUMN nex.interactor.role_id IS 'Interactor biological role. FK to PSIMI.PSIMI_ID.';
-COMMENT ON COLUMN nex.interactor.stoichiometry IS 'Stoichiometry.';
 COMMENT ON COLUMN nex.interactor.residues IS 'Interactor protein sequence from UniProt.';
 ALTER TABLE nex.interactor ADD CONSTRAINT interactor_uk UNIQUE (format_name);
 CREATE INDEX interactor_source_fk_index ON nex.interactor (source_id);
