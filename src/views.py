@@ -249,6 +249,14 @@ def genomesnapshot(request):
         columns.append(contig.to_dict_sequence_widget())
     genome_snapshot['columns'] = columns
 
+    data = list()
+    for row in rows:
+        row_data = list()
+        for column in columns:
+            count = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.so_id==row.so_id, Dnasequenceannotation.contig_id==column['id'], Dnasequenceannotation.dna_type=="GENOMIC")).count()
+            row_data.append(count)
+        data.append(row_data)
+    genome_snapshot['data'] = data
     return genome_snapshot
 
 @view_config(route_name='formats', renderer='json', request_method='GET')
