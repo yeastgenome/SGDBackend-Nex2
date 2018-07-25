@@ -226,8 +226,7 @@ def search(request):
 def genomesnapshot(request):
     genome_snapshot = dict()
 
-    observable_phenotypes = DBSession.query(Apo.apo_id).filter(and_(Apo.source_id==SGD_SOURCE_ID, Apo.apo_namespace=='observable')).all()
-    phenotype_slim_data = DBSession.query(Phenotype).filter(Phenotype.observable_id.in_(observable_phenotypes)).all()
+    phenotype_slim_data = DBSession.query(Apo).filter(and_(Apo.source_id==SGD_SOURCE_ID, Apo.apo_namespace=='observable', Apo.is_in_slim==True)).all()
     phenotype_slim_terms = list()
     for phenotype_slim in phenotype_slim_data:
         phenotype_slim_terms.append(phenotype_slim.to_snapshot_dict())

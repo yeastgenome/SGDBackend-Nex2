@@ -129,6 +129,7 @@ class Apo(Base):
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
+    is_in_slim = Column(Boolean, nullable=False)
 
     source = relationship(u'Source')
 
@@ -182,6 +183,27 @@ class Apo(Base):
             "overview": Phenotypeannotation.create_count_overview([p[2] for p in phenotypes]),
             "locus_count": annotations_count,
             "descendant_locus_count": annotations_count + children_annotation_count
+        }
+
+    def to_snapshot_dict(self):
+        phenotypes = DBSession.query(Phenotype.obj_url, Phenotype.qualifier_id, Phenotype.phenotype_id).filter_by(observable_id=self.apo_id).all()
+
+        annotations_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p[2] for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
+
+        children_relation = DBSession.query(ApoRelation).filter_by(parent_id=self.apo_id).all()
+        if len(children_relation) > 0:
+            children_phenotype_ids = DBSession.query(Phenotype.phenotype_id).filter(Phenotype.observable_id.in_([c.child_id for c in children_relation])).all()
+            children_annotation_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([i[0] for i in children_phenotype_ids])).group_by(Phenotypeannotation.dbentity_id).count()
+        else:
+            children_annotation_count = 0
+
+        return {
+            "id": self.apo_id,
+            "display_name": self.display_name,
+            "format_name": self.format_name,
+            "link": self.obj_url,
+            "direct_annotation_gene_count": annotations_count,
+            "descendant_annotation_gene_count": annotations_count + children_annotation_count
         }
 
     def annotations_to_dict(self):
@@ -6717,16 +6739,6 @@ class Phenotype(Base):
     observable = relationship(u'Apo', primaryjoin='Phenotype.observable_id == Apo.apo_id')
     qualifier = relationship(u'Apo', primaryjoin='Phenotype.qualifier_id == Apo.apo_id')
     source = relationship(u'Source')
-
-    def to_snapshot_dict(self):
-        descendant_annotation_gene_count = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=self.phenotype_id).count()
-        return {
-            'descendant_annotation_gene_count': descendant_annotation_gene_count,
-            'display_name': self.display_name,
-            'format_name': self.format_name,
-            'link': self.obj_url,
-            'id': self.phenotype_id
-        }
 
     def to_main_dict(self):
         return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
