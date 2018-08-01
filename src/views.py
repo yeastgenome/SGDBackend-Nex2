@@ -18,7 +18,7 @@ import logging
 import json
 
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Goslim, So
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Goslim, So, ApoRelation, GoRelation
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, primer3_parser
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query
 from .models_helpers import ModelsHelper
@@ -232,11 +232,26 @@ def genomesnapshot(request):
         phenotype_slim_terms.append(phenotype_slim.to_snapshot_dict())
     genome_snapshot['phenotype_slim_terms'] = phenotype_slim_terms
 
-    go_slim_data = DBSession.query(Goslim).filter_by(slim_name="Yeast GO-Slim").all()
+    phenotype_slim_relationships = list()
+    phenotype_slim_relationships.append(["Child", "Parent"])
+    for phenotype in phenotype_slim_terms:
+        parent = DBSession.query(ApoRelation).filter(ApoRelation.child_id==phenotype['id']).one_or_none()
+        phenotype_slim_relationships.append([phenotype['id'], parent.parent_id])
+    genome_snapshot['phenotype_slim_relationships'] = phenotype_slim_relationships
+
+    go_slim_data = DBSession.query(Goslim).filter_by(slim_name='Yeast GO-Slim').all()
     go_slim_terms = list()
     for go_slim in go_slim_data:
         go_slim_terms.append(go_slim.to_snapshot_dict())
     genome_snapshot['go_slim_terms'] = go_slim_terms
+
+    go_slim_relationships = list()
+    go_slim_relationships.append(["Child", "Parent"])
+    for go_slim in go_slim_terms:
+        parents = DBSession.query(GoRelation).filter(GoRelation.child_id==go_slim['id']).all()
+        for parent in parents:
+            go_slim_relationships.append([go_slim['id'], parent.parent_id])
+    genome_snapshot['go_slim_relationships'] = go_slim_relationships
 
     distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).all()
     rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()

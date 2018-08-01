@@ -203,7 +203,8 @@ class Apo(Base):
             "format_name": self.format_name,
             "link": self.obj_url,
             "direct_annotation_gene_count": annotations_count,
-            "descendant_annotation_gene_count": annotations_count + children_annotation_count
+            "descendant_annotation_gene_count": annotations_count + children_annotation_count,
+            "is_root": False
         }
 
     def annotations_to_dict(self):
@@ -1172,7 +1173,13 @@ class Contig(Base):
             "link": self.obj_url,
             "id": self.contig_id,
             "length": len(self.residues),
-            "format_name": self.format_name
+            "format_name": self.format_name,
+            "strain": {
+                "display_name": "S288C",
+                "link": "/strain/S288C/overview",
+                "id": 1,
+                "format_name": "S288C"
+            }
         }
 
     def to_dict_strain_table(self, chromosome_cache={}):
@@ -6045,7 +6052,8 @@ class Goslim(Base):
             "format_name": self.format_name,
             "link": self.obj_url,
             "direct_annotation_gene_count": direct_annotation_gene_count,
-            "id": self.go_id
+            "id": self.go_id,
+            "is_root": False
         }
 
 
