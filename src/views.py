@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
 from primer3 import bindings, designPrimers
 from collections import defaultdict
+from operator import itemgetter
 
 import os
 import re
@@ -224,12 +225,11 @@ def search(request):
 
 @view_config(route_name='genomesnapshot', renderer='json', request_method='GET')
 def genomesnapshot(request):
+    GENOMIC = 'GENOMIC'
     genome_snapshot = dict()
 
     phenotype_slim_data = DBSession.query(Apo).filter(and_(Apo.source_id==SGD_SOURCE_ID, Apo.apo_namespace=='observable', Apo.is_in_slim==True)).all()
-    phenotype_slim_terms = list()
-    for phenotype_slim in phenotype_slim_data:
-        phenotype_slim_terms.append(phenotype_slim.to_snapshot_dict())
+    phenotype_slim_terms = [phenotype_slim.to_snapshot_dict() for phenotype_slim in phenotype_slim_data]
     genome_snapshot['phenotype_slim_terms'] = phenotype_slim_terms
 
     phenotype_slim_relationships = list()
@@ -240,9 +240,7 @@ def genomesnapshot(request):
     genome_snapshot['phenotype_slim_relationships'] = phenotype_slim_relationships
 
     go_slim_data = DBSession.query(Goslim).filter_by(slim_name='Yeast GO-Slim').all()
-    go_slim_terms = list()
-    for go_slim in go_slim_data:
-        go_slim_terms.append(go_slim.to_snapshot_dict())
+    go_slim_terms = [go_slim.to_snapshot_dict() for go_slim in go_slim_data]
     genome_snapshot['go_slim_terms'] = go_slim_terms
 
     go_slim_relationships = list()
@@ -255,22 +253,43 @@ def genomesnapshot(request):
 
     distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).all()
     rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()
-    genome_snapshot['rows'] = [row.display_name for row in rows]
 
-    contigs = DBSession.query(Contig).filter(Contig.display_name.like("Chromosome%")).all()
-    columns = list()
-    for contig in contigs:
-        columns.append(contig.to_dict_sequence_widget())
+    contigs = DBSession.query(Contig).filter(Contig.display_name.like("Chromosome%")).order_by(Contig.contig_id).all()
+    columns = [contig.to_dict_sequence_widget() for contig in contigs]
     genome_snapshot['columns'] = columns
 
     data = list()
     for row in rows:
         row_data = list()
+        # Insert display_name of each row as first item in each 'data' list item.
+        # Data needs to be sorted in descending order of number of features
+        row_data.append(row.display_name)
         for column in columns:
-            count = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.so_id==row.so_id, Dnasequenceannotation.contig_id==column['id'], Dnasequenceannotation.dna_type=="GENOMIC")).count()
+            count = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.so_id==row.so_id, Dnasequenceannotation.contig_id==column['id'], Dnasequenceannotation.dna_type==GENOMIC)).count()
             row_data.append(count)
         data.append(row_data)
+
+    # sort the list of lists 'data' in descending order based on element in index 1 in each list item
+    data = sorted(data, key=itemgetter(1), reverse=True)
+    data_row = list()
+    for item in data:
+        # Pop the display name of each row and add it to row data
+        data_row.append(item.pop(0))
+    # sub-categories for 'ORF' data row
+    sub_categories = ['Verified', 'Dubious', 'Uncharacterized']
+    data_row.extend(sub_categories)
+    orf_so_id = DBSession.query(So.so_id).filter(So.display_name=='ORF').one_or_none()
+    for category in sub_categories:
+        row_data = list()
+        for column in columns:
+            db_entity_ids = DBSession.query(Dnasequenceannotation.dbentity_id).filter(and_(Dnasequenceannotation.so_id==orf_so_id, Dnasequenceannotation.dna_type==GENOMIC, Dnasequenceannotation.contig_id==column['id']))
+            count = DBSession.query(Locusdbentity).filter(and_(Locusdbentity.dbentity_id.in_(db_entity_ids), Locusdbentity.qualifier==category)).count()
+            row_data.append(count)
+        data.append(row_data)
+
     genome_snapshot['data'] = data
+    genome_snapshot['rows'] = data_row
+
     return genome_snapshot
 
 @view_config(route_name='formats', renderer='json', request_method='GET')
