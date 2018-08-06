@@ -6048,8 +6048,8 @@ class Goslim(Base):
         direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
         return {
             "descendant_annotation_gene_count": self.genome_count,
+            "format_name": self.display_name if self.display_name in ['molecular_function', 'biological_process', 'cellular_component'] else self.obj_url.split('/')[2],
             "display_name": self.display_name.replace('_', ' '),
-            "format_name": self.display_name,
             "link": self.obj_url,
             "direct_annotation_gene_count": direct_annotation_gene_count,
             "id": self.go_id,
