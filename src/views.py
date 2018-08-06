@@ -8,7 +8,6 @@ from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
 from primer3 import bindings, designPrimers
 from collections import defaultdict
-from operator import itemgetter
 
 import os
 import re
@@ -270,8 +269,8 @@ def genomesnapshot(request):
             row_data.append(count)
         data.append(row_data)
 
-    # sort the list of lists 'data' in descending order based on element in index 1 in each list item
-    data = sorted(data, key=itemgetter(1), reverse=True)
+    # sort the list of lists 'data' in descending order based on sum of values in each list except first item(display_name)
+    data = sorted(data, key=lambda item: sum(item[1:]), reverse=True)
     data_row = list()
     for item in data:
         # Pop the display name of each row and add it to row data
