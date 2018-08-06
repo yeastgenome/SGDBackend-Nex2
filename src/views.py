@@ -246,9 +246,9 @@ def genomesnapshot(request):
     go_slim_relationships = list()
     go_slim_relationships.append(["Child", "Parent"])
     for go_slim in go_slim_terms:
-        parents = DBSession.query(GoRelation).filter(GoRelation.child_id==go_slim['id']).all()
-        for parent in parents:
-            go_slim_relationships.append([go_slim['id'], parent.parent_id])
+        go_namespace = DBSession.query(Go.go_namespace).filter(Go.go_id==go_slim['id']).scalar()
+        parent = DBSession.query(Go).filter(Go.display_name==go_namespace.replace('_', ' ')).one_or_none()
+        go_slim_relationships.append([go_slim['id'], parent.go_id])
     genome_snapshot['go_slim_relationships'] = go_slim_relationships
 
     distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).all()
