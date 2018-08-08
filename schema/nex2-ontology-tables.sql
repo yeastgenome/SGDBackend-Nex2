@@ -19,6 +19,7 @@ CREATE TABLE nex.apo (
 	apoid varchar(20) NOT NULL,
 	apo_namespace varchar(20) NOT NULL,
 	namespace_group varchar(40),
+    is_in_slim boolean NOT NULL,
     is_obsolete boolean NOT NULL,
 	description varchar(1000),
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -34,6 +35,7 @@ COMMENT ON COLUMN nex.apo.date_created IS 'Date the record was entered into the 
 COMMENT ON COLUMN nex.apo.apo_namespace IS 'Aspect or vocabulary groupings (observable, qualifier, experiment_type, mutant_type).';
 COMMENT ON COLUMN nex.apo.display_name IS 'Public display name.';
 COMMENT ON COLUMN nex.apo.is_obsolete IS 'Whether the ontology term is obsolete.';
+COMMENT ON COLUMN nex.apo.is_in_slim IS 'Whether the ontology term is in the slim.';
 COMMENT ON COLUMN nex.apo.namespace_group IS 'A way to group terms within a namespace together.';
 COMMENT ON COLUMN nex.apo.format_name IS 'Unique name to create download files.';
 COMMENT ON COLUMN nex.apo.obj_url IS 'URL of the object (relative for local links or complete for external links).';
@@ -789,6 +791,110 @@ ALTER TABLE nex.obi_url ADD CONSTRAINT obi_url_uk UNIQUE (obi_id,display_name,ob
 ALTER TABLE nex.obi_url ADD CONSTRAINT obiurl_type_ck CHECK (URL_TYPE IN ('Ontobee', 'OLS', 'BioPortal'));
 ALTER TABLE nex.obi_url ADD CONSTRAINT obiurl_display_name_ck CHECK (DISPLAY_NAME IN ('Ontobee', 'OLS', 'BioPortal'));
 CREATE INDEX obiurl_source_fk_index ON nex.obi_url (source_id);
+
+
+DROP TABLE IF EXISTS nex.psimi CASCADE;
+CREATE TABLE nex.psimi (
+    psimi_id bigint NOT NULL DEFAULT nextval('object_seq'),
+    format_name varchar(100) NOT NULL,
+    display_name varchar(500) NOT NULL,
+    obj_url varchar(500) NOT NULL,
+    source_id bigint NOT NULL,
+    psimiid varchar(20) NOT NULL,
+    is_obsolete boolean NOT NULL,
+    description varchar(2000),
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT psimi_pk PRIMARY KEY (psimi_id)
+) ;
+COMMENT ON TABLE nex.psimi IS 'Molecular interactions ontology (PSI-MI) developed by the Proteomics Standards Initiative (PSI).';
+COMMENT ON COLUMN nex.psimi.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.psimi.description IS 'Description or comment.';
+COMMENT ON COLUMN nex.psimi.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.psimi.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.psimi.obj_url IS 'URL of the object (relative for local links or complete for external links).';
+COMMENT ON COLUMN nex.psimi.format_name IS 'Unique name to create download files.';
+COMMENT ON COLUMN nex.psimi.psimi_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.psimi.is_obsolete IS 'Whether the ontology term is obsolete.';
+COMMENT ON COLUMN nex.psimi.psimiid IS 'Molecular interactions ontology identifier (e.g., MI:0348).';
+COMMENT ON COLUMN nex.psimi.display_name IS 'Public display name.';
+ALTER TABLE nex.psimi ADD CONSTRAINT psimi_uk UNIQUE (format_name);
+CREATE UNIQUE INDEX psimiid_uk_index ON nex.psimi (psimiid);
+CREATE INDEX psimi_source_fk_index ON nex.psimi (source_id);
+
+DROP TABLE IF EXISTS nex.psimi_alias CASCADE;
+CREATE TABLE nex.psimi_alias (
+    alias_id bigint NOT NULL DEFAULT nextval('alias_seq'),
+    display_name varchar(500) NOT NULL,
+    source_id bigint NOT NULL,
+    psimi_id bigint NOT NULL,
+    alias_type varchar(40) NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT psimi_alias_pk PRIMARY KEY (alias_id)
+) ;
+COMMENT ON TABLE nex.psimi_alias IS 'Other names or synonyms for a PSI-MI term.';
+COMMENT ON COLUMN nex.psimi_alias.alias_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.psimi_alias.alias_type IS 'Type of alias (EXACT).';
+COMMENT ON COLUMN nex.psimi_alias.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.psimi_alias.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.psimi_alias.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.psimi_alias.psimi_id IS 'FK to PSIMI.PSIMI_ID.';
+COMMENT ON COLUMN nex.psimi_alias.display_name IS 'Public display name.';
+ALTER TABLE nex.psimi_alias ADD CONSTRAINT psimi_alias_uk UNIQUE (psimi_id,display_name,alias_type);
+ALTER TABLE nex.psimi_alias ADD CONSTRAINT psimialias_type_ck CHECK (ALIAS_TYPE IN ('EXACT'));
+CREATE INDEX psimialias_source_fk_index ON nex.psimi_alias (source_id);
+
+DROP TABLE IF EXISTS nex.psimi_relation CASCADE;
+CREATE TABLE nex.psimi_relation (
+    relation_id bigint NOT NULL DEFAULT nextval('relation_seq'),
+    source_id bigint NOT NULL,
+    parent_id bigint NOT NULL,
+    child_id bigint NOT NULL,
+    ro_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT psimi_relation_pk PRIMARY KEY (relation_id)
+) ;
+COMMENT ON TABLE nex.psimi_relation IS 'Relationship between two molecular interaction ontology terms.';
+COMMENT ON COLUMN nex.psimi_relation.relation_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.psimi_relation.ro_id IS 'FK to RO.RO_ID.';
+COMMENT ON COLUMN nex.psimi_relation.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.psimi_relation.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.psimi_relation.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.psimi_relation.child_id IS 'FK to PSIMI.PSIMI_ID.';
+COMMENT ON COLUMN nex.psimi_relation.parent_id IS 'FK to PSIMI.PSIMI_ID.';
+ALTER TABLE nex.psimi_relation ADD CONSTRAINT psimi_relation_uk UNIQUE (parent_id,child_id,ro_id);
+CREATE INDEX psimirelation_ro_fk_index ON nex.psimi_relation (ro_id);
+CREATE INDEX psimirelation_child_fk_index ON nex.psimi_relation (child_id);
+CREATE INDEX psimirelation_source_fk_index ON nex.psimi_relation (source_id);
+
+DROP TABLE IF EXISTS nex.psimi_url CASCADE;
+CREATE TABLE nex.psimi_url (
+    url_id bigint NOT NULL DEFAULT nextval('url_seq'),
+    display_name varchar(500) NOT NULL,
+    obj_url varchar(500) NOT NULL,
+    source_id bigint NOT NULL,
+    psimi_id bigint NOT NULL,
+    url_type varchar(40) NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT psimi_url_pk PRIMARY KEY (url_id)
+) ;
+COMMENT ON TABLE nex.psimi_url IS 'URLs associated with the molecular interaction ontology.';
+COMMENT ON COLUMN nex.psimi_url.display_name IS 'Public display name (OLS, Ontobee).';
+COMMENT ON COLUMN nex.psimi_url.psimi_id IS 'FK to PSIMI.PSIMI_ID.';
+COMMENT ON COLUMN nex.psimi_url.obj_url IS 'URL of the object (relative for local links or complete for external links).';
+COMMENT ON COLUMN nex.psimi_url.url_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.psimi_url.url_type IS 'Type of URL (OLS, Ontobee).';
+COMMENT ON COLUMN nex.psimi_url.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.psimi_url.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.psimi_url.date_created IS 'Date the record was entered into the database.';
+ALTER TABLE nex.psimi_url ADD CONSTRAINT psimi_url_uk UNIQUE (psimi_id,display_name,obj_url);
+ALTER TABLE nex.psimi_url ADD CONSTRAINT psimiurl_type_ck CHECK (URL_TYPE IN ('OLS', 'Ontobee'));
+ALTER TABLE nex.psimi_url ADD CONSTRAINT psimiurl_display_name_ck CHECK (DISPLAY_NAME IN ('OLS', 'Ontobee'));
+CREATE INDEX psimiurl_source_fk_index ON nex.psimi_url (source_id);
+
 
 DROP TABLE IF EXISTS nex.psimod CASCADE;
 CREATE TABLE nex.psimod (

@@ -33,10 +33,10 @@ COMMENT ON COLUMN nex.dbentity.dbentity_id IS 'Unique identifier (serial number)
 COMMENT ON COLUMN nex.dbentity.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.dbentity.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.dbentity.dbentity_status IS 'Current state of the dbentity (Active, Merged, Deleted, Archived).';
-COMMENT ON COLUMN nex.dbentity.subclass IS 'What object inherits from DBENTITY (DBENTITY, FILE, LOCUS, REFERENCE, STRAIN).';
+COMMENT ON COLUMN nex.dbentity.subclass IS 'What object inherits from DBENTITY (DBENTITY, FILE, LOCUS, REFERENCE, STRAIN, COMPLEX).';
 COMMENT ON COLUMN nex.dbentity.date_created IS 'Date the record was entered into the database.';
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_uk UNIQUE (format_name,subclass);
-ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_subclass_ck CHECK (SUBCLASS IN ('FILE','LOCUS','REFERENCE','STRAIN', 'PATHWAY'));
+ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_subclass_ck CHECK (SUBCLASS IN ('FILE','LOCUS','REFERENCE','STRAIN', 'PATHWAY','COMPLEX'));
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_status_ck CHECK (DBENTITY_STATUS IN ('Active','Merged','Deleted','Archived'));
 CREATE INDEX dbentity_source_fk_index ON nex.dbentity (source_id);
 CREATE UNIQUE INDEX dbentity_sgdid_index ON nex.dbentity (sgdid);
@@ -553,6 +553,97 @@ COMMENT ON COLUMN nex.pathwaysummary_reference.source_id IS 'FK to SOURCE.SOURCE
 ALTER TABLE nex.pathwaysummary_reference ADD CONSTRAINT pathwaysummary_reference_uk UNIQUE (summary_id,reference_id);
 CREATE INDEX pathwaysummaryreference_ref_fk_index ON nex.pathwaysummary_reference (reference_id);
 CREATE INDEX pathwaysummaryreference_source_fk_index ON nex.pathwaysummary_reference (source_id);
+
+
+DROP TABLE IF EXISTS nex.complexdbentity CASCADE;
+CREATE TABLE nex.complexdbentity (
+    dbentity_id bigint NOT NULL DEFAULT nextval('object_seq'),
+    complex_accession varchar(20) NOT NULL,
+    intact_id varchar(20) NOT NULL,
+    systematic_name varchar(500) NOT NULL,
+    eco_id varchar(40) NOT NULL,
+    description text NOT NULL,
+    properties text,
+    CONSTRAINT complexdbentity_pk PRIMARY KEY (dbentity_id)
+) ;
+COMMENT ON TABLE nex.complexdbentity IS 'A macromolecular complex. Inherits from DBENTITY';
+COMMENT ON COLUMN nex.complexdbentity.dbentity_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.complexdbentity.complex_accession IS 'Unique complex accession identifier (e.g., CPX-2262).';
+COMMENT ON COLUMN nex.complexdbentity.intact_id IS 'IntAct identifier (e.g., EBI-9010849).';
+COMMENT ON COLUMN nex.complexdbentity.systematic_name IS 'Name composed of all the complex participants from IntAct.';
+COMMENT ON COLUMN nex.complexdbentity.eco_id IS 'The protein complex evidence or confidence. FK to ECO.ECO_ID.';
+COMMENT ON COLUMN nex.complexdbentity.description IS 'Functional description of the macromolecular complex.';
+COMMENT ON COLUMN nex.complexdbentity.properties IS 'Properties associated with the macromolecular complex.';
+ALTER TABLE nex.complexdbentity ADD CONSTRAINT complexdbentity_uk UNIQUE (complex_accession);
+CREATE INDEX complexdbentity_eco_fk_index ON nex.complexdbentity (eco_id);
+
+DROP TABLE IF EXISTS nex.complex_alias CASCADE;
+CREATE TABLE nex.complex_alias (
+    alias_id bigint NOT NULL DEFAULT nextval('alias_seq'),
+    display_name varchar(500) NOT NULL,
+    obj_url varchar(500),
+    source_id bigint NOT NULL,
+    complex_id bigint NOT NULL,
+    alias_type varchar(40) NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT complex_alias_pk PRIMARY KEY (alias_id)
+) ;
+COMMENT ON TABLE nex.complex_alias IS 'Other names, synonyms, or dbxrefs for a complex.';
+COMMENT ON COLUMN nex.complex_alias.display_name IS 'Public display name.';
+COMMENT ON COLUMN nex.complex_alias.alias_type IS 'Type of alias or dbxref (Synonym, IntEnz, PDB, EMDB).';
+COMMENT ON COLUMN nex.complex_alias.alias_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.complex_alias.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.complex_alias.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.complex_alias.obj_url IS 'URL of the object (relative for local links or complete for external links).';
+COMMENT ON COLUMN nex.complex_alias.complex_id IS 'FK to COMPLEXDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.complex_alias.created_by IS 'Username of the person who entered the record into the database.';
+ALTER TABLE nex.complex_alias ADD CONSTRAINT complex_alias_uk UNIQUE (complex_id,display_name,alias_type);
+ALTER TABLE nex.complex_alias ADD CONSTRAINT complexalias_type_ck CHECK (ALIAS_TYPE IN ('Synonym','IntEnz','PDB','EMDB'));
+CREATE INDEX complexalias_source_fk_index ON nex.complex_alias (source_id);
+
+DROP TABLE IF EXISTS nex.complex_reference CASCADE;
+CREATE TABLE nex.complex_reference (
+    complex_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    complex_id bigint NOT NULL,
+    reference_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT complex_reference_pk PRIMARY KEY (complex_reference_id)
+) ;
+COMMENT ON TABLE nex.complex_reference IS 'References associated with a complex.';
+COMMENT ON COLUMN nex.complex_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.complex_reference.complex_id IS 'FK to COMPLEXDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.complex_reference.complex_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.complex_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.complex_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.complex_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+ALTER TABLE nex.complex_reference ADD CONSTRAINT complex_reference_uk UNIQUE (complex_id,reference_id);
+CREATE INDEX complexreference_source_fk_index ON nex.complex_reference (source_id);
+CREATE INDEX complexreference_ref_fk_index ON nex.complex_reference (reference_id);
+
+DROP TABLE IF EXISTS nex.complex_go CASCADE;
+CREATE TABLE nex.complex_go (
+    complex_go_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    complex_id bigint NOT NULL,
+    go_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT complex_go_pk PRIMARY KEY (complex_go_id)
+) ;
+COMMENT ON TABLE nex.complex_go IS 'GO terms associated with a complex.';
+COMMENT ON COLUMN nex.complex_go.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.complex_go.complex_id IS 'FK to COMPLEXDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.complex_go.complex_go_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.complex_go.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.complex_go.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.complex_go.go_id IS 'FK to GO.GO_ID.';
+ALTER TABLE nex.complex_go ADD CONSTRAINT complex_go_uk UNIQUE (complex_id,go_id);
+CREATE INDEX complexgo_source_fk_index ON nex.complex_go (source_id);
+CREATE INDEX complexgo_go_fk_index ON nex.complex_go (go_id);
+
 
 DROP TABLE IF EXISTS nex.filedbentity CASCADE; 
 CREATE TABLE nex.filedbentity (

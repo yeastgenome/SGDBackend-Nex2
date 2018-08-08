@@ -39,6 +39,47 @@ CREATE INDEX bindingmotifannotation_source_fk_index ON nex.bindingmotifannotatio
 CREATE INDEX bindingmotifannotation_ref_fk_index ON nex.bindingmotifannotation (reference_id);
 CREATE INDEX bindingmotifannotation_tax_fk_index ON nex.bindingmotifannotation (taxonomy_id);
 
+
+DROP TABLE IF EXISTS nex.complexbindingannotation CASCADE;
+CREATE TABLE nex.complexbindingannotation (
+    annotation_id bigint NOT NULL DEFAULT nextval('annotation_seq'),
+    complex_id bigint NOT NULL,
+    interactor_id bigint NOT NULL,
+    binding_interactor_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    reference_id bigint,
+    taxonomy_id bigint NOT NULL,
+    binding_type_id bigint NOT NULL,
+    stoichiometry int,
+    range_start int,
+    range_end int,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT complexbindingannotation_pk PRIMARY KEY (annotation_id)
+) ;
+COMMENT ON TABLE nex.complexbindingannotation IS 'Complex Binding interactions from the IntAct database.';
+COMMENT ON COLUMN nex.complexbindingannotation.annotation_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.complexbindingannotation.reference_id IS 'FK to REFERENCEBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.complexbindingannotation.taxonomy_id IS 'FK to TAXONOMY.TAXONOMY_ID.';
+COMMENT ON COLUMN nex.complexbindingannotation.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.complexbindingannotation.complex_id IS 'FK to COMPLEXDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.complexbindingannotation.interactor_id IS 'FK to INTERACTOR.INTERACTOR_ID. Protein that contains the binding site.';
+COMMENT ON COLUMN nex.complexbindingannotation.binding_interactor_id IS 'FK to INTERACTOR.INTERACTOR_ID. Protein that binds to the Interactor.';
+COMMENT ON COLUMN nex.complexbindingannotation.binding_type_id IS 'FK to PSIMI.PSIMI_ID. Type of binding site.';
+COMMENT ON COLUMN nex.complexbindingannotation.stoichiometry IS 'Stoichiometry.';
+COMMENT ON COLUMN nex.complexbindingannotation.range_start IS 'Start of the binding site relative to the protein sequence.';
+COMMENT ON COLUMN nex.complexbindingannotation.range_end IS 'End of the binding site relative to the protein sequence.';
+COMMENT ON COLUMN nex.complexbindingannotation.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.complexbindingannotation.created_by IS 'Username of the person who entered the record into the database.';
+ALTER TABLE nex.complexbindingannotation ADD CONSTRAINT complexbindingannotation_uk UNIQUE (interactor_id,binding_interactor_id,complex_id,reference_id);
+CREATE INDEX complexbindinganno_ref_fk_index ON nex.complexbindingannotation (reference_id);
+CREATE INDEX complexbindinganno_complex_index ON nex.complexbindingannotation (complex_id);
+CREATE INDEX complexbindinganno_tax_fk_index ON nex.complexbindingannotation (taxonomy_id);
+CREATE INDEX complexbindinganno_source_fk_index ON nex.complexbindingannotation (source_id);
+CREATE INDEX complexbindinganno_bindinteract_fk_index ON nex.complexbindingannotation (binding_interactor_id);
+CREATE INDEX complexbindinganno_bindtype_fk_index ON nex.complexbindingannotation (binding_type_id);
+
+
 DROP TABLE IF EXISTS nex.diseaseannotation CASCADE;
 CREATE TABLE nex.diseaseannotation (
 	annotation_id bigint NOT NULL DEFAULT nextval('annotation_seq'),

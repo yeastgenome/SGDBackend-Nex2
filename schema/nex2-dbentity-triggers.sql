@@ -108,7 +108,7 @@ BEGIN
         IF (NEW.dbentity_status = 'Merged') OR (NEW.dbentity_status = 'Deleted') THEN
             RAISE EXCEPTION 'Allowable values are Active or Archived.';
         END IF;
-    ELSIF (NEW.subclass = 'STRAIN') OR (NEW.subclass = 'REFERENCE') OR (NEW.subclass = 'PATHWAY') THEN
+    ELSIF (NEW.subclass = 'STRAIN') OR (NEW.subclass = 'REFERENCE') OR (NEW.subclass = 'PATHWAY') OR (NEW.subclass = 'COMPLEX') THEN
         IF (NEW.dbentity_status != 'Active') THEN
             RAISE EXCEPTION 'Only allowable value is Active.';
       	END IF;
@@ -1867,6 +1867,310 @@ CREATE TRIGGER pathwaysummaryreference_biur
 BEFORE INSERT OR UPDATE ON nex.pathwaysummary_reference FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_pathwaysummaryreference_biur();
 
+
+DROP TRIGGER IF EXISTS complexdbentity_audr ON nex.complexdbentity CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexdbentity_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+    v_sgdid     nex.dbentity.sgdid%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.complex_accession != NEW.complex_accession) THEN
+        PERFORM nex.insertupdatelog('COMPLEXDBENTITY'::text, 'COMPLEX_ACCESSION'::text, OLD.dbentity_id, OLD.complex_accession, NEW.complex_accession, USER);
+    END IF;
+
+    IF (OLD.intact_id != NEW.intact_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXDBENTITY'::text, 'INTACT_ID'::text, OLD.dbentity_id, OLD.intact_id, NEW.intact_id, USER);
+    END IF;
+
+    IF (OLD.systematic_name != NEW.systematic_name) THEN
+        PERFORM nex.insertupdatelog('COMPLEXDBENTITY'::text, 'SYSTEMATIC_NAME'::text, OLD.dbentity_id, OLD.systematic_name, NEW.systematic_name, USER);
+    END IF;
+
+    IF (OLD.eco_id != NEW.eco_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEXDBENTITY'::text, 'ECO_ID'::text, OLD.dbentity_id, OLD.eco_id::text, NEW.eco_id::text, USER);
+    END IF;
+
+    IF (OLD.description != NEW.description) THEN
+        PERFORM nex.insertupdatelog('COMPLEXDBENTITY'::text, 'DESCRIPTION'::text, OLD.dbentity_id, OLD.description, NEW.description, USER);
+    END IF;
+
+    IF (((OLD.properties IS NULL) AND (NEW.properties IS NOT NULL)) OR ((OLD.properties IS NOT NULL) AND (NEW.properties IS NULL)) OR (OLD.properties != NEW.properties)) THEN
+            PERFORM nex.insertupdatelog('COMPLEXDBENTITY'::text, 'PROPERTIES'::text, OLD.dbentity_id, OLD.properties, NEW.properties, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+        SELECT sgdid INTO v_sgdid
+        FROM nex.dbentity
+        WHERE dbentity_id = OLD.dbentity_id;
+
+        UPDATE nex.sgdid SET sgdid_status = 'Deleted'
+        WHERE display_name = v_sgdid;
+
+        v_row := OLD.dbentity_id || '[:]' || OLD.complex_accession || '[:]' ||  
+                 OLD.intact_id || '[:]' ||
+                 OLD.systematic_name || '[:]' ||  OLD.eco_id || '[:]' ||
+                 OLD.description || '[:]' ||  coalesce(OLD.properties,'');
+
+        PERFORM nex.insertdeletelog('COMPLEXDBENTITY'::text, OLD.dbentity_id, v_row, USER);
+
+    RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexdbentity_audr
+AFTER UPDATE OR DELETE ON nex.complexdbentity FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexdbentity_audr();
+
+DROP TRIGGER IF EXISTS complexdbentity_bur ON nex.complexdbentity CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexdbentity_bur() RETURNS trigger AS $BODY$
+BEGIN
+
+    IF (NEW.dbentity_id != OLD.dbentity_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+RETURN NEW;
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexdbentity_bur
+BEFORE UPDATE ON nex.complexdbentity FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexdbentity_bur();
+
+DROP TRIGGER IF EXISTS complexalias_audr ON nex.complex_alias CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexalias_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+     IF (OLD.display_name != NEW.display_name) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_ALIAS'::text, 'DISPLAY_NAME'::text, OLD.alias_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+    IF (((OLD.obj_url IS NULL) AND (NEW.obj_url IS NOT NULL)) OR ((OLD.obj_url IS NOT NULL) AND (NEW.obj_url IS NULL)) OR (OLD.obj_url != NEW.obj_url)) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_ALIAS'::text, 'OBJ_URL'::text, OLD.alias_id, OLD.obj_url, NEW.obj_url, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_ALIAS'::text, 'SOURCE_ID'::text, OLD.alias_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    IF (OLD.complex_id != NEW.complex_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_ALIAS'::text, 'COMPLEX_ID'::text, OLD.alias_id, OLD.complex_id::text, NEW.complex_id::text, USER);
+    END IF;
+
+    IF (OLD.alias_type != NEW.alias_type) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_ALIAS'::text, 'ALIAS_TYPE'::text, OLD.alias_id, OLD.alias_type, NEW.alias_type, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.alias_id || '[:]' || OLD.display_name || '[:]' ||
+             coalesce(OLD.obj_url,'') || '[:]' || OLD.source_id || '[:]' ||
+             OLD.complex_id || '[:]' || OLD.alias_type || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+          PERFORM nex.insertdeletelog('COMPLEX_ALIAS'::text, OLD.alias_id, v_row, USER);
+
+    RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexalias_audr
+AFTER UPDATE OR DELETE ON nex.complex_alias FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexalias_audr();
+
+DROP TRIGGER IF EXISTS complexalias_biur ON nex.complex_alias CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexalias_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+    NEW.created_by := upper(NEW.created_by);
+    PERFORM nex.checkuser(NEW.created_by);
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.alias_id != OLD.alias_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexalias_biur
+BEFORE INSERT OR UPDATE ON nex.complex_alias FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexalias_biur();
+
+DROP TRIGGER IF EXISTS complexreference_audr ON nex.complex_reference CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexreference_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.complex_id != NEW.complex_id) THEN
+	PERFORM nex.insertupdatelog('COMPLEX_REFERENCE'::text, 'COMPLEX_ID'::text, OLD.complex_reference_id, OLD.complex_id::text, NEW.complex_id::text, USER);
+    END IF;
+
+     IF (OLD.reference_id != NEW.reference_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_REFERENCE'::text, 'REFERENCE_ID'::text, OLD.complex_reference_id, OLD.reference_id::text, NEW.reference_id::text, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+     PERFORM nex.insertupdatelog('COMPLEX_REFERENCE'::text, 'SOURCE_ID'::text, OLD.complex_reference_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.complex_reference_id || '[:]' || OLD.complex_id || '[:]' ||
+             OLD.reference_id || '[:]' || OLD.source_id || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('COMPLEX_REFERENCE'::text, OLD.complex_reference_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexreference_audr
+AFTER UPDATE OR DELETE ON nex.complex_reference FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexreference_audr();
+
+DROP TRIGGER IF EXISTS complexreference_biur ON nex.complex_reference CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexreference_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := upper(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.complex_reference_id != OLD.complex_reference_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexreference_biur
+BEFORE INSERT OR UPDATE ON nex.complex_reference FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexreference_biur();
+
+DROP TRIGGER IF EXISTS complexgo_audr ON nex.complex_go CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexgo_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.complex_id != NEW.complex_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_GO'::text, 'COMPLEX_ID'::text, OLD.complex_go_id, OLD.complex_id::text, NEW.complex_id::text, USER);
+    END IF;
+
+     IF (OLD.go_id != NEW.go_id) THEN
+        PERFORM nex.insertupdatelog('COMPLEX_GO'::text, 'GO_ID'::text, OLD.complex_go_id, OLD.go_id::text, NEW.go_id::text, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+	 PERFORM nex.insertupdatelog('COMPLEX_GO'::text, 'SOURCE_ID'::text, OLD.complex_go_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.complex_go_id || '[:]' || OLD.complex_id || '[:]' ||
+             OLD.go_id || '[:]' || OLD.source_id || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('COMPLEX_GO'::text, OLD.complex_go_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexgo_audr
+AFTER UPDATE OR DELETE ON nex.complex_go FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexgo_audr();
+
+DROP TRIGGER IF EXISTS complexgo_biur ON nex.complex_go CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_complexgo_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := upper(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.complex_go_id != OLD.complex_go_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER complexgo_biur
+BEFORE INSERT OR UPDATE ON nex.complex_go FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_complexgo_biur();
 
 
 DROP TRIGGER IF EXISTS filedbentity_audr ON nex.filedbentity CASCADE;
