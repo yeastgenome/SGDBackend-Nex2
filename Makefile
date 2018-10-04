@@ -60,7 +60,7 @@ refresh-cache:
 	source dev_variables.sh && python src/loading/scrapy/pages/spiders/pages_spider.py
 
 index-es:
-	source dev_variables.sh && python scripts/search/index_elastic_search.py
+	source dev_variables.sh && python scripts/search/index_es_test.py
 
 index-es-prod:
 	source prod_variables.sh && python scripts/search/index_elastic_search.py
