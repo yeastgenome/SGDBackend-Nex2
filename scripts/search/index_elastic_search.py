@@ -501,34 +501,6 @@ def index_reserved_names():
         keys = [reserved_name.display_name.lower()]
         # change name if has an orf
         if reserved_name.locus_id:
-            locus = DBSession.query(Locusdbentity).filter(
-                Locusdbentity.dbentity_id ==
-                reserved_name.locus_id).one_or_none()
-            name = name + " / " + locus.systematic_name
-            href = locus.obj_url
-            keys = []
-        obj = {
-            "name": name,
-            "href": href,
-            "description": reserved_name.name_description,
-            "category": "reserved_name",
-            "keys": keys
-        }
-        es.index(
-            index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
-
-
-def index_reserved_names():
-    # only index reservednames that do not have a locus associated with them
-    reserved_names = DBSession.query(Reservedname).all()
-
-    print("Indexing " + str(len(reserved_names)) + " reserved names")
-    for reserved_name in reserved_names:
-        name = reserved_name.display_name
-        href = reserved_name.obj_url
-        keys = [reserved_name.display_name.lower()]
-        # change name if has an orf
-        if reserved_name.locus_id:
             locus = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id == reserved_name.locus_id).one_or_none()
             name = name + " / " + locus.systematic_name
             href = locus.obj_url
