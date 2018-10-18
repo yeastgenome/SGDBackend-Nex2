@@ -681,7 +681,7 @@ class Index(object):
 
 
     def index_go_terms(self):
-        go_id_blacklist = load_go_id_blacklist("scripts/search/go_id_blacklist.lst")
+        go_id_blacklist = self.load_go_id_blacklist("scripts/search/go_id_blacklist.lst")
         gos = DBSession.query(Go).all()
         self.print_index_msg((len(gos) - len(go_id_blacklist)), "GO terms")
         bulk_data = []
