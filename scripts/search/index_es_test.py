@@ -870,6 +870,32 @@ class Index(object):
         if len(bulk_data) > 0:
             self.bulk_index(bulk_data)
 
+    def index_blog_posts(self):
+        blog_posts = IndexESHelper.get_blog_posts()
+        self.print_index_msg(len(blog_posts), "blog posts")
+        bulk_data = []
+
+        for blog in blog_posts:
+            obj = {
+                "title": blog['title'],
+                "href": blog['guid'],
+                "description": blog['excerpt'],
+                "author": blog['author'],
+                "year": str(blog['year']),
+                "month": blog['month'],
+                "category": "blogs",
+                "categories": blog['categories'],
+                "tags": blog['tags']
+            }
+            bulk_data.append(self.create_bulk_data_index(str(uuid.uuid4())))
+            bulk_data.append(obj)
+            if len(bulk_data) == 100:
+                self.bulk_index(bulk_data)
+                bulk_data = []
+        if len(bulk_data) > 0:
+            self.bulk_index(bulk_data)
+
+
     def cleanup(self):
         self.delete_mapping()
         self.put_mapping()
@@ -888,6 +914,7 @@ def index_part_1(obj):
     obj.index_observables()
     obj.index_reserved_names()
     obj.index_colleagues()
+    obj.index_blog_posts()
 
 def index_part_2(obj):
     obj.index_phenotypes()

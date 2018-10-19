@@ -5,6 +5,8 @@ from mapping import mapping
 import os
 import requests
 import json
+from dateutil import parser
+from math import ceil
 from multiprocess import Pool
 
 engine = create_engine(os.environ["NEX2_URI"], pool_recycle=3600)
@@ -631,3 +633,44 @@ class IndexESHelper:
     @classmethod
     def get_readme_file(cls, id):
         _data = DBSession.query(Filedbentity).filter_by(Filedbentity.dbentity_id == id).all()
+
+
+    @classmethod
+    def get_blog_posts(cls):
+        try:
+            BLOG_BASE_URL = 'https://public-api.wordpress.com/rest/v1.1/sites/yeastgenomeblog.wordpress.com/posts'
+            REQUEST_TIMEOUT = 2
+            # The Wordpress REST API doesn't let you fetch all blog posts at a single time.
+            # So we have to fetch records one page at a time
+            page_filter = '?page='
+            # Page numbers start from 1
+            page_num = 1
+            # Default number of records per page is 20
+            records_per_page = 20
+            response = requests.get(BLOG_BASE_URL, timeout=REQUEST_TIMEOUT)
+            num_blogs = json.loads(response.text)['found']
+            json_blogs = json.loads(response.text)['posts']
+            num_pages = int(ceil(float(num_blogs)/records_per_page))
+            # Add the blogs from page 1 to result
+            blog_posts = [blog for blog in json_blogs]
+
+            for page_num in xrange(2, num_pages+1):
+                wp_url = '{}{}{}'.format(BLOG_BASE_URL, page_filter, page_num)
+                response = requests.get(wp_url, timeout=REQUEST_TIMEOUT)
+                json_blogs = json.loads(response.text)['posts']
+                blog_posts.extend(blog for blog in json_blogs)
+
+            for post in blog_posts:
+                post = cls.add_simple_date_to_post(post)
+        except Exception, e:
+            blog_posts = []
+        return blog_posts
+
+
+    @classmethod
+    def add_simple_date_to_post(cls, raw):
+        year = parser.parse(raw['date']).strftime("%Y")
+        month = parser.parse(raw['date']).strftime("%B")
+        raw['year'] = year
+        raw['month'] = month
+        return raw
