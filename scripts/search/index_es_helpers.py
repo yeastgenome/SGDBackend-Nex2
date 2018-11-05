@@ -650,6 +650,7 @@ class IndexESHelper:
             response = requests.get(BLOG_BASE_URL, timeout=REQUEST_TIMEOUT)
             num_blogs = json.loads(response.text)['found']
             json_blogs = json.loads(response.text)['posts']
+            print json_blogs
             num_pages = int(ceil(float(num_blogs)/records_per_page))
             # Add the blogs from page 1 to result
             blog_posts = [blog for blog in json_blogs]

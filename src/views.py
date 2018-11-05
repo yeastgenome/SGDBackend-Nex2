@@ -122,7 +122,9 @@ def search(request):
                       ("keywords", "keywords"), ("colleague_loci",
                                                  "colleague_loci")],
         "download": [("topic", "topic"), ("data", "data"), ("keyword", "keyword"), ("format", "format"),
-                     ("status", "status"), ("year", "year")]
+                     ("status", "status"), ("year", "year")],
+        "download": [('title', 'title'), ('description', 'description'), ('author', 'author'), ('year','year'),
+                 ('month', 'month'), ('categories', 'categories'), ('tags', 'tags')]
     }
 
     search_fields = [
@@ -167,12 +169,16 @@ def search(request):
         "year",
         "readme_url",
         "chebiid",
+        "title",
+        "categories",
+        "tags"
     ]  # year not inserted, have to change to str in mapping
 
     json_response_fields = [
         'name', 'href', 'description', 'category', 'bioentity_id',
         'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'aliases', 'year',
-        'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
+        'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag',
+        'title', 'categories', 'tags'
     ]
 
     args = {}
