@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 from mapping import mapping
 import os
 import requests
+import re
 import json
 from dateutil import parser
 from math import ceil
@@ -662,6 +663,7 @@ class IndexESHelper:
 
             for post in blog_posts:
                 post = cls.add_simple_date_to_post(post)
+                post = cls.strip_html_from_blog_desc(post)
         except Exception, e:
             blog_posts = []
         return blog_posts
@@ -673,4 +675,12 @@ class IndexESHelper:
         month = parser.parse(raw['date']).strftime("%B")
         raw['year'] = year
         raw['month'] = month
+        return raw
+
+
+    @classmethod
+    def strip_html_from_blog_desc(cls, raw):
+        remove_tags = re.compile('<.*?>')
+        raw['excerpt'] = re.sub(remove_tags, '', raw['excerpt'])
+        raw['content'] = re.sub(remove_tags, '', raw['content'])
         return raw

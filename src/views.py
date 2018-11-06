@@ -66,7 +66,7 @@ def search(request):
     name_flag = False
     sys_flag = False
 
-    if len(query_temp_arr) > 3:
+    if len(query_temp_arr) > 10:
         return {
             'total': [],
             'results': [],
@@ -123,8 +123,8 @@ def search(request):
                                                  "colleague_loci")],
         "download": [("topic", "topic"), ("data", "data"), ("keyword", "keyword"), ("format", "format"),
                      ("status", "status"), ("year", "year")],
-        "download": [('title', 'title'), ('description', 'description'), ('author', 'author'), ('year','year'),
-                 ('month', 'month'), ('categories', 'categories'), ('tags', 'tags')]
+        "blog": [('description', 'description'), ('author', 'author'), ('year','year'),
+                 ('month', 'month'), ('categories', 'categories'), ('tags', 'tags'), ('content', 'content')]
     }
 
     search_fields = [
@@ -171,14 +171,16 @@ def search(request):
         "chebiid",
         "title",
         "categories",
-        "tags"
+        "tags",
+        "content",
+        "month"
     ]  # year not inserted, have to change to str in mapping
 
     json_response_fields = [
         'name', 'href', 'description', 'category', 'bioentity_id',
         'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'aliases', 'year',
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag',
-        'title', 'categories', 'tags'
+        'categories', 'tags', 'content', 'month'
     ]
 
     args = {}

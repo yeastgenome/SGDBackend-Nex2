@@ -446,16 +446,7 @@ es_mapping = {
                             "index": "not_analyzed"
                         }
                     }
-                }
-                "title": {
-                    "type": "string",
-                    "fields": {
-                        "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
-                        }
-                    }
-                }
+                },
                 "categories": {
                     "type": "string",
                     "fields": {
@@ -464,8 +455,17 @@ es_mapping = {
                             "index": "not_analyzed"
                         }
                     }
-                }
+                },
                 "tags": {
+                    "type": "string",
+                    "fields": {
+                        "raw": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        }
+                    }
+                },
+                "month": {
                     "type": "string",
                     "fields": {
                         "raw": {
