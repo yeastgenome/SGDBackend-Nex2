@@ -209,14 +209,14 @@ es_mapping = {
                     }
                 },
                 "country": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         }
                     }

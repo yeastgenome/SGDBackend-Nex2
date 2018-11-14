@@ -185,7 +185,7 @@ def build_search_query(query, search_fields, category, category_filters, args):
     if category == '':
         return es_query
 
-    query = {
+    '''query = {
         'filtered': {
             'query': es_query,
             'filter': {
@@ -194,18 +194,25 @@ def build_search_query(query, search_fields, category, category_filters, args):
                 }
             }
         }
+    }'''
+    query = {
+            'query': es_query,
+            'filter': {
+                'term': {'category': category}
+            }
     }
 
     if category in category_filters.keys():
         for item in category_filters[category]:
             if args.get(item[1]):
                 for param in args.get(item[1]):
-                    query['filtered']['filter']['bool']['must'].append({
+                    query['bool']['filter'].append({
                         'term': {
                             (item[1] + ".raw"): param
                         }
                     })
 
+    import pdb; pdb.set_trace()
     return query
 
 
@@ -247,6 +254,7 @@ def build_search_params(query, search_fields):
             es_query['dis_max']['queries'].append({'match': match})
             es_query['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
 
+    import pdb; pdb.set_trace()
     return es_query
 
 

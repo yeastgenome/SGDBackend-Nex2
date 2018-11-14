@@ -40,96 +40,100 @@ mapping = {
         "searchable_item": {
             "properties": {
                 "name": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         },
-                        "autocomplete": {
-                            "type": "string",
-                            "analyzer": "autocomplete"
-                        }
+                        "suggest": {
+                            "type": "completion"
+                        },
                     }
                 },
                 "category": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "href": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "text",
+                    "fielddata": True,
+                    "fielddata": True
                 },
                 "first_name": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "last_name": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "institution": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "position": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "country": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "state": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "colleague_loci": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         },
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         }
 
@@ -139,103 +143,109 @@ mapping = {
                     "type": "integer"
                 },
                 "feature_type": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "name_description": {
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "summary": {
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "phenotypes": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         }
                     }
                 },
                 "cellular_component": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "biological_process": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "molecular_function": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "ec_number": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "protein": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         }
                     }
                 },
                 "tc_number": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "secondary_sgdid": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "sequence_history": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "gene_history": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "bioentity_id": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "chebiid": {
@@ -243,64 +253,67 @@ mapping = {
                     "analyzer": "symbols"
                 },
                 "keys": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "status": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "observable": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "qualifier": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "references": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "phenotype_loci": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         },
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         }
 
@@ -308,259 +321,264 @@ mapping = {
                 },
                 
                 "chemical": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "mutant_type": {
-                    "type": "string",
+                    "type": "keyword",
                     "fields": {
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         },
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "synonyms": {
-                    "type": "string"
+                    "type": "keyword"
                 },
                 "go_id": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols"
                 },
                 "gene_ontology_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         },
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         }
 
                     }
                 },
                 "do_id": {
-                    "type": "string",
+                    "type": "text",
                     "analyzer": "symbols"
                 },
                 "disease_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         },
                         "symbol": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "symbols"
                         }
 
                     }
                 },
                 "author": {
-                    "type": "string",
+                    "type": "text",
+                    "fielddata": True,
                     "analyzer": "symbols",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "journal": {
-                    "type": "string",
+                    "type": "text",
                     "analyzer": "symbols",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "year": {
-                    "type": "string",
+                    "type": "text",
                     "analyzer": "symbols",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "reference_loci": {
-                    "type": "string",
+                    "type": "text",
                     "analyzer": "symbols",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": False
                         }
                     }
                 },
                 "aliases": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "format": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "keyword": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "file_size": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "readme_url": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "topic": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "data": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "is_quick_flag": {
-                        "type": "string",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "categories": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                    },
                 "tags": {
-                        "type": "string",
+                        "type": "text",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
                         }
                     },
                 "month": {
-                        "type": "string",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
-                                "type": "string",
-                                "index": "not_analyzed"
+                                "type": "keyword",
+                                "index": False
                             },
                             "symbol": {
-                                "type": "string",
+                                "type": "text",
                                 "analyzer": "symbols"
                             }
 
