@@ -35,6 +35,7 @@ import ColleaguesIndex from './containers/colleagues/index';
 import ColleaguesShow from './containers/colleagues/show';
 // import AuthorResponse from './containers/authorResponse/index';
 import NewColleague from './containers/colleagues/new';
+import FileCurate from './containers/fileCurate';
 
 
 export default (
@@ -76,6 +77,7 @@ export default (
       <Route component={NewColleague} path='new_colleague' />
       <Route component={NewGeneNameReservation} path='new_reservation' />
     </Route>
+    <Route component={requireAuthentication(FileCurate)} path='file_curate' />
     <Route component={NotFound} path='*' />
   </Route>
 );
