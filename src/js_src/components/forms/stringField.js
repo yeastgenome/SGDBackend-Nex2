@@ -1,5 +1,18 @@
 import React, { Component } from 'react';
 
+/**
+ * Renders single line input field
+ * @prop {string} defaultValue : default text value
+ * @prop {string} displayName : clabel
+ * @prop {string} iconClass : font-awesome icon class
+ * @prop {boolean} isReadOnly : read/write flag
+ * @prop {string} paramName : component name
+ * @prop {string} placeholder : placeholder text
+ * @func {object} _renderReadOnly: render read-only component
+ * @func {object} _renderEdit: render writeable component
+ * @func {object} _renderIcon: render font-awesome icon
+ */
+
 class StringField extends Component {
   _renderReadOnly () {
     return (
