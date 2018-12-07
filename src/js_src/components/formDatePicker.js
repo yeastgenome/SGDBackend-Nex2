@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+<<<<<<< HEAD
 import DayPickerInput from 'react-day-picker/DayPickerInput';
 import { DateUtils } from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
@@ -15,11 +16,29 @@ class FormDatePicker extends Component{
 
   }
 
+=======
+import DatePicker from 'react-datepicker';
+import moment from 'moment';
+
+import 'react-datepicker/dist/react-datepicker.css';
+
+class FormDatePicker extends Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      startDate: moment()
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+
+  }
+>>>>>>> added datetime component
   handleChange(date) {
     this.setState({startDate: date});
   }
 
   render(){
+<<<<<<< HEAD
     return (
         <div>
           <DayPickerInput
@@ -45,4 +64,10 @@ function formatDate(date, format, locale){
   return dateFnsFormat(date, format, {locale});
 }
 
+=======
+    return (<DatePicker selected={this.state.startDate} onChange={this.handleChange} />);
+  }
+}
+
+>>>>>>> added datetime component
 export default FormDatePicker;
