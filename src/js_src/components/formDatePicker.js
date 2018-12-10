@@ -3,12 +3,12 @@ import DatePicker from 'react-datepicker';
 import moment from 'moment';
 
 import 'react-datepicker/dist/react-datepicker.css';
-
+/* eslint-disable no-debugger */
 class FormDatePicker extends Component{
   constructor(props){
     super(props);
     this.state = {
-      startDate: moment()
+      startDate: moment().toDate()
     };
 
     this.handleChange = this.handleChange.bind(this);
@@ -19,7 +19,9 @@ class FormDatePicker extends Component{
   }
 
   render(){
-    return (<DatePicker selected={this.state.startDate} onChange={this.handleChange} />);
+    let dt = <div><DatePicker selected={new Date()} onChange={this.handleChange} /></div>;
+    debugger;
+    return dt ? (dt) : (<div>Not found</div>);
   }
 }
 
