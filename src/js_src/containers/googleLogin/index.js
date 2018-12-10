@@ -1,4 +1,5 @@
 /* eslint-disable react/no-set-state */
+/* eslint-disable no-debugger */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
@@ -22,7 +23,7 @@ class GoogleLogin extends Component {
       isPending: false
     };
   }
-  
+
   // google login setup, adjusted for react
   componentDidMount () {
     if (document) {
@@ -43,12 +44,13 @@ class GoogleLogin extends Component {
     let fetchOptions = {
       type: 'POST',
       headers: {
-        'X-CSRF-Token': window.CSRF_TOKEN,        
+        'X-CSRF-Token': window.CSRF_TOKEN,
         'Content-Type': 'application/json'
       },
       data: params
     };
     fetchData(AUTH_URL, fetchOptions).then( (data) => {
+
       this.setState({ isPending: false });
       let nextUrl = this.props.queryParams.next || DEFAULT_AUTH_LANDING;
       this.props.dispatch(authenticateUser(data.username));
@@ -58,13 +60,14 @@ class GoogleLogin extends Component {
       this.props.dispatch(setError('There was an error with your login. Make sure that you are logged into Google with your Stanford email address. You may need to refresh the page.'));
     });
   }
-  
+
   onSignIn (googleUser) {
     _this.setState({ isPending: true });
     _this.fetchAuth(googleUser.getAuthResponse().id_token);
   }
 
   _renderLoginButton () {
+    debugger;
     if (this.state.isPending) {
       return <Loader />;
     }
