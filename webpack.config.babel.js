@@ -22,8 +22,9 @@ let config = {
     filename: '[name].[hash].js',
     chunkFilename: '[id].[hash].js'
   },
-  devtool: 'eval-source-map',
+  devtool: 'cheap-module-inline-source-map',
   devServer: {
+    stats: 'errors-only',
     contentBase: 'public',
     historyApiFallback: true
   },
