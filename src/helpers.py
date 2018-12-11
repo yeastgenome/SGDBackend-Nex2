@@ -480,7 +480,7 @@ def file_upload_to_dict(file_upload, delimiter="\t"):
         return list_dictionary
 
 
-def send_newsletter_email(subject,recipients,msg):
+def send_newsletter_email(subject, recipients, msg):
     try:
         SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>" 
         REPLY_TO = "sgd-helpdesk@lists.stanford.edu"
@@ -505,17 +505,16 @@ def send_newsletter_email(subject,recipients,msg):
             error_message = "Email sending unsuccessful for this recipients " + error_message
             return {"error": error_message}
                 
-        
-        return {"success":"Email was successfully sent."}
+        return {"success": "Email was successfully sent."}
 
     except SMTPHeloError as e:
-        return {"error","The server didn't reply properly to the helo greeting. "}
+        return {"error", "The server didn't reply properly to the helo greeting. "}
     except SMTPRecipientsRefused as e:
-        return {"error","The server rejected ALL recipients (no mail was sent)."}
+        return {"error", "The server rejected ALL recipients (no mail was sent)."}
     except SMTPSenderRefused as e:
-        return {"error","The server didn't accept the sender's email"}
+        return {"error", "The server didn't accept the sender's email"}
     except SMTPDataError as e:
-        return {"error","The server replied with an unexpected"}
+        return {"error", "The server replied with an unexpected"}
     except Exception as e:
         return {"error":"Error occured while sending email."}
 

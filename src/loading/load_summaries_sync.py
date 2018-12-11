@@ -96,7 +96,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
             summary_text = item.get('Summary', '')
 
             if gene_id:
-                file_gene_ids.append(gene_id.strip())
+                file_gene_ids.append(gene_id.strip()) 
             if summary_type:
                 gene_id_with_summary = gene_id + summary_type
                 if gene_id_with_summary in already_used_genes:
