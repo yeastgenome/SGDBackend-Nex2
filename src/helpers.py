@@ -556,6 +556,8 @@ def update_curate_activity(locus_summary_object):
         raise(e)
         
     return flag
+
+    
 def set_string_format(str_param, char_format='_'):
     ''' format given string to replace space with underscore character
     Parameters
