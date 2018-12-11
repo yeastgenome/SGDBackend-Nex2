@@ -606,4 +606,3 @@ def get_file_delimiter(file_upload):
     else:
         raise ValueError(
             'file format error, acceptable formats are txt, tsv, xls')
-
