@@ -8,8 +8,9 @@ import os
 import re
 from sqlalchemy import create_engine, and_, not_
 from src.models import DBSession, Locussummary, LocussummaryReference,\
-     Locusdbentity, Referencedbentity, Source
-from src.helpers import link_gene_names, tsv_file_to_dict
+     Locusdbentity, Referencedbentity, Source, CuratorActivity
+from src.helpers import link_gene_names, file_upload_to_dict, update_curate_activity
+from src.curation_helpers import ban_from_cache
 
 __author__ = 'tshepp'
 
@@ -70,6 +71,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
     file_pmids = []
     copied = []
     already_used_genes = []
+    clear_target_urls = []
 
     try:
         for item in file_content:
@@ -79,22 +81,23 @@ def validate_file_content_and_process(file_content, nex_session, username):
                     'File header does not match expected format. Please make your file match the template file linked below.'
                 )
             else:
+                if item.get('PMIDs'):
+                    pmids = item.get('PMIDs').replace(' ', '')
+                else:
+                    pmids = ''
                 gene_id = item.get('# Feature', '')
                 summary_type = item.get(
                     'Summary Type (phenotype, regulation)', '')
                 summary_text = item.get('Summary', '')
-                pmids = item.get('PMIDs').replace(' ', '')
                 file_gene_ids.append(gene_id.strip())
                 gene_id_with_summary = gene_id + summary_type
                 if gene_id_with_summary in already_used_genes:
                     raise ValueError(
                         'The same gene summary cannot be updated twice in the same\
-                        file: '
-                                + str(gene_id))
+                        file: ' + str(gene_id))
                 already_used_genes.append(gene_id_with_summary)
                 if summary_type not in accepted_summary_types:
-                    raise ValueError('Unaccepted summary type. Must be one of ' +
-                                    ', '.join(accepted_summary_types))
+                    raise ValueError('Unaccepted summary type. Must be one of ' + ', '.join(accepted_summary_types))
                 if len(pmids) > 0:
                     pmids = re.split('\||,', pmids)
                     for pmid in pmids:
@@ -106,9 +109,9 @@ def validate_file_content_and_process(file_content, nex_session, username):
         raise ValueError(
             'The file is not a valid TSV with the correct number of columns. Check the file and try again.'
         )
-    
+
     nex_session.execute('SET LOCAL ROLE ' + username)
-    
+
     # check that gene names are valid
     valid_genes = nex_session.query(Locusdbentity.format_name).filter(Locusdbentity.format_name.in_(file_gene_ids)).all()
     valid_genes = [ str(d[0]) for d in valid_genes ]
@@ -127,7 +130,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
     locus_names_ids = nex_session.query(Locusdbentity.display_name, Locusdbentity.sgdid).all()
     inserts = 0
     updates = 0
-    
+
     for item in copied:
         if item:
             file_id = item.get('# Feature', '')
@@ -157,7 +160,10 @@ def validate_file_content_and_process(file_content, nex_session, username):
             summary = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()[0]
             # add LocussummaryReference(s)
             if item:
-                pmids = item.get('PMIDs').replace(' ', '')
+                if item.get('PMIDs'):
+                    pmids = item.get('PMIDs').replace(' ', '')
+                else:
+                    pmids = ''
                 if len(pmids) > 0:
                     pmids = re.split('\||,', pmids)
                     for idx, pmid in enumerate(pmids):
@@ -181,24 +187,47 @@ def validate_file_content_and_process(file_content, nex_session, username):
 
             # add receipt
             summary_type_url_segment = file_summary_type.lower()
-            if summary_type_url_segment not in ['phenotype', 'regulation']:
+            if summary_type_url_segment not in ['phenotype', 'regulation', 'interaction', 'sequence', 'disease', 'protein']:
                 summary_type_url_segment = ''
             preview_url = '/locus/' + gene.sgdid + '/' + summary_type_url_segment
+            clear_target_urls.append(preview_url)
+            if summary:
+                summary_obj = {
+                    'display_name': gene.format_name,
+                    'obj_url': preview_url,
+                    'activity_category': summary.summary_type,
+                    'json': json.dumps({ 'summary_data': item}),
+                    'created_by': username,
+                    'dbentity_id': gene.dbentity_id
+                }
+                message = 'added'
+                new_curate_activity = CuratorActivity(
+                    display_name=summary_obj['display_name'],
+                    obj_url=summary_obj['obj_url'],
+                    activity_category=summary_obj['activity_category'],
+                    dbentity_id=summary_obj['dbentity_id'],
+                    message=message,
+                    json=summary_obj['json'],
+                    created_by=summary_obj['created_by']
+                )
+                nex_session.add(new_curate_activity)
             receipt_entries.append({
-                'category': 'locus', 
-                'href': preview_url, 
-                'name': gene.display_name, 
-                'type': file_summary_type, 
-                'value': file_summary_val 
+                'category': 'locus',
+                'href': preview_url,
+                'name': gene.display_name,
+                'type': file_summary_type,
+                'value': file_summary_val
             })
     transaction.commit()
     nex_session.close()
+    if len(clear_target_urls) > 0:
+        ban_from_cache(clear_target_urls)
     return {
         'inserts': inserts,
         'updates': updates,
         'entries': receipt_entries
     }
-    
+
 def load_summaries(nex_session, file_content, username, summary_type=None):
     annotation_summary = validate_file_content_and_process(file_content, nex_session, username)
     return annotation_summary

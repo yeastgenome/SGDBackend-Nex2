@@ -70,6 +70,21 @@ def get_pusher_client():
     return pusher_client
 
 def ban_from_cache(targets, is_exact=False):
+    '''
+         clear targeted cache urls
+    Paramaters
+    ----------
+    targets: list of str
+        list of urls
+    
+    Returns
+    -------
+    Doesn't return anything
+
+    Notes
+    -----
+    ban command invalidates specified url(s)
+    '''
     # ignore if developing against local db
     if 'localhost' in os.environ['NEX2_URI']:
         return

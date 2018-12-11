@@ -7126,6 +7126,7 @@ class Locussummary(Base):
             'value': self.text
         }
 
+   
 class LocussummaryReference(Base):
     __tablename__ = 'locussummary_reference'
     __table_args__ = (
