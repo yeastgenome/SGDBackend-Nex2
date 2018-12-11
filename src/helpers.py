@@ -16,7 +16,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease
+from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
+from src.curation_helpers import ban_from_cache, get_curator_session
 
 import logging
 log = logging.getLogger(__name__)
@@ -450,24 +451,23 @@ def primer3_parser(primer3_results):
     return list(map(primer_pairs.get, sorted(primer_pairs.keys()))), notes
 
 
-def tsv_file_to_dict(tsv_file):
-    # import pdb ; pdb.set_trace()
+def file_upload_to_dict(file_upload):
     ''' parse file to list of dictionaries
 
     Paramaters
     ----------
-    file: tsv_file object
+    file: file_upload object
 
     Returns
     -------
     list
-        dictionary: each file row becomes a dictionary with column header
+        dictionary: each file row becomes a dictionary with column headers
                     as keys.
 
     '''
     list_dictionary = []
-    if(tsv_file):
-        csv_obj = csv.DictReader(tsv_file, dialect='excel-tab')
+    if(file_upload):
+        csv_obj = csv.DictReader(file_upload, dialect='excel-tab')
         for item in csv_obj:
             list_dictionary.append(
                 {k: v for k, v in item.items() if k is not None}
@@ -477,7 +477,7 @@ def tsv_file_to_dict(tsv_file):
         return list_dictionary
 
 
-def send_newsletter_email(subject,recipients,msg):
+def send_newsletter_email(subject, recipients, msg):
     try:
         SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>" 
         REPLY_TO = "sgd-helpdesk@lists.stanford.edu"
@@ -502,16 +502,56 @@ def send_newsletter_email(subject,recipients,msg):
             error_message = "Email sending unsuccessful for this recipients " + error_message
             return {"error": error_message}
                 
-        
-        return {"success":"Email was successfully sent."}
+        return {"success": "Email was successfully sent."}
 
     except SMTPHeloError as e:
-        return {"error","The server didn't reply properly to the helo greeting. "}
+        return {"error", "The server didn't reply properly to the helo greeting. "}
     except SMTPRecipientsRefused as e:
-        return {"error","The server rejected ALL recipients (no mail was sent)."}
+        return {"error", "The server rejected ALL recipients (no mail was sent)."}
     except SMTPSenderRefused as e:
-        return {"error","The server didn't accept the sender's email"}
+        return {"error", "The server didn't accept the sender's email"}
     except SMTPDataError as e:
-        return {"error","The server replied with an unexpected"}
+        return {"error", "The server replied with an unexpected"}
     except Exception as e:
-        return {"error":"Error occured while sending email."}
+        return {"error": "Error occured while sending email."}
+
+
+# TODO: abstract this function in second release
+def update_curate_activity(locus_summary_object):
+    '''
+        Add curator locus-summary event to curator activity table
+    Paramaters
+    ----------
+    locus_summary_object: LocusSummary
+        locus-summary object
+    
+    Returns
+    -------
+    bool: The return value. True for success, False otherwise
+    '''
+    flag = False
+    try:
+        curator_session = get_curator_session(locus_summary_object['created_by'])
+        existing = curator_session.query(CuratorActivity).filter(CuratorActivity.dbentity_id == locus_summary_object['dbentity_id']).one_or_none()
+        message = 'added'
+        if existing:
+            #curator_session.delete(existing)
+            message = 'updated'
+        new_curate_activity = CuratorActivity(
+            display_name=locus_summary_object['display_name'],
+            obj_url=locus_summary_object['obj_url'],
+            activity_category=locus_summary_object['activity_category'],
+            dbentity_id=locus_summary_object['dbentity_id'],
+            message=message,
+            json=locus_summary_object['json'],
+            created_by=locus_summary_object['created_by']
+        )
+        curator_session.add(new_curate_activity)
+        transaction.commit()
+        flag = True
+    except Exception as e:
+        traceback.print_exc()
+        transaction.abort()
+        raise(e)
+        
+    return flag
