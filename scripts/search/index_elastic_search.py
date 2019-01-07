@@ -893,24 +893,17 @@ def index_part_1(obj):
 def index_part_2(obj):
     obj.index_phenotypes()
 
-def index_part_1():
-    index_phenotypes()
-    index_downloads()
-    index_not_mapped_genes()
-    index_genes()
-    index_strains()
-    index_colleagues()
-    index_chemicals()
+def index_part_3(obj):
+    obj.index_genes()
+    obj.index_chemicals()
+    obj.index_complex_names()
+    obj.index_disease_terms()
 
-
-def index_part_2():
-    index_reserved_names()
-    index_toolbar_links()
-    index_observables()
-    index_go_terms()
-    index_disease_terms()
-    index_complex_names()
-    index_references()
+def index_part_4(obj):
+    obj.index_downloads()
+    obj.index_go_terms()
+    obj.index_not_mapped_genes()
+    obj.index_references()'''
 
 
 if __name__ == "__main__":
