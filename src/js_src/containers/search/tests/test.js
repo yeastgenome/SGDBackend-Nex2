@@ -2,7 +2,7 @@ import assert from 'assert';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { createMemoryHistory } from 'react-router';
-import { Provider } from 'react-redux'
+import { Provider } from 'react-redux';
 
 import configureStore from '../../../lib/configureStore';
 import SearchContainer from '../search';
