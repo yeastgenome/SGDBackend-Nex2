@@ -164,7 +164,6 @@ class GeneNameReservation extends Component {
     if (this.state.isSuccess) {
       return this.renderSuccess();
     }
-
     let formNode = (this.state.stage === 0) ? this.renderColleagueUpdate() : this.renderResForm();
     return (
       <div>
