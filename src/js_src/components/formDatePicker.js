@@ -19,9 +19,9 @@ class FormDatePicker extends Component{
   }
 
   render(){
-    let dt = <div><DatePicker selected={new Date()} onChange={this.handleChange} /></div>;
-    debugger;
-    return dt ? (dt) : (<div>Not found</div>);
+    let dt = <DatePicker onChange={this.handleChange} />;
+    //debugger;
+    return <div>{dt}<div></div><div>Not Found</div></div>;
   }
 }
 
