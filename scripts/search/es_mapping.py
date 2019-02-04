@@ -34,177 +34,177 @@ es_mapping = {
         "searchable_item": {
             "properties": {
                 "biological_process": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "category": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "observable": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "qualifier": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "references": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "phenotype_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 
                 "keys": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "secondary_sgdid": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "chemical": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "mutant_type": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "go_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "do_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "strain": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "author": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "journal": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "year": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "first_name": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         }
                     }
                 },
                 "last_name": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         }
                     }
                 },
                 "institution": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         }
                     }
                 },
                 "position": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
@@ -213,7 +213,7 @@ es_mapping = {
                     "fields": {
                         "raw": {
                             "type": "text",
-                            "index": "not_analyzed"
+                            "index": False
                         },
                         "autocomplete": {
                             "type": "text",
@@ -222,255 +222,255 @@ es_mapping = {
                     }
                 },
                 "state": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         }
                     }
                 },
                 "colleague_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "keywords": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         }
                     }
                 },
                 "reference_loci": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "ec_number": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "tc_number": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "cellular_component": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "description": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "sequence_history": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "gene_history": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "summary": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "feature_type": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "href": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "molecular_function": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "name": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "raw"
                         },
                         "autocomplete": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "autocomplete"
                         },
                         "search": {
-                            "type": "string",
+                            "type": "text",
                             "analyzer": "default"
                         },
                     }
                 },
                 "go_id": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "do_id": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "number_annotations": {
                     "type": "integer"
                 },
                 "name_description": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "synonyms": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "phenotypes": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "aliases": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "format": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "keyword": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "status": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "file_size": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "readme_url": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "topic": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "data": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "is_quick_flag": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "categories": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "tags": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 },
                 "month": {
-                    "type": "string",
+                    "type": "text",
                     "fields": {
                         "raw": {
-                            "type": "string",
-                            "index": "not_analyzed"
+                            "type": "text",
+                            "index": False
                         }
                     }
                 }
