@@ -185,20 +185,11 @@ def build_search_query(query, search_fields, category, category_filters, args):
     if category == '':
         return es_query
 
-    '''query = {
-        'filtered': {
-            'query': es_query,
-            'filter': {
-                'bool': {
-                    'must': [{'term': {'category': category}}]
-                }
-            }
-        }
-    }'''
     query = {
-            'query': es_query,
-            'filter': {
-                'term': {'category': category}
+            'bool': {
+                'filter': {
+                    'term': {'category': category} if category else {'terms': es_query}
+                }
             }
     }
 
@@ -212,7 +203,6 @@ def build_search_query(query, search_fields, category, category_filters, args):
                         }
                     })
 
-    import pdb; pdb.set_trace()
     return query
 
 
@@ -254,7 +244,6 @@ def build_search_params(query, search_fields):
             es_query['dis_max']['queries'].append({'match': match})
             es_query['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
 
-    import pdb; pdb.set_trace()
     return es_query
 
 
@@ -312,7 +301,7 @@ def build_sequence_objects_search_query(query):
     elif ',' in query:
         search_body = {
             'query': {
-                'filtered': {
+                'bool': {
                     'filter': {
                         'terms': {
                             '_all': [q.strip() for q in query.split(',')]

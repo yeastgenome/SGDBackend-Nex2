@@ -197,7 +197,6 @@ def search(request):
                                                json_response_fields,
                                                search_fields,
                                                sort_by)
-    import pdb; pdb.set_trace()
     search_results = ESearch.search(
         index=ES_INDEX_NAME,
         body=search_body,

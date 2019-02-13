@@ -903,7 +903,7 @@ def index_part_4(obj):
     obj.index_downloads()
     obj.index_go_terms()
     obj.index_not_mapped_genes()
-    obj.index_references()'''
+    obj.index_references()
 
 
 if __name__ == "__main__":
