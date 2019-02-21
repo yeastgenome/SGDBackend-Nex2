@@ -181,16 +181,17 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
 
 def build_search_query(query, search_fields, category, category_filters, args):
     es_query = build_search_params(query, search_fields)
+    import pdb; pdb.set_trace()
 
     if category == '':
         return es_query
 
     query = {
-            'bool': {
-                'filter': {
-                    'term': {'category': category} if category else {'terms': es_query}
-                }
-            }
+        'bool': {
+            'filter': [
+                { 'term': {'category': category} },
+            ]
+        }
     }
 
     if category in category_filters.keys():
@@ -202,11 +203,12 @@ def build_search_query(query, search_fields, category, category_filters, args):
                             (item[1] + ".raw"): param
                         }
                     })
-
+    import pdb; pdb.set_trace()
     return query
 
 
 def build_search_params(query, search_fields):
+    import pdb; pdb.set_trace()
     if query == "":
         es_query = {"match_all": {}}
     else:
@@ -243,7 +245,7 @@ def build_search_params(query, search_fields):
 
             es_query['dis_max']['queries'].append({'match': match})
             es_query['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
-
+    pdb.set_trace()
     return es_query
 
 
