@@ -171,6 +171,10 @@ def main(global_config, **settings):
     config.add_route('reserved_name_promote', '/reservations/{id}/promote', request_method='PUT')
     config.add_route('new_gene_name_reservation', '/reserve', request_method='POST')
     config.add_route('healthcheck', '/healthcheck')
+
+    #swagger
+    config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_route('api_portal', '/api', request_method='GET')
     config.scan()
     config.add_static_view(name='assets', path='./build')
 
