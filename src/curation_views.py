@@ -31,8 +31,6 @@ log = logging.getLogger()
 models_helper = ModelsHelper()
 
 
-
-
 def authenticate(view_callable):
     def inner(context, request):
         if 'email' not in request.session or 'username' not in request.session:
