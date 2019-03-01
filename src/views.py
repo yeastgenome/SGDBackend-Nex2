@@ -667,6 +667,10 @@ def disease_locus_details_all(request):
 
 @view_config(route_name='locus', renderer='json', request_method='GET')
 def locus(request):
+<<<<<<< HEAD
+=======
+    #import pdb; pdb.set_trace()
+>>>>>>> minor changes
     id = extract_id_request(request, 'locus', param_name="sgdid")
     try:
         locus = get_locus_by_id(id)
@@ -675,6 +679,10 @@ def locus(request):
         else:
             return HTTPNotFound()
     except Exception as e:
+<<<<<<< HEAD
+=======
+        import pdb; pdb.set_trace()
+>>>>>>> minor changes
         print(e)
         return HTTPNotFound()
 
@@ -741,6 +749,7 @@ def locus_expression_graph(request):
 
 @view_config(route_name='locus_literature_details', renderer='json', request_method='GET')
 def locus_literature_details(request):
+    import pdb; pdb.set_trace()
     id = extract_id_request(request, 'locus')
     locus = get_locus_by_id(id)
     if locus:
@@ -1436,20 +1445,16 @@ def healthcheck(request):
 
 
 # api portal with swagger
-@view_config(route_name='api_portal', renderer='json')
+'''@view_config(route_name='api_portal', renderer='json')
 def api_portal(request):
     request.response.headers.update({
        'Access-Control-Allow-Origin': '*',
        'Access-Control-Allow-Methods': 'POST,GET,DELETE,PUT,OPTIONS',
        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization'
     })
-<<<<<<< HEAD
-=======
-    #import pdb ; pdb.set_trace()
->>>>>>> minor changes
     json_file = os.path.join(str(Path(__file__).parent.parent), "api_docs/swagger.json")
     with open(json_file) as f:
         data = json.load(f)
 
-    return data
+    return data '''
 
