@@ -1443,6 +1443,10 @@ def api_portal(request):
        'Access-Control-Allow-Methods': 'POST,GET,DELETE,PUT,OPTIONS',
        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization'
     })
+<<<<<<< HEAD
+=======
+    #import pdb ; pdb.set_trace()
+>>>>>>> minor changes
     json_file = os.path.join(str(Path(__file__).parent.parent), "api_docs/swagger.json")
     with open(json_file) as f:
         data = json.load(f)
