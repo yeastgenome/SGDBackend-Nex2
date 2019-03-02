@@ -14,7 +14,7 @@
         }
     },
     "host":"localhost:6543",
-    "basePath": "/",
+    "basePath": "/backend",
     "tags": [],
     "schemes": [
         "http","https"
