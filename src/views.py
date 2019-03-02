@@ -712,7 +712,6 @@ def locus_expression_graph(request):
 
 @view_config(route_name='locus_literature_details', renderer='json', request_method='GET')
 def locus_literature_details(request):
-    import pdb; pdb.set_trace()
     id = extract_id_request(request, 'locus')
     locus = get_locus_by_id(id)
     if locus:
