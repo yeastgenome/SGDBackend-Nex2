@@ -99,7 +99,7 @@ def colleague_by_format_name(request):
         if(colleague.is_in_triage):
             return HTTPNotFound(body=json.dumps({'error': 'Colleague not found'}))
         else:
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             result = colleague.to_dict()
             return result
     else:
