@@ -169,7 +169,7 @@ def main(global_config, **settings):
 
     #swagger
     #config.add_static_view('static', 'static', cache_max_age=3600)
-    #config.add_route('api_portal', '/api', request_method='GET')
+    config.add_route('api_portal', '/api', request_method='GET')
     config.scan()
     config.add_static_view(name='assets', path='./build')
 
