@@ -1444,7 +1444,7 @@ def healthcheck(request):
 
 
 # api portal with swagger
-'''@view_config(route_name='api_portal', renderer='json')
+@view_config(route_name='api_portal', renderer='json')
 def api_portal(request):
     request.response.headers.update({
        'Access-Control-Allow-Origin': '*',
@@ -1455,5 +1455,5 @@ def api_portal(request):
     with open(json_file) as f:
         data = json.load(f)
 
-    return data '''
+    return data
 
