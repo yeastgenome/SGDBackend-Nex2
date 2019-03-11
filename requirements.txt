@@ -89,9 +89,9 @@ packaging==16.8
 paramiko==2.4.1
 parsel==1.2.0
 PasteDeploy==1.5.2
+pathlib==1.0.1
 pathlib2==2.3.0
 pbr==1.8.1
-pdb==0.1
 pep8==1.7.1
 pexpect==4.3.1
 pickleshare==0.7.4
@@ -136,6 +136,7 @@ readline==6.2.4.1
 redis==2.10.5
 repoze.lru==0.6
 requests==2.9.0
+rfc3987==1.3.8
 rsa==3.2.3
 Rx==1.6.0
 s3transfer==0.1.13
@@ -143,7 +144,7 @@ say==1.6.4
 scandir==1.6
 Scrapy==1.3.3
 service-identity==17.0.0
--e git+https://github.com/yeastgenome/SGDBackend-Nex2.git@83680e53f1c5c72d929b52a3b9a872acdbe26e4a#egg=SGDBackend
+-e git+https://github.com/yeastgenome/SGDBackend-Nex2.git@2878640ddd17c71b5a0aaabdb790f5424d76260f#egg=SGDBackend
 show==1.6.0
 simplegeneric==0.8.1
 simplejson==3.16.0
@@ -152,6 +153,7 @@ singledispatch==3.4.0.3
 six==1.11.0
 sqlacodegen==1.1.6
 SQLAlchemy==1.0.10
+strict-rfc3339==0.7
 swagger-spec-validator==2.4.3
 textdata==1.7.3
 textwrap3==0.9.1
@@ -167,6 +169,7 @@ venusian==1.0
 w3lib==1.17.0
 waitress==0.8.10
 wcwidth==0.1.7
+webcolors==1.8.1
 WebOb==1.5.1
 WebOb-GraphQL==1.0
 WebTest==2.0.20
