@@ -2,7 +2,7 @@ from oauth2client import client, crypt
 from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
 from pyramid.view import view_config
 from pyramid.session import check_csrf_token
-from sqlalchemy import create_engine, and_
+from sqlalchemy import create_engine, and_, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from validate_email import validate_email
@@ -30,6 +30,7 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 models_helper = ModelsHelper()
 
+
 def authenticate(view_callable):
     def inner(context, request):
         if 'email' not in request.session or 'username' not in request.session:
@@ -38,10 +39,12 @@ def authenticate(view_callable):
             return view_callable(request)
     return inner
 
+
 @view_config(route_name='account', request_method='GET', renderer='json')
 @authenticate
 def account(request):
-    return { 'username': request.session['username'] }
+    return {'username': request.session['username']}
+
 
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
 @authenticate
@@ -49,6 +52,7 @@ def get_locus_curate(request):
     id = extract_id_request(request, 'locus', param_name="sgdid")
     locus = get_locus_by_id(id)
     return locus.to_curate_dict()
+
 
 @view_config(route_name='locus_curate_summaries', request_method='PUT', renderer='json')
 @authenticate
@@ -884,6 +888,61 @@ def get_username_from_db_uri():
     userp = s[s.find(start)+len(start):s.find(end)]
     created_by = userp.split(':')[0].upper()
     return created_by
+
+
+# add new colleague
+#     config.add_route('add_new_colleague_triage', '/colleagues', request_method='POST')
+
+@view_config(route_name='add_new_colleague_triage', renderer='json', request_method='POST')
+def add_new_colleague_triage(request):
+
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    params = request.json_body
+    required_fields = ['first_name', 'last_name', 'email', 'orcid']
+    for x in required_fields:
+        if not params[x]:
+            msg = x + ' is a required field.'
+            return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
+    is_email_valid = validate_email(params['email'], verify=False)
+    if not is_email_valid:
+        msg = params['email'] + ' is not a valid email.'
+        return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
+    is_orcid_valid = validate_orcid(params['orcid'])
+    if not is_orcid_valid:
+        msg = params['orcid'] + ' is not a valid orcid.'
+        return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
+    colleague_orcid_email_exists = DBSession.query(Colleague).filter(or_(and_(Colleague.orcid == params.get('orcid'), Colleague.email == params.get(
+        'email')), or_(Colleague.orcid == params.get('orcid'), Colleague.email == params.get('email')))).one_or_none()
+    if colleague_orcid_email_exists:
+        msg = 'You entered an ORCID or Email which is already being used by an SGD colleague. Try to find your entry or contact sgd-helpdesk@lists.stanford.edu if you think this is a mistake.'
+        return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
+    try:
+
+        username = request.session['username']
+        full_name = params['first_name'] + ' ' + params['last_name']
+        # add a random number to be sure it's unique
+        format_name = set_string_format(full_name) + str(randint(1, 100))
+
+        created_by = username  # if username else get_username_from_db_uri()
+
+        new_c_triage = Colleaguetriage(
+            json=json.dumps(params),
+            triage_type='New',
+        )
+        DBSession.add(new_c_triage)
+        transaction.commit()
+        return {'colleague_id': 0}
+    except IntegrityError as IE:
+        transaction.abort()
+        log.error(IE)
+        return HTTPBadRequest(body=json.dumps({'message': 'Orcid or Email already exists, if error persist Please contact sgd-helpdesk@lists.stanford.edu'}), content_type='text/json')
+    except Exception as e:
+        transaction.abort()
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'message': str(e)}), content_type='text/json')
+
+
 
 # @view_config(route_name='upload', request_method='POST', renderer='json')
 # @authenticate
