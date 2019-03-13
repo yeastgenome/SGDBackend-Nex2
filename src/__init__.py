@@ -138,6 +138,9 @@ def main(global_config, **settings):
     config.add_route('colleague_get', '/colleagues/{format_name}', request_method='GET')
     config.add_route('refresh_homepage_cache', '/refresh_homepage_cache', request_method='POST')
 
+    #add new colleague
+    config.add_route('add_new_colleague_triage', '/colleagues', request_method='POST')
+
     config.add_route('get_new_reference_info', '/reference/confirm', request_method='POST')
     config.add_route('new_reference', '/reference', request_method='POST')
     config.add_route('reference_triage_index', '/reference_triage', request_method='GET')
