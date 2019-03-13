@@ -91,6 +91,7 @@ models_helper = ModelsHelper()
 #     else:
 #         return HTTPNotFound(body=json.dumps({'error': 'Colleague triage not found'}))
 
+
 @view_config(route_name='colleague_get', renderer='json', request_method='GET')
 def colleague_by_format_name(request):
     try:
