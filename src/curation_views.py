@@ -564,8 +564,9 @@ def colleague_update(request):
         is_changed = False
         old_dict = colleague.to_simple_dict()
         for x in old_dict.keys():
-            if old_dict[x] != data[x]:
-                is_changed = True
+            if data.get(x) is not None:
+                if old_dict[x] != data[x]:
+                    is_changed = True
         if is_changed:
             existing_triage = DBSession.query(Colleaguetriage).filter(Colleaguetriage.colleague_id == req_id).one_or_none()
             if existing_triage:
@@ -577,6 +578,7 @@ def colleague_update(request):
                     triage_type='Update',
                 )
                 DBSession.add(new_c_triage)
+                colleague.is_in_triage = True
             transaction.commit()
             return { 'colleague_id': req_id }
         else:
@@ -822,20 +824,69 @@ def colleague_triage_update(request):
         return HTTPBadRequest(body=json.dumps({'error':'Bad CSRF Token'}))
     return True
 
+
 @view_config(route_name='colleague_triage_promote', renderer='json', request_method='PUT')
 @authenticate
 def colleague_triage_promote(request):
     if not check_csrf_token(request, raises=False):
-        return HTTPBadRequest(body=json.dumps({'error':'Bad CSRF Token'}))
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     curator_session = None
     try:
         username = request.session['username']
         curator_session = get_curator_session(username)
         req_id = int(request.matchdict['id'])
         params = request.json_body
-        c_triage = curator_session.query(Colleaguetriage).filter(Colleaguetriage.curation_id == req_id).one_or_none()
+        full_name = params['first_name'] + ' ' + params['last_name']
+        format_name = set_string_format(full_name) + str(randint(1, 100))
+        c_triage = curator_session.query(Colleaguetriage).filter(
+            Colleaguetriage.curation_id == req_id).one_or_none()
         if not c_triage:
             return HTTPNotFound()
+        orcid = params.get('orcid')
+        first_name = params.get('first_name')
+        last_name = params.get('last_name')
+        email = params.get('email')
+        is_beta_tester = params.get('willing_to_be_beta_tester')
+        display_email = params.get('display_email')
+        is_contact = params.get('receive_quarterly_newsletter')
+
+        if c_triage.colleague_id:
+            colleague = DBSession.query(Colleague).filter(
+                Colleague.colleague_id == c_triage.colleague_id).one_or_none()
+            if (colleague.first_name != first_name or colleague.last_name != last_name):
+                colleague.first_name = first_name
+                colleague.last_name = last_name
+                colleague.format_name = format_name
+                colleague.display_name = full_name
+                colleague.obj_url = '/colleague/' + format_name
+            colleague.orcid = orcid
+            colleague.email = email
+            colleague.display_email = display_email
+            colleague.is_contact = is_contact
+            colleague.is_beta_tester = is_beta_tester
+            colleague.is_in_triage = False
+
+            # get_username_from_db_uri() if colleague.created_by == 'OTTO' else username
+        else:
+            new_colleague = Colleague(
+                format_name=format_name,
+                display_name=full_name,
+                obj_url='/colleague/' + format_name,
+                source_id=759,  # direct submission
+                orcid=orcid,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                is_contact=is_contact,
+                is_beta_tester=is_beta_tester,
+                display_email=display_email,
+                is_in_triage=False,
+                is_pi=False,
+                created_by=username
+            )
+            DBSession.add(new_colleague)
+            DBSession.flush()
+        '''
         colleague = curator_session.query(Colleague).filter(Colleague.colleague_id == c_triage.colleague_id).one_or_none()
         colleague.first_name = params.get('first_name')
         colleague.last_name = params.get('last_name')
@@ -845,17 +896,25 @@ def colleague_triage_promote(request):
         colleague.is_contact = params.get('receive_quarterly_newsletter')
         colleague.is_beta_tester = params.get('willing_to_be_beta_tester')
         colleague.is_in_triage = False
+        colleague.created_by = username #get_username_from_db_uri() if colleague.created_by == 'OTTO' else username
+        '''
+
         curator_session.delete(c_triage)
         transaction.commit()
         return True
+    except IntegrityError as e:
+        transaction.abort()
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'message': 'Error: Duplicate record detected, Please contact sgd-helpdesk@lists.stanford.edu if issue persists'}), content_type='text/json')
     except Exception as e:
         transaction.abort()
         log.error(e)
-        return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'message': str(e)}), content_type='text/json')
     finally:
         if curator_session:
             curator_session.remove()
 
+            
 @view_config(route_name='colleague_triage_delete', renderer='json', request_method='DELETE')
 @authenticate
 def colleague_triage_delete(request):
