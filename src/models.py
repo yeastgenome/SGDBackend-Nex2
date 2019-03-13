@@ -931,7 +931,10 @@ class Colleague(Base):
             'email': self.email,
             'display_email': self.display_email,
             'receive_quarterly_newsletter': self.is_contact,
-            'willing_to_be_beta_tester': self.is_beta_tester
+            'willing_to_be_beta_tester': self.is_beta_tester,
+            'colleague_id': self.colleague_id,
+            'link': self.obj_url,
+            'is_pi': self.is_pi
         }
 
     def to_dict_basic_data(self):
