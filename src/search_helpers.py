@@ -37,7 +37,7 @@ def build_autocomplete_search_body_request(query,
     if field != 'name':
         es_query['aggs'] = {}
         es_query['aggs'][field] = {
-            'terms': {'field': field + '.raw', 'size': 999}
+            'terms': {'field': field, 'size': 999}
         }
 
         es_query['query']['bool']['must'][0]['match'] = {}
@@ -98,7 +98,7 @@ def build_es_aggregation_body_request(es_query, category, category_filters):
         for subcategory in category_filters[category]:
             agg_query_body['aggs'][subcategory[1]] = {
                 'terms': {
-                    'field': subcategory[1] + '.raw',
+                    'field': subcategory[1],
                     'size': MAX_AGG_SIZE
                 }
             }
@@ -170,7 +170,7 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
     if sort_by == 'alphabetical':
         es_search_body['sort'] = [
             {
-                "name.raw": {
+                "name": {
                     "order": "asc"
                 }
             }
@@ -181,34 +181,36 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
 
 def build_search_query(query, search_fields, category, category_filters, args):
     es_query = build_search_params(query, search_fields)
-    import pdb; pdb.set_trace()
 
     if category == '':
         return es_query
 
     query = {
         'bool': {
-            'filter': [
-                { 'term': {'category': category} },
-            ]
+            'must': [{
+                'term': {
+                    'category': category,
+                }
+            }]
         }
     }
+
+    if es_query != {"match_all": {}}:
+        query.update(es_query)
 
     if category in category_filters.keys():
         for item in category_filters[category]:
             if args.get(item[1]):
                 for param in args.get(item[1]):
-                    query['bool']['filter'].append({
+                    query['bool']['must'].append({
                         'term': {
-                            (item[1] + ".raw"): param
+                            (item[1]): param
                         }
                     })
-    import pdb; pdb.set_trace()
     return query
 
 
 def build_search_params(query, search_fields):
-    import pdb; pdb.set_trace()
     if query == "":
         es_query = {"match_all": {}}
     else:
@@ -245,7 +247,6 @@ def build_search_params(query, search_fields):
 
             es_query['dis_max']['queries'].append({'match': match})
             es_query['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
-    pdb.set_trace()
     return es_query
 
 

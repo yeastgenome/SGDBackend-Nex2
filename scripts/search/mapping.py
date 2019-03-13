@@ -69,7 +69,7 @@ mapping = {
                 "description": {
                     "type": "text",
                     "fielddata": True,
-                    "fielddata": True
+                    "analyzer": "symbols"
                 },
                 "first_name": {
                     "type": "keyword",
@@ -258,9 +258,7 @@ mapping = {
                     "analyzer": "symbols"
                 },
                 "status": {
-                    "type": "text",
-                    "fielddata": True,
-                    "analyzer": "symbols",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -295,9 +293,7 @@ mapping = {
                     }
                 },
                 "references": {
-                    "type": "text",
-                    "fielddata": True,
-                    "analyzer": "symbols",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -360,12 +356,7 @@ mapping = {
                         "raw": {
                             "type": "keyword",
                             "index": False
-                        },
-                        "symbol": {
-                            "type": "text",
-                            "analyzer": "symbols"
                         }
-
                     }
                 },
                 "do_id": {
@@ -378,18 +369,11 @@ mapping = {
                         "raw": {
                             "type": "keyword",
                             "index": False
-                        },
-                        "symbol": {
-                            "type": "text",
-                            "analyzer": "symbols"
                         }
-
                     }
                 },
                 "author": {
-                    "type": "text",
-                    "fielddata": True,
-                    "analyzer": "symbols",
+                    "type": "keyword",
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -398,9 +382,7 @@ mapping = {
                     }
                 },
                 "journal": {
-                    "type": "text",
-                    "analyzer": "symbols",
-                    "fielddata": True,
+                    "type": "keyword",
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -420,9 +402,7 @@ mapping = {
                     }
                 },
                 "reference_loci": {
-                    "type": "text",
-                    "analyzer": "symbols",
-                    "fielddata": True,
+                    "type": "keyword",
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -431,160 +411,105 @@ mapping = {
                     }
                 },
                 "aliases": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "format": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "keyword": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "file_size": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "readme_url": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "topic": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "data": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "is_quick_flag": {
                         "type": "keyword",
                         "fields": {
                             "raw": {
                                 "type": "keyword",
                                 "index": False
-                            },
-                            "symbol": {
-                                "type": "text",
-                                "analyzer": "symbols"
                             }
-
                         }
-                   },
+                },
                 "categories": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
-                                "type": "keyword",
-                                "index": False
-                            },
-                            "symbol": {
                                 "type": "text",
-                                "analyzer": "symbols"
+                                "index": False
                             }
-
                         }
-                   },
+                },
                 "tags": {
-                        "type": "text",
+                        "type": "keyword",
                         "fields": {
                             "raw": {
-                                "type": "keyword",
-                                "index": False
-                            },
-                            "symbol": {
                                 "type": "text",
-                                "analyzer": "symbols"
+                                "index": False
                             }
-
                         }
-                    },
+                },
                 "month": {
                         "type": "keyword",
                         "fields": {
                             "raw": {
-                                "type": "keyword",
-                                "index": False
-                            },
-                            "symbol": {
                                 "type": "text",
-                                "analyzer": "symbols"
+                                "index": False
                             }
-
                         }
-                    }
                 }
             }
         }
+    }
 }

@@ -123,8 +123,7 @@ def search(request):
                                                  "colleague_loci")],
         "download": [("topic", "topic"), ("data", "data"), ("keyword", "keyword"), ("format", "format"),
                      ("status", "status"), ("year", "year")],
-        "blog": [('description', 'description'), ('author', 'author'), ('year','year'),
-                 ('month', 'month'), ('categories', 'categories'), ('tags', 'tags'), ('content', 'content')]
+        "blog": [('year','year'), ('month', 'month'), ('categories', 'categories'), ('tags', 'tags')]
     }
 
     search_fields = [
@@ -172,7 +171,6 @@ def search(request):
         "title",
         "categories",
         "tags",
-        "content",
         "month"
     ]  # year not inserted, have to change to str in mapping
 
