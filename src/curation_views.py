@@ -944,6 +944,10 @@ def colleague_triage_promote(request):
         if curator_session:
             curator_session.remove()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> bug fix
 @view_config(route_name='colleague_triage_delete', renderer='json', request_method='DELETE')
 @authenticate
 def colleague_triage_delete(request):
