@@ -598,7 +598,7 @@ def colleague_update(request):
         transaction.abort()
         log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
-
+'''
 # not authenticated to allow the public submission
 @view_config(route_name='new_colleague', renderer='json', request_method='POST')
 def new_colleague(request):
@@ -658,6 +658,8 @@ def new_colleague(request):
         transaction.abort()
         log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
+'''
+
 
 @view_config(route_name='reserved_name_index', renderer='json')
 @authenticate
@@ -924,7 +926,7 @@ def colleague_triage_promote(request):
         if curator_session:
             curator_session.remove()
 
-            
+
 @view_config(route_name='colleague_triage_delete', renderer='json', request_method='DELETE')
 @authenticate
 def colleague_triage_delete(request):
