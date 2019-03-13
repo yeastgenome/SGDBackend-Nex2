@@ -1025,7 +1025,7 @@ def add_new_colleague_triage(request):
     except Exception as e:
         transaction.abort()
         log.error(e)
-        return HTTPBadRequest(body=json.dumps({'message': str(e)}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'message': str(e) + ' something bad happened'}), content_type='text/json')
 
 
 
