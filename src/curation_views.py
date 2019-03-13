@@ -45,6 +45,7 @@ models_helper = ModelsHelper()
 
 
 
+
 def authenticate(view_callable):
     def inner(context, request):
         if 'email' not in request.session or 'username' not in request.session:
@@ -999,9 +1000,14 @@ def add_new_colleague_triage(request):
         msg = 'You entered an ORCID or Email which is already being used by an SGD colleague. Try to find your entry or contact sgd-helpdesk@lists.stanford.edu if you think this is a mistake.'
         return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
     try:
+
+        username = request.session['username']
         full_name = params['first_name'] + ' ' + params['last_name']
         # add a random number to be sure it's unique
         format_name = set_string_format(full_name) + str(randint(1, 100))
+
+        created_by = username  # if username else get_username_from_db_uri()
+
         new_c_triage = Colleaguetriage(
             json=json.dumps(params),
             triage_type='New',
@@ -1016,7 +1022,7 @@ def add_new_colleague_triage(request):
     except Exception as e:
         transaction.abort()
         log.error(e)
-        return HTTPBadRequest(body=json.dumps({'message': str(e) + ' something bad happened'}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'message': str(e)}), content_type='text/json')
 
 
 
