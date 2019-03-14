@@ -667,10 +667,6 @@ def disease_locus_details_all(request):
 
 @view_config(route_name='locus', renderer='json', request_method='GET')
 def locus(request):
-<<<<<<< HEAD
-=======
-    #import pdb; pdb.set_trace()
->>>>>>> minor changes
     id = extract_id_request(request, 'locus', param_name="sgdid")
     try:
         locus = get_locus_by_id(id)
@@ -679,10 +675,6 @@ def locus(request):
         else:
             return HTTPNotFound()
     except Exception as e:
-<<<<<<< HEAD
-=======
-        import pdb; pdb.set_trace()
->>>>>>> minor changes
         print(e)
         return HTTPNotFound()
 
