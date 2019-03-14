@@ -966,7 +966,6 @@ def get_username_from_db_uri():
 
 @view_config(route_name='add_new_colleague_triage', renderer='json', request_method='POST')
 def add_new_colleague_triage(request):
-
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     params = request.json_body
@@ -989,14 +988,9 @@ def add_new_colleague_triage(request):
         msg = 'You entered an ORCID or Email which is already being used by an SGD colleague. Try to find your entry or contact sgd-helpdesk@lists.stanford.edu if you think this is a mistake.'
         return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
     try:
-
-        username = request.session['username']
         full_name = params['first_name'] + ' ' + params['last_name']
         # add a random number to be sure it's unique
         format_name = set_string_format(full_name) + str(randint(1, 100))
-
-        created_by = username  # if username else get_username_from_db_uri()
-
         new_c_triage = Colleaguetriage(
             json=json.dumps(params),
             triage_type='New',
