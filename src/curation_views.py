@@ -145,7 +145,8 @@ def new_reference(request):
         for x in references:
             pmid = x['pmid']
             Referencedbentity.clear_from_triage_and_deleted(pmid, username)
-            new_ref = add_paper(pmid, username)
+            new_ref = add_paper(
+                pmid, username, method_obtained="Curator PubMed reference")
         transaction.commit()
         # sync to curator activity
         for x in references:

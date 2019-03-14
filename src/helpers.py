@@ -448,7 +448,6 @@ def primer3_parser(primer3_results):
 
 
 def tsv_file_to_dict(tsv_file):
-    # import pdb ; pdb.set_trace()
     ''' parse file to list of dictionaries
 
     Paramaters
