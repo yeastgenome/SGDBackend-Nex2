@@ -16,6 +16,7 @@ import traceback
 import datetime
 import logging
 import json
+from pathlib import Path
 
 from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser
@@ -633,13 +634,19 @@ def disease_locus_details_all(request):
 
 @view_config(route_name='locus', renderer='json', request_method='GET')
 def locus(request):
-
+    #import pdb; pdb.set_trace()
     id = extract_id_request(request, 'locus', param_name="sgdid")
-    locus = get_locus_by_id(id)
-    if locus:
-        return locus.to_dict()
-    else:
+    try:
+        locus = get_locus_by_id(id)
+        if locus:
+            return locus.to_dict()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        import pdb; pdb.set_trace()
+        print(e)
         return HTTPNotFound()
+
 
 @view_config(route_name='locus_tabs', renderer='json', request_method='GET')
 def locus_tabs(request):
@@ -1334,3 +1341,20 @@ def healthcheck(request):
             DBSession.remove()
             attempts += 1
     return ldict
+
+
+# api portal with swagger
+@view_config(route_name='api_portal', renderer='json')
+def api_portal(request):
+    request.response.headers.update({
+       'Access-Control-Allow-Origin': '*',
+       'Access-Control-Allow-Methods': 'POST,GET,DELETE,PUT,OPTIONS',
+       'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization'
+    })
+    #import pdb ; pdb.set_trace()
+    json_file = os.path.join(str(Path(__file__).parent.parent), "api_docs/swagger.json")
+    with open(json_file) as f:
+        data = json.load(f)
+
+    return data
+
