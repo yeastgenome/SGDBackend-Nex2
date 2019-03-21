@@ -185,24 +185,37 @@ def build_search_query(query, search_fields, category, category_filters, args):
     if category == '':
         return es_query
 
-    query = {
-        'bool': {
-            'must': [{
-                'term': {
-                    'category': category,
-                }
-            }]
-        }
-    }
-
     if es_query != {"match_all": {}}:
-        query.update(es_query)
+        query = es_query
+        query['bool']['filter'] = {
+            'bool': {
+                'must': [{
+                    'term': {
+                        'category': category,
+                    }
+                }]
+            }
+        }
+    else:
+        query = {
+            'bool': {
+                'filter': {
+                    'bool': {
+                        'must': [{
+                            'term': {
+                                'category': category,
+                            }
+                        }]
+                    }
+                }
+            }
+        }
 
     if category in category_filters.keys():
         for item in category_filters[category]:
             if args.get(item[1]):
                 for param in args.get(item[1]):
-                    query['bool']['must'].append({
+                    query['bool']['filter']['bool']['must'].append({
                         'term': {
                             (item[1]): param
                         }
@@ -214,12 +227,12 @@ def build_search_params(query, search_fields):
     if query == "":
         es_query = {"match_all": {}}
     else:
-        es_query = {'dis_max': {'queries': []}}
+        es_query = {'bool': {'should': {'dis_max': {'queries': []}}}}
 
         if (query[0] in ('"', "'") and query[-1] in ('"', "'")):
             query = query[1:-1]
 
-        es_query['dis_max']['queries'] = []
+        es_query['bool']['should']['dis_max']['queries'] = []
 
         custom_boosts = {
             "name": 400,
@@ -245,8 +258,8 @@ def build_search_params(query, search_fields):
                 'query': query
             }
 
-            es_query['dis_max']['queries'].append({'match': match})
-            es_query['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
+            es_query['bool']['should']['dis_max']['queries'].append({'match': match})
+            es_query['bool']['should']['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
     return es_query
 
 

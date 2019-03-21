@@ -52,7 +52,9 @@ mapping = {
                             "index": False
                         },
                         "suggest": {
-                            "type": "completion"
+                            "type": "completion",
+                            "analyzer" : "simple",
+                            "search_analyzer" : "simple",
                         },
                     }
                 },
