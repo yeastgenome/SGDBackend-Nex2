@@ -3,10 +3,15 @@ import re
 import os
 import pusher
 import re
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from telnetlib import Telnet
 from zope.sqlalchemy import ZopeTransactionExtension
+
+logging.basicConfig(format='%(message)s')
+log = logging.getLogger()
+log.setLevel(logging.ERROR)
 
 cache_urls = None
 if 'CACHE_URLS' in os.environ.keys():
@@ -94,10 +99,16 @@ def ban_from_cache(targets, is_exact=False):
         command_exp = '~'
     command = 'ban req.url ' + command_exp + ' '
     for server in cache_urls:
-        tn = Telnet(server.replace('http://', ''), '6082')
-        for x in targets:
-            tn.write(command + x + '\n')
-        tn.close()
+        try:
+            if 'dev' in os.environ['DEV_SERVER']:
+                return
+            else:
+                tn = Telnet(server.replace('http://', '').replace('https://', ''), '6082')
+                for x in targets:
+                    tn.write(command + x + '\n')
+                tn.close()
+        except Exception as e:
+            log.error(e)
 
 def get_author_etc(author_list):
     if author_list is None or len(author_list) == 0:

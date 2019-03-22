@@ -31,6 +31,7 @@ log = logging.getLogger()
 models_helper = ModelsHelper()
 
 
+
 def authenticate(view_callable):
     def inner(context, request):
         if 'email' not in request.session or 'username' not in request.session:
@@ -44,6 +45,7 @@ def authenticate(view_callable):
 @authenticate
 def account(request):
     return {'username': request.session['username']}
+
 
 
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
@@ -73,6 +75,7 @@ def locus_curate_summaries(request):
         return locus.get_summary_dict()
     except ValueError as e:
         return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
+
 
 @view_config(route_name='locus_curate_basic', request_method='PUT', renderer='json')
 @authenticate
@@ -425,8 +428,11 @@ def upload_spreadsheet(request):
         filename = request.POST['file'].filename
         template_type = request.POST['template']
         username = request.session['username']
-        annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username)
-
+        file_ext = os.path.splitext(filename)[1]
+        delimiter = '\t'
+        if file_ext != 'xlsx' or file_ext != 'xls':
+            delimiter = get_file_delimiter(file_upload)
+        annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username, delimiter)
         pusher = get_pusher_client()
         pusher.trigger('sgd', 'curateHomeUpdate', {})
         return {'annotations': annotations}

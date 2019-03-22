@@ -349,7 +349,7 @@ def link_gene_names(raw, locus_names_ids):
     processed = raw
     words = raw.split(' ')
     for p_original_word in words:
-        original_word = p_original_word.translate(None, string.punctuation)
+        original_word = str(p_original_word).translate(None, string.punctuation)
         wupper = original_word.upper()
         if wupper in locus_names_object.keys() and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
@@ -357,6 +357,7 @@ def link_gene_names(raw, locus_names_ids):
             new_str = '<a href="' + url + '">' + wupper + '</a>'
             processed = processed.replace(original_word, new_str)
     return processed
+
 
 def primer3_parser(primer3_results):
     ''' Parse Primer3 designPrimers output, and sort it into a hierachical
@@ -451,7 +452,7 @@ def primer3_parser(primer3_results):
     return list(map(primer_pairs.get, sorted(primer_pairs.keys()))), notes
 
 
-def file_upload_to_dict(file_upload):
+def file_upload_to_dict(file_upload, delimiter="\t"):
     ''' parse file to list of dictionaries
 
     Paramaters
@@ -467,10 +468,12 @@ def file_upload_to_dict(file_upload):
     '''
     list_dictionary = []
     if(file_upload):
-        csv_obj = csv.DictReader(file_upload, dialect='excel-tab')
+        delimiter = delimiter
+        csv_obj = csv.DictReader(file_upload, delimiter=delimiter)
         for item in csv_obj:
             list_dictionary.append(
-                {k: v for k, v in item.items() if k is not None}
+                {k.decode('utf-8-sig'): v
+                 for k, v in item.items() if k not in (None, '')}
                 )
         return list_dictionary
     else:
@@ -519,8 +522,8 @@ def send_newsletter_email(subject,recipients,msg):
 
 #TODO: abstract this function in second release
 def update_curate_activity(locus_summary_object):
-    '''
-        Add curator locus-summary event to curator activity table
+    ''' Add curator locus-summary event to curator activity table
+    
     Paramaters
     ----------
     locus_summary_object: LocusSummary
@@ -580,3 +583,28 @@ def set_string_format(str_param, char_format='_'):
         return temp_str
     else:
         return None
+
+
+def get_file_delimiter(file_upload):
+    ''' Check file delimiters
+
+    Parameters
+    ----------
+    file_upload: file
+
+    Returns
+    -------
+    string
+        delimiter character
+
+    '''
+
+    if file_upload:
+        dialect = csv.Sniffer().sniff(
+            file_upload.readline(), [',', '|', '\t', ';'])
+        file_upload.seek(0)
+        return dialect.delimiter
+    else:
+        raise ValueError(
+            'file format error, acceptable formats are txt, tsv, xls')
+
