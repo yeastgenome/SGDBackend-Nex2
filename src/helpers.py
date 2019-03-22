@@ -13,7 +13,8 @@ import traceback
 import requests
 import csv
 
-from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease
+from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
+from src.curation_helpers import ban_from_cache, get_curator_session
 
 import logging
 log = logging.getLogger(__name__)
@@ -345,7 +346,7 @@ def link_gene_names(raw, locus_names_ids):
     processed = raw
     words = raw.split(' ')
     for p_original_word in words:
-        original_word = p_original_word.translate(None, string.punctuation)
+        original_word = str(p_original_word).translate(None, string.punctuation)
         wupper = original_word.upper()
         if wupper in locus_names_object.keys() and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
@@ -353,6 +354,7 @@ def link_gene_names(raw, locus_names_ids):
             new_str = '<a href="' + url + '">' + wupper + '</a>'
             processed = processed.replace(original_word, new_str)
     return processed
+
 
 def primer3_parser(primer3_results):
     ''' Parse Primer3 designPrimers output, and sort it into a hierachical
@@ -447,50 +449,95 @@ def primer3_parser(primer3_results):
     return list(map(primer_pairs.get, sorted(primer_pairs.keys()))), notes
 
 
-def tsv_file_to_dict(tsv_file):
+def file_upload_to_dict(file_upload, delimiter="\t"):
     ''' parse file to list of dictionaries
 
     Paramaters
     ----------
-    file: tsv_file object
+    file: file_upload object
 
     Returns
     -------
     list
-        dictionary: each file row becomes a dictionary with column header
+        dictionary: each file row becomes a dictionary with column headers
                     as keys.
 
     '''
     list_dictionary = []
-    if(tsv_file):
-        csv_obj = csv.DictReader(tsv_file, dialect='excel-tab')
+    if(file_upload):
+        delimiter = delimiter
+        csv_obj = csv.DictReader(file_upload, delimiter=delimiter)
         for item in csv_obj:
             list_dictionary.append(
-                {k: v for k, v in item.items() if k is not None}
+                {k.decode('utf-8-sig'): v
+                 for k, v in item.items() if k not in (None, '')}
                 )
         return list_dictionary
     else:
         return list_dictionary
 
-def set_string_format(str_param, char_format='_'):
-    ''' format given string to replace space with underscore character
+
+#TODO: abstract this function in second release
+def update_curate_activity(locus_summary_object):
+    ''' Add curator locus-summary event to curator activity table
+    
+    Paramaters
+    ----------
+    locus_summary_object: LocusSummary
+        locus-summary object
+    
+    Returns
+    -------
+    bool: The return value. True for success, False otherwise
+    '''
+    flag = False
+    try:
+        curator_session = get_curator_session(locus_summary_object['created_by'])
+        existing = curator_session.query(CuratorActivity).filter(CuratorActivity.dbentity_id == locus_summary_object['dbentity_id']).one_or_none()
+        message = 'added'
+        if existing:
+            #curator_session.delete(existing)
+            message = 'updated'
+        new_curate_activity = CuratorActivity(
+            display_name=locus_summary_object['display_name'],
+            obj_url=locus_summary_object['obj_url'],
+            activity_category=locus_summary_object['activity_category'],
+            dbentity_id=locus_summary_object['dbentity_id'],
+            message=message,
+            json=locus_summary_object['json'],
+            created_by=locus_summary_object['created_by']
+        )
+        curator_session.add(new_curate_activity)
+        transaction.commit()
+        flag = True
+    except Exception as e:
+        traceback.print_exc()
+        transaction.abort()
+        raise(e)
+        
+    return flag
+
+
+def get_file_delimiter(file_upload):
+    ''' Check file delimiters
+
     Parameters
     ----------
-    string: str_param
-    string: char_format
-            needs to be single character
+    file_upload: file
+
     Returns
     -------
     string
-        returns formated string or empty string if parameter str_param is not provided/empty or if char_format length is greater than 1
+        delimiter character
+
     '''
-    if str_param and len(char_format) == 1:
-        str_arr = str_param.strip().split(' ')
-        temp_str = ''
-        for element in str_arr:
-            temp_str += element + char_format
-        if temp_str.endswith(char_format):
-            temp_str = temp_str[:-1]
-        return temp_str
+
+    if file_upload:
+        dialect = csv.Sniffer().sniff(
+            file_upload.readline(), [',', '|', '\t', ';'])
+        file_upload.seek(0)
+        return dialect.delimiter
     else:
-        return None
+        raise ValueError(
+            'file format error, acceptable formats are txt, tsv, xls')
+
