@@ -14,7 +14,6 @@ from helpers import upload_file, file_upload_to_dict
 def parse_tsv_annotations(
     db_session, file_upload, filename,
         template_type, username, delimiter="\t"):
-
     db_session.execute('SET LOCAL ROLE ' + username)
     file_extension = ''
     extensions = ['csv', 'tsv', 'txt']

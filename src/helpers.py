@@ -583,7 +583,6 @@ def set_string_format(str_param, char_format='_'):
     else:
         return None
 
-
 def get_file_delimiter(file_upload):
     ''' Check file delimiters
 

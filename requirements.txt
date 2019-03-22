@@ -37,11 +37,7 @@ pycparser==2.14
 pydns==2.3.6
 pyOpenSSL==17.5.0
 pyramid==1.7.3
-<<<<<<< HEAD
 python-dateutil==2.8.0
-=======
-python-dateutil==2.4.0
->>>>>>> minor changes
 pyramid-jinja2==2.5
 pyramid-redis-sessions==1.0.1
 pyramid-webpack==0.1.1

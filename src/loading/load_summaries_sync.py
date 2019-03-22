@@ -75,6 +75,10 @@ def validate_file_content_and_process(file_content, nex_session, username):
     key_feature = re.compile(r".*feature$", re.IGNORECASE)
     key_summary_type = re.compile(r"^summary type.*", re.IGNORECASE)
 
+    # use regex to get keys from dictionary
+    key_feature = re.compile(r".*feature$", re.IGNORECASE)
+    key_summary_type = re.compile(r"^summary type.*", re.IGNORECASE)
+
     try:
         for item in file_content:
             if (len(item) != len(header_literal)):
