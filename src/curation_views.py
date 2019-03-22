@@ -16,8 +16,9 @@ import traceback
 import transaction
 import json
 import re
+import pandas as pd
 
-from .helpers import allowed_file, extract_id_request, secure_save_file, curator_or_none, extract_references, extract_keywords, get_or_create_filepath, extract_topic, extract_format, file_already_uploaded, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id
+from .helpers import allowed_file, extract_id_request, secure_save_file, curator_or_none, extract_references, extract_keywords, get_or_create_filepath, extract_topic, extract_format, file_already_uploaded, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_file_delimiter
 from .curation_helpers import ban_from_cache, process_pmid_list, get_curator_session, get_pusher_client, validate_orcid
 from .loading.promote_reference_triage import add_paper
 from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague, Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname, ReservednameTriage, Straindbentity, Literatureannotation, Referencetriage, Referencedeleted, Locusdbentity, CurationReference, Locussummary, validate_tags, convert_space_separated_pmids_to_list
@@ -27,6 +28,7 @@ logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 
+
 def authenticate(view_callable):
     def inner(context, request):
         if 'email' not in request.session or 'username' not in request.session:
@@ -35,10 +37,12 @@ def authenticate(view_callable):
             return view_callable(request)
     return inner
 
+
 @view_config(route_name='account', request_method='GET', renderer='json')
 @authenticate
 def account(request):
     return { 'username': request.session['username'] }
+
 
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
 @authenticate
@@ -46,6 +50,7 @@ def get_locus_curate(request):
     id = extract_id_request(request, 'locus', param_name="sgdid")
     locus = get_locus_by_id(id)
     return locus.to_curate_dict()
+
 
 @view_config(route_name='locus_curate_summaries', request_method='PUT', renderer='json')
 @authenticate
@@ -66,6 +71,7 @@ def locus_curate_summaries(request):
         return locus.get_summary_dict()
     except ValueError as e:
         return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
+
 
 @view_config(route_name='locus_curate_basic', request_method='PUT', renderer='json')
 @authenticate
@@ -417,8 +423,11 @@ def upload_spreadsheet(request):
         filename = request.POST['file'].filename
         template_type = request.POST['template']
         username = request.session['username']
-        annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username)
-
+        file_ext = os.path.splitext(filename)[1]
+        delimiter = '\t'
+        if file_ext != 'xlsx' or file_ext != 'xls':
+            delimiter = get_file_delimiter(file_upload)
+        annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username, delimiter)
         pusher = get_pusher_client()
         pusher.trigger('sgd', 'curateHomeUpdate', {})
         return {'annotations': annotations}
