@@ -1,3 +1,4 @@
+import pandas as pd
 from oauth2client import client, crypt
 from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
 from pyramid.view import view_config
@@ -23,7 +24,7 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     get_or_create_filepath, extract_topic, extract_format,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
     FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, set_string_format,\
-    send_newsletter_email
+    send_newsletter_email, get_file_delimiter
 from .curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid
 from .loading.promote_reference_triage import add_paper
@@ -34,11 +35,13 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
     validate_tags, convert_space_separated_pmids_to_list
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
+import pandas as pd
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 models_helper = ModelsHelper()
+
 
 
 def authenticate(view_callable):
@@ -54,6 +57,7 @@ def authenticate(view_callable):
 @authenticate
 def account(request):
     return {'username': request.session['username']}
+
 
 
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
@@ -83,6 +87,7 @@ def locus_curate_summaries(request):
         return locus.get_summary_dict()
     except ValueError as e:
         return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
+
 
 @view_config(route_name='locus_curate_basic', request_method='PUT', renderer='json')
 @authenticate
@@ -435,8 +440,11 @@ def upload_spreadsheet(request):
         filename = request.POST['file'].filename
         template_type = request.POST['template']
         username = request.session['username']
-        annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username)
-
+        file_ext = os.path.splitext(filename)[1]
+        delimiter = '\t'
+        if file_ext != 'xlsx' or file_ext != 'xls':
+            delimiter = get_file_delimiter(file_upload)
+        annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username, delimiter)
         pusher = get_pusher_client()
         pusher.trigger('sgd', 'curateHomeUpdate', {})
         return {'annotations': annotations}

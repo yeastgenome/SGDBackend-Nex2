@@ -32,10 +32,9 @@ __author__ = 'tshepp'
 SGD_SOURCE_ID = 834
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
-# has correct columns in header
-# checks IDs to make sure real IDs
+
 def validate_file_content_and_process(file_content, nex_session, username):
-    ''' check file content, process and save to db
+    ''' Check file content, process and save to db
 
     Parameters
     ----------
@@ -55,13 +54,14 @@ def validate_file_content_and_process(file_content, nex_session, username):
     Note:
     Accepted summary types: Phenotype, Regulation, Disease, Interaction
                             Sequence, Protein
+    Checks correct number of columns in the header and valid IDs
     '''
 
     header_literal = [
-            '# Feature', 'Summary Type (phenotype, regulation)',
-            'Summary', 'PMIDs'
-            ]
-    #accepted_summary_types = ['Phenotype', 'Regulation']
+                        '# Feature',
+                        'Summary Type (phenotype, regulation, disease, interaction, sequence, protein )',
+                        'Summary', 'PMIDs'
+                    ]
     accepted_summary_types = [
         'Phenotype', 'Regulation', 'Disease',
         'Interaction', 'Sequence', 'Protein'
@@ -73,23 +73,33 @@ def validate_file_content_and_process(file_content, nex_session, username):
     already_used_genes = []
     clear_target_urls = []
 
+    # use regex to get keys from dictionary
+    key_feature = re.compile(r".*feature$", re.IGNORECASE)
+    key_summary_type = re.compile(r"^summary type.*", re.IGNORECASE)
+
     try:
         for item in file_content:
-            is_header_match = sorted(header_literal) == sorted(item)
-            if not is_header_match:
-                raise ValueError(
-                    'File header does not match expected format. Please make your file match the template file linked below.'
-                )
+            if (len(item) != len(header_literal)):
+                raise ValueError('Row or header has incorrect number of columns.')
+            #TODO: abstract the loop below in the next release
+            gene_id = ''
+            summary_type = ''
+            for k, v in item.iteritems():
+                if key_feature.match(k):
+                    gene_id = item.get(k)
+                if key_summary_type.match(k):
+                    summary_type = item.get(k)
+
+            pmid_temp = item.get('PMIDs', None)
+            if pmid_temp:
+                pmids = str(pmid_temp).replace(' ', '').replace('0.0', '')
             else:
-                if item.get('PMIDs'):
-                    pmids = item.get('PMIDs').replace(' ', '')
-                else:
-                    pmids = ''
-                gene_id = item.get('# Feature', '')
-                summary_type = item.get(
-                    'Summary Type (phenotype, regulation)', '')
-                summary_text = item.get('Summary', '')
+                pmids = ''
+            summary_text = item.get('Summary', '')
+
+            if gene_id:
                 file_gene_ids.append(gene_id.strip())
+            if summary_type:
                 gene_id_with_summary = gene_id + summary_type
                 if gene_id_with_summary in already_used_genes:
                     raise ValueError(
@@ -98,12 +108,11 @@ def validate_file_content_and_process(file_content, nex_session, username):
                 already_used_genes.append(gene_id_with_summary)
                 if summary_type not in accepted_summary_types:
                     raise ValueError('Unaccepted summary type. Must be one of ' + ', '.join(accepted_summary_types))
-                if len(pmids) > 0:
-                    pmids = re.split('\||,', pmids)
-                    for pmid in pmids:
-                        file_pmids.append(str(pmid))
-            if (len(item) != len(header_literal)):
-                raise ValueError('Row has incorrect number of columns.')
+            if len(pmids) > 0:
+                pmids = re.split('\||,', pmids)
+                for pmid in pmids:
+                    file_pmids.append(str(pmid))
+
             copied.append(item)
     except IndexError:
         raise ValueError(
@@ -133,32 +142,39 @@ def validate_file_content_and_process(file_content, nex_session, username):
 
     for item in copied:
         if item:
-            file_id = item.get('# Feature', '')
-            file_summary_type = item.get(
-                    'Summary Type (phenotype, regulation)', '')
+            for k, v in item.iteritems():
+                if key_feature.match(k):
+                    file_id = item.get(k)
+                if key_summary_type.match(k):
+                    file_summary_type = item.get(k)
+            #file_id = item.get('# Feature', '')
+            #file_summary_type = item.get(
+            #      'Summary Type (phenotype, regulation)', '')
             file_summary_val = item.get('Summary', '')
             file_summary_html = link_gene_names(file_summary_val, locus_names_ids)
-            gene = nex_session.query(Locusdbentity).filter_by(format_name=file_id).one_or_none()
-            summaries = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()
-            # update
-            summary = None
-            if len(summaries):
-                summary = summaries[0]
-                nex_session.query(Locussummary).filter_by(summary_id=summary.summary_id).update({'text': file_summary_val, 'html': file_summary_html})
-                updates += 1
-            else:
-                new_summary = Locussummary(
-                    locus_id=gene.dbentity_id,
-                    summary_type=file_summary_type,
-                    text=file_summary_val,
-                    html=file_summary_html,
-                    created_by=username,
-                    source_id=SGD_SOURCE_ID
-                )
-                nex_session.add(new_summary)
-                inserts += 1
-            summary = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()[0]
-            # add LocussummaryReference(s)
+            if file_id:
+                gene = nex_session.query(Locusdbentity).filter_by(format_name=file_id).one_or_none()
+            if file_summary_type:
+                summaries = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()
+                # update
+                summary = None
+                if len(summaries):
+                    summary = summaries[0]
+                    nex_session.query(Locussummary).filter_by(summary_id=summary.summary_id).update({'text': file_summary_val, 'html': file_summary_html})
+                    updates += 1
+                else:
+                    new_summary = Locussummary(
+                        locus_id=gene.dbentity_id,
+                        summary_type=file_summary_type,
+                        text=file_summary_val,
+                        html=file_summary_html,
+                        created_by=username,
+                        source_id=SGD_SOURCE_ID
+                    )
+                    nex_session.add(new_summary)
+                    inserts += 1
+                summary = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()[0]
+                # add LocussummaryReference(s)
             if item:
                 if item.get('PMIDs'):
                     pmids = item.get('PMIDs').replace(' ', '')
