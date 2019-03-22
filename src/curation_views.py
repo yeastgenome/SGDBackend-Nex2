@@ -44,6 +44,7 @@ models_helper = ModelsHelper()
 
 
 
+
 def authenticate(view_callable):
     def inner(context, request):
         if 'email' not in request.session or 'username' not in request.session:
@@ -57,6 +58,7 @@ def authenticate(view_callable):
 @authenticate
 def account(request):
     return {'username': request.session['username']}
+
 
 
 
