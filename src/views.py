@@ -467,6 +467,7 @@ def reference_regulation_details(request):
         return reference.regulation_to_dict()
     else:
         return HTTPNotFound()
+
 @view_config(route_name='author', renderer='json', request_method='GET')
 def author(request):
     format_name = extract_id_request(request, 'author', param_name="format_name")

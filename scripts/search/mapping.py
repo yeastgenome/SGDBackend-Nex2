@@ -51,11 +51,10 @@ mapping = {
                             "type": "keyword",
                             "index": False
                         },
-                        "suggest": {
-                            "type": "completion",
-                            "analyzer" : "simple",
-                            "search_analyzer" : "simple",
-                        },
+                        "autocomplete": {
+                            "type": "text",
+                            "analyzer": "autocomplete"
+                        }
                     }
                 },
                 "category": {
