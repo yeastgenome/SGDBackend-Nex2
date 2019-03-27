@@ -288,7 +288,6 @@ def upload_file(username, file, **kwargs):
     file.seek(0)
 
     try:
-        '''
         md5sum = hashlib.md5(file.read()).hexdigest()
         fdb = Filedbentity(
             md5sum=md5sum,
@@ -320,7 +319,7 @@ def upload_file(username, file, **kwargs):
         DBSession.flush()
         fdb = DBSession.query(Filedbentity).filter(
             Filedbentity.dbentity_id == did).one_or_none()
-        fdb.upload_file_to_s3(file, filename) '''
+        fdb.upload_file_to_s3(file, filename)
     except Exception as e:
         DBSession.rollback()
         DBSession.remove()
@@ -649,3 +648,28 @@ def summary_file_is_valid(file_upload):
             ', '.join(invalid_genes)
         obj['flag'] = False
     return obj
+
+
+def set_string_format(str_param, char_format='_'):
+    ''' format given string to replace space with underscore character
+    Parameters
+    ----------
+    string: str_param
+    string: char_format
+            needs to be single character
+    Returns
+    -------
+    string
+        returns formated string or empty string if parameter str_param is not provided/empty or if char_format length is greater than 1
+    '''
+    
+    if str_param and len(char_format) == 1:
+        str_arr = str_param.strip().split(' ')
+        temp_str = ''
+        for element in str_arr:
+            temp_str += element + char_format
+        if temp_str.endswith(char_format):
+            temp_str = temp_str[:-1]
+        return temp_str
+    else:
+        return None
