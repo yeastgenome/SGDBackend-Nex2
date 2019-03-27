@@ -18,7 +18,7 @@ import json
 import re
 import pandas as pd
 
-from .helpers import allowed_file, extract_id_request, secure_save_file, curator_or_none, extract_references, extract_keywords, get_or_create_filepath, extract_topic, extract_format, file_already_uploaded, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_file_delimiter
+from .helpers import allowed_file, extract_id_request, secure_save_file, curator_or_none, extract_references, extract_keywords, get_or_create_filepath, extract_topic, extract_format, file_already_uploaded, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_file_delimiter, set_string_format
 from .curation_helpers import ban_from_cache, process_pmid_list, get_curator_session, get_pusher_client, validate_orcid
 from .loading.promote_reference_triage import add_paper
 from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague, Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname, ReservednameTriage, Straindbentity, Literatureannotation, Referencetriage, Referencedeleted, Locusdbentity, CurationReference, Locussummary, validate_tags, convert_space_separated_pmids_to_list
