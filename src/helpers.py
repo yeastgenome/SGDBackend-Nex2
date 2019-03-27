@@ -15,6 +15,7 @@ import csv
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import re
 
 from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
 from src.curation_helpers import ban_from_cache, get_curator_session
@@ -287,6 +288,7 @@ def upload_file(username, file, **kwargs):
     file.seek(0)
 
     try:
+        '''
         md5sum = hashlib.md5(file.read()).hexdigest()
         fdb = Filedbentity(
             md5sum=md5sum,
@@ -318,7 +320,7 @@ def upload_file(username, file, **kwargs):
         DBSession.flush()
         fdb = DBSession.query(Filedbentity).filter(
             Filedbentity.dbentity_id == did).one_or_none()
-        fdb.upload_file_to_s3(file, filename)
+        fdb.upload_file_to_s3(file, filename) '''
     except Exception as e:
         DBSession.rollback()
         DBSession.remove()
