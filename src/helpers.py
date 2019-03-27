@@ -287,6 +287,7 @@ def upload_file(username, file, **kwargs):
     file.seek(0)
 
     try:
+        '''
         md5sum = hashlib.md5(file.read()).hexdigest()
         fdb = Filedbentity(
             md5sum=md5sum,
@@ -318,7 +319,7 @@ def upload_file(username, file, **kwargs):
         DBSession.flush()
         fdb = DBSession.query(Filedbentity).filter(
             Filedbentity.dbentity_id == did).one_or_none()
-        fdb.upload_file_to_s3(file, filename)
+        fdb.upload_file_to_s3(file, filename) '''
     except Exception as e:
         DBSession.rollback()
         DBSession.remove()
@@ -607,4 +608,44 @@ def get_file_delimiter(file_upload):
     else:
         raise ValueError(
             'file format error, acceptable formats are txt, tsv, xls')
+#TODO: develop this into an endpoint that will check the file before uploading in the next release
+def summary_file_is_valid(file_upload):
+    ''' Check if file is valid for upload
 
+    Parameters
+    ----------
+    file_upload: file
+
+    Returns
+    -------
+    dict
+
+    '''
+
+    obj = {'message': '', 'flag': True}
+    header_literal = [
+        '# Feature',
+        'Summary Type (phenotype, regulation, disease, interaction, sequence, protein )',
+        'Summary', 'PMIDs'
+    ]
+    key_feature = re.compile(r".*feature$", re.IGNORECASE)
+    file_gene_ids = []
+    for item in file_upload:
+        for k, v in item.iteritems():
+            if key_feature.match(k):
+                gene_id = item.get(k, None)
+                if gene_id:
+                    file_gene_ids.append(gene_id.strip())
+                
+    valid_genes = DBSession.query(Locusdbentity.format_name).filter(
+        Locusdbentity.format_name.in_(file_gene_ids)).all()
+    valid_genes = [str(d[0]) for d in valid_genes]
+    invalid_genes = [d for d in file_gene_ids if d not in valid_genes]
+    if (len(item) != len(header_literal)):
+        obj['message'] = 'Row or header has incorrect number of columns'
+        obj['flag'] = False
+    if len(invalid_genes) > 0:
+        obj['message'] = 'Invalid gene identifier: ' + \
+            ', '.join(invalid_genes)
+        obj['flag'] = False
+    return obj

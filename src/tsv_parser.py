@@ -14,6 +14,7 @@ from helpers import upload_file, file_upload_to_dict
 def parse_tsv_annotations(
     db_session, file_upload, filename,
         template_type, username, delimiter="\t"):
+
     db_session.execute('SET LOCAL ROLE ' + username)
     file_extension = ''
     extensions = ['csv', 'tsv', 'txt']
@@ -45,7 +46,7 @@ def parse_tsv_annotations(
             'File format not accepted. Please upload a valid TSV, TXT or CSV file.')
 
     try:
-        upload_file(
+        '''upload_file(
                 username, file_upload,
                 filename=filename,
                 data_id=248375,
@@ -54,7 +55,7 @@ def parse_tsv_annotations(
                 format_id=248824,
                 format_name=file_extension.upper(),
                 file_extension=file_extension,
-                topic_id=250482)
+                topic_id=250482)'''
     except IntegrityError:
         db_session.rollback()
         db_session.close()
