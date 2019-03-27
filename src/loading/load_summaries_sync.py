@@ -66,13 +66,11 @@ def validate_file_content_and_process(file_content, nex_session, username):
         'Phenotype', 'Regulation', 'Disease',
         'Interaction', 'Sequence', 'Protein'
         ]
-
     file_gene_ids = []
     file_pmids = []
     copied = []
     already_used_genes = []
     clear_target_urls = []
-
     # use regex to get keys from dictionary
     key_feature = re.compile(r".*feature$", re.IGNORECASE)
     key_summary_type = re.compile(r"^summary type.*", re.IGNORECASE)
