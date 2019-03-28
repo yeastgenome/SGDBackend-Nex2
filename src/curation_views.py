@@ -425,9 +425,9 @@ def upload_spreadsheet(request):
         filename = request.POST['file'].filename
         template_type = request.POST['template']
         username = request.session['username']
-        file_ext = os.path.splitext(filename)[1]
+        file_ext = os.path.splitext(filename)[1].replace('.','').strip()
         delimiter = '\t'
-        if file_ext != 'xlsx' or file_ext != 'xls':
+        if file_ext in ('csv', 'tsv', 'txt',):
             delimiter = get_file_delimiter(file_upload)
         annotations = parse_tsv_annotations(DBSession, file_upload, filename, template_type, username, delimiter)
         pusher = get_pusher_client()
@@ -438,6 +438,12 @@ def upload_spreadsheet(request):
     except AttributeError:
         traceback.print_exc()
         return HTTPBadRequest(body=json.dumps({ 'error': 'Please attach a valid TSV file.' }), content_type='text/json')
+    except IntegrityError as IE:
+        traceback.print_exc()
+        if 'already exists' in IE.message:
+            return HTTPBadRequest(body=json.dumps({'error': 'Unable to process file upload. Record already exists.'}), content_type='text/json')
+        else:
+            return HTTPBadRequest(body=json.dumps({'error': 'Unable to process file upload. Database error occured while updating your entry.'}), content_type='text/json')
     except:
         traceback.print_exc()
         return HTTPBadRequest(body=json.dumps({ 'error': 'Unable to process file upload. Please try again.' }), content_type='text/json')

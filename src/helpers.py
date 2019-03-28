@@ -13,7 +13,6 @@ import traceback
 import requests
 import csv
 import re
-
 from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
 from src.curation_helpers import ban_from_cache, get_curator_session
 
@@ -534,8 +533,9 @@ def get_file_delimiter(file_upload):
     '''
 
     if file_upload:
+        temp = file_upload.readline()
         dialect = csv.Sniffer().sniff(
-            file_upload.readline(), [',', '|', '\t', ';'])
+            temp, [',', '|', '\t', ';'])
         file_upload.seek(0)
         return dialect.delimiter
     else:
