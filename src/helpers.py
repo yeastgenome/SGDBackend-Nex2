@@ -16,7 +16,6 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
-
 from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
 from src.curation_helpers import ban_from_cache, get_curator_session
 
