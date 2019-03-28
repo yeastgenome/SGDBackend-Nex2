@@ -104,7 +104,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
                         'The same gene summary cannot be updated twice in the same\
                         file: ' + str(gene_id))
                 already_used_genes.append(gene_id_with_summary)
-                if summary_type not in accepted_summary_types:
+                if summary_type.lower() not in ''.join(accepted_summary_types).lower():
                     raise ValueError('Unaccepted summary type. Must be one of ' + ', '.join(accepted_summary_types))
             if len(pmids) > 0:
                 pmids = re.split('\||,', pmids)
@@ -149,6 +149,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
             #file_summary_type = item.get(
             #      'Summary Type (phenotype, regulation)', '')
             file_summary_val = item.get('Summary', '')
+
             file_summary_html = link_gene_names(file_summary_val, locus_names_ids)
             if file_id:
                 gene = nex_session.query(Locusdbentity).filter_by(format_name=file_id).one_or_none()
@@ -161,9 +162,10 @@ def validate_file_content_and_process(file_content, nex_session, username):
                     nex_session.query(Locussummary).filter_by(summary_id=summary.summary_id).update({'text': file_summary_val, 'html': file_summary_html})
                     updates += 1
                 else:
+                    mod_summary_type = file_summary_type.lower().capitalize()
                     new_summary = Locussummary(
                         locus_id=gene.dbentity_id,
-                        summary_type=file_summary_type,
+                        summary_type=mod_summary_type,
                         text=file_summary_val,
                         html=file_summary_html,
                         created_by=username,
@@ -171,7 +173,9 @@ def validate_file_content_and_process(file_content, nex_session, username):
                     )
                     nex_session.add(new_summary)
                     inserts += 1
-                summary = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()[0]
+                
+                summary = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(
+                    locus_id=gene.dbentity_id, summary_type=mod_summary_type).all()[0]
                 # add LocussummaryReference(s)
             if item:
                 if item.get('PMIDs'):

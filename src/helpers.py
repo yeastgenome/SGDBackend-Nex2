@@ -600,8 +600,9 @@ def get_file_delimiter(file_upload):
     '''
 
     if file_upload:
+        temp = file_upload.readline()
         dialect = csv.Sniffer().sniff(
-            file_upload.readline(), [',', '|', '\t', ';'])
+            temp, [',', '|', '\t', ';'])
         file_upload.seek(0)
         return dialect.delimiter
     else:
