@@ -5,6 +5,7 @@ import fetchData from '../../lib/fetchData';
 import { setError, setMessage } from '../../actions/metaActions';
 import { connect } from 'react-redux';
 import style from './style.css' ;
+import {setURL,setCode,setSubject,setRecipients} from '../../actions/newsLetterActions';
 
 const RECIPIENT_URL = '/colleagues_subscriptions';
 const SOURCE_URL = '/get_newsletter_sourcecode';
@@ -16,10 +17,6 @@ class NewsLetter extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      url: '',
-      code: '',
-      subject: '',
-      recipients: '',
       isPending: false,
 
       urlError:INVISIBLE_ERROR,
@@ -42,28 +39,32 @@ class NewsLetter extends Component {
 
     this.handleErrorChecking = this.handleErrorChecking.bind(this);
   }
+  
 
   handleUrlChange(event) {
-    this.setState({ url: event.target.value, code: '' });
+    this.props.updateURL(event.target.value);
+    this.props.updateCode('');
+
     if(event.target.value.length== 0){
       this.setState({urlError:VISIBLE_ERROR},this.handleErrorChecking);
     }
     else{
       this.setState({urlError:INVISIBLE_ERROR});
     }
-
-    // this.handleErrorChecking();
   }
 
   handleSubmitURL() {
-    this.setState({ isPending: true, code: '' });
+    this.setState({ isPending: true});
+    this.setCode('');
+
     fetchData(SOURCE_URL, {
       type: 'POST',
       data: {
-        url: this.state.url
+        url: this.props.url
       }
     }).then((data) => {
-      this.setState({ isPending: false,code: data.code,codeError:INVISIBLE_ERROR },this.handleErrorChecking);
+      this.setState({ isPending: false,codeError:INVISIBLE_ERROR },this.handleErrorChecking);
+      this.setCode(data.code);
     }).catch((data) => {
       this.setState({ isPending: false },this.handleErrorChecking);
       this.props.dispatch(setError(data.error));
@@ -73,18 +74,18 @@ class NewsLetter extends Component {
 
   handleRenderCode() {
     if (this.state.isPending) return <Loader />;
-    return (<textarea rows="26" cols="10" onChange={this.handleCodeChange} value={this.state.code}></textarea>);
+    return (<textarea name="code" rows="26" cols="10" onChange={this.handleCodeChange} value={this.props.code}></textarea>);
   }
 
   preview() {
-    let htmlText = () => ({ __html: this.state.code });
+    let htmlText = () => ({ __html: this.props.code });
     return (
       <div dangerouslySetInnerHTML={htmlText()}></div>
     );
   }
 
   handleCodeChange(event) {
-    this.setState({ code: event.target.value });
+    this.setCode(event.target.value);
 
     if(event.target.value.length== 0){
       this.setState({codeError:VISIBLE_ERROR},this.handleErrorChecking);
@@ -92,12 +93,11 @@ class NewsLetter extends Component {
     else{
       this.setState({codeError:INVISIBLE_ERROR},this.handleErrorChecking);
     }
-
-    // this.handleErrorChecking();
   }
 
   handleSubjectChange(event) {
-    this.setState({ subject: event.target.value });
+    this.setSubject(event.target.value);
+
     if(event.target.value.length == 0){
       this.setState({subjectError:VISIBLE_ERROR},this.handleErrorChecking);
     }
@@ -107,7 +107,8 @@ class NewsLetter extends Component {
   }
 
   handleRecipientsChange(event) {
-    this.setState({ recipients: event.target.value });
+    this.setSubject(event.target.value);
+
     if(event.target.value.length == 0){
       this.setState({recipientsError:VISIBLE_ERROR},this.handleErrorChecking);
     }
@@ -117,11 +118,13 @@ class NewsLetter extends Component {
   }
 
   handleGettingRecipients() {
-    this.setState({recipients:''});
+    this.setRecipients('');
+
     fetchData(RECIPIENT_URL, {
       type: 'GET'
     }).then((data) => {
-      this.setState({ recipients: data.colleagues,recipientsError:INVISIBLE_ERROR },this.handleErrorChecking);
+      this.setRecipients(data.colleagues);
+      this.setState({recipientsError:INVISIBLE_ERROR },this.handleErrorChecking);
     }).catch((data) => {
       this.props.dispatch(setError(data.error),this.handleErrorChecking);
     });
@@ -133,7 +136,7 @@ class NewsLetter extends Component {
       fetchData(SEND_EMAIL, {
         type: 'POST',
         data: {
-          html: this.state.code, subject: this.state.subject, recipients: this.state.recipients
+          html: this.props.code, subject: this.props.subject, recipients: this.props.recipients
         }
       }).then((data) => {
         this.props.dispatch(setMessage(data.success));
@@ -144,7 +147,7 @@ class NewsLetter extends Component {
   }
 
   handleErrorChecking(){
-    if(this.state.url.length > 0 && this.state.code.length > 0 && this.state.subject.length > 0 && this.state.recipients.length > 0 ){
+    if(this.props.url.length > 0 && this.props.code.length > 0 && this.props.subject.length > 0 && this.state.props.length > 0 ){
       this.setState({isSubmitButtonDisabled: false});
     }
     else{
@@ -172,7 +175,7 @@ class NewsLetter extends Component {
                 {/* URL*/}
                 <div className="row">
                   <div className="columns medium-8">
-                    <input type="url" placeholder="Enter URL for newsletter" value={this.state.url} onChange={this.handleUrlChange} />
+                    <input type="url" name="url" placeholder="Enter URL for newsletter" value={this.props.url} onChange={this.handleUrlChange} />
                     <label data-alert className={this.state.urlError}>URL is required</label>
                   </div>
                   <div className="columns medium-4">
@@ -213,7 +216,7 @@ class NewsLetter extends Component {
                 {/* Subject line */}
                 <div className="row">
                   <label className="columns medium-12 large-9">Subject Line
-                  <input type="url" placeholder="Enter newsletter subject line" value={this.state.subject} onChange={this.handleSubjectChange} />
+                  <input type="url" placeholder="Enter newsletter subject line" value={this.props.subject} name="subject" onChange={this.handleSubjectChange} />
                   <label data-alert className={this.state.subjectError}>Subject line is required</label>
                   </label>
                 </div>
@@ -228,7 +231,7 @@ class NewsLetter extends Component {
                 {/* Recipients*/}
                 <div className="row">
                   <div className="large-8 columns">
-                    <textarea rows="3" cols="10" type="url" placeholder="Enter emails with ; seperated" value={this.state.recipients} onChange={this.handleRecipientsChange} />
+                    <textarea name="recipients" rows="3" cols="10" type="url" placeholder="Enter emails with ; seperated" value={this.props.recipients} onChange={this.handleRecipientsChange} />
                     <label data-alert className={this.state.recipientsError}>Recipient(s) is required</label>
                   </div>
 
@@ -254,12 +257,34 @@ class NewsLetter extends Component {
 }
 
 NewsLetter.propTypes = {
-  dispatch: React.PropTypes.func
+  url:React.PropTypes.string,
+  code:React.PropTypes.string,
+  subject:React.PropTypes.string,
+  recipients:React.PropTypes.string,
+  dispatch: React.PropTypes.func,
+  updateURL:React.PropTypes.func,
+  updateCode:React.PropTypes.func,
+  updateRecipients:React.PropTypes.func,
+  updateSubject:React.PropTypes.func,
 };
 
 function mapStateToProps(state) {
-  return state;
+  return {
+    url:state.url,
+    code:state.code,
+    subject:state.subject,
+    recipients:state.recipients
+  };
+}
+
+function mapDispatchToProps(dispatch){
+  return {
+    updateURL : (url) => {dispatch(setURL(url));},
+    updateCode: (code) => {dispatch(setCode(code));},
+    updateSubject:(subject) => {dispatch(setSubject(subject));},
+    updateRecipients: (recipients) =>{dispatch(setRecipients(recipients));}
+  };
 }
 
 // export default NewsLetter;
-export default connect(mapStateToProps)(NewsLetter);
+export default connect(mapStateToProps,mapDispatchToProps)(NewsLetter);
