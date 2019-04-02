@@ -1,30 +1,25 @@
 import React, { Component } from 'react';
-import CurateLayout from '../curateHome/layout';
 import Loader from '../../components/loader';
 import fetchData from '../../lib/fetchData';
 import { setError, setMessage } from '../../actions/metaActions';
 import { connect } from 'react-redux';
-import style from './style.css' ;
-import {setURL,setCode,setSubject,setRecipients} from '../../actions/newsLetterActions';
+import style from './style.css';
+import { setURL, setCode, setSubject, setRecipients } from '../../actions/newsLetterActions';
+import Label from './label';
 
 const RECIPIENT_URL = '/colleagues_subscriptions';
 const SOURCE_URL = '/get_newsletter_sourcecode';
 const SEND_EMAIL = '/send_newsletter';
-const VISIBLE_ERROR = 'form-error is-visible';
-const INVISIBLE_ERROR = 'form-error';
+
 
 class NewsLetter extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isPending: false,
-
-      urlError:INVISIBLE_ERROR,
-      codeError:INVISIBLE_ERROR,
-      subjectError:INVISIBLE_ERROR,
-      recipientsError:INVISIBLE_ERROR,
-
-      isSubmitButtonDisabled : true
+      isErrorURL:false,
+      isErrorCode:false,
+      isErrorSubject:false,
+      isErrorRecipients:false,
     };
 
     this.handleCodeChange = this.handleCodeChange.bind(this);
@@ -36,37 +31,69 @@ class NewsLetter extends Component {
     this.handleSubjectChange = this.handleSubjectChange.bind(this);
     this.handleRecipientsChange = this.handleRecipientsChange.bind(this);
     this.handleGettingRecipients = this.handleGettingRecipients.bind(this);
-
-    this.handleErrorChecking = this.handleErrorChecking.bind(this);
   }
-  
+
 
   handleUrlChange(event) {
     this.props.updateURL(event.target.value);
     this.props.updateCode('');
 
-    if(event.target.value.length== 0){
-      this.setState({urlError:VISIBLE_ERROR},this.handleErrorChecking);
+    if (event.target.value.length == 0) {
+      this.setState({ isErrorURL: true });
     }
-    else{
-      this.setState({urlError:INVISIBLE_ERROR});
+    else {
+      this.setState({ isErrorURL: false});
     }
   }
 
-  handleSubmitURL() {
-    this.setState({ isPending: true});
-    this.setCode('');
+  handleCodeChange(event) {
+    this.props.updateCode(event.target.value);
 
+    if (event.target.value.length == 0) {
+      this.setState({ isErrorCode: true });
+    }
+    else {
+      this.setState({ isErrorCode: false });
+    }
+  }
+
+  handleSubjectChange(event) {
+    this.props.updateSubject(event.target.value);
+    if (event.target.value.length == 0) {
+      this.setState({ isErrorSubject: true });
+    }
+    else {
+      this.setState({ isErrorSubject: false });
+    }
+  }
+
+  handleRecipientsChange(event) {
+    this.props.updateRecipients(event.target.value);
+
+    if (event.target.value.length == 0) {
+      this.setState({ isErrorRecipients: true });
+    }
+    else {
+      this.setState({ isErrorRecipients: false });
+    }
+  }
+
+
+
+  handleSubmitURL() {
+    this.setState({ isPending: true });
+    this.props.updateCode('');
+    
     fetchData(SOURCE_URL, {
       type: 'POST',
       data: {
         url: this.props.url
       }
     }).then((data) => {
-      this.setState({ isPending: false,codeError:INVISIBLE_ERROR },this.handleErrorChecking);
-      this.setCode(data.code);
+      this.setState({ isPending: false, isErrorCode : false });
+      this.props.updateCode(data.code);
     }).catch((data) => {
-      this.setState({ isPending: false },this.handleErrorChecking);
+      this.setState({ isPending: false,isErrorCode : true });
       this.props.dispatch(setError(data.error));
     });
 
@@ -84,49 +111,16 @@ class NewsLetter extends Component {
     );
   }
 
-  handleCodeChange(event) {
-    this.setCode(event.target.value);
-
-    if(event.target.value.length== 0){
-      this.setState({codeError:VISIBLE_ERROR},this.handleErrorChecking);
-    }
-    else{
-      this.setState({codeError:INVISIBLE_ERROR},this.handleErrorChecking);
-    }
-  }
-
-  handleSubjectChange(event) {
-    this.setSubject(event.target.value);
-
-    if(event.target.value.length == 0){
-      this.setState({subjectError:VISIBLE_ERROR},this.handleErrorChecking);
-    }
-    else{
-      this.setState({subjectError:INVISIBLE_ERROR},this.handleErrorChecking);
-    }
-  }
-
-  handleRecipientsChange(event) {
-    this.setSubject(event.target.value);
-
-    if(event.target.value.length == 0){
-      this.setState({recipientsError:VISIBLE_ERROR},this.handleErrorChecking);
-    }
-    else{
-      this.setState({recipientsError:INVISIBLE_ERROR},this.handleErrorChecking);
-    }
-  }
-
   handleGettingRecipients() {
-    this.setRecipients('');
+    this.props.updateRecipients('');
 
     fetchData(RECIPIENT_URL, {
       type: 'GET'
     }).then((data) => {
-      this.setRecipients(data.colleagues);
-      this.setState({recipientsError:INVISIBLE_ERROR },this.handleErrorChecking);
+      this.props.updateRecipients(data.colleagues);
+      this.setState({ isErrorRecipients:false });
     }).catch((data) => {
-      this.props.dispatch(setError(data.error),this.handleErrorChecking);
+      this.props.dispatch(setError(data.error));
     });
   }
 
@@ -146,18 +140,10 @@ class NewsLetter extends Component {
     }
   }
 
-  handleErrorChecking(){
-    if(this.props.url.length > 0 && this.props.code.length > 0 && this.props.subject.length > 0 && this.state.props.length > 0 ){
-      this.setState({isSubmitButtonDisabled: false});
-    }
-    else{
-      this.setState({isSubmitButtonDisabled: true});
-    }
-  }
-
   render() {
+    const isError = this.state.isErrorCode || this.state.isErrorURL || this.state.isErrorSubject || this.state.isErrorRecipients;
     return (
-      <CurateLayout>
+      <div>
         {
           <form>
 
@@ -166,17 +152,14 @@ class NewsLetter extends Component {
                 <h1>NewsLetter</h1>
 
                 {/* URL Label*/}
-                <div className="row">
-                  <div className="columns medium-12">
-                    <label> URL </label>
-                  </div>
-                </div>
-                
+                <Label label="URL" />
+
                 {/* URL*/}
                 <div className="row">
                   <div className="columns medium-8">
                     <input type="url" name="url" placeholder="Enter URL for newsletter" value={this.props.url} onChange={this.handleUrlChange} />
-                    <label data-alert className={this.state.urlError}>URL is required</label>
+                    <label data-alert className={`form-error  + ${this.state.isErrorURL ? 'is-visible' : ''}`}>URL is required</label>
+                    
                   </div>
                   <div className="columns medium-4">
                     <button type="button" onClick={this.handleSubmitURL} className="button">Get source code</button>
@@ -186,25 +169,18 @@ class NewsLetter extends Component {
                 {/* Source code */}
                 <div className="row">
                   <div className="column medium-6 large-6">
-                    <div className="row">
-                      <div className="column medium-12 large-12">
-                        <label>HTML Code</label>
-                      </div>
-                    </div>
+                    <Label label="HTML Code" />
                     <div className="row">
                       <div className="column medium-12 large-12">
                         {this.handleRenderCode()}
-                        <label data-alert className={this.state.codeError}>HTML code is required</label>
+                        <label data-alert className={`form-error + ${this.state.isErrorCode ? 'is-visible' :''}`}>HTML code is required</label>
                       </div>
                     </div>
                   </div>
 
                   <div className="column medium-6 large-6">
-                    <div className="row">
-                      <div className="column medium-12 large-12">
-                        <label>Preview Area</label>
-                      </div>
-                    </div>
+                    <Label label="Preview Area" />
+
                     <div className="row">
                       <div className={`column medium-12 large-11 ${style.previewBox}`}>
                         {this.preview()}
@@ -212,27 +188,24 @@ class NewsLetter extends Component {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Subject line */}
+                <Label label="Subject Line" />
                 <div className="row">
-                  <label className="columns medium-12 large-9">Subject Line
-                  <input type="url" placeholder="Enter newsletter subject line" value={this.props.subject} name="subject" onChange={this.handleSubjectChange} />
-                  <label data-alert className={this.state.subjectError}>Subject line is required</label>
-                  </label>
+                  <div className="column medium-8">
+                    <input type="url" placeholder="Enter newsletter subject line" value={this.props.subject} name="subject" onChange={this.handleSubjectChange} />
+                    <label data-alert className={`form-error + ${this.state.isErrorSubject ? 'is-visible' :''}`}>Subject line is required</label>
+                  </div>
                 </div>
 
                 {/* Recipients Label */}
-                <div className="row">
-                  <div className="large-8 columns">
-                    <label>Recipients</label>
-                  </div>
-                </div>
+                <Label label="Recipients" />
 
                 {/* Recipients*/}
                 <div className="row">
                   <div className="large-8 columns">
                     <textarea name="recipients" rows="3" cols="10" type="url" placeholder="Enter emails with ; seperated" value={this.props.recipients} onChange={this.handleRecipientsChange} />
-                    <label data-alert className={this.state.recipientsError}>Recipient(s) is required</label>
+                    <label data-alert className={`form-error + ${this.state.isErrorRecipients ? 'is-visible' :''}`}>Recipient(s) is required</label>
                   </div>
 
                   <div className="large-4 columns">
@@ -244,7 +217,7 @@ class NewsLetter extends Component {
                 {/* Send button */}
                 <div className="row">
                   <div className="columns large-12">
-                    <button type="button" onClick={this.handleSendEmail} className="button" disabled={this.state.isSubmitButtonDisabled}>Send Email</button>
+                    <button type="button" onClick={this.handleSendEmail} className="button" disabled={isError}>Send Email</button>
                   </div>
                 </div>
               </div>
@@ -252,39 +225,38 @@ class NewsLetter extends Component {
 
           </form>
         }
-      </CurateLayout>);
+      </div>);
   }
 }
 
 NewsLetter.propTypes = {
-  url:React.PropTypes.string,
-  code:React.PropTypes.string,
-  subject:React.PropTypes.string,
-  recipients:React.PropTypes.string,
+  url: React.PropTypes.string,
+  code: React.PropTypes.string,
+  subject: React.PropTypes.string,
+  recipients: React.PropTypes.string,
   dispatch: React.PropTypes.func,
-  updateURL:React.PropTypes.func,
-  updateCode:React.PropTypes.func,
-  updateRecipients:React.PropTypes.func,
-  updateSubject:React.PropTypes.func,
+  updateURL: React.PropTypes.func,
+  updateCode: React.PropTypes.func,
+  updateRecipients: React.PropTypes.func,
+  updateSubject: React.PropTypes.func
 };
 
 function mapStateToProps(state) {
   return {
-    url:state.url,
-    code:state.code,
-    subject:state.subject,
-    recipients:state.recipients
+    url: state.newsLetter.get('url'),
+    code: state.newsLetter.get('code'),
+    subject: state.newsLetter.get('subject'),
+    recipients: state.newsLetter.get('recipients')
   };
 }
 
-function mapDispatchToProps(dispatch){
+function mapDispatchToProps(dispatch) {
   return {
-    updateURL : (url) => {dispatch(setURL(url));},
-    updateCode: (code) => {dispatch(setCode(code));},
-    updateSubject:(subject) => {dispatch(setSubject(subject));},
-    updateRecipients: (recipients) =>{dispatch(setRecipients(recipients));}
+    updateURL: (url) => { dispatch(setURL(url)); },
+    updateCode: (code) => { dispatch(setCode(code)); },
+    updateSubject: (subject) => { dispatch(setSubject(subject));},
+    updateRecipients: (recipients) => { dispatch(setRecipients(recipients)); }
   };
 }
 
-// export default NewsLetter;
-export default connect(mapStateToProps,mapDispatchToProps)(NewsLetter);
+export default connect(mapStateToProps, mapDispatchToProps)(NewsLetter);
