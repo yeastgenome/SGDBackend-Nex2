@@ -4,8 +4,7 @@ const DEFAULT_STATE = fromJS({
   url: '',
   code: '',
   subject: '',
-  recipients: '',
-  isPending: false
+  recipients: ''
 });
 
 const UPDATE_URL = 'UPDATE_URL';

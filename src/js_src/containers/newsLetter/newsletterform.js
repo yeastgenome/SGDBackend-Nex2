@@ -20,6 +20,7 @@ class NewsLetterForm extends Component {
       isErrorCode:false,
       isErrorSubject:false,
       isErrorRecipients:false,
+      isPending:false
     };
 
     this.handleCodeChange = this.handleCodeChange.bind(this);
