@@ -5,7 +5,6 @@ import { setError, setMessage } from '../../actions/metaActions';
 import { connect } from 'react-redux';
 import style from './style.css';
 import { setURL, setCode, setSubject, setRecipients } from '../../actions/newsLetterActions';
-import Label from './label';
 
 const RECIPIENT_URL = '/colleagues_subscriptions';
 const SOURCE_URL = '/get_newsletter_sourcecode';
@@ -153,7 +152,11 @@ class NewsLetterForm extends Component {
                 <h1>NewsLetter</h1>
 
                 {/* URL Label*/}
-                <Label label="URL" />
+                <div className="row">
+                  <div className="columns medium-12">
+                    <label>URL</label>
+                  </div>
+                </div>
 
                 {/* URL*/}
                 <div className="row">
@@ -170,7 +173,11 @@ class NewsLetterForm extends Component {
                 {/* Source code */}
                 <div className="row">
                   <div className="column medium-6 large-6">
-                    <Label label="HTML Code" />
+                    <div className="row">
+                      <div className="columns medium-12">
+                        <label>HTML Code</label>
+                      </div>
+                    </div>
                     <div className="row">
                       <div className="column medium-12 large-12">
                         {this.handleRenderCode()}
@@ -180,8 +187,11 @@ class NewsLetterForm extends Component {
                   </div>
 
                   <div className="column medium-6 large-6">
-                    <Label label="Preview Area" />
-
+                    <div className="row">
+                      <div className="columns medium-12">
+                        <label>Preview Area</label>
+                      </div>
+                    </div>
                     <div className="row">
                       <div className={`column medium-12 large-11 ${style.previewBox}`}>
                         {this.preview()}
@@ -191,7 +201,11 @@ class NewsLetterForm extends Component {
                 </div>
 
                 {/* Subject line */}
-                <Label label="Subject Line" />
+                <div className="row">
+                  <div className="columns medium-12">
+                    <label>Subject Line</label>
+                  </div>
+                </div>
                 <div className="row">
                   <div className="column medium-8">
                     <input type="url" placeholder="Enter newsletter subject line" value={this.props.subject} name="subject" onChange={this.handleSubjectChange} />
@@ -200,7 +214,11 @@ class NewsLetterForm extends Component {
                 </div>
 
                 {/* Recipients Label */}
-                <Label label="Recipients" />
+                <div className="row">
+                  <div className="columns medium-12">
+                    <label>Recipients</label>
+                  </div>
+                </div>
 
                 {/* Recipients*/}
                 <div className="row">
