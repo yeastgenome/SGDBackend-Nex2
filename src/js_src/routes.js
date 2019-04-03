@@ -21,7 +21,7 @@ import TriageIndex from './containers/triage';
 import SpreadsheetUpload from './containers/spreadsheetUpload/index';
 import Settings from './containers/settings/index';
 import NotFound from './containers/curateHome/notFound';
-import NewsLetter from './containers/newsLetter/newsLetterWrapper';
+import NewsLetter from './containers/newsLetter/index';
 // curate lit biz
 import Blank from './components/blank';
 import NewReference from './containers/newReference';
