@@ -55,7 +55,10 @@ export default (
       <Route component={requireAuthentication(ColleaguesShow)} path='colleagues/triage/:id' />
       <Route component={requireAuthentication(SpreadsheetUpload)} path='spreadsheet_upload' />
       <Route component={requireAuthentication(FileCurate)} path='file_curate' />
+<<<<<<< HEAD
       <Route component={requireAuthentication(FileCurateUpdate)} path='file_curate_update' />
+=======
+>>>>>>> minor changes
       <Route component={requireAuthentication(Settings)} path='settings' />
       <Route component={requireAuthentication(NewsLetter)} path='newsletter' />
       <Route component={requireAuthentication(PostTranslationModification)} path='ptm' />
@@ -86,7 +89,6 @@ export default (
       <Route component={NewColleague} path='new_colleague' />
       <Route component={NewGeneNameReservation} path='new_reservation' />
     </Route>
-    <Route component={requireAuthentication(FileCurate)} path='file_curate' />
     <Route component={NotFound} path='*' />
   </Route>
 );
