@@ -131,4 +131,23 @@ color:#FFF!important;
 
 .styleList li a{
   color:#000;
+.fileContainer {
+  width: 100%;
+  min-height: 200px;
+}
+
+.uploadMsg {
+  width: 7rem;
+  text-align: center;
+  margin: 0 auto;
+  margin-top: 2rem;
+}
+
+.uploadIcon {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.submitButton {
+  margin-top: 1rem;
 }

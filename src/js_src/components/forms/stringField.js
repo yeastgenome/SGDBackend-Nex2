@@ -11,6 +11,7 @@ import React, { Component } from 'react';
  * @func {object} _renderReadOnly: render read-only component
  * @func {object} _renderEdit: render writeable component
  * @func {object} _renderIcon: render font-awesome icon
+ * @prop {boolean} isRequired: reqiored flag
  */
 
 class StringField extends Component {
@@ -29,7 +30,7 @@ class StringField extends Component {
     return (
       <div>
         <label>{this._renderIcon()}{this.props.displayName}</label>
-        <input defaultValue={this.props.defaultValue} name={this.props.paramName} placeholder={this.props.placeholder} type='text' />
+        <input defaultValue={this.props.defaultValue} name={this.props.paramName} placeholder={this.props.placeholder} type='text' required={this.props.isRequired} />
       </div>
     );
   }
@@ -49,7 +50,8 @@ StringField.propTypes = {
   iconClass: React.PropTypes.string,
   isReadOnly: React.PropTypes.bool,
   paramName: React.PropTypes.string,
-  placeholder: React.PropTypes.string
+  placeholder: React.PropTypes.string,
+  isRequired: React.PropTypes.bool
 };
 
 export default StringField;
