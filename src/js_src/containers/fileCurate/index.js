@@ -1,4 +1,5 @@
-
+/* eslint-disable no-debugger */
+/* eslint-disable no-unused-vars */
 import React, {Component} from 'react';
 import FileCurateForm from '../../components/fileCurate/fileCurateForm';
 import CurateLayout from '../curateHome/layout';
@@ -13,11 +14,20 @@ import CurateLayout from '../curateHome/layout';
 class FileCurate extends Component {
   constructor(props){
     super(props);
+    this.handleFileUploadSubmit = this.handleFileUploadSubmit.bind(this);
+  }
+  handleFileUploadSubmit(e){
+    console.log(e);
+    //e.prevenyDefault();
+    //let formData = new FormData(this.refs.form);
+    debugger;
+
   }
 
   render(){
-    return (<CurateLayout><FileCurateForm /></CurateLayout>);
+    return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} /></div></CurateLayout>);
   }
 }
+
 
 export default FileCurate;
