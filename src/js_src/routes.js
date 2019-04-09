@@ -86,7 +86,6 @@ export default (
       <Route component={NewColleague} path='new_colleague' />
       <Route component={NewGeneNameReservation} path='new_reservation' />
     </Route>
-    <Route component={requireAuthentication(FileCurate)} path='file_curate' />
     <Route component={NotFound} path='*' />
   </Route>
 );
