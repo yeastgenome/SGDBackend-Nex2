@@ -29,11 +29,7 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
 from .curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid
 from .loading.promote_reference_triage import add_paper
-from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
-    Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname,\
-    ReservednameTriage, Straindbentity, Literatureannotation, Referencetriage,\
-    Referencedeleted, Locusdbentity, CurationReference, Locussummary,\
-    validate_tags, convert_space_separated_pmids_to_list
+from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague, Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname, ReservednameTriage, Straindbentity, Literatureannotation, Referencetriage, Referencedeleted, Locusdbentity, CurationReference, Locussummary, validate_tags, convert_space_separated_pmids_to_list, Psimod
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 import pandas as pd
@@ -1178,11 +1174,43 @@ def ptm_file_insert(request):
     try:
         file = request.POST['file'].file
         filename = request.POST['file'].filename
-        data = pd.read_excel(io=file, sheet_name="Sheet1")
-        for index, row in data.iterrows():
-            print (row.values)
+        # data = pd.read_excel(io=file, sheet_name="Sheet1")
+
+
+        
+        locus_sgd_id = {}
+        reference_sgd_id = {}
+        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.subclass == 'LOCUS',Dbentity.subclass =='REFERENCE')).all()
+        
+        for d in dbentity_in_db:
+            if d.subclass == 'LOCUS':
+                locus_sgd_id[d.sgdid] = d.dbentity_id
+                continue
+            
+            if d.subclass == 'REFERENCE':
+                reference_sgd_id[d.sgdid] = d.dbentity_id
+                continue
+        
+        #taxonomy_id
+        strain_to_taxonomy_id={}
+        strains_in_db = DBSession.query(Straindbentity).filter(or_(Straindbentity.strain_type == 'Reference', Straindbentity.strain_type == 'Alternative Reference')).all()
+        for s in strains_in_db:
+            strain_to_taxonomy_id[s.display_name]= s.taxonomy_id
+
+        #psmoid
+        psimod_to_id = {}
+        psimod_in_db = DBSession.query(Psimod).filter(Psimod.source_id == 834).all()
+        for p in psimod_in_db:
+            psimod_to_id[p.display_name] = p.psimod_id
+        
+        #modifier_id
+
+
+        # for index, row in data.iterrows():
+        #     print (row.values)
         
         return {"data":filename}
 
     except Exception as e:
+        print(e)
         return HTTPBadRequest(body=json.dumps({ 'error': "error" }), content_type='text/json')
