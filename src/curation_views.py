@@ -1204,6 +1204,7 @@ def ptm_file_insert(request):
         list_of_posttranslationannotation = []
         list_of_posttranslationannotation_errors = []
         data = pd.read_excel(io=file, sheet_name="Sheet1")
+        
         for index, row in data.iterrows():
             posttranslationannotation={}
             posttranslationannotation_error = {}
@@ -1258,7 +1259,7 @@ def ptm_file_insert(request):
 
             list_of_posttranslationannotation.append(posttranslationannotation)
         
-        curator_session = get_curator_session(request.session['username'])
+        # curator_session = get_curator_session(request.session['username'])
         # curator_session
 
         ##How to identify if it an update or insert
@@ -1270,4 +1271,4 @@ def ptm_file_insert(request):
 
     except Exception as e:
         print(e)
-        return HTTPBadRequest(body=json.dumps({ 'error': "error" }), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({ 'error': e.message }), content_type='text/json')
