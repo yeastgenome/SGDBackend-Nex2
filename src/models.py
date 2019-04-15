@@ -8191,7 +8191,7 @@ class Posttranslationannotation(Base):
             "aliases": [],
             "type": self.psimod.display_name,
             "id": self.annotation_id,
-
+            "psimod_id":self.psimod.psimod_id
         }
 
 class Proteindomain(Base):
