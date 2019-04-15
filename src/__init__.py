@@ -178,6 +178,8 @@ def main(global_config, **settings):
     config.add_route('new_gene_name_reservation', '/reserve', request_method='POST')
 
     config.add_route('ptm_file_insert','/ptm_file',request_method='POST')
+    config.add_route('get_ptm_by_gene','/get_ptms/{id}',request_method='GET')
+
     config.add_route('healthcheck', '/healthcheck')
 
     #swagger
