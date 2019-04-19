@@ -1581,6 +1581,8 @@ def update_ptm(request):
                 modifier_id = dbentity_in_db.dbentity_id
             else:
                 return HTTPBadRequest(body=json.dumps({'error': "Modifier value not found in database"}), content_type='text/json')
+        else:
+            modifier_id = None
         
         if(int(id) > 0):
             try:
@@ -1591,11 +1593,9 @@ def update_ptm(request):
                               "site_index": site_index,
                               "site_residue": site_residue,
                               "psimod_id": psimod_id,
-                              "created_by": CREATED_BY
+                              "modifier_id": modifier_id
                               }
-                if modifier_id:
-                   update_ptm["modifier_id"] = modifier_id
-
+                
                 DBSession.query(Posttranslationannotation).filter(Posttranslationannotation.annotation_id == id).update(update_ptm)
                 transaction.commit()
 
@@ -1607,25 +1607,15 @@ def update_ptm(request):
         if(int(id) == 0):
             try: 
                 y = None
-                if not modifier_id:    
-                    y = Posttranslationannotation(taxonomy_id=taxonomy_id,
-                                                source_id=source_id,
-                                                dbentity_id=dbentity_id,
-                                                reference_id=reference_id,
-                                                site_index=site_index,
-                                                site_residue=site_residue,
-                                                psimod_id=psimod_id,
-                                                created_by=CREATED_BY)
-                else:
-                    y = Posttranslationannotation(taxonomy_id=taxonomy_id,
-                                                  source_id=source_id,
-                                                  dbentity_id=dbentity_id,
-                                                  reference_id=reference_id,
-                                                  site_index=site_index,
-                                                  site_residue=site_residue,
-                                                  psimod_id=psimod_id,
-                                                  modifier_id=modifier_id,
-                                                  created_by=CREATED_BY)
+                y = Posttranslationannotation(taxonomy_id=taxonomy_id,
+                                              source_id=source_id,
+                                              dbentity_id=dbentity_id,
+                                              reference_id=reference_id,
+                                              site_index=site_index,
+                                              site_residue=site_residue,
+                                              psimod_id=psimod_id,
+                                              modifier_id=modifier_id,
+                                              created_by=CREATED_BY)
                 DBSession.add(y)
                 transaction.commit()
             
