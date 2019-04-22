@@ -1610,7 +1610,7 @@ def update_ptm(request):
                 curator_session.query(Posttranslationannotation).filter(Posttranslationannotation.annotation_id == id).update(update_ptm)
                 transaction.commit()
 
-                return HttpOk(body=json.dumps({"success": "Record updated successfully."}),content_type='text/json') 
+                return HTTPOk(body=json.dumps({"success": "Record updated successfully."}), content_type='text/json')
             except Exception as e:
                 transaction.abort()
                 if curator_session:
@@ -1635,7 +1635,7 @@ def update_ptm(request):
                 curator_session.add(y)
                 transaction.commit()
             
-                return HttpOk(body=json.dumps({"success": "Record added successfully."}), content_type='text/json')
+                return HTTPOk(body=json.dumps({"success": "Record added successfully."}), content_type='text/json')
             except Exception as e:
                 transaction.abort()
                 if curator_session:
