@@ -672,3 +672,11 @@ def set_string_format(str_param, char_format='_'):
         return temp_str
     else:
         return None
+def unicode_to_string(unicode_value):
+    try:
+        returnValue = unicode_value.encode('ascii','ignore')
+        return returnValue
+    except UnicodeEncodeError as err:
+        return None
+
+    
