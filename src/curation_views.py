@@ -3,8 +3,8 @@ from oauth2client import client, crypt
 from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
 from pyramid.view import view_config
 from pyramid.session import check_csrf_token
-from sqlalchemy import create_engine, and_, or_
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import create_engine, and_ , or_
+from sqlalchemy.exc import IntegrityError,DataError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from validate_email import validate_email
 from random import randint
@@ -1404,13 +1404,19 @@ def ptm_file_insert(request):
                 transaction.commit()
                 err = '\n'.join(list_of_posttranslationannotation_errors)
                 isSuccess = True
-                returnValue = "Inserted: " + str(INSERT) + " Updated: " + str(UPDATE) + " Errors " + err
+                returnValue = 'Inserted: ' + str(INSERT) + ' Updated: ' + str(UPDATE) + ' Errors: ' + err
             except IntegrityError as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
-                returnValue = "Record already exisits for site index = " + str(e.params['site_index']) + " site residue = " + e.params['site_residue'] + ' dbentity_id = ' + str(e.params['dbentity_id'])
+                returnValue = 'Record already exisits for site index: ' + str(e.params['site_index']) + ' site residue: ' + e.params['site_residue'] + ' dbentity_id: ' + str(e.params['dbentity_id'])
+            except DataError as e:
+                transaction.abort()
+                if curator_session:
+                    curator_session.rollback()
+                isSuccess = False
+                returnValue = 'Error, issue in data row with site index: ' + str(e.params['site_index']) + ' site residue: ' + e.params['site_residue'] + ' dbentity_id: ' + str(e.params['dbentity_id'])
             except Exception as e:
                 transaction.abort()
                 if curator_session:
@@ -1587,13 +1593,25 @@ def update_ptm(request):
                 curator_session.query(Posttranslationannotation).filter(Posttranslationannotation.annotation_id == id).update(update_ptm)
                 transaction.commit()
                 isSuccess = True
-                returnValue = "Record updated successfully."
+                returnValue = 'Record updated successfully.'
+            except IntegrityError as e:
+                transaction.abort()
+                if curator_session:
+                    curator_session.rollback()
+                isSuccess = False
+                returnValue = 'Updated failed, record already exists' 
+            except DataError as e:
+                transaction.abort()
+                if curator_session:
+                    curator_session.rollback()
+                isSuccess = False
+                returnValue = 'Insert failes, issue in data'
             except Exception as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
-                returnValue = 'Updated failed' + ' ' + str(e.message)
+                returnValue = 'Updated failed ' + str(e.message)
             finally:
                 if curator_session:
                     curator_session.close()
@@ -1613,7 +1631,19 @@ def update_ptm(request):
                 curator_session.add(y)
                 transaction.commit()
                 isSuccess = True
-                returnValue = "Record added successfully."
+                returnValue = 'Record added successfully.'
+            except IntegrityError as e:
+                transaction.abort()
+                if curator_session:
+                    curator_session.rollback()
+                isSuccess = False
+                returnValue = 'Insert failed, record already exists'
+            except DataError as e:
+                transaction.abort()
+                if curator_session:
+                    curator_session.rollback()
+                isSuccess = False
+                returnValue = 'Insert failes, issue in data'
             except Exception as e:
                 transaction.abort()
                 if curator_session:
@@ -1625,7 +1655,7 @@ def update_ptm(request):
                     curator_session.close()
 
         if isSuccess:
-            return HTTPOk(body=json.dumps({"success": returnValue}), content_type='text/json')
+            return HTTPOk(body=json.dumps({'success': returnValue}), content_type='text/json')
 
         return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
 
