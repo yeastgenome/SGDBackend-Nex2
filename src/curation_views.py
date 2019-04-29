@@ -27,7 +27,7 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, set_string_format,\
     send_newsletter_email, get_file_delimiter, unicode_to_string
 from .curation_helpers import ban_from_cache, process_pmid_list,\
-    get_curator_session, get_pusher_client, validate_orcid
+    get_curator_session, get_pusher_client, validate_orcid, get_list_of_ptms
 from .loading.promote_reference_triage import add_paper
 from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague, Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname, ReservednameTriage, Straindbentity, Literatureannotation, Referencetriage, Referencedeleted, Locusdbentity, CurationReference, Locussummary, validate_tags, convert_space_separated_pmids_to_list, Psimod, Posttranslationannotation
 from .tsv_parser import parse_tsv_annotations
@@ -1452,30 +1452,7 @@ def ptm_by_gene(request):
         return HTTPBadRequest(body=json.dumps({'error': 'Gene not found in database'}), content_type='text/json')
     
     ptms = models_helper.get_all_ptms_by_dbentity(dbentity.dbentity_id)
-
-    list_of_ptms = []
-    for ptm in ptms:
-        new_ptm = ptm.to_dict()
-        new_ptm['modifier'] = {'format_name': ''}
-        new_ptm['psimod_id'] = ''
-        new_ptm['taxonomy'] = {
-            "taxonomy_id": '',
-            "format_name": '',
-            "display_name": ''
-            }
-        
-        if ptm.modifier:
-            new_ptm['modifier'] = {'format_name': ptm.modifier.format_name}
-        if ptm.psimod:
-            new_ptm['psimod_id'] = ptm.psimod.psimod_id
-        if ptm.taxonomy:
-            new_ptm['taxonomy'] = {
-                "taxonomy_id": ptm.taxonomy.taxonomy_id,
-                "format_name": ptm.taxonomy.format_name,
-                "display_name": ptm.taxonomy.display_name
-            }
-
-        list_of_ptms.append(new_ptm)
+    list_of_ptms = get_list_of_ptms(ptms)
 
     return {'ptms' :list_of_ptms}
 
@@ -1578,6 +1555,7 @@ def ptm_update(request):
         
         isSuccess = False
         returnValue = ''
+        ptms_in_db = []
 
         if(int(id) > 0):
             try:
@@ -1595,6 +1573,8 @@ def ptm_update(request):
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Record updated successfully.'
+                ptms = models_helper.get_all_ptms_by_dbentity(dbentity_id)
+                ptms_in_db = get_list_of_ptms(ptms)
             except IntegrityError as e:
                 transaction.abort()
                 if curator_session:
@@ -1656,7 +1636,7 @@ def ptm_update(request):
                     curator_session.close()
 
         if isSuccess:
-            return HTTPOk(body=json.dumps({'success': returnValue}), content_type='text/json')
+            return HTTPOk(body=json.dumps({'success': returnValue, "ptms": ptms_in_db}), content_type='text/json')
 
         return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
 
@@ -1673,12 +1653,16 @@ def ptm_delete(request):
         isSuccess = False
         returnValue = ''
         ptm_in_db = curator_session.query(Posttranslationannotation).filter(Posttranslationannotation.annotation_id == id).one_or_none()
+        dbentity_id = ptm_in_db.dbentity_id
+        ptms_in_db = []
         if(ptm_in_db):
             try:
                 curator_session.delete(ptm_in_db)
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Ptm successfully deleted.'
+                ptms = models_helper.get_all_ptms_by_dbentity(dbentity_id)
+                ptms_in_db = get_list_of_ptms(ptms)
             except Exception as e:
                 transaction.abort()
                 if curator_session:
@@ -1690,7 +1674,7 @@ def ptm_delete(request):
                     curator_session.close()
 
             if isSuccess:
-                return HTTPOk(body=json.dumps({'success': returnValue}), content_type='text/json')
+                return HTTPOk(body=json.dumps({'success': returnValue, 'ptms': ptms_in_db}), content_type='text/json')
             
             return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
         
