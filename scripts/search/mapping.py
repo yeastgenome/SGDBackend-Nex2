@@ -157,10 +157,12 @@ mapping = {
                     }
                 },
                 "name_description": {
-                    "type": "keyword"
+                    "type": "text",
+                    "fielddata": True
                 },
                 "summary": {
-                    "type": "keyword"
+                    "type": "text",
+                    "fielddata": True
                 },
                 "phenotypes": {
                     "type": "keyword",
@@ -303,7 +305,8 @@ mapping = {
                     }
                 },
                 "phenotype_loci": {
-                    "type": "keyword",
+                    "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -412,7 +415,8 @@ mapping = {
                     }
                 },
                 "aliases": {
-                        "type": "keyword",
+                        "type": "text",
+                        "fielddata": True,
                         "fields": {
                             "raw": {
                                 "type": "keyword",
