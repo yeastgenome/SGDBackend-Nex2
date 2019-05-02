@@ -1485,6 +1485,7 @@ def get_psimod(request):
             returnList = []
             for p in psimods_in_use:
                 obj = {"psimod_id": p.psimod_id,
+                       "format_name":p.format_name,
                        "display_name": p.display_name,
                        "inuse":True
                       }
@@ -1492,6 +1493,7 @@ def get_psimod(request):
             
             for p in psimods_not_in_use:
                 obj = {"psimod_id": p.psimod_id,
+                       "format_name": p.format_name,
                        "display_name": p.display_name,
                        "inuse": False
                        }
