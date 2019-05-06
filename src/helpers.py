@@ -607,7 +607,9 @@ def get_file_delimiter(file_upload):
     else:
         raise ValueError(
             'file format error, acceptable formats are txt, tsv, xls')
-#TODO: develop this into an endpoint that will check the file before uploading in the next release
+
+
+# TODO: develop this into an endpoint that will check the file before uploading in the next release
 def summary_file_is_valid(file_upload):
     ''' Check if file is valid for upload
 
