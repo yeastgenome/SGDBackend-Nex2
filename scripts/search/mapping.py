@@ -127,7 +127,8 @@ mapping = {
                     }
                 },
                 "colleague_loci": {
-                    "type": "keyword",
+                    "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -296,7 +297,8 @@ mapping = {
                     }
                 },
                 "references": {
-                    "type": "keyword",
+                    "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -355,7 +357,8 @@ mapping = {
                     "analyzer": "symbols"
                 },
                 "gene_ontology_loci": {
-                    "type": "text",
+                    "type": "keyword",
+                    "index": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -369,6 +372,7 @@ mapping = {
                 },
                 "disease_loci": {
                     "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -378,6 +382,7 @@ mapping = {
                 },
                 "author": {
                     "type": "keyword",
+                    "index": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -406,7 +411,8 @@ mapping = {
                     }
                 },
                 "reference_loci": {
-                    "type": "keyword",
+                    "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
