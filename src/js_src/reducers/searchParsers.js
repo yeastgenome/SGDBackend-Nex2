@@ -1,5 +1,6 @@
 const JOIN_HIGHLIGHT_BY = '...';
 const FILTER_ORDER = ['gene_type', 'species'];
+/* eslint-disable no-debugger */
 
 import { makeFieldDisplayName } from '../lib/searchHelpers';
 import { NON_HIGHLIGHTED_FIELDS } from '../constants';
@@ -26,8 +27,9 @@ export function injectHighlightIntoResponse(responseObj) {
   return responseObj;
 }
 
+
 export function parseResults(results) {
-  return results.map( d => { 
+  return results.map( d => {
     switch (d.category) {
     case 'gene':
       return parseGeneResult(d);
@@ -51,7 +53,7 @@ export function parseAggs(rawAggs, queryObject) {
       let currentValue = queryObject[d.key];
       let _isActive;
       // look at array fields differently
-      if (typeof currentValue === 'object') { 
+      if (typeof currentValue === 'object') {
         _isActive = (currentValue.indexOf(_d.key) >= 0);
       } else {
         _isActive = _d.key === currentValue;
@@ -169,13 +171,30 @@ function parseHomologyGroupResult(_d) {
 
 function parseDefaultResult(_d) {
   let d = injectHighlightIntoResponse(_d);
-  return {
-    associated_genes: d.associated_genes,
-    category: d.category || 'gene',
-    display_name: d.name,
-    highlight: d.highlights,
-    href: d.href,
-    name: d.name,
-    synonyms: d.synonym
-  };
+  if(d.category == 'download'){
+    return {
+      associated_genes: d.associated_genes,
+      category: d.category || 'gene',
+      display_name: d.name,
+      highlight: d.highlights,
+      href: d.href,
+      name: d.name,
+      synonyms: d.synonym,
+      file_size: d.file_size,
+      readme_url: d.readme_url,
+      status: d.status
+    };
+
+  }
+  else{
+    return {
+      associated_genes: d.associated_genes,
+      category: d.category || 'gene',
+      display_name: d.name,
+      highlight: d.highlights,
+      href: d.href,
+      name: d.name,
+      synonyms: d.synonym
+    };
+  }
 }
