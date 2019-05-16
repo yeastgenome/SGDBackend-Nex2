@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
+/* eslint-disable no-debugger */
 
 class ActionList extends Component {
   render() {
