@@ -62,7 +62,6 @@ def account(request):
 
 
 
-
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
 @authenticate
 def get_locus_curate(request):
@@ -943,6 +942,7 @@ def colleague_triage_promote(request):
     finally:
         if curator_session:
             curator_session.remove()
+
 
 @view_config(route_name='colleague_triage_delete', renderer='json', request_method='DELETE')
 @authenticate
