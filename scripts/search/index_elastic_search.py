@@ -843,6 +843,7 @@ def index_downloads():
             else:
                 status = "Archived"
         obj = {
+            ""
             "name":
                 x.display_name,
             "href":
