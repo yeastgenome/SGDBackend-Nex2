@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React  from 'react';
 import { IndexRoute, Route  } from 'react-router';
 
@@ -15,7 +14,7 @@ import { requireAuthentication } from './containers/authenticateComponent';
 import CurateHome from './containers/curateHome';
 import Search from './containers/search';
 import LocusLayout from './containers/locus/layout';
-import LocusBasic from './containers/locus/basic';
+// import LocusBasic from './containers/locus/basic';
 // import LocusName from './containers/locus/name';
 import LocusSummaries from './containers/locus/summaries';
 import TriageIndex from './containers/triage';
@@ -55,10 +54,7 @@ export default (
       <Route component={requireAuthentication(ColleaguesShow)} path='colleagues/triage/:id' />
       <Route component={requireAuthentication(SpreadsheetUpload)} path='spreadsheet_upload' />
       <Route component={requireAuthentication(FileCurate)} path='file_curate' />
-<<<<<<< HEAD
       <Route component={requireAuthentication(FileCurateUpdate)} path='file_curate_update' />
-=======
->>>>>>> minor changes
       <Route component={requireAuthentication(Settings)} path='settings' />
       <Route component={requireAuthentication(NewsLetter)} path='newsletter' />
       <Route component={requireAuthentication(PostTranslationModification)} path='ptm' />
@@ -67,11 +63,10 @@ export default (
       <Route component={PublicHome} path='login' />
       <Route component={GoogleLogin} path='google_login' />
       <Route component={requireAuthentication(LocusLayout)} path='curate/locus/:id'>
-        {/* <IndexRoute component={requireAuthentication(LocusSummaries)} /> */}
-        <IndexRoute component={requireAuthentication(LocusBasic)} />
-        <Route component={requireAuthentication(LocusBasic)} path='basic' />
-        <Route component={requireAuthentication(LocusSummaries)} path='summaries' />
-        { /*<Route component={requireAuthentication(LocusName)} path='gene_name' /> */ }
+        <IndexRoute component={requireAuthentication(LocusSummaries)} />
+        {/*<IndexRoute component={requireAuthentication(LocusBasic)} />*/}
+        {/*<Route component={requireAuthentication(LocusName)} path='gene_name' />*/}
+        {/*<Route component={requireAuthentication(LocusSummaries)} path='summaries' />*/}
       </Route>
       <Route component={requireAuthentication(NewReference)} path='curate/reference/new' />
       <Route component={requireAuthentication(CurateLit)} path='curate/reference/:id'>
@@ -89,6 +84,7 @@ export default (
       <Route component={NewColleague} path='new_colleague' />
       <Route component={NewGeneNameReservation} path='new_reservation' />
     </Route>
+    <Route component={requireAuthentication(FileCurate)} path='file_curate' />
     <Route component={NotFound} path='*' />
   </Route>
 );
