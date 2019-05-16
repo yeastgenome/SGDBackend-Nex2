@@ -415,8 +415,8 @@ class ModelsHelper(object):
         strain_to_taxonomy_id = {}
         strains_in_db = DBSession.query(Straindbentity).all()
         for s in strains_in_db:
-            if(s.strain_type in straintypes):
-                strain_to_taxonomy_id[s.display_name] = s.taxonomy_id
+            if(s.strain_type in straintypes or s.dbentity_id == 1364635):
+                strain_to_taxonomy_id[s.display_name.upper()] = s.taxonomy_id
         
         return strain_to_taxonomy_id
 
