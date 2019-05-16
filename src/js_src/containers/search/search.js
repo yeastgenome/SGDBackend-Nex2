@@ -14,7 +14,7 @@ import { SMALL_COL_CLASS, LARGE_COL_CLASS, SEARCH_API_ERROR_MESSAGE } from '../.
 import { receiveResponse, setError, setPending } from './searchActions';
 import Loader from '../../components/loader';
 import LoadingPage from '../../components/loadingPage';
-
+/* eslint-disable no-debugger */
 // used to test rendering fixture response
 import fixtureResponse from './tests/fixtureResponse';
 
@@ -85,7 +85,8 @@ class SearchComponent extends Component {
     if (this.props.isList) {
       return <ResultsList entries={this.props.results} />;
     } else {
-      return <ResultsTable entries={this.props.results} />;      
+      debugger;
+      return <ResultsTable entries={this.props.results} />;
     }
   }
 

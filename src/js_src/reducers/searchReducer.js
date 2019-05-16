@@ -1,4 +1,5 @@
 /*eslint-disable no-case-declarations */
+/* eslint-disable no-debugger */
 import { fromJS } from 'immutable';
 
 import { parseAggs, parseResults } from './searchParsers';
