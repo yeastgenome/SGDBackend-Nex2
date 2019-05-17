@@ -1072,7 +1072,7 @@ def ptm_file_insert(request):
             return HTTPBadRequest(body=json.dumps({"error": list_of_posttranslationannotation_errors}), content_type='text/json')
 
         sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE'])
-        strain_to_taxonomy_id = models_helper.get_straindbentity_by_strain_type(['Reference', 'Alternative Reference'])
+        strain_to_taxonomy_id = models_helper.get_common_strains()
         psimod_to_id = models_helper.get_psimod_all()
         posttranslationannotation_to_site = models_helper.posttranslationannotation_with_key_index()
         pubmed_id_to_reference, reference_to_dbentity_id = models_helper.get_references_all()
@@ -1324,11 +1324,10 @@ def ptm_by_gene(request):
 @view_config(route_name='get_strains', renderer='json', request_method='GET')
 def get_strains(request):
     try:
-        strains = models_helper.get_all_strains()
-        filered_strains = list(filter(lambda strain: strain.strain_type =='Alternative Reference'  or strain.strain_type =='Reference' or strain.dbentity_id == 1364635,strains))
-
-        if filered_strains:
-            return {'strains': [s.get_strains_with_taxonomy() for s in filered_strains]}
+        strains = models_helper.get_common_strains()
+        
+        if strains:
+            return {'strains': [{'display_name':key,'taxonomy_id':value} for key,value in strains.iteritems()]}
 
         return None
 

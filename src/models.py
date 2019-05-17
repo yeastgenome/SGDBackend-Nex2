@@ -4931,13 +4931,6 @@ class Straindbentity(Dbentity):
 
         return obj
 
-    def get_strains_with_taxonomy(self):
-        obj = {
-            "display_name": self.display_name,
-            "status": self.strain_type,
-            "taxonomy_id": self.taxonomy.taxonomy_id
-        }
-        return obj
 
 class Dbuser(Base):
     __tablename__ = 'dbuser'
