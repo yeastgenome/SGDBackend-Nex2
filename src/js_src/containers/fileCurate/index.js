@@ -20,7 +20,6 @@ class FileCurate extends Component {
     console.log(e);
     //e.prevenyDefault();
     //let formData = new FormData(this.refs.form);
-    debugger;
 
   }
 
