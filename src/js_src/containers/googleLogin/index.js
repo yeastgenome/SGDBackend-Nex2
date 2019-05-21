@@ -67,7 +67,6 @@ class GoogleLogin extends Component {
   }
 
   _renderLoginButton () {
-    debugger;
     if (this.state.isPending) {
       return <Loader />;
     }

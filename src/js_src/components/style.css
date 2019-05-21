@@ -151,3 +151,11 @@ color:#FFF!important;
 .submitButton {
   margin-top: 1rem;
 }
+
+.dateComponent {
+  margin-bottom: 1rem;
+}
+
+.txtBox {
+  min-height: 100px !important;
+}
