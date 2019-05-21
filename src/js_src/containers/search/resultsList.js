@@ -50,7 +50,6 @@ class ResultsList extends Component {
 
   renderRows() {
     return this.props.entries.map( (d, i) => {
-      debugger;
       let fields = [];
       return this.renderEntry(d, i, fields);
     });
