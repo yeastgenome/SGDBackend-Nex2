@@ -49,7 +49,6 @@ class ResultsTable extends Component {
   }
 
   renderActions(d) {
-    debugger;
     return <ActionList category={d.category} href={d.href} id={d.id} />;
   }
 
@@ -57,7 +56,6 @@ class ResultsTable extends Component {
     let entries = this.props.entries;
     let fields = this.getFields();
     let rowNodes = entries.map( (d, i) => {
-      debugger;
       let href = `${SGD_LINK_URL}${d.href}`;
       let nodes = fields.map( (field) => {
         let _key = `srtc.${i}.${field}`;

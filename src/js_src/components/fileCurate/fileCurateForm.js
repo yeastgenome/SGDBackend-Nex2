@@ -26,7 +26,6 @@ class FileCurateForm extends Component{
   }
   handleSubmit(e){
     e.preventDefault();
-    debugger;
     let formData = new FormData();
     if(this.state.files){
       formData.append('file', this.state.files[0]);
@@ -75,11 +74,11 @@ class FileCurateForm extends Component{
             </div>
           </div>
           <div className={'row'}>
-            <div className={'columns small-6'}><TextField paramName={'description'}  displayName={'Description'} placeholder={'Genome-wide measurement of whole transcriptome versus histone modified mutants'} isRequired={true}  /></div>
+            <div className={'columns small-6'}><TextField className={`${style.txtBox}`} paramName={'description'}  displayName={'Description'} placeholder={'Genome-wide measurement of whole transcriptome versus histone modified mutants'} isRequired={true}  /></div>
             <div className={'columns small-6 small-offset-5'}></div>
           </div>
           <div className={'row'}>
-            <div className={'columns small-6'}>
+            <div className={`columns small-6 ${style.dateComponent}`}>
               <label htmlFor="dPicker"> File Date </label>
               <FormDatePicker id="dPicker" /></div>
             <div className={'columns small-6 small-offset-5'}>

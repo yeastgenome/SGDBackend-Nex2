@@ -29,7 +29,7 @@ class TextField extends Component {
     return (
       <div>
         <label>{this._renderIcon()}{this.props.displayName}</label>
-        <textarea type='text' name={this.props.paramName} placeholder={this.props.placeholder} required={this.props.isRequired}>{this.props.defaultValue}</textarea>
+        <textarea className={this.props.className} type='text' name={this.props.paramName} placeholder={this.props.placeholder} required={this.props.isRequired}>{this.props.defaultValue}</textarea>
       </div>
     );
   }
@@ -57,7 +57,9 @@ TextField.propTypes = {
   /** text field readonly flag  */
   isReadOnly: React.PropTypes.bool,
   /** required field flag */
-  isRequired: React.PropTypes.bool
+  isRequired: React.PropTypes.bool,
+  /** css classname  */
+  className: React.PropTypes.string
 };
 
 export default TextField;
