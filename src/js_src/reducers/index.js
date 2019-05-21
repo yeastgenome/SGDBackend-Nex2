@@ -3,6 +3,7 @@ import metaReducer from './metaReducer';
 import litReducer from './litReducer';
 import locusReducer from './locusReducer';
 import searchReducer from './searchReducer';
+import newsLetterReducer from './newsLetterReducer';
 import ptmReducer from './ptmReducer';
 
 export default {
@@ -11,5 +12,6 @@ export default {
   lit: litReducer,
   locus: locusReducer,
   search: searchReducer,
-  ptm:ptmReducer
+  ptm:ptmReducer,
+  newsLetter: newsLetterReducer
 };
