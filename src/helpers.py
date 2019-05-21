@@ -657,3 +657,24 @@ def unicode_to_string(unicode_value):
         return None
 
     
+def get_topic_dropdown():
+    """ Get topic ided based on edam relation
+
+    Returns
+    -------
+    dict:
+        file_id(key): edam.display_name 
+    
+    Notes:
+        From filedbentity topic_id, mapp to Edam table and get the Edam.display_name
+        query and filter where edam_namespace is 'topic'
+
+    """
+    data = DBSession.query(Filedbentity).all()
+    temp = []
+
+    for item in data:
+        import pdb; pdb.set_trace()
+        temp.append(item.to_dict())
+    
+    return temp

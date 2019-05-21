@@ -81,7 +81,6 @@ class CurateLitLayout extends Component {
       let _className = isActive ? style.activeNavLink : style.navLink;
       return <li key={`lit${d}`}><Link className={_className} to={url}>{d}</Link></li>;
     });
-    debugger;
     return temp;
   }
 

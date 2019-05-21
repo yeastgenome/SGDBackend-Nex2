@@ -85,7 +85,6 @@ class SearchComponent extends Component {
     if (this.props.isList) {
       return <ResultsList entries={this.props.results} />;
     } else {
-      debugger;
       return <ResultsTable entries={this.props.results} />;
     }
   }
