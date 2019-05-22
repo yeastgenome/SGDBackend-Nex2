@@ -18,7 +18,6 @@ import transaction
 import json
 import re
 from bs4 import BeautifulSoup
-import pandas as pd
 
 from .helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
@@ -32,7 +31,6 @@ from .loading.promote_reference_triage import add_paper
 from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague, Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname, ReservednameTriage, Straindbentity, Literatureannotation, Referencetriage, Referencedeleted, Locusdbentity, CurationReference, Locussummary, validate_tags, convert_space_separated_pmids_to_list, Psimod, Posttranslationannotation
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
-import pandas as pd
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -1434,6 +1432,7 @@ def ptm_file_insert(request):
 
 
     except Exception as e:
+        print(e)
         return HTTPBadRequest(body=json.dumps({ 'error': e.message }), content_type='text/json')
 
 
