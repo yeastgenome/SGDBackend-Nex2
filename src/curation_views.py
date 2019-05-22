@@ -1432,7 +1432,6 @@ def ptm_file_insert(request):
 
 
     except Exception as e:
-        print(e)
         return HTTPBadRequest(body=json.dumps({ 'error': e.message }), content_type='text/json')
 
 
@@ -1453,7 +1452,7 @@ def ptm_by_gene(request):
     ptms = models_helper.get_all_ptms_by_dbentity(dbentity.dbentity_id)
     list_of_ptms = get_list_of_ptms(ptms)
 
-    return {'ptms' :list_of_ptms}
+    return HTTPOk(body=json.dumps({'ptms' :list_of_ptms}),content_type='text/json')
 
 
 @view_config(route_name='get_strains', renderer='json', request_method='GET')
@@ -1478,7 +1477,6 @@ def get_psimod(request):
             distinct_psimod_ids = DBSession.query(Posttranslationannotation.psimod_id).distinct()
             psimods_in_use = psimods.filter(Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             psimods_not_in_use = psimods.filter(~Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
-            # unique_list = list(set(psimods.all() + psimods_in_use))
             
             returnList = []
             for p in psimods_in_use:
@@ -1499,7 +1497,6 @@ def get_psimod(request):
 
                 
             return HTTPOk(body=json.dumps({'psimods': returnList}),content_type='text/json') 
-            # return {'psimods': [{"psimod_id": p.psimod_id, "display_name": p.display_name} for p in unique_list]}
         return None
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
