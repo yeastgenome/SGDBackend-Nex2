@@ -329,7 +329,10 @@ def db_sign_in(request):
         session['email'] = curator.email
         session['username'] = curator.username
         log.info('User ' + curator.email + ' was successfuly authenticated.')
-        return { 'username': session['username'] }
+        return { 
+            'username': session['username'],
+            'csrfToken': request.session.get_csrf_token() 
+            }
     except:
         traceback.print_exc()
         return HTTPForbidden(body=json.dumps({'error': 'Incorrect login details.'}))
@@ -459,6 +462,15 @@ def upload_spreadsheet(request):
     except:
         traceback.print_exc()
         return HTTPBadRequest(body=json.dumps({ 'error': 'Unable to process file upload. Please try again.' }), content_type='text/json')
+
+
+@view_config(route_name='upload_file_curate', renderer='json', request_method='POST')
+def upload_file_curate(request):
+    import pdb ; pdb.set_trace()
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    data = request.json_body
+    return {}
 
 # not authenticated to allow the public submission
 @view_config(route_name='new_gene_name_reservation', renderer='json', request_method='POST')
