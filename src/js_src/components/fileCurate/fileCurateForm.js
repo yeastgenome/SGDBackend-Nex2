@@ -210,8 +210,6 @@ class FileCurateForm extends Component{
 class FileCurateForm extends Component{
   constructor(props){
     super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleDrop = this.handleDrop.bind(this);
     this.handleClear = this.handleClear.bind(this);
     this.renderFileDrop = this.renderFileDrop.bind(this);
     this.state = {
@@ -221,17 +219,18 @@ class FileCurateForm extends Component{
   handleClear(){
     this.state({ files:[]});
   }
-  handleDrop(){
-    //this.setState({files: _files});
+  handleDrop(_files){
+    this.setState({files: _files});
 
   }
   handleSubmit(e){
     e.preventDefault();
-    let formData = new FormData();
+    debugger;
+    let data = new FormData(this.refs.upForm);
     if(this.state.files){
-      formData.append('file', this.state.files[0]);
+      data.append('file', this.state.files[0]);
     }
-    this.props.onFileUploadSubmit(e);
+    this.props.onFileUploadSubmit(data);
 
   }
   renderFileDrop(){
@@ -243,11 +242,15 @@ class FileCurateForm extends Component{
         </div>
       );
     }
+    return  (<Dropzone name={'file'} onDrop={this.handleDrop.bind(this)} multiple={false}>
+                <p className={style.uploadMsg}>Drop file here or click to select.</p>
+                <h3 className={style.uploadIcon}><i className='fa fa-cloud-upload' /></h3>
+              </Dropzone>);
   }
 
   render(){
     return(
-        <form onSubmit={this.handleSubmit(event)}>
+        <form ref='upForm' onSubmit={this.handleSubmit.bind(this)} name='test'>
           <div>
             <h1>Upload File to S3</h1>
             <hr />
@@ -260,22 +263,22 @@ class FileCurateForm extends Component{
           <hr />
           <div className={'row'} >
             <div className={'columns small-6'}>
-              <StringField className={'columns small-6'} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716'} isRequired={true} />
+              <StringField id='dname' className={'columns small-6'} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716'} isRequired={true} />
             </div>
             <div className={'columns small-6'}>
-              <StringField className={'columns small-6'} paramName={'status'} displayName={'status'} defaultValaue={'active'} placeholder={'Active or Archive'} isRequired={true} />      </div>
+              <StringField id='status' className={'columns small-6'} paramName={'status'} displayName={'status'} defaultValaue={'active'} placeholder={'Active or Archive'} isRequired={true} />      </div>
             </div>
 
           <div className={'row'}>
             <div className={'columns small-6'}>
-              <StringField className={'columns small-6 medium-6'} paramName={'genomeVariation'} displayName={'keywords'} placeholder={'genome variation'} isRequired={true} />
+              <StringField value='x' id='gvariation' className={'columns small-6 medium-6'} paramName={'genomeVariation'} displayName={'keywords'} placeholder={'genome variation'} isRequired={true} />
             </div>
             <div className={'columns small-6'}>
-              <StringField className={'columns small-6 medium-6'} paramName={'previousFileName'} displayName={'Previous Filename'} />
+              <StringField id='pfilename' className={'columns small-6 medium-6'} paramName={'previousFileName'} displayName={'Previous Filename'} />
             </div>
           </div>
           <div className={'row'}>
-            <div className={'columns small-6'}><TextField className={`${style.txtBox}`} paramName={'description'}  displayName={'Description'} placeholder={'Genome-wide measurement of whole transcriptome versus histone modified mutants'} isRequired={true}  /></div>
+            <div id='description' className={'columns small-6'}><TextField className={`${style.txtBox}`} paramName={'description'}  displayName={'Description'} placeholder={'Genome-wide measurement of whole transcriptome versus histone modified mutants'} isRequired={true}  /></div>
             <div className={'columns small-6 small-offset-5'}></div>
           </div>
           <div className={'row'}>
@@ -286,22 +289,18 @@ class FileCurateForm extends Component{
             </div>
           </div>
           <div className={'row'}>
-            <div className={'columns small-6'}>
-              <Dropzone name={'file'} onDrop={this.handleDrop()} multiple={false}>
-                <p className={style.uploadMsg}>Drop file here or click to select.</p>
-                <h3 className={style.uploadIcon}><i className='fa fa-cloud-upload' /></h3>
-              </Dropzone>
-            </div>
             <div className={'columns small-6 small-offset-5'}></div>
           </div>
           <div className={'row'}>
-            {this.renderFileDrop()}
+            <div className={'columns small-6'}>
+              {this.renderFileDrop()}
+            </div>
           </div>
 
           <hr />
           <div className={'row'}>
             <div className={'columns small-3'}>
-              <button type='submit' className='button'>Submit</button>
+              <input type='submit' className='button' value='Submit' />
             </div>
             <div className={'columns small-3 small-offset-4'}></div>
           </div>
