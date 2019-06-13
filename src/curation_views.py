@@ -465,6 +465,7 @@ def upload_spreadsheet(request):
 
 @view_config(route_name='upload_file_curate', renderer='json', request_method='POST')
 def upload_file_curate(request):
+<<<<<<< HEAD
     try:
         if not check_csrf_token(request, raises=False):
             return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
@@ -482,6 +483,12 @@ def upload_file_curate(request):
     except Exception as e:
         pass
 
+=======
+    import pdb ; pdb.set_trace()
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    data = request.json_body
+>>>>>>> reconnect backend api
     return {}
 
 # not authenticated to allow the public submission
