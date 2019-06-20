@@ -24,7 +24,6 @@ class FileCurateForm extends Component{
   }
   handleSubmit(e){
     e.preventDefault();
-    debugger;
     let data = new FormData(this.refs.upForm);
     if(this.state.files){
       data.append('file', this.state.files[0]);

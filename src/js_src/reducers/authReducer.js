@@ -1,5 +1,4 @@
 import { fromJS } from 'immutable';
-
 const DEFAULT_STATE = fromJS({
   csrfToken: null,
   isAuthenticated: false,
@@ -18,8 +17,8 @@ export default function authReducer(state = DEFAULT_STATE, action) {
       .set('isAuthenticated', true)
       .set('isAuthenticating', false)
       .set('loginError', false)
-      .set('username', action.payload)
-      .set('csrfToken', action.payload );
+      .set('username', action.payload.username)
+      .set('csrfToken', action.payload.csrfToken);
   case 'LOGOUT':
     return state
       .set('isAuthenticated', false)

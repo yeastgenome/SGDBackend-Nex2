@@ -2591,6 +2591,18 @@ class Filedbentity(Dbentity):
 
 
     def upload_file_to_s3(self, file, filename):
+        ''' Uploads file to s3
+
+        Parameters
+        ----------
+        file: file
+        filename: str
+
+        Notes
+        -----
+        Updates the database with file changes on s3
+
+        '''
         # get s3_url and upload
         s3_path = self.sgdid + '/' + filename
         conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)

@@ -164,9 +164,8 @@ SpreadsheetUpload.propTypes = {
 };
 
 function mapStateToProps(state) {
-  debugger;
   return {
-    csrfToken: state.auth.csrfToken
+    csrfToken: state.auth.get('csrfToken')
   };
 }
 
