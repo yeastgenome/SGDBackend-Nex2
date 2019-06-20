@@ -24,8 +24,9 @@ class Login extends Component {
       }
     };
     let _onSuccess = (data) => {
+      debugger;
       let nextUrl = this.props.queryParams.next || DEFAULT_AUTH_LANDING;
-      this.props.dispatch(authenticateUser(data.username));
+      this.props.dispatch(authenticateUser(data));
       this.props.dispatch(push(nextUrl));
     };
     return (
