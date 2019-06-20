@@ -1,0 +1,1 @@
+time taken to run upload script: <---> 15.363268137 seconds <--->timestamp: 05/31/2019 20:37:05
