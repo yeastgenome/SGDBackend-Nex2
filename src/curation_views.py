@@ -434,6 +434,7 @@ def get_recent_annotations(request):
 @view_config(route_name='upload_spreadsheet', request_method='POST', renderer='json')
 @authenticate
 def upload_spreadsheet(request):
+    import pdb ; pdb.set_trace()
     try:
         file_upload = request.POST['file'].file
         filename = request.POST['file'].filename
