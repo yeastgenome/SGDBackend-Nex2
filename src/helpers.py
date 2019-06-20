@@ -678,7 +678,7 @@ def unicode_to_string(unicode_value):
         return returnValue
     except UnicodeEncodeError as err:
         return None
-
+    
 
 def update_readme_files_with_urls(readme_name, update_all=False):
     """ Update parent readme files with list of s3 urls
@@ -705,7 +705,6 @@ def update_readme_files_with_urls(readme_name, update_all=False):
             for _file in all_files:
                 if _file.display_name.endswith('.README'):
                     update_urls_helper(_file)
-
             transaction.commit()
 
     except Exception as e:
