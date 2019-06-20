@@ -16,7 +16,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
-from .models import DBSession, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
+from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
 from src.curation_helpers import ban_from_cache, get_curator_session
 
 import logging
@@ -674,7 +674,13 @@ def get_topic_dropdown():
     temp = []
 
     for item in data:
-        import pdb; pdb.set_trace()
         temp.append(item.to_dict())
     
     return temp
+
+
+def file_curate_update_readme(obj):
+    readme_file = DBSession.query(
+        Filedbentity).filter(Filedbentity.display_name==obj['display_name']).one_or_none()
+    if readme_file:
+        readme_file.upload_file_to_s3(obj['file'], obj['file_name'])

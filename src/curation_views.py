@@ -24,7 +24,8 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     get_or_create_filepath, extract_topic, extract_format,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
     FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, set_string_format,\
-    send_newsletter_email, get_file_delimiter, unicode_to_string
+    send_newsletter_email, get_file_delimiter, unicode_to_string,\
+    file_curate_update_readme
 from .curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid, get_list_of_ptms
 from .loading.promote_reference_triage import add_paper
@@ -53,7 +54,7 @@ def authenticate(view_callable):
 @view_config(route_name='account', request_method='GET', renderer='json')
 @authenticate
 def account(request):
-    return {'username': request.session['username']}
+    return {'username': request.session['username'], 'csrfToken': request.session.get_csrf_token()}
 
 
 
@@ -435,6 +436,7 @@ def get_recent_annotations(request):
 @view_config(route_name='upload_spreadsheet', request_method='POST', renderer='json')
 @authenticate
 def upload_spreadsheet(request):
+    import pdb ; pdb.set_trace()
     try:
         file_upload = request.POST['file'].file
         filename = request.POST['file'].filename
@@ -466,10 +468,23 @@ def upload_spreadsheet(request):
 
 @view_config(route_name='upload_file_curate', renderer='json', request_method='POST')
 def upload_file_curate(request):
-    import pdb ; pdb.set_trace()
-    if not check_csrf_token(request, raises=False):
-        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
-    data = request.json_body
+    try:
+        if not check_csrf_token(request, raises=False):
+            return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+        obj = {
+            'file': request.POST['file'].file,
+            'file_name': request.POST['file'].filename,
+            'status': request.POST['status'],
+            'display_name': request.POST['displayName'],
+            'keywords': request.POST['genomeVariation'],
+            'previous_filename': request.POST['previousFileName'],
+            'description': request.POST['description']
+        }
+        file_curate_update_readme(obj)
+
+    except Exception as e:
+        pass
+
     return {}
 
 # not authenticated to allow the public submission

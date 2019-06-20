@@ -18,7 +18,7 @@ export function requireAuthentication(Component) {
     checkAuth () {
       if (!this.props.isAuthenticated) {
         fetchData('/account').then( (d) => {
-          this.props.dispatch(authenticateUser(d.username));
+          this.props.dispatch(authenticateUser(d));
         }).catch( () => {
           let redirectAfterLogin = this.props.location.pathname;
           this.props
