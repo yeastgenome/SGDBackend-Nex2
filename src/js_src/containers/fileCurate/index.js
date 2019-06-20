@@ -68,7 +68,7 @@ FileCurate.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    csrfToken: state.auth.csrfToken
+    csrfToken: state.auth.get('csrfToken')
   };
 }
 
