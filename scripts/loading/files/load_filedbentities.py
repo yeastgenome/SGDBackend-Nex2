@@ -12,6 +12,11 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from zope.sqlalchemy import ZopeTransactionExtension
 import transaction
 import traceback
+import pandas as pd
+from operator import itemgetter
+
+from src.aws_helpers import get_zip_files, get_sra_files, get_readme_files, get_file_from_path_collection
+
 
 '''
     Process a CSV file of downloads, create filedbentity entries, file_path entries, and 
@@ -31,6 +36,7 @@ CREATED_BY = os.environ.get('CREATED_BY')
 SGD_SOURCE_ID = 834
 
 logging.basicConfig(level=logging.INFO)
+
 
 def create_and_upload_file(obj, row_num, sftp_client):
     try:
@@ -173,6 +179,7 @@ def format_csv_date_string(date_string, flag=False):
     else:
         return None
 
+
 def load_csv_filedbentities():
     engine = create_engine(NEX2_URI, pool_recycle=3600)
     DBSession.configure(bind=engine)
@@ -241,5 +248,205 @@ def load_csv_filedbentities():
             create_and_upload_file(obj, i, sftp_client)
     client.close()
 
+
+#TODO: Make this more generic in the nxr relase
+def file_upload_to_obj():
+    """ convert csv to list of objects """
+
+    temp = []
+    file_content = pd.read_excel(INPUT_FILE_NAME).fillna(0).to_dict('records')
+    sorted_content = sorted(file_content, key=itemgetter(
+        'filedbentity.file_extension'))
+    for item in file_content:
+
+        raw_date = item.get('filedbentity.file_date')
+        if raw_date:
+            temp_date = raw_date.strftime('%Y-%m-%d')
+            raw_date = datetime.strptime(temp_date, "%Y-%m-%d").date()
+        else:
+            raw_date = datetime.now().date()
+
+        raw_status = item.get('dbentity.status')
+        if raw_status == 'Archive':
+            raw_status = 'Archived'
+        #for key, value in item.iteritems():
+        #    print(key)
+        obj = {
+            'path': item.get('EBS path'),
+            'display_name': item.get('dbentity.display_name'),
+            'status': raw_status,
+            'source': item.get('dbentity.source'),
+            'topic_edam_id': item.get('topic edam_id').upper().replace('TOPIC', 'EDAM').strip(),
+            'data_edam_id': item.get('data edam_id').upper().replace('DATA', 'EDAM').strip(),
+            'format_edam_id': item.get('format edam_id').upper().replace('FORMAT', 'EDAM').strip(),
+            'file_extension': item.get('filedbentity.file_extension'),
+            'file_date': raw_date,
+            'is_public': (item.get('filedbentity.is_public') == '1'),
+            'is_in_spell': item.get('filedbentity.is_in_spell'),
+            'is_in_browser': (item.get('filedbentity.is_in_browser') == '1'),
+            'readme_name': item.get('readme name'),
+            'description': item.get('filedbentity.description'),
+            'pmids': item.get('pmids (|)'),
+            'keywords': item.get('keywords (|)')
+        }
+        temp.append(obj)
+
+    if len(temp) > 0:
+        return temp
+    return None
+
+
+def upload_file_obj_db_s3():
+    """ Upload file metadata to database and s3 """
+
+    # TODO: upload metadata to database
+    temp_engine = create_engine(NEX2_URI)
+    session_factory = sessionmaker(
+        bind=temp_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
+    db_session = scoped_session(session_factory)
+    readme_file_id = None
+    file_content_list = file_upload_to_obj()
+    try:
+        if file_content_list:
+            sorted_content = sorted(
+                file_content_list, key=itemgetter('file_extension'))
+            for item in sorted_content:
+                if item['readme_name']:
+                    readme = db_session.query(Filedbentity).filter(
+                        Filedbentity.display_name == obj['readme_name']).one_or_none()
+
+                    if readme is None:
+                        logging.warning(
+                            'unable to find README ' + obj['readme_name'])
+                    else:
+                        readme_file_id = readme.dbentity_id
+
+                # see if file_meta already exists, else create
+                existing_file_meta_data = db_session.query(Filedbentity).filter(
+                    Filedbentity.display_name == item['display_name']).one_or_none()
+                source_id = db_session.query(Source.source_id).filter(
+                    Source.display_name == item['source']).one_or_none()[0]
+                
+                d_name = item['display_name']
+                f_ext = item['file_extension']
+                temp_file_path = get_file_from_path_collection(f_ext, d_name)
+
+                if not existing_file_meta_data:
+                    try:
+                        data_id = db_session.query(Edam.edam_id).filter(
+                            Edam.edamid == item['data_edam_id']).one_or_none()[0]
+                        
+                        format_id = db_session.query(Edam.edam_id).filter(
+                            Edam.edamid == item['format_edam_id']).one_or_none()[0]
+                        topic_id = db_session.query(Edam.edam_id).filter(
+                            Edam.edamid == item['topic_edam_id']).one_or_none()[0]
+                        item["data_id"] = data_id
+                        item["format_id"] = format_id
+                        item["topic_id"] = topic_id
+                        item["source_id"] = source_id
+                        item["readme_file_id"] = readme_file_id
+
+                    except TypeError:
+                        logging.error(
+                            'invalid EDAM id or source in row ' +
+                            str(row_num) + ' val in ' + item['data_edam_id'] +
+                            ', ' + item['format_edam_id'] +
+                            ', ' + item['topic_edam_id'])
+                    
+                    if temp_file_path:
+                        with open(temp_file_path, 'r') as remote_file:
+                            upload_file_helper(CREATED_BY, remote_file, item)
+                    
+                    db_session.flush()
+                else:
+                    existing_file_meta_data.display_name = item['display_name']
+                    existing_file_meta_data.description = item['description']
+                    existing_file_meta_data.status = item['status']
+                    existing_file_meta_data.is_public = item['is_public']
+                    existing_file_meta_data.is_in_spell = item['is_in_spell']
+                    existing_file_meta_data.is_in_browser = item['is_in_browser']
+                    existing_file_meta_data.source_id = source_id
+
+                    if temp_file_path:
+                        with open(temp_file_path, 'r') as remote_file:
+                        #update file size
+                            if not existing_file_meta_data.file_size and existing_file_meta_data.s3_url:
+                                remote_file.seek(0, os.SEEK_END)
+                                file_size = remote_file.tell()
+                                remote_file.seek(0)
+                                existing_file_meta_data.file_size = file_size
+                            
+                            if item['file_date']:
+                                existing_file_meta_data.file_date = item['file_date']
+                                existing_file_meta_data.year = item['file_date'].year
+                            existing_file_meta_data.readme_file_id = readme_file_id
+                            remote_file.seek(0, os.SEEK_END)
+
+                            #transaction.commit()
+                            existing_file_meta_data = db_session.query(Filedbentity).filter(
+                                Filedbentity.display_name == item['display_name']).one_or_none()
+                            # only upload s3 file if not defined
+                            if existing_file_meta_data.s3_url is None:
+                                existing_file_meta_data.upload_file_to_s3(
+                                remote_file, item['display_name'])
+                            db_session.flush()
+                    
+    except Exception as e:
+        
+        logging.error(e)
+        print(e)
+        
+
+def upload_file_helper(CREATED_BY, remote_file, obj):
+    """ upload file to s3 and update db with s3_url """
+    try:
+        
+        upload_file(CREATED_BY, remote_file,
+            filename=obj['display_name'],
+            file_extension=obj['file_extension'],
+            description=obj['description'],
+            display_name=obj['display_name'],
+            data_id=obj['data_id'],
+            format_id=obj['format_id"],
+            status=obj['status'],
+            topic_id=obj['topic_id'],
+            is_public=obj['is_public'],
+            is_in_spell=obj['is_in_spell'],
+            is_in_browser=obj['is_in_browser'],
+            file_date=obj['file_date'],
+            readme_file_id=obj['readme_file_id'],
+            source_id=obj['source_id']
+            )
+    except Exception as e:
+        logging.error(e)
+
+
+      
+
+
 if __name__ == '__main__':
-    load_csv_filedbentities()
+    #load_csv_filedbentities()
+    upload_file_obj_db_s3()
+    #get_all_readme_files()
+
+
+'''
+def upload_readmes_first(file_upload={}):
+    """ uploads readmes before rest of the files """
+
+    try:
+        # get list of readme paths
+        readme_paths = get_readme_files()
+        if read_paths:
+            for file in read_paths:
+                with open(file, 'r') as open_file:
+                    # upload file
+
+
+        return True
+    except Exception as e:
+        logging.error(e)
+        return False
+    
+
+'''
