@@ -20,6 +20,7 @@ import re
 =======
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
 from src.curation_helpers import ban_from_cache, get_curator_session
+<<<<<<< HEAD
 >>>>>>> - Add endpoint for file upload
 
 
@@ -27,6 +28,8 @@ from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
     ReferenceFile, Disease, CuratorActivity, Source
 from src.curation_helpers import ban_from_cache, get_curator_session
+=======
+>>>>>>> resolve merge conflicts
 from src.aws_helpers import update_s3_readmefile, get_s3_url
 import logging
 log = logging.getLogger(__name__)
@@ -668,6 +671,7 @@ def unicode_to_string(unicode_value):
     except UnicodeEncodeError as err:
         return None
     
+<<<<<<< HEAD
 
 def update_readme_files_with_urls(readme_name, update_all=False):
     """ Update parent readme files with list of s3 urls
@@ -702,6 +706,42 @@ def update_readme_files_with_urls(readme_name, update_all=False):
         transaction.abort()
 
 
+=======
+
+def update_readme_files_with_urls(readme_name, update_all=False):
+    """ Update parent readme files with list of s3 urls
+
+    Notes:
+        The parent readme file should contain all the s3 urls of files
+        under the parent folder
+        create a dictionary with parent_readme name as key and value as list of files
+    """ 
+    try:
+        if not update_all:
+            temp = []
+
+            if readme_name:
+                readme_file = DBSession.query(Dbentity).filter(
+                    Dbentity.display_name == readme_name).one_or_none()
+                
+                if readme_file:
+                    update_urls_helper(readme_file)   
+                    transaction.commit()
+        else:
+            all_files = DBSession.query(Dbentity).all()
+
+            for _file in all_files:
+                if _file.display_name.endswith('.README'):
+                    update_urls_helper(_file)
+            
+            transaction.commit()
+
+    except Exception as e:
+        logging.error(e)
+        transaction.abort()
+
+
+>>>>>>> resolve merge conflicts
 
 
 def update_urls_helper(readme_file):
@@ -727,6 +767,7 @@ def update_urls_helper(readme_file):
             readme_dbentity_file.md5sum = updated_readme['md5sum']
             readme_dbentity_file.file_size = updated_readme['file_size']
             readme_dbentity_file.s3_url = updated_readme['s3_url']
+<<<<<<< HEAD
   
 
 def get_sources(session=None):
@@ -749,6 +790,8 @@ def get_file_keywords(session=None):
         temp.add(item.keyword.display_name)
   
     return list(temp)
+=======
+>>>>>>> resolve merge conflicts
     
 
 def get_edam_data(session=None):
