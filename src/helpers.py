@@ -16,6 +16,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
+<<<<<<< HEAD
+=======
+from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
+from src.curation_helpers import ban_from_cache, get_curator_session
+>>>>>>> - Add endpoint for file upload
 
 
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
@@ -765,6 +770,7 @@ def get_edam_data(session=None):
     temp = []
     data_obj = {}
     for item in data:
+<<<<<<< HEAD
         name = item.topic.display_name
         name_space = item.topic.edam_namespace
     
@@ -789,10 +795,19 @@ def get_file_curate_dropdown_data(session=None):
     
 
 def file_curate_update_readme(obj, session=None):
+=======
+        temp.append(item.to_dict())
+    
+    return temp
+
+
+def file_curate_update_readme(obj):
+>>>>>>> - Add endpoint for file upload
     readme_file = DBSession.query(
         Filedbentity).filter(Filedbentity.display_name==obj['display_name']).one_or_none()
     if readme_file:
         readme_file.upload_file_to_s3(obj['file'], obj['file_name'])
+<<<<<<< HEAD
 
 
 def upload_new_file(req_obj, session=None):
@@ -908,3 +923,5 @@ def add_keywords(name, keywords, src_id, uname):
 
     except Exception as e:
         logging.error(e)
+=======
+>>>>>>> - Add endpoint for file upload
