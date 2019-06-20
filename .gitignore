@@ -74,7 +74,6 @@ dev_aws_variables*
 #temp files
 # logs
 backup
-data
 *.log-*
 zz_*
 tmo_*
@@ -109,3 +108,5 @@ index_*.png
 *.env
 src/Untitled*
 dev_variables*
+scripts/loading/data/YJM1383_Duke_2015_SRR800821.sra
+*/data

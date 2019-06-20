@@ -22,6 +22,12 @@ from urllib2 import Request, urlopen, URLError, HTTPError
 from src.curation_helpers import ban_from_cache, get_author_etc, link_gene_names, get_curator_session, clear_list_empty_values
 from scripts.loading.util import link_gene_complex_names
 
+from src.aws_helpers import simple_s3_upload
+
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
@@ -2591,52 +2597,72 @@ class Filedbentity(Dbentity):
         return obj
 
 
-    def upload_file_to_s3(self, file, filename):
-        ''' Uploads file to s3
-
-        Parameters
-        ----------
-        file: file
-        filename: str
-
+    def upload_file_to_s3(self, file, filename, file_path=None):
+        """ uploads files to s3 
+        
         Notes
-        -----
-        Updates the database with file changes on s3
+        ------
+        S3 only supports 5Gb files for uploading directly
 
-        '''
-        # get s3_url and upload
-        s3_path = self.sgdid + '/' + filename
-        conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-        bucket = conn.get_bucket(S3_BUCKET)
-        k = Key(bucket)
-        k.key = s3_path
-        # make content-type 'text/plain' if it's a README
-        if self.readme_file_id is None:
-            k.content_type = 'text/plain'
-        k.set_contents_from_file(file, rewind=True)
-        k.make_public()
-        file_s3 = bucket.get_key(k.key)
-        # s3 md5sum
-        etag_md5_s3 = file_s3.etag.strip('"').strip("'")
-        # get local md5sum https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
-        hash_md5 = hashlib.md5()
-        file.seek(0)
-        for chunk in iter(lambda: file.read(4096), b""):
-            hash_md5.update(chunk)
-        local_md5sum = hash_md5.hexdigest()
-        file.seek(0)
-        # compare m5sum, save if match
-        if local_md5sum != etag_md5_s3:
-            transaction.abort()
-            raise Exception('MD5sum check failed.')
-        self.md5sum = etag_md5_s3
-        # get file size
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
-        file.seek(0)
-        self.file_size = file_size
-        self.s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
-        transaction.commit()
+        To upload bigger files, use multi-part upload
+        """
+        try:
+            # get s3_url and upload
+            s3_path = self.sgdid + '/' + filename
+            conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
+            bucket = conn.get_bucket(S3_BUCKET)
+            k = Key(bucket)
+            k.key = s3_path
+            if file_path:
+                new_s3_file =simple_s3_upload(file_path, s3_path, True)
+                file_s3 = bucket.get_key(k.key)
+                etag_md5_s3 = file_s3.etag.strip('"').strip("'")
+                file.seek(0)
+                self.md5sum = etag_md5_s3
+                # get file size
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+                self.file_size = file_size
+                self.s3_url = file_s3.generate_url(
+                    expires_in=0, query_auth=False)
+                transaction.commit()
+                
+            else:
+                conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
+                bucket = conn.get_bucket(S3_BUCKET)
+                k = Key(bucket)
+                k.key = s3_path
+                # make content-type 'text/plain' if it's a README
+                if self.readme_file_id is None:
+                    k.content_type = 'text/plain'
+                k.set_contents_from_file(file, rewind=True)
+                k.make_public()
+                file_s3 = bucket.get_key(k.key)
+                # s3 md5sum
+                etag_md5_s3 = file_s3.etag.strip('"').strip("'")
+                # get local md5sum https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
+                hash_md5 = hashlib.md5()
+                file.seek(0)
+                for chunk in iter(lambda: file.read(4096), b""):
+                    hash_md5.update(chunk)
+                local_md5sum = hash_md5.hexdigest()
+                file.seek(0)
+                # compare m5sum, save if match
+                if local_md5sum != etag_md5_s3:
+                    transaction.abort()
+                    raise Exception('MD5sum check failed.')
+                self.md5sum = etag_md5_s3
+                # get file size
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+                self.file_size = file_size
+                self.s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
+                transaction.commit()
+        except Exception as e:
+            logging.debug(e)
+            print(e)
 
     def get_path(self):
         path_res = DBSession.query(FilePath, Path).filter(
