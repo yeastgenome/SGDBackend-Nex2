@@ -79,6 +79,60 @@ class FileCurateForm extends Component{
               </Dropzone>);
   }
 
+  /* rendeFormDropDownMenus(){
+    if(this.state.menus){
+      let menus = this.state.menus;
+      let topicOpts = menus.topic.map((item) => {
+        return {value: item,  label: 'Topic'};
+
+      });
+      let keywords = menus.keywords.map( (item) => {
+        return {
+          value: item,
+          label: 'Keywords'
+        };
+      });
+      let sources = menus.sources.map((item) => {
+        return {
+          value: item,
+          label: 'Sources'
+        };
+      });
+      let data = menus.data((item) => {
+        return {
+          value: item,
+          label: 'Data'
+        };
+      });
+      debugger;
+
+      let dd_menu = (<div>
+          <div className='columns small-3'>
+            <Select
+              options={topicOpts}
+            />
+          </div>
+          <div className='columns small-3'>
+            <Select
+              options={keywords}
+            />
+          </div>
+          <div className='columns small-3'>
+            <Select
+              options={sources}
+            />
+          </div>
+           <div className='columns small-3'>
+            <Select
+              options={data}
+            />
+          </div>
+        </div>);
+      return dd_menu;
+    }
+
+  } */
+
   render(){
     if(this.props.fileData == undefined){
       return (<LoadingPage />);
