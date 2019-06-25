@@ -2,6 +2,7 @@ from wsgiref.simple_server import make_server
 from pyramid.config import Configurator
 from sqlalchemy import create_engine
 import os
+#from easy_profile import EasyProfileMiddleware
 
 from .models import DBSession, Base
 
@@ -169,6 +170,8 @@ def main(global_config, **settings):
     config.add_route('upload', '/upload')
     config.add_route('upload_spreadsheet', '/upload_spreadsheet', request_method='POST')
     config.add_route('upload_file_curate', '/upload_file_curate', request_method='POST')
+    config.add_route('upload_tar_file', '/upload_tar_file', request_method='POST')
+    config.add_route('file_curate_menus', 'file_curate_menus', request_method='GET')
 
     config.add_route('reserved_name_index', '/reservations', request_method='GET')
     config.add_route('reserved_name_curate_show', '/reservations/{id}', request_method='GET')
@@ -194,5 +197,7 @@ def main(global_config, **settings):
     config.add_route('api_portal', '/api', request_method='GET')
     config.scan()
     config.add_static_view(name='assets', path='./build')
-
     return config.make_wsgi_app()
+    '''app = 
+    application = EasyProfileMiddleware(app)
+    return application'''

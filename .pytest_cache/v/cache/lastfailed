@@ -1,4 +1,5 @@
 {
+  "test/test_dev.py": true, 
   "test/test_functional.py": true, 
   "test/test_helpers.py": true, 
   "test/test_views/test_author.py": true, 
