@@ -16,6 +16,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
+
+
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
 from src.curation_helpers import ban_from_cache, get_curator_session
 from src.aws_helpers import update_s3_readmefile, get_s3_url
@@ -718,8 +720,31 @@ def update_urls_helper(readme_file):
             readme_dbentity_file.md5sum = updated_readme['md5sum']
             readme_dbentity_file.file_size = updated_readme['file_size']
             readme_dbentity_file.s3_url = updated_readme['s3_url']
+  
+
+def get_sources(session=None):
+    ''' Get sources from dbentity model '''
+
+    data = DBSession.query(Dbentity).all()
+    temp = set()
+    for item in data:
+        temp.add(item.source.display_name)
+
+    return list(temp)
+
+def get_file_keywords(session=None):
+
+    data = DBSession.query(FileKeyword).all()
+    temp = set()
     
-def get_topic_dropdown():
+    for item in data:
+        
+        temp.add(item.keyword.display_name)
+  
+    return list(temp)
+    
+
+def get_edam_data(session=None):
     """ Get topic ided based on edam relation
 
     Returns
@@ -732,17 +757,49 @@ def get_topic_dropdown():
         query and filter where edam_namespace is 'topic'
 
     """
+
     data = DBSession.query(Filedbentity).all()
+    n_spaces = ['topic', 'data', 'format']
     temp = []
-
+    data_obj = {}
     for item in data:
-        temp.append(item.to_dict())
+        name = item.topic.display_name
+        name_space = item.topic.edam_namespace
     
-    return temp
+        if name_space in data_obj:
+            if name not in data_obj[name_space] and name_space in n_spaces:
+                data_obj[name_space].append(name)
+        else:
+            if name_space in n_spaces:
+                data_obj[name_space] = []
+       
+    return data_obj
 
+def get_file_curate_dropdown_data(session=None):
+    ''' Get dropdown menus for new file curate form '''
+    
+    data = get_edam_data()
+    if data:
+        data['keywords'] = get_file_keywords()
+        data['sources'] = get_sources()
+        data['status'] = ['Active', 'Archived']
+    return data
+    
 
-def file_curate_update_readme(obj):
+def file_curate_update_readme(obj, session=None):
     readme_file = DBSession.query(
         Filedbentity).filter(Filedbentity.display_name==obj['display_name']).one_or_none()
     if readme_file:
         readme_file.upload_file_to_s3(obj['file'], obj['file_name'])
+
+def upload_new_file(req_obj, session=None):
+    if req_obj:
+        import pdb
+        pdb.set_trace()
+        readme_file = None
+        for key, val in req_obj.iteritems():
+            if key.endswith('.README'):
+                readme_file= {'display_name': key, 'file': val, 'file_name': key} 
+
+
+

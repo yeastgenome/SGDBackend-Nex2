@@ -85,3 +85,6 @@ crawl-site:
 
 load-files:
 	source dev_variables.sh && CREATED_BY=fgondwe python scripts/loading/files/upload_files_fdb.py
+
+tests-dev:
+	source dev_variables.sh && python test/test_dev.py
