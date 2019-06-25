@@ -434,7 +434,6 @@ def get_recent_annotations(request):
 @view_config(route_name='upload_spreadsheet', request_method='POST', renderer='json')
 @authenticate
 def upload_spreadsheet(request):
-    import pdb ; pdb.set_trace()
     try:
         file_upload = request.POST['file'].file
         filename = request.POST['file'].filename
@@ -1766,13 +1765,6 @@ def upload_tar_file(request):
         return upload_new_file(obj)
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
-        obj['uname'] = request.session['username']
-        obj['source_id'] = SGD_SOURCE_ID
-
-        upload_new_file(obj)
-    except Exception as e:
-         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
->>>>>>> - Add ES functionality
 
 
 @view_config(route_name="file_curate_menus", renderer='json', request_method='GET')

@@ -5,6 +5,7 @@ import FormDatePicker from '../../components/formDatePicker';
 import Dropzone from 'react-dropzone';
 import style from '../style.css';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import LoadingPage from '../../components/loadingPage';
 //import fetchData from '../../lib/fetchData';
 //import {setError} from '../../actions/metaActions';
@@ -205,6 +206,13 @@ class FileCurateForm extends Component{
       );
     }
 =======
+=======
+import fetchData from '../../lib/fetchData';
+import {setError} from '../../actions/metaActions';
+//import Select from 'react-select';
+const DROP_DOWN_URL = '/file_curate_menus';
+
+>>>>>>> miunor changes
 /* eslint-disable no-debugger */
 
 class FileCurateForm extends Component{
@@ -213,11 +221,31 @@ class FileCurateForm extends Component{
     this.handleClear = this.handleClear.bind(this);
     this.renderFileDrop = this.renderFileDrop.bind(this);
     this.state = {
-      files: []
+      files: [],
+      menus: undefined
     };
   }
+
+  componentDidMount(){
+
+    fetchData(DROP_DOWN_URL, {
+      type: 'GET',
+      credentials: 'same-origin',
+      processData: false,
+      contentType: false
+    }).then( data => {
+      this.setState({
+        menus: data
+      });
+
+    }).catch( data => {
+      let errorMEssage = data ? data.error : 'Error occured';
+      this.props.dispatch(setError(errorMEssage));
+    });
+  }
+
   handleClear(){
-    this.state({ files:[]});
+    this.setState({ files:[]});
   }
   handleDrop(_files){
     this.setState({files: _files});
@@ -226,28 +254,91 @@ class FileCurateForm extends Component{
   handleSubmit(e){
     e.preventDefault();
     let data = new FormData(this.refs.upForm);
-    if(this.state.files){
-      data.append('file', this.state.files[0]);
+    if(this.state.files.length > 0){
+      this.state.files.map( item => {
+        data.append(item.name, item);
+      });
+      this.props.onFileUploadSubmit(data);
     }
-    this.props.onFileUploadSubmit(data);
+
 
   }
+
   renderFileDrop(){
     if(this.state.files.length){
-      let filename = this.state.files[0].name;
+      let filenames = this.state.files.map( (file, index) => {
+        return <li key={index}>{file.name}</li>;
+      });
       return(
         <div>
-          <p>{filename}</p>
+          <ul>{filenames}</ul>
+          <a onClick={this.handleClear.bind(this)}>Clear Files</a>
         </div>
       );
     }
-    return  (<Dropzone name={'file'} onDrop={this.handleDrop.bind(this)} multiple={false}>
+    return  (<Dropzone name={'file'} onDrop={this.handleDrop.bind(this)} multiple={true}>
                 <p className={style.uploadMsg}>Drop file here or click to select.</p>
                 <h3 className={style.uploadIcon}><i className='fa fa-cloud-upload' /></h3>
               </Dropzone>);
   }
 
+  /* rendeFormDropDownMenus(){
+    if(this.state.menus){
+      let menus = this.state.menus;
+      let topicOpts = menus.topic.map((item) => {
+        return {value: item,  label: 'Topic'};
+
+      });
+      let keywords = menus.keywords.map( (item) => {
+        return {
+          value: item,
+          label: 'Keywords'
+        };
+      });
+      let sources = menus.sources.map((item) => {
+        return {
+          value: item,
+          label: 'Sources'
+        };
+      });
+      let data = menus.data((item) => {
+        return {
+          value: item,
+          label: 'Data'
+        };
+      });
+      debugger;
+
+      let dd_menu = (<div>
+          <div className='columns small-3'>
+            <Select
+              options={topicOpts}
+            />
+          </div>
+          <div className='columns small-3'>
+            <Select
+              options={keywords}
+            />
+          </div>
+          <div className='columns small-3'>
+            <Select
+              options={sources}
+            />
+          </div>
+           <div className='columns small-3'>
+            <Select
+              options={data}
+            />
+          </div>
+        </div>);
+      return dd_menu;
+    }
+
+  } */
+
   render(){
+
+
     return(
         <form ref='upForm' onSubmit={this.handleSubmit.bind(this)} name='test'>
           <div>
@@ -260,6 +351,7 @@ class FileCurateForm extends Component{
             </ul>
           </div>
           <hr />
+
           <div className={'row'} >
             <div className={'columns small-6'}>
               <StringField id='dname' className={'columns small-6'} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716'} isRequired={true} />
@@ -313,12 +405,17 @@ class FileCurateForm extends Component{
 
 FileCurateForm.propTypes = {
 <<<<<<< HEAD
+<<<<<<< HEAD
   onFileUploadSubmit: React.PropTypes.func,
   dispatch: React.PropTypes.func,
   fileData: React.PropTypes.object
 =======
   onFileUploadSubmit: React.PropTypes.func
 >>>>>>> minor changes
+=======
+  onFileUploadSubmit: React.PropTypes.func,
+  dispatch: React.PropTypes.func
+>>>>>>> miunor changes
 };
 
 export default FileCurateForm;

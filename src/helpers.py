@@ -736,7 +736,6 @@ def update_urls_helper(readme_file):
             readme_dbentity_file.file_size = updated_readme['file_size']
             readme_dbentity_file.s3_url = updated_readme['s3_url']
 
-
 def get_sources(session=None):
     ''' Get sources from dbentity model '''
 
@@ -746,7 +745,6 @@ def get_sources(session=None):
         temp.add(item.source.display_name)
 
     return list(temp)
-
 
 def get_file_keywords(session=None):
 
