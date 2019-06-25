@@ -108,5 +108,4 @@ index_*.png
 *.env
 src/Untitled*
 dev_variables*
-scripts/loading/data/YJM1383_Duke_2015_SRR800821.sra
-*/data
+scripts/loading/data/*
