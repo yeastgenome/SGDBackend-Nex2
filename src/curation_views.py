@@ -1737,6 +1737,7 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
 
+<<<<<<< HEAD
 @view_config(route_name="get_file", renderer='json', request_method='GET')
 @authenticate
 def get_file(request):
@@ -1750,6 +1751,8 @@ def get_file(request):
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
+=======
+>>>>>>> miunor changes
 @view_config(route_name="upload_tar_file", renderer='json', request_method='POST')
 @authenticate
 def upload_tar_file(request):
@@ -1763,12 +1766,18 @@ def upload_tar_file(request):
             else:
                 obj[key] = val
 
+<<<<<<< HEAD
         obj['uname'] = request.session['username']
         obj['source_id'] = SGD_SOURCE_ID
 
         upload_new_file(obj)
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+=======
+        upload_new_file(obj)
+    except Exception as e:
+        logging.error(e)
+>>>>>>> miunor changes
 
 
 @view_config(route_name="file_curate_menus", renderer='json', request_method='GET')
