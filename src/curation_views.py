@@ -18,6 +18,7 @@ import transaction
 import json
 import re
 from bs4 import BeautifulSoup
+import cgi
 
 from .helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
@@ -25,7 +26,7 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
     FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, set_string_format,\
     send_newsletter_email, get_file_delimiter, unicode_to_string,\
-    file_curate_update_readme
+    file_curate_update_readme, upload_new_file, get_file_curate_dropdown_data
 from .curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid, get_list_of_ptms
 from .loading.promote_reference_triage import add_paper
@@ -1728,3 +1729,27 @@ def ptm_delete(request):
 
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+
+
+@view_config(route_name="upload_tar_file", renderer='json', request_method='POST')
+@authenticate
+def upload_tar_file(request):
+    ''' Upload tar files containing zip/sra file with README file '''
+
+    try:
+        obj = {}
+        for key, val in request.POST.iteritems():
+            if type(cgi.FieldStorage()) is type(val):
+                obj[val.name] = val.file
+            else:
+                obj[key] = val
+
+        upload_new_file(obj)
+    except Exception as e:
+        logging.error(e)
+
+
+@view_config(route_name="file_curate_menus", renderer='json', request_method='GET')
+def file_curate_menus(request):
+
+    return get_file_curate_dropdown_data()
