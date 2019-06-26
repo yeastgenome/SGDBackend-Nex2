@@ -22,8 +22,14 @@ import re
 =======
 
 
+<<<<<<< HEAD
 >>>>>>> miunor changes
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
+=======
+from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
+    Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
+    ReferenceFile, Disease, CuratorActivity, Source
+>>>>>>> minor changes
 from src.curation_helpers import ban_from_cache, get_curator_session
 <<<<<<< HEAD
 >>>>>>> - Add endpoint for file upload
@@ -1015,15 +1021,82 @@ def add_keywords(name, keywords, src_id, uname):
 >>>>>>> - Add endpoint for file upload
 =======
 
+
 def upload_new_file(req_obj, session=None):
-    if req_obj:
-        import pdb
-        pdb.set_trace()
-        readme_file = None
-        for key, val in req_obj.iteritems():
-            if key.endswith('.README'):
-                readme_file= {'display_name': key, 'file': val, 'file_name': key} 
+    try:
+        if req_obj:
+            other_extensions = ('zip', '.gz', '.sra')
+            readme_file = {}
+            other_files = []
+            readme_file_id = None
+            for key, val in req_obj.iteritems():
+                if key.endswith('.README'):
+                    existing_reademe_meta = get_existing_meta_data(req_obj['displayName'])
+
+                    if existing_reademe_meta:
+                        existing_reademe_meta.display_name = req_obj['displayName']
+                        existing_reademe_meta.description = req_obj['description']
+                        existing_reademe_meta.status = req_obj['status']
+                        existing_reademe_meta.is_public = True
+                        existing_reademe_meta.is_in_spell = False
+                        existing_reademe_meta.is_in_browser = False
+                        existing_reademe_meta.upload_file_to_s3(
+                            val, req_obj['display_name'])
+                        readme_file_id = existing_reademe_meta.dbentity_id
+
+                if key.endswith(other_extensions):
+                    other_files.append(
+                        {
+                            'display_name': req_obj['displayName'],
+                            'file': val, 
+                            'file_name': key,
+                            'description': val
+                        })
+                
+            if len(other_files) > 0:
+                for item in other_files:
+                    db_file = get_existing_meta_data(item['display_name'])
+                    if db_file:
+                        add_file_meta_db(db_file, item, readme_file_id)
+
+            transaction.commit()
+            DBSession.flush()
+    except Exception as e:
+        transaction.abort()
+        raise(e)
 
 
-
+<<<<<<< HEAD
 >>>>>>> miunor changes
+=======
+def add_file_meta_db(db_file, obj, readme_id=None):
+    if db_file and obj:
+        db_file.display_name = obj['display_name']
+        db_file.description = obj['description']
+        db_file.status = obj['status']
+        db_file.is_public = True
+        db_file.is_in_spell = False
+        db_file.is_in_browser = False
+        db_file.upload_file_to_s3(
+            obj['file'], obj['display_name'])
+        if readme_id:
+            db_file.readme_file_id = readme_id
+    
+
+
+def get_existing_meta_data(display_name=None):
+
+    result = None
+    if display_name:
+        result = DBSession.query(Filedbentity).filter(Filedbentity.display_name == display_name).one_or_none()
+    
+    return result
+
+
+def get_source_id(source=None):
+    result = None
+    if source:
+        result = DBSession.query(Source.source_id).filter(
+            Source.display_name == source).one_or_none()[0]
+        
+>>>>>>> minor changes
