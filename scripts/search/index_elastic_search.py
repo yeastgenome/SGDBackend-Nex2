@@ -900,9 +900,9 @@ def index_part_3(obj):
     obj.index_disease_terms()
 
 def index_part_4(obj):
-    '''obj.index_downloads()
+    obj.index_downloads()
     obj.index_go_terms()
-    obj.index_not_mapped_genes()'''
+    obj.index_not_mapped_genes()
     obj.index_references()
 
 
@@ -918,16 +918,16 @@ if __name__ == "__main__":
     start_time = dt.now()
     print "Start time = " + str(start_time)
     processes = list()
-    '''p1 = Process(target=index_part_1(index))
+    p1 = Process(target=index_part_1(index))
     p2 = Process(target=index_part_2(index))
-    p3 = Process(target=index_part_3(index))'''
+    p3 = Process(target=index_part_3(index))
     p4 = Process(target=index_part_4(index))
-    '''p1.start()
+    p1.start()
     processes.append(p1)
     p2.start()
     processes.append(p2)
     p3.start()
-    processes.append(p3)'''
+    processes.append(p3)
     p4.start()
     processes.append(p4)
     for process in processes:

@@ -349,7 +349,8 @@ mapping = {
                     }
                 },
                 "synonyms": {
-                    "type": "keyword"
+                    "type": "text",
+                    "fielddata": True
                 },
                 "go_id": {
                     "type": "text",
@@ -357,8 +358,8 @@ mapping = {
                     "analyzer": "symbols"
                 },
                 "gene_ontology_loci": {
-                    "type": "keyword",
-                    "index": True,
+                    "type": "text",
+                    "fielddata": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
@@ -386,12 +387,13 @@ mapping = {
                     "fields": {
                         "raw": {
                             "type": "keyword",
-                            "index": False
+                            "index": True
                         }
                     }
                 },
                 "journal": {
                     "type": "keyword",
+                    "index": True,
                     "fields": {
                         "raw": {
                             "type": "keyword",
