@@ -4,10 +4,10 @@ import StringField from '../forms/stringField';
 import FormDatePicker from '../../components/formDatePicker';
 import Dropzone from 'react-dropzone';
 import style from '../style.css';
-import fetchData from '../../lib/fetchData';
-import {setError} from '../../actions/metaActions';
+//import fetchData from '../../lib/fetchData';
+//import {setError} from '../../actions/metaActions';
 //import Select from 'react-select';
-const DROP_DOWN_URL = '/file_curate_menus';
+//const DROP_DOWN_URL = '/file_curate_menus';
 
 /* eslint-disable no-debugger */
 
@@ -21,7 +21,7 @@ class FileCurateForm extends Component{
       menus: undefined
     };
   }
-
+  /*
   componentDidMount(){
 
     fetchData(DROP_DOWN_URL, {
@@ -38,7 +38,7 @@ class FileCurateForm extends Component{
       let errorMEssage = data ? data.error : 'Error occured';
       this.props.dispatch(setError(errorMEssage));
     });
-  }
+  } */
 
   handleClear(){
     this.setState({ files:[]});
@@ -138,12 +138,12 @@ class FileCurateForm extends Component{
     return(
         <form ref='upForm' onSubmit={this.handleSubmit.bind(this)} name='test'>
           <div>
-            <h1>Upload File to S3</h1>
+            <h1>Upload README File to S3</h1>
             <hr />
             <h5>Directions</h5>
             <ul>
               <li>Make sure your file has header matching the following example: link to google sheets</li>
-              <li>Acceptable file formats: <span className={'label'}>csv</span></li>
+              <li>Acceptable file formats: <span className={'label'}>README</span></li>
             </ul>
           </div>
           <hr />

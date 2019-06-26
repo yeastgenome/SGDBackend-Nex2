@@ -33,7 +33,7 @@ class FileCurate extends Component {
   }
 
   componentDidMount(){
-    fetchData(DROP_DOWN_URL, {
+    fetchData(UPLOAD_TAR_URL, {
       type: 'GET',
       credentials: 'same-origin',
       processData: false,
