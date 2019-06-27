@@ -1,25 +1,90 @@
 import React, { Component } from 'react';
 import CurateLayout from '../curateHome/layout';
 import { connect } from 'react-redux';
-/* eslint-disable no-debugger */
+import FileCurateForm from '../../components/fileCurate/fileCurateForm';
+import fetchData from '../../lib/fetchData';
+import { setError } from '../../actions/metaActions';
 
-//const BASE_CURATE_URL = 'curate/file';
+//const UPLOAD_URL = '/upload_file_curate';
+const UPLOAD_TAR_URL = '/upload_tar_file';
 
-class FileCurateUpdate extends Component{
-  render(){
-    return(
-      <CurateLayout>
-        <div className='row'>
-          <p>File curate page</p>
-        </div>
-      </CurateLayout>
-    );
+const UPLOAD_TIMEOUT = 120000;
+//const DROP_DOWN_URL = '/file_curate_menus';
+
+
+class FileCurateUpdate extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      files: [],
+      isPending: false,
+      menus: undefined
+    };
+    this.handleFileUploadSubmit = this.handleFileUploadSubmit.bind(this);
   }
 
+  componentDidMount(){
+    fetchData(UPLOAD_TAR_URL, {
+      type: 'GET',
+      credentials: 'same-origin',
+      processData: false,
+      contentType: false
+    }).then(data => {
+      this.setState({
+        menus: data
+      });
+
+    }).catch(data => {
+      let errorMEssage = data ? data.error : 'Error occured';
+      this.props.dispatch(setError(errorMEssage));
+    });
+  }
+
+  handleFileUploadSubmit(e){
+    this.uploadData(e);
+  }
+
+  uploadData(formData){
+    this.setState({ isPending: true});
+    fetchData(UPLOAD_TAR_URL, {
+      type: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRF-Token': this.props.csrfToken
+      },
+      data: formData,
+      processData: false,
+      contentType: false,
+      timeout: UPLOAD_TIMEOUT
+    }).then( (data) => {
+      console.log(data);
+      this.setState({
+        isPending: false,
+      });
+
+    }).catch( (data) => {
+      let errorMEssage = data ? data.error: 'Error occured';
+      this.props.dispatch(setError(errorMEssage));
+      this.setState({ isPending: false});
+    });
+    //fetchData
+
+  }
+
+  render(){
+    return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} /></div></CurateLayout>);
+  }
 }
 
-function mapStateToProps(state){
-  return state;
+FileCurateUpdate.propTypes = {
+  csrfToken: React.PropTypes.string,
+  dispatch: React.PropTypes.func
+};
+
+function mapStateToProps(state) {
+  return {
+    csrfToken: state.auth.get('csrfToken')
+  };
 }
 
 export default connect(mapStateToProps)(FileCurateUpdate);
