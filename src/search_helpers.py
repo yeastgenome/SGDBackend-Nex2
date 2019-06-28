@@ -170,7 +170,7 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
     if sort_by == 'alphabetical':
         es_search_body['sort'] = [
             {
-                "name": {
+                "name.raw": {
                     "order": "asc"
                 }
             }
