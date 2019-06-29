@@ -74,8 +74,7 @@ mapping = {
                 },
                 "description": {
                     "type": "text",
-                    "fielddata": True,
-                    "analyzer": "symbols"
+                    "fielddata": True
                 },
                 "first_name": {
                     "type": "keyword"
