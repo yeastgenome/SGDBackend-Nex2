@@ -6,7 +6,10 @@ class ActionList extends Component {
     let action_categories = ['locus', 'reference', 'reserved_name', 'download'];
     if(action_categories.includes(this.props.category)){
       if(this.props.category == 'download'){
-        return <Link style={{ display: 'inline-block', minWidth: '6rem' }} to='file_curate_update'><i className='fa fa-edit' /> Curate</Link>;
+        /*eslint-disable no-debugger */
+        return <Link
+        style={{ display: 'inline-block', minWidth: '6rem' }}
+        to={{pathname:'file_curate_update', search:`?name=${this.props.displayName}`}}><i className='fa fa-edit' /> Curate</Link>;
       }
       else{
         let href = `curate${this.props.href}`;
@@ -21,6 +24,7 @@ class ActionList extends Component {
 ActionList.propTypes = {
   category: React.PropTypes.string,
   href: React.PropTypes.string,
+  displayName: React.PropTypes.string
 };
 
 export default ActionList;

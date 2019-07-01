@@ -4,9 +4,10 @@ import { connect } from 'react-redux';
 import FileCurateForm from '../../components/fileCurate/fileCurateForm';
 import fetchData from '../../lib/fetchData';
 import { setError } from '../../actions/metaActions';
-
+/*eslint-disable no-debugger */
 //const UPLOAD_URL = '/upload_file_curate';
 const UPLOAD_TAR_URL = '/upload_tar_file';
+const GET_FILE_URL = '/get_file';
 
 const UPLOAD_TIMEOUT = 120000;
 //const DROP_DOWN_URL = '/file_curate_menus';
@@ -18,20 +19,32 @@ class FileCurateUpdate extends Component {
     this.state = {
       files: [],
       isPending: false,
-      menus: undefined
+      fileData: undefined
     };
     this.handleFileUploadSubmit = this.handleFileUploadSubmit.bind(this);
   }
 
+  getParam(){
+    let urlStr = '';
+    let query = new URLSearchParams(this.props.location.search);
+    for (let param of query.entries()){
+      urlStr = param[1];
+    }
+
+    return urlStr;
+
+  }
+
   componentDidMount(){
-    fetchData(UPLOAD_TAR_URL, {
+    let urlStr = this.getParam();
+    fetchData(`${GET_FILE_URL}/${urlStr}`, {
       type: 'GET',
       credentials: 'same-origin',
       processData: false,
       contentType: false
     }).then(data => {
       this.setState({
-        menus: data
+        fileData: data
       });
 
     }).catch(data => {
@@ -72,7 +85,7 @@ class FileCurateUpdate extends Component {
   }
 
   render(){
-    return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} /></div></CurateLayout>);
+    return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} fileData={this.state.fileData} /></div></CurateLayout>);
   }
 }
 
@@ -80,6 +93,8 @@ FileCurateUpdate.propTypes = {
   csrfToken: React.PropTypes.string,
   dispatch: React.PropTypes.func
 };
+
+/*eslint-disable no-debugger */
 
 function mapStateToProps(state) {
   return {
