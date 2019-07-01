@@ -4,7 +4,6 @@ from glob import glob
 import logging
 import boto
 from boto.s3.key import Key
-import pdb
 import hashlib
 import functools
 import multiprocessing
