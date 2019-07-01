@@ -1032,8 +1032,8 @@ def upload_new_file(req_obj, session=None):
             for key, val in req_obj.iteritems():
                 if key.endswith('.README'):
                     existing_reademe_meta = get_existing_meta_data(req_obj['displayName'])
-
                     if existing_reademe_meta:
+                        keywords = re.split(',|\|', req_obj['keywords'])
                         existing_reademe_meta.display_name = req_obj['displayName']
                         existing_reademe_meta.description = req_obj['description']
                         existing_reademe_meta.status = req_obj['status']
@@ -1041,9 +1041,10 @@ def upload_new_file(req_obj, session=None):
                         existing_reademe_meta.is_in_spell = False
                         existing_reademe_meta.is_in_browser = False
                         existing_reademe_meta.upload_file_to_s3(
-                            val, req_obj['display_name'])
+                            val, req_obj['displayName'])
                         readme_file_id = existing_reademe_meta.dbentity_id
-
+                        add_keywords(req_obj['displayName'],
+                                     keywords, req_obj['source_id'], req_obj['uname'])
                 if key.endswith(other_extensions):
                     other_files.append(
                         {
@@ -1083,7 +1084,6 @@ def add_file_meta_db(db_file, obj, readme_id=None):
             db_file.readme_file_id = readme_id
     
 
-
 def get_existing_meta_data(display_name=None):
 
     result = None
@@ -1099,4 +1099,46 @@ def get_source_id(source=None):
         result = DBSession.query(Source.source_id).filter(
             Source.display_name == source).one_or_none()[0]
         
+<<<<<<< HEAD
 >>>>>>> minor changes
+=======
+
+def get_file_details(display_name):
+
+    if display_name:
+        file_data = DBSession.query(Filedbentity).filter(
+            Filedbentity.display_name == display_name).one_or_none()
+        if file_data:
+            readme = file_data.readme_file
+            if readme:
+                return readme.to_dict()
+            else:
+                return file_data.to_dict()
+        else:
+            return None
+    else:
+        return None
+
+
+def add_keywords(name, keywords, src_id, uname):
+    """ add keywords """
+
+    try:
+        if len(keywords) > 0:
+            existing = DBSession.query(Filedbentity).filter(
+                Filedbentity.display_name == name).one_or_none()
+
+            for word in keywords:
+                word = word.strip()
+                keyword = DBSession.query(Keyword).filter(
+                    Keyword.display_name == word).one_or_none()
+                existing_file_keyword = DBSession.query(FileKeyword).filter(and_(
+                    FileKeyword.file_id == existing.dbentity_id, FileKeyword.keyword_id == keyword.keyword_id)).one_or_none()
+                if not existing_file_keyword:
+                    new_file_keyword = FileKeyword(
+                        created_by=uname, file_id=existing.dbentity_id, keyword_id=keyword.keyword_id, source_id=src_id)
+                    DBSession.add(new_file_keyword)
+
+    except Exception as e:
+        logging.error(e)
+>>>>>>> - Add ES functionality

@@ -434,7 +434,6 @@ def get_recent_annotations(request):
 @view_config(route_name='upload_spreadsheet', request_method='POST', renderer='json')
 @authenticate
 def upload_spreadsheet(request):
-    import pdb ; pdb.set_trace()
     try:
         file_upload = request.POST['file'].file
         filename = request.POST['file'].filename
@@ -466,10 +465,6 @@ def upload_spreadsheet(request):
 
 @view_config(route_name='upload_file_curate', renderer='json', request_method='POST')
 def upload_file_curate(request):
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> - Add endpoint for file upload
     try:
         if not check_csrf_token(request, raises=False):
             return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
@@ -487,15 +482,6 @@ def upload_file_curate(request):
     except Exception as e:
         pass
 
-<<<<<<< HEAD
-=======
-    import pdb ; pdb.set_trace()
-    if not check_csrf_token(request, raises=False):
-        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
-    data = request.json_body
->>>>>>> reconnect backend api
-=======
->>>>>>> - Add endpoint for file upload
     return {}
 
 # not authenticated to allow the public submission
@@ -1737,7 +1723,6 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
 
-<<<<<<< HEAD
 @view_config(route_name="get_file", renderer='json', request_method='GET')
 @authenticate
 def get_file(request):
@@ -1751,8 +1736,6 @@ def get_file(request):
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
-=======
->>>>>>> miunor changes
 @view_config(route_name="upload_tar_file", renderer='json', request_method='POST')
 @authenticate
 def upload_tar_file(request):
@@ -1766,18 +1749,19 @@ def upload_tar_file(request):
             else:
                 obj[key] = val
 
-<<<<<<< HEAD
         obj['uname'] = request.session['username']
         obj['source_id'] = SGD_SOURCE_ID
 
         upload_new_file(obj)
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
-=======
+        obj['uname'] = request.session['username']
+        obj['source_id'] = SGD_SOURCE_ID
+
         upload_new_file(obj)
     except Exception as e:
-        logging.error(e)
->>>>>>> miunor changes
+         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+>>>>>>> - Add ES functionality
 
 
 @view_config(route_name="file_curate_menus", renderer='json', request_method='GET')
