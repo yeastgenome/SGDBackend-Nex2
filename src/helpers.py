@@ -868,7 +868,6 @@ def add_file_meta_db(db_file, obj, readme_id=None):
         if readme_id:
             db_file.readme_file_id = readme_id
 
-
 def get_existing_meta_data(display_name=None):
 
     result = None

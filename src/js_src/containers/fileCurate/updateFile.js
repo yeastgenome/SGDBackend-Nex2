@@ -27,7 +27,6 @@ class FileCurateUpdate extends Component {
   }
 
 
-
   componentDidMount(){
     let urlStr = this.getParam();
     fetchData(`${GET_FILE_URL}/${urlStr}`, {
@@ -38,7 +37,6 @@ class FileCurateUpdate extends Component {
     }).then(data => {
       this.setState({
         fileData: data
-
       });
 
     }).catch(data => {
