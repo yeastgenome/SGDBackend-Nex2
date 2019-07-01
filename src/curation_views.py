@@ -26,7 +26,8 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
     FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, set_string_format,\
     send_newsletter_email, get_file_delimiter, unicode_to_string,\
-    file_curate_update_readme, upload_new_file, get_file_curate_dropdown_data
+    file_curate_update_readme, upload_new_file, get_file_curate_dropdown_data,\
+    get_file_details
 from .curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid, get_list_of_ptms
 from .loading.promote_reference_triage import add_paper
@@ -38,7 +39,7 @@ logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 models_helper = ModelsHelper()
-
+SGD_SOURCE_ID = 834
 
 
 
@@ -433,7 +434,6 @@ def get_recent_annotations(request):
 @view_config(route_name='upload_spreadsheet', request_method='POST', renderer='json')
 @authenticate
 def upload_spreadsheet(request):
-    import pdb ; pdb.set_trace()
     try:
         file_upload = request.POST['file'].file
         filename = request.POST['file'].filename
@@ -1723,6 +1723,19 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
 
+@view_config(route_name="get_file", renderer='json', request_method='GET')
+@authenticate
+def get_file(request):
+    ''' Get file data '''
+
+    try:
+        dname = request.matchdict['name']
+        if dname:
+            return get_file_details(dname)
+        return None
+    except Exception as e:
+         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+
 @view_config(route_name="upload_tar_file", renderer='json', request_method='POST')
 @authenticate
 def upload_tar_file(request):
@@ -1736,9 +1749,12 @@ def upload_tar_file(request):
             else:
                 obj[key] = val
 
+        obj['uname'] = request.session['username']
+        obj['source_id'] = SGD_SOURCE_ID
+
         upload_new_file(obj)
     except Exception as e:
-        logging.error(e)
+         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
 
 @view_config(route_name="file_curate_menus", renderer='json', request_method='GET')

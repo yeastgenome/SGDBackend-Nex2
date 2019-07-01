@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+/*eslint-disable no-debugger */
+
 /**
  * Renders multi-line input field
  * @prop {string} displayName : label
