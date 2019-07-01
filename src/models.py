@@ -2560,7 +2560,7 @@ class Filedbentity(Dbentity):
     readme_file = relationship(
         u'Filedbentity',
         foreign_keys=[dbentity_id],
-        primaryjoin='Filedbentity.dbentity_id == Filedbentity.readme_file_id')
+        primaryjoin='Filedbentity.dbentity_id == Filedbentity.readme_file_id', uselist=False)
     topic = relationship(
         u'Edam', primaryjoin='Filedbentity.topic_id == Edam.edam_id')
 
@@ -2591,7 +2591,9 @@ class Filedbentity(Dbentity):
             "description":
                 self.description if self.description else '',
             "year":
-                self.year
+                self.year,
+            "display_name": self.display_name,
+            "status": self.dbentity_status
         }
         return obj
 

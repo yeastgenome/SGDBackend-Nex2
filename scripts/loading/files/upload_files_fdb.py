@@ -4,7 +4,7 @@ import logging
 import re
 from datetime import datetime
 import getpass
-from src.helpers import upload_file, update_readme_files_with_urls
+from src.helpers import upload_file, update_readme_files_with_urls, add_keywords
 from src.models import DBSession, Base, Edam, Filedbentity, FileKeyword, FilePath, Keyword, Path, Referencedbentity, ReferenceFile, Source
 from sqlalchemy import create_engine, and_
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -15,7 +15,6 @@ import pandas as pd
 from operator import itemgetter
 import time
 import pandas as pd
-import pdb 
 
 from src.aws_helpers import get_zip_files, get_sra_files, get_readme_files, get_file_from_path_collection, multi_part_upload_s3, simple_s3_upload
 
@@ -278,7 +277,7 @@ def add_pmids(file_name, file_pmids, src_id, uname):
     except Exception as e:
         logging.error(e)
 
-
+'''
 def add_keywords(name, keywords, src_id, uname):
     """ add keywords """
 
@@ -299,7 +298,7 @@ def add_keywords(name, keywords, src_id, uname):
                     DBSession.add(new_file_keyword)
 
     except Exception as e:
-        logging.error(e)
+        logging.error(e) '''
 
 '''
 def check_uploaded_files():
