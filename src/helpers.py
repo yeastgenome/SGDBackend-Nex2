@@ -884,7 +884,6 @@ def get_source_id(source=None):
         result = DBSession.query(Source.source_id).filter(
             Source.display_name == source).one_or_none()[0]
 
-
 def get_file_details(display_name):
     if display_name:
         file_data = DBSession.query(Filedbentity).filter(

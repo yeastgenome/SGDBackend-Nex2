@@ -37,6 +37,7 @@ class FileCurateUpdate extends Component {
     }).then(data => {
       this.setState({
         fileData: data
+
       });
 
     }).catch(data => {
