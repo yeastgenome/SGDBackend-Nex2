@@ -7,9 +7,13 @@ class ActionList extends Component {
     if(action_categories.includes(this.props.category)){
       if(this.props.category == 'download'){
         /*eslint-disable no-debugger */
-        return <Link
-        style={{ display: 'inline-block', minWidth: '6rem' }}
-        to={{pathname:'file_curate_update', search:`?name=${this.props.displayName}`}}><i className='fa fa-edit' /> Curate</Link>;
+        return(
+        <Link
+          style={{ display: 'inline-block', minWidth: '6rem' }}
+          to={{pathname:'file_curate_update', search:`?name=${this.props.displayName.replace(/<[^>]*>?/gm, '')}`}}
+        >
+          <i className='fa fa-edit' /> Curate
+        </Link>);
       }
       else{
         let href = `curate${this.props.href}`;

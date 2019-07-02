@@ -1,3 +1,4 @@
+import redis
 from math import pi, sqrt, acos
 import datetime
 import hashlib
@@ -16,31 +17,13 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
-
-
-<<<<<<< HEAD
->>>>>>> miunor changes
-from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity, Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword, ReferenceFile, Disease, CuratorActivity
-=======
-from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
-    Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
-    ReferenceFile, Disease, CuratorActivity, Source
->>>>>>> minor changes
-from src.curation_helpers import ban_from_cache, get_curator_session
-<<<<<<< HEAD
->>>>>>> - Add endpoint for file upload
+from sqlalchemy import and_
 
 
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
     ReferenceFile, Disease, CuratorActivity, Source
 from src.curation_helpers import ban_from_cache, get_curator_session
-=======
->>>>>>> resolve merge conflicts
 from src.aws_helpers import update_s3_readmefile, get_s3_url
 import logging
 log = logging.getLogger(__name__)
@@ -55,7 +38,6 @@ FILE_EXTENSIONS = [
 ]
 MAX_QUERY_ATTEMPTS = 3
 
-import redis
 disambiguation_table = redis.Redis()
 
 # get list of URLs to visit from comma-separated ENV variable cache_urls 'url1, url2'
@@ -90,6 +72,7 @@ def get_locus_by_id(id):
 def get_go_by_id(id):
     return dbentity_safe_query(id, Go)
 
+
 def get_disease_by_id(id):
     return dbentity_safe_query(id, Disease)
 
@@ -104,9 +87,11 @@ def dbentity_safe_query(id, entity_class):
                 dbentity = DBSession.query(Locusdbentity).filter_by(
                     dbentity_id=id).one_or_none()
             elif entity_class is Go:
-                dbentity = DBSession.query(Go).filter_by(go_id=id).one_or_none()
+                dbentity = DBSession.query(
+                    Go).filter_by(go_id=id).one_or_none()
             elif entity_class is Disease:
-                dbentity = DBSession.query(Disease).filter_by(disease_id=id).one_or_none()
+                dbentity = DBSession.query(Disease).filter_by(
+                    disease_id=id).one_or_none()
             break
         # close connection that has idle-in-transaction
         except InternalError:
@@ -375,7 +360,8 @@ def link_gene_names(raw, locus_names_ids):
     processed = raw
     words = raw.split(' ')
     for p_original_word in words:
-        original_word = str(p_original_word).translate(None, string.punctuation)
+        original_word = str(p_original_word).translate(
+            None, string.punctuation)
         wupper = original_word.upper()
         if wupper in locus_names_object.keys() and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
@@ -413,7 +399,8 @@ def primer3_parser(primer3_results):
                     primer_pairs[id][key]['length'] = primer3_results[k][1]
             elif tmp[0] == 'EXPLAIN':
                 notes[key] = primer3_results[k]
-            elif tmp == ['NUM','RETURNED']: pass
+            elif tmp == ['NUM', 'RETURNED']:
+                pass
             else:
                 print(k)
         elif 'PRIMER_LEFT' == k[:11]:
@@ -432,7 +419,8 @@ def primer3_parser(primer3_results):
                     primer_pairs[id][key]['length'] = primer3_results[k][1]
             elif tmp[0] == 'EXPLAIN':
                 notes[key] = primer3_results[k]
-            elif tmp == ['NUM','RETURNED']: pass
+            elif tmp == ['NUM', 'RETURNED']:
+                pass
             else:
                 print(k)
         elif 'PRIMER_PAIR' == k[:11]:
@@ -450,7 +438,8 @@ def primer3_parser(primer3_results):
                     print(k, primer3_results[k])
             elif tmp[0] == 'EXPLAIN':
                 notes[key] = primer3_results[k]
-            elif tmp == ['NUM','RETURNED']: pass
+            elif tmp == ['NUM', 'RETURNED']:
+                pass
             else:
                 print(k)
         elif 'PRIMER_INTERNAL' == k[:15]:
@@ -469,7 +458,8 @@ def primer3_parser(primer3_results):
                     primer_pairs[id][key]['length'] = primer3_results[k][1]
             elif tmp[0] == 'EXPLAIN':
                 notes['pair'] = primer3_results[k]
-            elif tmp == ['NUM','RETURNED']: pass
+            elif tmp == ['NUM', 'RETURNED']:
+                pass
             else:
                 print(k, tmp[0])
         else:
@@ -500,7 +490,7 @@ def file_upload_to_dict(file_upload, delimiter="\t"):
             list_dictionary.append(
                 {k.decode('utf-8-sig'): v
                  for k, v in item.items() if k not in (None, '')}
-                )
+            )
         return list_dictionary
     else:
         return list_dictionary
@@ -508,29 +498,31 @@ def file_upload_to_dict(file_upload, delimiter="\t"):
 
 def send_newsletter_email(subject, recipients, msg):
     try:
-        SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>" 
+        SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>"
         REPLY_TO = "sgd-helpdesk@lists.stanford.edu"
 
-        message = MIMEMultipart("alternative")        
+        message = MIMEMultipart("alternative")
         message["Subject"] = subject
         message["From"] = SENDER_EMAIL
-        message.add_header('reply-to',REPLY_TO)
+        message.add_header('reply-to', REPLY_TO)
 
         html_message = MIMEText(msg.encode('utf8'), "html")
         message.attach(html_message)
-        
+
         server = smtplib.SMTP("localhost", 25)
-        any_recipients_error = server.sendmail(SENDER_EMAIL, recipients, message.as_string())
+        any_recipients_error = server.sendmail(
+            SENDER_EMAIL, recipients, message.as_string())
         server.quit()
 
         if(len(any_recipients_error) > 0):
             error_message = ''
             for key in any_recipients_error:
-                error_message = error_message + ' ' + key + ' ' + str(any_recipients_error[key]) + ' ;' + '\n'
-            
+                error_message = error_message + ' ' + key + ' ' + \
+                    str(any_recipients_error[key]) + ' ;' + '\n'
+
             error_message = "Email sending unsuccessful for this recipients " + error_message
             return {"error": error_message}
-                
+
         return {"success": "Email was successfully sent."}
 
     except SMTPHeloError as e:
@@ -542,7 +534,7 @@ def send_newsletter_email(subject, recipients, msg):
     except SMTPDataError as e:
         return {"error", "The server replied with an unexpected"}
     except Exception as e:
-        return {"error":"Error occured while sending email."}
+        return {"error": "Error occured while sending email."}
 
 
 #TODO: abstract this function in second release
@@ -560,8 +552,10 @@ def update_curate_activity(locus_summary_object):
     '''
     flag = False
     try:
-        curator_session = get_curator_session(locus_summary_object['created_by'])
-        existing = curator_session.query(CuratorActivity).filter(CuratorActivity.dbentity_id == locus_summary_object['dbentity_id']).one_or_none()
+        curator_session = get_curator_session(
+            locus_summary_object['created_by'])
+        existing = curator_session.query(CuratorActivity).filter(
+            CuratorActivity.dbentity_id == locus_summary_object['dbentity_id']).one_or_none()
         message = 'added'
         if existing:
             #curator_session.delete(existing)
@@ -582,7 +576,7 @@ def update_curate_activity(locus_summary_object):
         traceback.print_exc()
         transaction.abort()
         raise(e)
-        
+
     return flag
 
 
@@ -609,6 +603,7 @@ def set_string_format(str_param, char_format='_'):
     else:
         return None
 
+
 def get_file_delimiter(file_upload):
     ''' Check file delimiters
 
@@ -633,6 +628,8 @@ def get_file_delimiter(file_upload):
         raise ValueError(
             'file format error, acceptable formats are txt, tsv, xls')
 #TODO: develop this into an endpoint that will check the file before uploading in the next release
+
+
 def summary_file_is_valid(file_upload):
     ''' Check if file is valid for upload
 
@@ -660,7 +657,7 @@ def summary_file_is_valid(file_upload):
                 gene_id = item.get(k, None)
                 if gene_id:
                     file_gene_ids.append(gene_id.strip())
-                
+
     valid_genes = DBSession.query(Locusdbentity.format_name).filter(
         Locusdbentity.format_name.in_(file_gene_ids)).all()
     valid_genes = [str(d[0]) for d in valid_genes]
@@ -681,8 +678,7 @@ def unicode_to_string(unicode_value):
         return returnValue
     except UnicodeEncodeError as err:
         return None
-    
-<<<<<<< HEAD
+
 
 def update_readme_files_with_urls(readme_name, update_all=False):
     """ Update parent readme files with list of s3 urls
@@ -691,7 +687,7 @@ def update_readme_files_with_urls(readme_name, update_all=False):
         The parent readme file should contain all the s3 urls of files
         under the parent folder
         create a dictionary with parent_readme name as key and value as list of files
-    """ 
+    """
     try:
         if not update_all:
             temp = []
@@ -699,9 +695,9 @@ def update_readme_files_with_urls(readme_name, update_all=False):
             if readme_name:
                 readme_file = DBSession.query(Dbentity).filter(
                     Dbentity.display_name == readme_name).one_or_none()
-                
+
                 if readme_file:
-                    update_urls_helper(readme_file)   
+                    update_urls_helper(readme_file)
                     transaction.commit()
         else:
             all_files = DBSession.query(Dbentity).all()
@@ -709,50 +705,12 @@ def update_readme_files_with_urls(readme_name, update_all=False):
             for _file in all_files:
                 if _file.display_name.endswith('.README'):
                     update_urls_helper(_file)
-            
+
             transaction.commit()
 
     except Exception as e:
         logging.error(e)
         transaction.abort()
-
-
-=======
-
-def update_readme_files_with_urls(readme_name, update_all=False):
-    """ Update parent readme files with list of s3 urls
-
-    Notes:
-        The parent readme file should contain all the s3 urls of files
-        under the parent folder
-        create a dictionary with parent_readme name as key and value as list of files
-    """ 
-    try:
-        if not update_all:
-            temp = []
-
-            if readme_name:
-                readme_file = DBSession.query(Dbentity).filter(
-                    Dbentity.display_name == readme_name).one_or_none()
-                
-                if readme_file:
-                    update_urls_helper(readme_file)   
-                    transaction.commit()
-        else:
-            all_files = DBSession.query(Dbentity).all()
-
-            for _file in all_files:
-                if _file.display_name.endswith('.README'):
-                    update_urls_helper(_file)
-            
-            transaction.commit()
-
-    except Exception as e:
-        logging.error(e)
-        transaction.abort()
-
-
->>>>>>> resolve merge conflicts
 
 
 def update_urls_helper(readme_file):
@@ -778,11 +736,7 @@ def update_urls_helper(readme_file):
             readme_dbentity_file.md5sum = updated_readme['md5sum']
             readme_dbentity_file.file_size = updated_readme['file_size']
             readme_dbentity_file.s3_url = updated_readme['s3_url']
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> miunor changes
-  
+
 
 def get_sources(session=None):
     ''' Get sources from dbentity model '''
@@ -794,29 +748,18 @@ def get_sources(session=None):
 
     return list(temp)
 
+
 def get_file_keywords(session=None):
 
     data = DBSession.query(FileKeyword).all()
     temp = set()
-<<<<<<< HEAD
-    
+
     for item in data:
-        
+
         temp.add(item.keyword.display_name)
-  
+
     return list(temp)
-=======
->>>>>>> resolve merge conflicts
-    
-=======
-    
-    for item in data:
-        
-        temp.add(item.keyword.display_name)
-  
-    return list(temp)
-    
->>>>>>> miunor changes
+
 
 def get_edam_data(session=None):
     """ Get topic ided based on edam relation
@@ -837,71 +780,35 @@ def get_edam_data(session=None):
     temp = []
     data_obj = {}
     for item in data:
-<<<<<<< HEAD
-<<<<<<< HEAD
         name = item.topic.display_name
         name_space = item.topic.edam_namespace
-    
+
         if name_space in data_obj:
             if name not in data_obj[name_space] and name_space in n_spaces:
                 data_obj[name_space].append(name)
         else:
             if name_space in n_spaces:
                 data_obj[name_space] = []
-       
+
     return data_obj
+
 
 def get_file_curate_dropdown_data(session=None):
     ''' Get dropdown menus for new file curate form '''
-    
+
     data = get_edam_data()
     if data:
         data['keywords'] = get_file_keywords()
         data['sources'] = get_sources()
         data['status'] = ['Active', 'Archived']
     return data
-    
+
 
 def file_curate_update_readme(obj, session=None):
-=======
-        temp.append(item.to_dict())
-=======
-        name = item.topic.display_name
-        name_space = item.topic.edam_namespace
->>>>>>> miunor changes
-    
-        if name_space in data_obj:
-            if name not in data_obj[name_space] and name_space in n_spaces:
-                data_obj[name_space].append(name)
-        else:
-            if name_space in n_spaces:
-                data_obj[name_space] = []
-       
-    return data_obj
-
-def get_file_curate_dropdown_data(session=None):
-    ''' Get dropdown menus for new file curate form '''
-    
-    data = get_edam_data()
-    if data:
-        data['keywords'] = get_file_keywords()
-        data['sources'] = get_sources()
-        data['status'] = ['Active', 'Archived']
-    return data
-    
-
-<<<<<<< HEAD
-def file_curate_update_readme(obj):
->>>>>>> - Add endpoint for file upload
-=======
-def file_curate_update_readme(obj, session=None):
->>>>>>> miunor changes
     readme_file = DBSession.query(
-        Filedbentity).filter(Filedbentity.display_name==obj['display_name']).one_or_none()
+        Filedbentity).filter(Filedbentity.display_name == obj['display_name']).one_or_none()
     if readme_file:
         readme_file.upload_file_to_s3(obj['file'], obj['file_name'])
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 
 def upload_new_file(req_obj, session=None):
@@ -913,7 +820,8 @@ def upload_new_file(req_obj, session=None):
             readme_file_id = None
             for key, val in req_obj.iteritems():
                 if key.endswith('.README'):
-                    existing_reademe_meta = get_existing_meta_data(req_obj['displayName'])
+                    existing_reademe_meta = get_existing_meta_data(
+                        req_obj['displayName'])
                     if existing_reademe_meta:
                         keywords = re.split(',|\|', req_obj['keywords'])
                         existing_reademe_meta.display_name = req_obj['displayName']
@@ -922,20 +830,20 @@ def upload_new_file(req_obj, session=None):
                         existing_reademe_meta.is_public = True
                         existing_reademe_meta.is_in_spell = False
                         existing_reademe_meta.is_in_browser = False
+                        readme_file_id = existing_reademe_meta.dbentity_id
                         existing_reademe_meta.upload_file_to_s3(
                             val, req_obj['displayName'])
-                        readme_file_id = existing_reademe_meta.dbentity_id
                         add_keywords(req_obj['displayName'],
                                      keywords, req_obj['source_id'], req_obj['uname'])
                 if key.endswith(other_extensions):
                     other_files.append(
                         {
                             'display_name': req_obj['displayName'],
-                            'file': val, 
+                            'file': val,
                             'file_name': key,
                             'description': val
                         })
-                
+
             if len(other_files) > 0:
                 for item in other_files:
                     db_file = get_existing_meta_data(item['display_name'])
@@ -944,6 +852,7 @@ def upload_new_file(req_obj, session=None):
 
             transaction.commit()
             DBSession.flush()
+            return True
     except Exception as e:
         transaction.abort()
         raise(e)
@@ -961,14 +870,15 @@ def add_file_meta_db(db_file, obj, readme_id=None):
             obj['file'], obj['display_name'])
         if readme_id:
             db_file.readme_file_id = readme_id
-    
+
 
 def get_existing_meta_data(display_name=None):
 
     result = None
     if display_name:
-        result = DBSession.query(Filedbentity).filter(Filedbentity.display_name == display_name).one_or_none()
-    
+        result = DBSession.query(Filedbentity).filter(
+            Filedbentity.display_name == display_name).one_or_none()
+
     return result
 
 
@@ -977,10 +887,9 @@ def get_source_id(source=None):
     if source:
         result = DBSession.query(Source.source_id).filter(
             Source.display_name == source).one_or_none()[0]
-        
+
 
 def get_file_details(display_name):
-
     if display_name:
         file_data = DBSession.query(Filedbentity).filter(
             Filedbentity.display_name == display_name).one_or_none()
@@ -1017,128 +926,3 @@ def add_keywords(name, keywords, src_id, uname):
 
     except Exception as e:
         logging.error(e)
-=======
->>>>>>> - Add endpoint for file upload
-=======
-
-
-def upload_new_file(req_obj, session=None):
-    try:
-        if req_obj:
-            other_extensions = ('zip', '.gz', '.sra')
-            readme_file = {}
-            other_files = []
-            readme_file_id = None
-            for key, val in req_obj.iteritems():
-                if key.endswith('.README'):
-                    existing_reademe_meta = get_existing_meta_data(req_obj['displayName'])
-                    if existing_reademe_meta:
-                        keywords = re.split(',|\|', req_obj['keywords'])
-                        existing_reademe_meta.display_name = req_obj['displayName']
-                        existing_reademe_meta.description = req_obj['description']
-                        existing_reademe_meta.status = req_obj['status']
-                        existing_reademe_meta.is_public = True
-                        existing_reademe_meta.is_in_spell = False
-                        existing_reademe_meta.is_in_browser = False
-                        existing_reademe_meta.upload_file_to_s3(
-                            val, req_obj['displayName'])
-                        readme_file_id = existing_reademe_meta.dbentity_id
-                        add_keywords(req_obj['displayName'],
-                                     keywords, req_obj['source_id'], req_obj['uname'])
-                if key.endswith(other_extensions):
-                    other_files.append(
-                        {
-                            'display_name': req_obj['displayName'],
-                            'file': val, 
-                            'file_name': key,
-                            'description': val
-                        })
-                
-            if len(other_files) > 0:
-                for item in other_files:
-                    db_file = get_existing_meta_data(item['display_name'])
-                    if db_file:
-                        add_file_meta_db(db_file, item, readme_file_id)
-
-            transaction.commit()
-            DBSession.flush()
-    except Exception as e:
-        transaction.abort()
-        raise(e)
-
-
-<<<<<<< HEAD
->>>>>>> miunor changes
-=======
-def add_file_meta_db(db_file, obj, readme_id=None):
-    if db_file and obj:
-        db_file.display_name = obj['display_name']
-        db_file.description = obj['description']
-        db_file.status = obj['status']
-        db_file.is_public = True
-        db_file.is_in_spell = False
-        db_file.is_in_browser = False
-        db_file.upload_file_to_s3(
-            obj['file'], obj['display_name'])
-        if readme_id:
-            db_file.readme_file_id = readme_id
-    
-
-def get_existing_meta_data(display_name=None):
-
-    result = None
-    if display_name:
-        result = DBSession.query(Filedbentity).filter(Filedbentity.display_name == display_name).one_or_none()
-    
-    return result
-
-
-def get_source_id(source=None):
-    result = None
-    if source:
-        result = DBSession.query(Source.source_id).filter(
-            Source.display_name == source).one_or_none()[0]
-        
-<<<<<<< HEAD
->>>>>>> minor changes
-=======
-
-def get_file_details(display_name):
-
-    if display_name:
-        file_data = DBSession.query(Filedbentity).filter(
-            Filedbentity.display_name == display_name).one_or_none()
-        if file_data:
-            readme = file_data.readme_file
-            if readme:
-                return readme.to_dict()
-            else:
-                return file_data.to_dict()
-        else:
-            return None
-    else:
-        return None
-
-
-def add_keywords(name, keywords, src_id, uname):
-    """ add keywords """
-
-    try:
-        if len(keywords) > 0:
-            existing = DBSession.query(Filedbentity).filter(
-                Filedbentity.display_name == name).one_or_none()
-
-            for word in keywords:
-                word = word.strip()
-                keyword = DBSession.query(Keyword).filter(
-                    Keyword.display_name == word).one_or_none()
-                existing_file_keyword = DBSession.query(FileKeyword).filter(and_(
-                    FileKeyword.file_id == existing.dbentity_id, FileKeyword.keyword_id == keyword.keyword_id)).one_or_none()
-                if not existing_file_keyword:
-                    new_file_keyword = FileKeyword(
-                        created_by=uname, file_id=existing.dbentity_id, keyword_id=keyword.keyword_id, source_id=src_id)
-                    DBSession.add(new_file_keyword)
-
-    except Exception as e:
-        logging.error(e)
->>>>>>> - Add ES functionality

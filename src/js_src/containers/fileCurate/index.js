@@ -14,6 +14,8 @@ import CurateLayout from '../curateHome/layout';
 import fetchData from '../../lib/fetchData';
 import { clearError, setError } from '../../actions/metaActions';
 
+import { Route, Redirect } from 'react-router';
+
 const UPLOAD_URL = '/upload_file_curate';
 const UPLOAD_TAR_URL = '/upload_tar_file';
 
@@ -27,26 +29,10 @@ class FileCurate extends Component {
     this.state = {
       files: [],
       isPending: false,
-      menus: undefined
+      menus: undefined,
+      toHome: false
     };
     this.handleFileUploadSubmit = this.handleFileUploadSubmit.bind(this);
-  }
-
-  componentDidMount(){
-    fetchData(UPLOAD_TAR_URL, {
-      type: 'GET',
-      credentials: 'same-origin',
-      processData: false,
-      contentType: false
-    }).then(data => {
-      this.setState({
-        menus: data
-      });
-
-    }).catch(data => {
-      let errorMEssage = data ? data.error : 'Error occured';
-      this.props.dispatch(setError(errorMEssage));
-    });
   }
 
   handleFileUploadSubmit(e){
@@ -69,18 +55,36 @@ class FileCurate extends Component {
       this.setState({
         isPending: false,
       });
+      if (data){
+        this.setState({
+          isPending: false,
+          toHome: true
+        });
+        this.props.dispatch(clearError());
+
+      }
 
     }).catch( (data) => {
       let errorMEssage = data ? data.error: 'Error occured';
       this.props.dispatch(setError(errorMEssage));
       this.setState({ isPending: false});
     });
-    //fetchData
 
   }
 
   render(){
-    return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} /></div></CurateLayout>);
+    if(this.state.toHome){
+      window.location.href = '/';
+
+    }
+    else{
+      return (
+        <CurateLayout>
+          <div className='row'>
+            <FileCurateForm fileData={{}} onFileUploadSubmit={this.handleFileUploadSubmit} />
+          </div>
+        </CurateLayout>);
+    }
   }
 }
 
