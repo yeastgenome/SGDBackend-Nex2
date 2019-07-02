@@ -3,7 +3,8 @@ import CurateLayout from '../curateHome/layout';
 import { connect } from 'react-redux';
 import FileCurateForm from '../../components/fileCurate/fileCurateForm';
 import fetchData from '../../lib/fetchData';
-import { setError } from '../../actions/metaActions';
+import { clearError, setError } from '../../actions/metaActions';
+
 /*eslint-disable no-debugger */
 //const UPLOAD_URL = '/upload_file_curate';
 const UPLOAD_TAR_URL = '/upload_tar_file';
@@ -19,21 +20,13 @@ class FileCurateUpdate extends Component {
     this.state = {
       files: [],
       isPending: false,
-      fileData: undefined
+      fileData: undefined,
+      toHome: false
     };
     this.handleFileUploadSubmit = this.handleFileUploadSubmit.bind(this);
   }
 
-  getParam(){
-    let urlStr = '';
-    let query = new URLSearchParams(this.props.location.search);
-    for (let param of query.entries()){
-      urlStr = param[1];
-    }
 
-    return urlStr;
-
-  }
 
   componentDidMount(){
     let urlStr = this.getParam();
@@ -45,12 +38,24 @@ class FileCurateUpdate extends Component {
     }).then(data => {
       this.setState({
         fileData: data
+
       });
 
     }).catch(data => {
       let errorMEssage = data ? data.error : 'Error occured';
       this.props.dispatch(setError(errorMEssage));
     });
+  }
+
+  getParam(){
+    let urlStr = '';
+    let query = new URLSearchParams(this.props.location.search);
+    for (let param of query.entries()){
+      urlStr = param[1];
+    }
+
+    return urlStr;
+
   }
 
   handleFileUploadSubmit(e){
@@ -70,10 +75,15 @@ class FileCurateUpdate extends Component {
       contentType: false,
       timeout: UPLOAD_TIMEOUT
     }).then( (data) => {
-      console.log(data);
-      this.setState({
-        isPending: false,
-      });
+      if (data){
+        this.setState({
+          isPending: false,
+          toHome: true
+        });
+        this.props.dispatch(clearError());
+
+      }
+
 
     }).catch( (data) => {
       let errorMEssage = data ? data.error: 'Error occured';
@@ -85,13 +95,19 @@ class FileCurateUpdate extends Component {
   }
 
   render(){
-    return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} fileData={this.state.fileData} /></div></CurateLayout>);
+    if(this.state.toHome){
+      window.location.href = '/';
+    }
+    else{
+      return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} fileData={this.state.fileData} /></div></CurateLayout>);
+    }
   }
 }
 
 FileCurateUpdate.propTypes = {
   csrfToken: React.PropTypes.string,
-  dispatch: React.PropTypes.func
+  dispatch: React.PropTypes.func,
+  location: React.PropTypes.object
 };
 
 /*eslint-disable no-debugger */
