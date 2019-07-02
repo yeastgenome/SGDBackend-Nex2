@@ -583,6 +583,11 @@ def new_gene_name_reservation(request):
 # not authenticated to allow the public submission
 @view_config(route_name='colleague_update', renderer='json', request_method='PUT')
 def colleague_update(request):
+    curator_session = None
+    if 'username' in request.session:
+        curator_session = get_curator_session(request.session['username'])
+    else:
+        curator_session = DBSession
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error':'Bad CSRF Token'}))
     req_id = request.matchdict['id'].upper()
@@ -602,7 +607,8 @@ def colleague_update(request):
     if not is_orcid_valid:
         msg = data['orcid'] + ' is not a valid orcid.'
         return HTTPBadRequest(body=json.dumps({ 'message': msg }), content_type='text/json')
-    colleague = DBSession.query(Colleague).filter(Colleague.colleague_id == req_id).one_or_none()
+    colleague = curator_session.query(Colleague).filter(
+        Colleague.colleague_id == req_id).one_or_none()
     if not colleague:
         return HTTPNotFound()
     # add colleague triage entry
@@ -614,7 +620,8 @@ def colleague_update(request):
                 if old_dict[x] != data[x]:
                     is_changed = True
         if is_changed:
-            existing_triage = DBSession.query(Colleaguetriage).filter(Colleaguetriage.colleague_id == req_id).one_or_none()
+            existing_triage = curator_session.query(Colleaguetriage).filter(
+                Colleaguetriage.colleague_id == req_id).one_or_none()
             if existing_triage:
                 existing_triage.json = json.dumps(data)
             else:
@@ -623,7 +630,7 @@ def colleague_update(request):
                     json=json.dumps(data),
                     triage_type='Update',
                 )
-                DBSession.add(new_c_triage)
+                curator_session.add(new_c_triage)
                 colleague.is_in_triage = True
             transaction.commit()
             return { 'colleague_id': req_id }
@@ -930,8 +937,8 @@ def colleague_triage_promote(request):
                 is_pi=False,
                 created_by=username
             )
-            DBSession.add(new_colleague)
-            DBSession.flush()
+            curator_session.add(new_colleague)
+            curator_session.flush()
         '''
         colleague = curator_session.query(Colleague).filter(Colleague.colleague_id == c_triage.colleague_id).one_or_none()
         colleague.first_name = params.get('first_name')
@@ -1000,6 +1007,11 @@ def get_username_from_db_uri():
 
 @view_config(route_name='add_new_colleague_triage', renderer='json', request_method='POST')
 def add_new_colleague_triage(request):
+    curator_session = None 
+    if 'username' in request.session:
+        curator_session = get_curator_session(request.session['username'])
+    else:
+        curator_session = DBSession
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     params = request.json_body
@@ -1016,7 +1028,7 @@ def add_new_colleague_triage(request):
     if not is_orcid_valid:
         msg = params['orcid'] + ' is not a valid orcid.'
         return HTTPBadRequest(body=json.dumps({'message': msg}), content_type='text/json')
-    colleague_orcid_email_exists = DBSession.query(Colleague).filter(or_(and_(Colleague.orcid == params.get('orcid'), Colleague.email == params.get(
+    colleague_orcid_email_exists = curator_session.query(Colleague).filter(or_(and_(Colleague.orcid == params.get('orcid'), Colleague.email == params.get(
         'email')), or_(Colleague.orcid == params.get('orcid'), Colleague.email == params.get('email')))).one_or_none()
     if colleague_orcid_email_exists:
         msg = 'You entered an ORCID or Email which is already being used by an SGD colleague. Try to find your entry or contact sgd-helpdesk@lists.stanford.edu if you think this is a mistake.'
@@ -1029,7 +1041,7 @@ def add_new_colleague_triage(request):
             json=json.dumps(params),
             triage_type='New',
         )
-        DBSession.add(new_c_triage)
+        curator_session.add(new_c_triage)
         transaction.commit()
         return {'colleague_id': 0}
     except IntegrityError as IE:
@@ -1727,7 +1739,6 @@ def ptm_delete(request):
 @authenticate
 def get_file(request):
     ''' Get file data '''
-
     try:
         dname = request.matchdict['name']
         if dname:
@@ -1740,7 +1751,6 @@ def get_file(request):
 @authenticate
 def upload_tar_file(request):
     ''' Upload tar files containing zip/sra file with README file '''
-
     try:
         obj = {}
         for key, val in request.POST.iteritems():
@@ -1752,7 +1762,7 @@ def upload_tar_file(request):
         obj['uname'] = request.session['username']
         obj['source_id'] = SGD_SOURCE_ID
 
-        upload_new_file(obj)
+        return upload_new_file(obj)
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 

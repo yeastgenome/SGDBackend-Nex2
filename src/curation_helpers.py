@@ -59,11 +59,14 @@ def process_pmid_list(raw):
         raise ValueError('PMIDs must be a space-separated list of valid PMIDs.')
 
 def get_curator_session(username):
-    curator_engine = create_engine(os.environ['NEX2_URI'])
-    session_factory = sessionmaker(bind=curator_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
-    curator_session = scoped_session(session_factory)
-    curator_session.execute('SET LOCAL ROLE ' + username)
-    return curator_session
+    if username:
+        curator_engine = create_engine(os.environ['NEX2_URI'])
+        session_factory = sessionmaker(bind=curator_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
+        curator_session = scoped_session(session_factory)
+        curator_session.execute('SET LOCAL ROLE ' + username)
+        return curator_session
+    else:
+        return None
 
 def get_pusher_client():
     pusher_client = pusher.Pusher(

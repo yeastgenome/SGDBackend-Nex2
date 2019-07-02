@@ -16,6 +16,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
+from sqlalchemy import and_
 
 
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
@@ -813,9 +814,9 @@ def upload_new_file(req_obj, session=None):
                         existing_reademe_meta.is_public = True
                         existing_reademe_meta.is_in_spell = False
                         existing_reademe_meta.is_in_browser = False
+                        readme_file_id = existing_reademe_meta.dbentity_id
                         existing_reademe_meta.upload_file_to_s3(
                             val, req_obj['displayName'])
-                        readme_file_id = existing_reademe_meta.dbentity_id
                         add_keywords(req_obj['displayName'],
                                      keywords, req_obj['source_id'], req_obj['uname'])
                 if key.endswith(other_extensions):
@@ -835,6 +836,7 @@ def upload_new_file(req_obj, session=None):
 
             transaction.commit()
             DBSession.flush()
+            return True
     except Exception as e:
         transaction.abort()
         raise(e)
@@ -871,7 +873,6 @@ def get_source_id(source=None):
         
 
 def get_file_details(display_name):
-
     if display_name:
         file_data = DBSession.query(Filedbentity).filter(
             Filedbentity.display_name == display_name).one_or_none()
