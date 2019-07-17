@@ -110,3 +110,4 @@ src/Untitled*
 dev_variables*
 scripts/loading/data/*
 .pytest_cache/*
+test/default_T_dev.py
