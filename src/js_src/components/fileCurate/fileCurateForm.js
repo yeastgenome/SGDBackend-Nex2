@@ -63,7 +63,7 @@ class FileCurateForm extends Component{
     if(this.props.fileData == undefined){
       return (<LoadingPage />);
     }
-    else if(this.props.fileData == {}){
+    else if (Object.keys(this.props.fileData).length == 0) {
       return(
           <form ref='upForm' onSubmit={this.handleSubmit.bind(this)} name='test'>
             <div>
