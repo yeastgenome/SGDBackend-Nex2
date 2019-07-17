@@ -28,7 +28,7 @@ def index_part_1():
 
 def index_part_2():
     index_reserved_names(record_limit)
-    index_toolbar_links(record_limit)
+    index_toolbar_links()
     index_observables(record_limit)
     index_go_terms(record_limit)
     index_disease_terms(record_limit)
