@@ -131,8 +131,11 @@ def index_toolbar_links():
         es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=l[1])
 
 
-def index_colleagues():
-    colleagues = DBSession.query(Colleague).all()
+def index_colleagues(record_limit=None):
+    if record_limit:
+        colleagues = DBSession.query(Colleague).limit(record_limit).all()
+    else:
+        colleagues = DBSession.query(Colleague).all()
     _locus_ids = IndexESHelper.get_colleague_locus()
     _locus_names = IndexESHelper.get_colleague_locusdbentity()
     _combined_list = IndexESHelper.combine_locusdbentity_colleague(
@@ -156,14 +159,19 @@ def index_colleagues():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_genes():
+def index_genes(record_limit=None):
     # Indexing just the S228C genes
     # dbentity: 1364643 (id) -> straindbentity -> 274901 (taxonomy_id)
     # list of dbentities comes from table DNASequenceAnnotation with taxonomy_id 274901
     # feature_type comes from DNASequenceAnnotation as well
-    gene_ids_so = DBSession.query(
-        Dnasequenceannotation.dbentity_id, Dnasequenceannotation.so_id).filter(
-            Dnasequenceannotation.taxonomy_id == 274901).all()
+    if record_limit:
+        gene_ids_so = DBSession.query(
+            Dnasequenceannotation.dbentity_id, Dnasequenceannotation.so_id).filter(
+                Dnasequenceannotation.taxonomy_id == 274901).limit(record_limit).all()
+    else:
+        gene_ids_so = DBSession.query(
+            Dnasequenceannotation.dbentity_id, Dnasequenceannotation.so_id).filter(
+                Dnasequenceannotation.taxonomy_id == 274901).all()
     dbentity_ids_to_so = {}
     dbentity_ids = set([])
     so_ids = set([])
@@ -172,8 +180,12 @@ def index_genes():
         so_ids.add(gis[1])
         dbentity_ids_to_so[gis[0]] = gis[1]
     # add some non S288C genes
-    not_s288c = DBSession.query(Locusdbentity.dbentity_id).filter(
-        Locusdbentity.not_in_s288c == True).all()
+    if record_limit:
+        not_s288c = DBSession.query(Locusdbentity.dbentity_id).filter(
+        Locusdbentity.not_in_s288c == True).limit(record_limit).all()
+    else:
+        not_s288c = DBSession.query(Locusdbentity.dbentity_id).filter(
+            Locusdbentity.not_in_s288c == True).all()
     for id in not_s288c:
         dbentity_ids.add(id[0])
         # assume non S288C features to be ORFs
@@ -182,8 +194,12 @@ def index_genes():
         Locusdbentity.dbentity_id.in_(list(dbentity_ids))).all()
 
     # make list of merged/deleted genes so they don"t redirect when they show up as an alias
-    merged_deleted_r = DBSession.query(Locusdbentity.format_name).filter(
-        Locusdbentity.dbentity_status.in_(["Merged", "Deleted"])).all()
+    if record_limit:
+            merged_deleted_r = DBSession.query(Locusdbentity.format_name).filter(
+                Locusdbentity.dbentity_status.in_(["Merged", "Deleted"])).all()
+    else:
+        merged_deleted_r = DBSession.query(Locusdbentity.format_name).filter(
+            Locusdbentity.dbentity_status.in_(["Merged", "Deleted"])).all()
     merged_deleted = [d[0] for d in merged_deleted_r]
 
     feature_types_db = DBSession.query(
@@ -192,8 +208,12 @@ def index_genes():
     for ft in feature_types_db:
         feature_types[ft[0]] = ft[1]
 
-    tc_numbers_db = DBSession.query(LocusAlias).filter_by(
-        alias_type="TC number").all()
+    if record_limit:
+        tc_numbers_db = DBSession.query(LocusAlias).filter_by(
+        alias_type="TC number").limit(record_limit).all()
+    else:
+        tc_numbers_db = DBSession.query(LocusAlias).filter_by(
+            alias_type="TC number").all()
     tc_numbers = {}
     for tc in tc_numbers_db:
         if tc.locus_id in tc_numbers:
@@ -201,8 +221,12 @@ def index_genes():
         else:
             tc_numbers[tc.locus_id] = [tc.display_name]
 
-    ec_numbers_db = DBSession.query(LocusAlias).filter_by(
-        alias_type="EC number").all()
+    if record_limit:
+        ec_numbers_db = DBSession.query(LocusAlias).filter_by(
+            alias_type="EC number").limit(record_limit).all()
+    else:
+        ec_numbers_db = DBSession.query(LocusAlias).filter_by(
+            alias_type="EC number").all()
     ec_numbers = {}
     for ec in ec_numbers_db:
         if ec.locus_id in ec_numbers:
@@ -210,8 +234,12 @@ def index_genes():
         else:
             ec_numbers[ec.locus_id] = [ec.display_name]
 
-    secondary_db = DBSession.query(LocusAlias).filter_by(
-        alias_type="SGDID Secondary").all()
+    if record_limit:
+        secondary_db = DBSession.query(LocusAlias).filter_by(
+        alias_type="SGDID Secondary").limit(record_limit).all()
+    else:
+        secondary_db = DBSession.query(LocusAlias).filter_by(
+            alias_type="SGDID Secondary").all()
     secondary_sgdids = {}
 
     for sid in secondary_db:
@@ -285,15 +313,27 @@ def index_genes():
                 Go.go_namespace).filter(Go.go_id.in_(go_ids)).all()
             for g in go:
                 go_annotations[g[1]].add(g[0] + " (direct)")
-        go_slim_ids = DBSession.query(Goslimannotation.goslim_id).filter(
-            Goslimannotation.dbentity_id == gene.dbentity_id).all()
+        if record_limit:
+            go_slim_ids = DBSession.query(Goslimannotation.goslim_id).filter(
+                Goslimannotation.dbentity_id == gene.dbentity_id).limit(record_limit).all()
+        else:
+            go_slim_ids = DBSession.query(Goslimannotation.goslim_id).filter(
+                Goslimannotation.dbentity_id == gene.dbentity_id).all()
         if len(go_slim_ids) > 0:
             go_slim_ids = [g[0] for g in go_slim_ids]
-            go_slim = DBSession.query(Goslim.go_id, Goslim.display_name).filter(
-                Goslim.goslim_id.in_(go_slim_ids)).all()
+            if record_limit:
+                go_slim = DBSession.query(Goslim.go_id, Goslim.display_name).filter(
+                    Goslim.goslim_id.in_(go_slim_ids)).limit(record_limit).all()
+            else:
+                go_slim = DBSession.query(Goslim.go_id, Goslim.display_name).filter(
+                    Goslim.goslim_id.in_(go_slim_ids)).all()
             go_ids = [g[0] for g in go_slim]
-            go = DBSession.query(
-                Go.go_id, Go.go_namespace).filter(Go.go_id.in_(go_ids)).all()
+            if record_limit:
+                go = DBSession.query(
+                    Go.go_id, Go.go_namespace).filter(Go.go_id.in_(go_ids)).limit(record_limit).all()
+            else:
+                go = DBSession.query(
+                    Go.go_id, Go.go_namespace).filter(Go.go_id.in_(go_ids)).all()
             for g in go:
                 for gs in go_slim:
                     if (gs[0] == g[0]):
@@ -403,9 +443,12 @@ def index_genes():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_phenotypes():
+def index_phenotypes(record_limit=None):
     bulk_data = []
-    phenotypes = DBSession.query(Phenotype).all()
+    if record_limit:
+        phenotypes = DBSession.query(Phenotype).limit(record_limit).all()
+    else:
+        phenotypes = DBSession.query(Phenotype).all()
     _result = IndexESHelper.get_pheno_annotations(phenotypes)
     print("Indexing " + str(len(_result)) + " phenotypes")
     for phenotype_item in _result:
@@ -424,9 +467,13 @@ def index_phenotypes():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_observables():
-    observables = DBSession.query(Apo).filter_by(
-        apo_namespace="observable").all()
+def index_observables(record_limit=None):
+    if record_limit:
+        observables = DBSession.query(Apo).filter_by(
+            apo_namespace="observable").limit(record_limit).all()
+    else:
+        observables = DBSession.query(Apo).filter_by(
+            apo_namespace="observable").all()
 
     print("Indexing " + str(len(observables)) + " observables")
     bulk_data = []
@@ -458,8 +505,11 @@ def index_observables():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_strains():
-    strains = DBSession.query(Straindbentity).all()
+def index_strains(record_limit=None):
+    if record_limit:
+        strains = DBSession.query(Straindbentity).limit(record_limit).all()
+    else:
+        strains = DBSession.query(Straindbentity).all()
 
     print("Indexing " + str(len(strains)) + " strains")
     for strain in strains:
@@ -490,37 +540,12 @@ def index_strains():
             index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
 
 
-def index_reserved_names():
+def index_reserved_names(record_limit=None):
     # only index reservednames that do not have a locus associated with them
-    reserved_names = DBSession.query(Reservedname).all()
-
-    print("Indexing " + str(len(reserved_names)) + " reserved names")
-    for reserved_name in reserved_names:
-        name = reserved_name.display_name
-        href = reserved_name.obj_url
-        keys = [reserved_name.display_name.lower()]
-        # change name if has an orf
-        if reserved_name.locus_id:
-            locus = DBSession.query(Locusdbentity).filter(
-                Locusdbentity.dbentity_id ==
-                reserved_name.locus_id).one_or_none()
-            name = name + " / " + locus.systematic_name
-            href = locus.obj_url
-            keys = []
-        obj = {
-            "name": name,
-            "href": href,
-            "description": reserved_name.name_description,
-            "category": "reserved_name",
-            "keys": keys
-        }
-        es.index(
-            index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
-
-
-def index_reserved_names():
-    # only index reservednames that do not have a locus associated with them
-    reserved_names = DBSession.query(Reservedname).all()
+    if record_limit:
+        reserved_names = DBSession.query(Reservedname).limit(record_limit).all()
+    else:
+        reserved_names = DBSession.query(Reservedname).all()
 
     print("Indexing " + str(len(reserved_names)) + " reserved names")
     for reserved_name in reserved_names:
@@ -551,10 +576,13 @@ def load_go_id_blacklist(list_filename):
     return go_id_blacklist
 
 
-def index_go_terms():
+def index_go_terms(record_limit=None):
     go_id_blacklist = load_go_id_blacklist("scripts/search/go_id_blacklist.lst")
 
-    gos = DBSession.query(Go).all()
+    if record_limit:
+        gos = DBSession.query(Go).limit(record_limit).all()
+    else:
+        gos = DBSession.query(Go).all()
 
     print("Indexing " + str(len(gos) - len(go_id_blacklist)) + " GO terms")
 
@@ -563,13 +591,21 @@ def index_go_terms():
         if go.goid in go_id_blacklist:
             continue
 
-        synonyms = DBSession.query(GoAlias.display_name).filter_by(
-            go_id=go.go_id).all()
+        if record_limit:
+            synonyms = DBSession.query(GoAlias.display_name).filter_by(
+                go_id=go.go_id).limit(record_limit).all()
+        else:
+            synonyms = DBSession.query(GoAlias.display_name).filter_by(
+                go_id=go.go_id).all()
 
         references = set([])
         gene_ontology_loci = set([])
-        annotations = DBSession.query(Goannotation).filter_by(
-            go_id=go.go_id).all()
+        if record_limit:
+            annotations = DBSession.query(Goannotation).filter_by(
+                go_id=go.go_id).limit(record_limit).all()
+        else:
+            annotations = DBSession.query(Goannotation).filter_by(
+                go_id=go.go_id).all()
         for annotation in annotations:
             if annotation.go_qualifier != "NOT":
                 gene_ontology_loci.add(annotation.dbentity.display_name)
@@ -616,17 +652,26 @@ def index_go_terms():
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
-def index_disease_terms():
-    dos = DBSession.query(Disease).all()
+def index_disease_terms(record_limit=None):
+    if record_limit:
+        dos = DBSession.query(Disease).limit(record_limit).all()
+    else:
+        dos = DBSession.query(Disease).all()
 
     print("Indexing " + str(len(dos)) + " DO terms")
 
     bulk_data = []
     for do in dos:
-        synonyms = DBSession.query(DiseaseAlias.display_name).filter_by(disease_id=do.disease_id).all()
+        if record_limit:
+            synonyms = DBSession.query(DiseaseAlias.display_name).filter_by(disease_id=do.disease_id).limit(record_limit).all()
+        else:
+            synonyms = DBSession.query(DiseaseAlias.display_name).filter_by(disease_id=do.disease_id).all()
         references = set([])
         disease_loci = set([])
-        annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=do.disease_id).all()
+        if record_limit:
+            annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=do.disease_id).limit(record_limit).all()
+        else:
+            annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=do.disease_id).all()
         for annotation in annotations:
             if annotation.disease_qualifier != "NOT":
                 disease_loci.add(annotation.dbentity.display_name)
@@ -673,9 +718,12 @@ def index_disease_terms():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_references():
+def index_references(record_limit=None):
     _ref_loci = IndexESHelper.get_dbentity_locus_note()
-    _references = DBSession.query(Referencedbentity).all()
+    if record_limit:
+        _references = DBSession.query(Referencedbentity).limit(record_limit).all()
+    else:
+        _references = DBSession.query(Referencedbentity).all()
     _abstracts = IndexESHelper.get_ref_abstracts()
     _authors = IndexESHelper.get_ref_authors()
     _aliases = IndexESHelper.get_ref_aliases()
@@ -744,8 +792,11 @@ def index_references():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_chemicals():
-    all_chebi_data = DBSession.query(Chebi).all()
+def index_chemicals(record_limit=None):
+    if record_limit:
+        all_chebi_data = DBSession.query(Chebi).limit(record_limit).all()
+    else:
+        all_chebi_data = DBSession.query(Chebi).all()
     _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
     bulk_data = []
     print("Indexing " + str(len(all_chebi_data)) + " chemicals")
@@ -824,12 +875,17 @@ def index_not_mapped_genes():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_downloads():
+def index_downloads(record_limit=None):
     bulk_data = []
     dbentity_file_obj = IndexESHelper.get_file_dbentity_keyword()
-    files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
-                                                 Filedbentity.s3_url != None,
-                                                 Filedbentity.readme_file_id != None).all()
+    if record_limit:
+        files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
+                                                    Filedbentity.s3_url != None,
+                                                    Filedbentity.readme_file_id != None).limit(record_limit).all()
+    else:
+        files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
+                                                    Filedbentity.s3_url != None,
+                                                    Filedbentity.readme_file_id != None).all()
     print("indexing " + str(len(files)) + " download files")
     for x in files:
         keyword = []
@@ -885,25 +941,35 @@ def index_downloads():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
         
 
-def index_complex_names():
-    
-    complexes = DBSession.query(Complexdbentity).all()
+def index_complex_names(record_limit=None):
+    if record_limit:
+        complexes = DBSession.query(Complexdbentity).limit(record_limit).all()
+    else:
+        complexes = DBSession.query(Complexdbentity).all()
     
     print("Indexing " + str(len(complexes)) + " complex names")
     
     bulk_data = []
 
     for c in complexes:
-         
-        synonyms = DBSession.query(ComplexAlias.display_name).filter_by(complex_id=c.dbentity_id).all()
+        if record_limit:
+            synonyms = DBSession.query(ComplexAlias.display_name).filter_by(complex_id=c.dbentity_id).limit(record_limit).all()
+        else:
+            synonyms = DBSession.query(ComplexAlias.display_name).filter_by(complex_id=c.dbentity_id).all()
 
         references = set([])
-        refs = DBSession.query(ComplexReference).filter_by(complex_id=c.dbentity_id).all()
+        if record_limit:
+            refs = DBSession.query(ComplexReference).filter_by(complex_id=c.dbentity_id).limit(record_limit).all()
+        else:
+            refs = DBSession.query(ComplexReference).filter_by(complex_id=c.dbentity_id).all()
         for ref in refs:
             references.add(ref.reference.display_name)
           
-        complex_loci = set([]) 
-        annotations = DBSession.query(Complexbindingannotation).filter_by(complex_id=c.dbentity_id).all()
+        complex_loci = set([])
+        if record_limit:
+            annotations = DBSession.query(Complexbindingannotation).filter_by(complex_id=c.dbentity_id).limit(record_limit).all()
+        else:
+            annotations = DBSession.query(Complexbindingannotation).filter_by(complex_id=c.dbentity_id).all()
         for a in annotations:
             interactor = a.interactor
             if interactor.locus_id is not None:
