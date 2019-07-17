@@ -109,3 +109,4 @@ index_*.png
 src/Untitled*
 dev_variables*
 scripts/loading/data/*
+.pytest_cache/*
