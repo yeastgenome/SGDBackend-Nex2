@@ -96,6 +96,7 @@ class FileCurateUpdate extends Component {
   render(){
     if(this.state.toHome){
       window.location.href = '/';
+      return;
     }
     else{
       return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} fileData={this.state.fileData} /></div></CurateLayout>);
