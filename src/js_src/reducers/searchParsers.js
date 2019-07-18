@@ -174,7 +174,7 @@ function parseDefaultResult(_d) {
   if(d.category == 'download'){
     return {
       associated_genes: d.associated_genes,
-      category: d.category || 'gene',
+      category: d.category,
       display_name: d.name,
       highlight: d.highlights,
       href: d.href,
