@@ -31,7 +31,7 @@ class TextField extends Component {
     return (
       <div>
         <label>{this._renderIcon()}{this.props.displayName}</label>
-        <textarea className={this.props.className} type='text' name={this.props.paramName} placeholder={this.props.placeholder} required={this.props.isRequired}>{this.props.defaultValue}</textarea>
+        <textarea defaultValue={this.props.defaultValue} className={this.props.className} type='text' name={this.props.paramName} placeholder={this.props.placeholder} required={this.props.isRequired}></textarea>
       </div>
     );
   }

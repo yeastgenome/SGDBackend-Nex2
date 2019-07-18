@@ -209,9 +209,9 @@ class PtmForm extends Component {
               <div className='row'>
                 <div className='columns medium-12'>
                   <div className='expanded button-group'>
-                    <li type='button' className='button warning' disabled={count_of_ptms < 0 || currentIndex <= 0 ? true : false} onClick={() => this.handle_next_previous(-SKIP)}> <i className="fa fa-chevron-circle-left"></i> </li>
+                    <li type='button' className='button warning' disabled={currentIndex <= 0 ? true : false} onClick={() => this.handle_next_previous(-SKIP)}> <i className="fa fa-chevron-circle-left"></i> </li>
                     {buttons}
-                    <li type='button' className='button warning' disabled={count_of_ptms == 0 || currentIndex + SKIP >= count_of_ptms ? true : false} onClick={() => this.handle_next_previous(SKIP)}> <i className="fa fa-chevron-circle-right"></i></li>
+                    <li type='button' className='button warning' disabled={currentIndex + SKIP >= count_of_ptms ? true : false} onClick={() => this.handle_next_previous(SKIP)}> <i className="fa fa-chevron-circle-right"></i></li>
                   </div>
                 </div>
               </div>

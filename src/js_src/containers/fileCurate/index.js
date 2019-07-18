@@ -75,6 +75,7 @@ class FileCurate extends Component {
   render(){
     if(this.state.toHome){
       window.location.href = '/';
+      return false;
 
     }
     else{
