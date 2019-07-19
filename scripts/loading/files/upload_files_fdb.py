@@ -51,8 +51,6 @@ def file_upload_to_obj():
         raw_status = item.get('dbentity.status')
         if raw_status == 'Archive':
             raw_status = 'Archived'
-        #for key, value in item.iteritems():
-        #    print(key)
         
         spell_flag = False
         if item.get('filedbentity.is_in_spell') > 0:

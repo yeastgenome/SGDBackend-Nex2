@@ -7,7 +7,6 @@ import style from './style.css';
 import CategoryLabel from '../../components/categoryLabel';
 import DetailList from '../../components/detailList';
 import fetchData from '../../lib/fetchData';
-// import Loader from '../../components/loader';
 import updateTitle from '../../lib/updateTitle';
 import { updateData, clearPending} from './locusActions';
 import { PREVIEW_URL } from '../../constants.js';
@@ -32,7 +31,7 @@ class LocusLayout extends Component {
       updateTitle(data.name);
       this.props.dispatch(clearPending());
       this.props.dispatch(updateData(data));
-    }); 
+    });
   }
 
   renderNav() {
@@ -40,7 +39,7 @@ class LocusLayout extends Component {
     let current = this.props.pathname.replace(baseUrl, '');
     let nodes = SECTIONS.map( (d) => {
       let relative = d ? `/${d}` : '';
-      current = !current? relative : current; 
+      current = !current? relative : current;
       let isActive = (current === relative);
       let url = `${baseUrl}${relative}`;
       let _className = isActive ? style.activeNavLink : style.navLink;
@@ -63,7 +62,7 @@ class LocusLayout extends Component {
     );
   }
 
-  render() {    
+  render() {
     return (
       <div>
         {this.renderHeader()}
@@ -73,9 +72,9 @@ class LocusLayout extends Component {
           </div>
           <div className='columns small-10'>
             {this.props.children}
-          </div>  
+          </div>
         </div>
-        
+
       </div>
     );
   }

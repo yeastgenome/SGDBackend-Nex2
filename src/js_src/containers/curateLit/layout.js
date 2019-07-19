@@ -7,7 +7,6 @@ import style from './style.css';
 import { SMALL_COL_CLASS, LARGE_COL_CLASS } from '../../constants';
 import fetchData from '../../lib/fetchData';
 import LoadingPage from '../../components/loadingPage';
-// import AuthorResponseDrawer from './authorResponseDrawer';
 import CategoryLabel from '../../components/categoryLabel';
 import updateTitle from '../../lib/updateTitle';
 import { selectActiveLitEntry } from '../../selectors/litSelectors';

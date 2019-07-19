@@ -269,8 +269,7 @@ def file_upload_to_obj():
         raw_status = item.get('dbentity.status')
         if raw_status == 'Archive':
             raw_status = 'Archived'
-        #for key, value in item.iteritems():
-        #    print(key)
+        
         obj = {
             'path': item.get('EBS path'),
             'display_name': item.get('dbentity.display_name'),
@@ -407,7 +406,7 @@ def upload_file_helper(CREATED_BY, remote_file, obj):
             description=obj['description'],
             display_name=obj['display_name'],
             data_id=obj['data_id'],
-            format_id=obj['format_id"],
+            format_id=obj['format_id'],
             status=obj['status'],
             topic_id=obj['topic_id'],
             is_public=obj['is_public'],
@@ -425,9 +424,7 @@ def upload_file_helper(CREATED_BY, remote_file, obj):
 
 
 if __name__ == '__main__':
-    #load_csv_filedbentities()
     upload_file_obj_db_s3()
-    #get_all_readme_files()
 
 
 '''

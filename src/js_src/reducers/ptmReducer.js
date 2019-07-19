@@ -1,5 +1,4 @@
 /*eslint-disable no-case-declarations */
-// import { fromJS } from 'immutable';
 
 const DEFAULT_STATE = {
   currentPtm:{

@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 
-// import DetailList from '../../components/detailList';
-
 class LitBasicInfo extends Component {
   render() {
     return (

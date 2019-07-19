@@ -2,7 +2,6 @@ import React, { Component, PropTypes } from 'react';
 import { Link } from 'react-router';
 import { connect } from 'react-redux';
 
-// import * as AuthActions from '../actions/auth_actions';
 import style from './style.css';
 import SearchBar from './searchBar';
 import curateLogo from './curateLogo.png';
@@ -64,7 +63,7 @@ class LayoutComponent extends Component {
       </ul>
     );
   }
-  
+
   renderError() {
     if (!this.props.error) return null;
     let handleClick = () => {

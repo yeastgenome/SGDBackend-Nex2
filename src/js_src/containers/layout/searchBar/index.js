@@ -6,9 +6,6 @@ import { push } from 'react-router-redux';
 
 import style from './style.css';
 import CategoryLabel from '../../../components/categoryLabel';
-// import fetchData from '../../../lib/fetchData';
-
-// const AUTO_BASE_URL = '/api/search_autocomplete';
 
 class SearchBarComponent extends Component {
   constructor(props) {
@@ -98,7 +95,7 @@ class SearchBarComponent extends Component {
             theme={_theme}
           />
         </form>
-        <i className={`fa fa-search ${style.searchIcon}`} /> 
+        <i className={`fa fa-search ${style.searchIcon}`} />
       </div>
     );
   }
