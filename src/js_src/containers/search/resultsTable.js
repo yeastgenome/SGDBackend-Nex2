@@ -10,6 +10,7 @@ import ActionList from './actionList';
 const MATCH_LABEL = 'match_by';
 const MAX_CHAR = 100;
 const SGD_LINK_URL = 'https://www.yeastgenome.org';
+/* eslint-disable no-debugger */
 
 class ResultsTable extends Component {
   getFields() {
@@ -48,7 +49,8 @@ class ResultsTable extends Component {
   }
 
   renderActions(d) {
-    return <ActionList category={d.category} href={d.href} id={d.id} />;
+    let dname = d.display_name ? d.display_name : undefined;
+    return <ActionList category={d.category} href={d.href} id={d.id} displayName={dname} />;
   }
 
   renderRows() {

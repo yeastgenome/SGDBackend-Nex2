@@ -1,3 +1,4 @@
+/*eslint-disable no-debugger */
 import { compose, createStore, applyMiddleware, combineReducers } from 'redux';
 import { routerMiddleware, routerReducer } from 'react-router-redux';
 import _ from 'underscore';
@@ -6,9 +7,12 @@ import _ from 'underscore';
 import reducers from '../reducers';
 
 const configureStore = (history) => {
+
+  let reduxDebugger = window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__();
+  //console.log('redux debug: ' + reduxDebugger + ' : env is ' + test);
   let combinedReducers = combineReducers(_.extend(reducers, { routing: routerReducer }));
   let store = createStore(
-    combinedReducers,
+    combinedReducers, reduxDebugger,
     compose(applyMiddleware(routerMiddleware(history)))
   );
   if (module.hot) {

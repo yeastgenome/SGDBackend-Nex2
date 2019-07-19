@@ -1410,6 +1410,17 @@ def alignment(request):
     else:
         return {}
 
+'''
+@view_config(route_name='test_curate', renderer='json', request_method='GET')
+def file_curate_form(request):
+    try:
+        form_data = get_topic_dropdown()
+        return form_data
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'message': str(e)}), content_type='text/json')'''
+
+
 # check for basic rad54 response
 @view_config(route_name='healthcheck', renderer='json', request_method='GET')
 def healthcheck(request):

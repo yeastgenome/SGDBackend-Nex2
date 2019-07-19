@@ -8,7 +8,7 @@ import ActionList from './actionList';
 
 const DEFAULT_FIELDS = ['symbol', 'gene_symbol', 'name', 'gene_synonyms', 'synonyms', 'sourceHref', 'id', 'species', 'type'];
 const SGD_LINK_URL = 'https://www.yeastgenome.org';
-
+/* eslint-disable no-debugger */
 class ResultsList extends Component {
   renderHighlightedValues(highlight) {
     let _data = highlight;
@@ -35,12 +35,14 @@ class ResultsList extends Component {
   }
 
   renderEntry(d, i, fields) {
+
+    let dname = d.displayName ? d.display_name : undefined;
     return (
       <div className={style.resultContainer} key={`sr${i}`}>
         {this.renderHeader(d)}
         {this.renderDetailFromFields(d, fields)}
         {this.renderHighlightedValues(d.highlight)}
-        <ActionList category={d.category} href={d.href} />
+        <ActionList category={d.category} href={d.href} displayName={dname} />
         <hr />
       </div>
     );

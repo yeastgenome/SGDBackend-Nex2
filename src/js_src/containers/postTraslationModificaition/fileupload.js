@@ -66,7 +66,7 @@ class FileUpload extends Component{
           <p>Template File: </p>
           </div>
           <div className='columns medium-6 end'>
-            <a href='https://docs.google.com/spreadsheets/d/1Hd3bvvlEEtx-ubgF42uGDA8F4_B5ryaOJivzqk059hA/edit?usp=sharing' target='_blank' >PTM template file </a>
+            <a href='https://docs.google.com/spreadsheets/d/1Hd3bvvlEEtx-ubgF42uGDA8F4_B5ryaOJivzqk059hA/edit?usp=sharing' target='_blank' rel='noopener noreferrer'>PTM template file </a>
           </div>
         </div>
 
@@ -91,12 +91,12 @@ class FileUpload extends Component{
           <div className='columns medium-12'>
             <p>Current file name : {this.state.file.name}</p>
           </div>
-        </div> 
+        </div>
         <div className='row'>
           <div className='columns small-3'>
-            {isLoading ? <Loader /> : <button type='submit' className='button'>Submit</button>}            
+            {isLoading ? <Loader /> : <button type='submit' className='button'>Submit</button>}
           </div>
-        </div> 
+        </div>
       </form>
     );
   }
@@ -109,7 +109,7 @@ FileUpload.propTypes = {
 
 function mapStateToProps(state) {
   return {
-    csrfToken: state.auth.csrfToken
+    csrfToken: state.auth.get('csrfToken')
   };
 }
 

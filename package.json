@@ -7,12 +7,15 @@
     "email": "tshepp@stanford.edu"
   },
   "dependencies": {
+    "date-fns": "^1.30.1",
     "extract-text-webpack-plugin": "^1.0.1",
     "immutable": "^3.8.1",
     "manifest-revision-webpack-plugin": "^0.3.0",
+    "moment": "^2.22.2",
     "react": "^15.3.2",
     "react-autosuggest": "^6.1.0",
     "react-bootstrap": "^0.30.5",
+    "react-day-picker": "^7.3.0",
     "react-dom": "^15.3.2",
     "react-dropzone": "^3.9.0",
     "react-redux": "^4.4.5",
@@ -28,21 +31,35 @@
     "webpack-bundle-tracker": "0.0.93"
   },
   "devDependencies": {
+    "ajv": "^6.6.1",
     "babel-core": "^6.14.0",
+    "babel-jest": "^23.6.0",
     "babel-loader": "^6.2.5",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-react-hmre": "^1.1.1",
+    "config.json": "0.0.4",
     "cross-env": "^3.0.0",
     "css-loader": "^0.25.0",
+    "enzyme": "^3.7.0",
+    "enzyme-adapter-react-15.4": "^1.2.0",
     "eslint": "^3.6.0",
     "eslint-loader": "^1.5.0",
     "eslint-plugin-react": "^6.3.0",
     "file-loader": "^0.9.0",
+    "identity-obj-proxy": "^3.0.0",
+    "intl": "^1.2.5",
+    "jest": "^24.5.0",
+    "jsdoc-react-proptypes": "^1.0.3",
     "mocha": "^3.1.0",
     "mocha-webpack": "^0.6.0",
     "null-loader": "^0.1.1",
     "postcss-loader": "^0.13.0",
+    "react-addons-test-utils": "^15.4.0",
+    "react-doc": "^1.2.6",
+    "react-test-renderer": "^16.6.3",
+    "redux-mock-store": "^1.5.3",
     "rimraf": "^2.5.2",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
@@ -51,6 +68,7 @@
     "webpack-node-externals": "^1.4.3"
   },
   "scripts": {
+    "start:dev": "webpack-dev-server --history-api-fallback --port 2992 --hot --inline",
     "start": "webpack-dev-server --history-api-fallback --port 2992 --hot --inline",
     "prebuild": "npm run clean && npm run copy",
     "build:dev": "cross-env DEMO_ENV=development NODE_ENV=production PREVIEW_URL=https://preview.qa.yeastgenome.org  webpack -p --optimize-minimize",
@@ -58,6 +76,12 @@
     "clean": "rimraf src/build && mkdir src/build",
     "copy": "cp -r src/public/. src/build",
     "test": "NODE_ENV=test mocha-webpack --webpack-config webpack.config-test.js \"src/js_src/**/*test.js\"",
-    "test:watch": "NODE_ENV=test mocha-webpack --webpack-config webpack.config-test.js --watch \"src/js_src/**/*test.js\""
+    "test:watch": "NODE_ENV=test mocha-webpack --webpack-config webpack.config-test.js --watch \"src/js_src/**/*test.js\"",
+    "test-with-jest": "jest",
+    "test-wtih-jest:watch": "jest --watch",
+    "jest-coverage": "jest --coverage --colors",
+    "clean-node": "rm -rf node_modules",
+    "reinstall": "npm run clean-node && npm install",
+    "rebuild": "npm run clean-node && npm install && npm run build"
   }
 }
