@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+#TODO: using pip like this is not recommended, needs to be changed before moving to production
 from pip._internal.download import PipSession
 from pip._internal.req import parse_requirements
 
