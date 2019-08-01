@@ -407,7 +407,7 @@ def upload_file_helper(CREATED_BY, remote_file, obj):
             description=obj['description'],
             display_name=obj['display_name'],
             data_id=obj['data_id'],
-            format_id=obj['format_id"],
+            format_id=obj['format_id'],
             status=obj['status'],
             topic_id=obj['topic_id'],
             is_public=obj['is_public'],
