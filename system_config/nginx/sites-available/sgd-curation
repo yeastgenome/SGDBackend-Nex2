@@ -8,7 +8,6 @@ upstream backend {
 
 server {
     listen 80;
-    client_max_body_size 3050m;
     server_name _;
     access_log /var/log/nginx/sgd-backend.log;
     proxy_connect_timeout   300s;
@@ -18,5 +17,6 @@ server {
             proxy_pass http://localhost:6543/;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            client_max_body_size 4050m;
     }
 }
