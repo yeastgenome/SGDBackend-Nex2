@@ -567,6 +567,26 @@ def update_curate_activity(locus_summary_object):
         
     return flag
 
+'''
+def update_curator_feed(update_obj):
+    flag = False
+
+    try:
+        curator_session = get_curator_session(update_obj['created_by'])
+        new_curator_activity = CuratorActivity()
+        curator_session.add(new_curate_activity)
+        transaction.commit()
+        flag = True
+
+        pass
+        
+    except Exception as e:
+        traceback.print_exc()
+        transaction.abort()
+        raise(e)
+
+    return flag
+'''
 
 def set_string_format(str_param, char_format='_'):
     ''' format given string to replace space with underscore character
@@ -806,8 +826,8 @@ def upload_new_file(req_obj, session=None):
             for key, val in req_obj.iteritems():
                 if key.endswith('.README'):
                     existing_reademe_meta = get_existing_meta_data(req_obj['displayName'])
+                    keywords = re.split(',|\|', req_obj['keywords'])
                     if existing_reademe_meta:
-                        keywords = re.split(',|\|', req_obj['keywords'])
                         existing_reademe_meta.display_name = req_obj['displayName']
                         existing_reademe_meta.description = req_obj['description']
                         existing_reademe_meta.status = req_obj['status']
@@ -819,20 +839,33 @@ def upload_new_file(req_obj, session=None):
                             val, req_obj['displayName'])
                         add_keywords(req_obj['displayName'],
                                      keywords, req_obj['source_id'], req_obj['uname'])
+                    '''else:
+                        #TODO: finish this method after getting metadata from Mike
+                        new_obj = {
+                            'display_name': req_obj['displayName'],
+                            'description': req_obj['description'],
+                            'status': req_obj['status'],
+                            'is_public': True,
+                            'is_in_spell': False,
+                            'is_in_browser': False
+                        }
+                    '''
                 if key.endswith(other_extensions):
+                    
                     other_files.append(
                         {
                             'display_name': req_obj['displayName'],
                             'file': val, 
                             'file_name': key,
-                            'description': val
+                            'description': req_obj['description'],
+                            'status': req_obj['status']
                         })
                 
             if len(other_files) > 0:
                 for item in other_files:
                     db_file = get_existing_meta_data(item['display_name'])
                     if db_file:
-                        add_file_meta_db(db_file, item, readme_file_id)
+                        add_file_meta_db(db_file, item, db_file.readme_file_id)
 
             transaction.commit()
             DBSession.flush()
@@ -843,17 +876,26 @@ def upload_new_file(req_obj, session=None):
 
 
 def add_file_meta_db(db_file, obj, readme_id=None):
-    if db_file and obj:
-        db_file.display_name = obj['display_name']
-        db_file.description = obj['description']
-        db_file.status = obj['status']
-        db_file.is_public = True
-        db_file.is_in_spell = False
-        db_file.is_in_browser = False
-        db_file.upload_file_to_s3(
-            obj['file'], obj['display_name'])
-        if readme_id:
-            db_file.readme_file_id = readme_id
+    try:
+        if db_file and obj:
+            db_file.display_name = obj['display_name']
+            db_file.description = obj['description']
+            db_file.status = obj['status']
+            db_file.is_public = True
+            db_file.is_in_spell = False
+            db_file.is_in_browser = False
+            db_file.upload_file_to_s3(
+                obj['file'], obj['display_name'])
+            if readme_id:
+                db_file.readme_file_id = readme_id
+                readme_file = DBSession.query(Filedbentity).filter(
+                    Filedbentity.dbentity_id == readme_id).one_or_none()
+                if readme_file:
+                    update_readme_files_with_urls(readme_file.display_name)
+
+    except Exception as e:
+        raise(e)
+
     
 
 def get_existing_meta_data(display_name=None):
