@@ -1,4 +1,5 @@
 /*eslint-disable no-undef */
+/*eslint-disable no-debugger */
 const DEFAULT_TIMEOUT = 60000;
 
 export default function fetchData(_url, options={}) {
@@ -22,10 +23,11 @@ export default function fetchData(_url, options={}) {
       success: data => {
         resolve(data);
       },
-      error: (response, e) => {
-        if (e === 'abort') {
+      error: (e) => {
+        if (e === 'abort' || 'timeout') {
           return;
         }
+
         reject(response.responseJSON);
       }
     });

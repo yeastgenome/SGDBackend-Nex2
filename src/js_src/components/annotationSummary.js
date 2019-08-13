@@ -6,7 +6,7 @@ import { PREVIEW_URL } from '../constants';
 import DetaiLList from './detailList';
 
 import TagList from './tagList';
-
+/* eslint-disable no-debugger */
 class AnnotationSummary extends Component {
   renderUpdatedBy(d) {
     if (d.date_created && d.created_by) {
@@ -22,11 +22,11 @@ class AnnotationSummary extends Component {
           <div style={{ marginLeft: '1rem', marginBottom: '1rem' }}>
             <DetaiLList data={d.data.keys} />
           </div>
-        );  
+        );
       } else if (d.data.tags) {
         return this.renderTags(d.data);
       }
-      
+
     }
     return null;
   }
@@ -60,6 +60,9 @@ class AnnotationSummary extends Component {
       if (d.category === 'reserved_name') {
         linkNode = <span>{d.name}</span>;
       }
+      if (d.category =='download'){
+        curateNode = <Link to={{pathname:'file_curate_update', search:`?name=${d.name.replace(/<[^>]*>?/gm, '')}`}}><i className='fa fa-edit' /> Curate</Link>;
+      }
       return (
         <div key={'note' + i}>
           <p>
@@ -80,7 +83,7 @@ class AnnotationSummary extends Component {
   }
 
   render() {
-    
+
     return (
       <div>
         {this.renderMessage()}

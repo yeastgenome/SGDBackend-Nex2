@@ -2,6 +2,7 @@ from math import pi, sqrt, acos
 import datetime
 import hashlib
 import werkzeug
+import json
 import os
 import shutil
 import string
@@ -16,7 +17,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
-from sqlalchemy import and_
+from sqlalchemy import and_, inspect
 
 
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
@@ -567,26 +568,36 @@ def update_curate_activity(locus_summary_object):
         
     return flag
 
-'''
-def update_curator_feed(update_obj):
+
+def update_curator_feed(update_obj, msg=None, curator_session=None):
+    if curator_session is None:
+        curator_session = DBSession
     flag = False
-
+    if msg is None:
+        msg = 'added'
+    msg = 'added'
     try:
-        curator_session = get_curator_session(update_obj['created_by'])
-        new_curator_activity = CuratorActivity()
-        curator_session.add(new_curate_activity)
-        transaction.commit()
+        exists = curator_session.query(CuratorActivity).filter(
+            CuratorActivity.dbentity_id == update_obj['dbentity_id']).one_or_none()
+        if exists:
+            msg = "updated"
+        new_curator_activity = CuratorActivity(
+            display_name=update_obj['display_name'],
+            obj_url=update_obj['s3_url'],
+            activity_category=update_obj['activity_category'],
+            dbentity_id=update_obj['dbentity_id'],
+            message=msg,
+            json=update_obj['json'],
+            created_by=update_obj['created_by']
+        )
+        curator_session.add(new_curator_activity)
         flag = True
-
-        pass
-        
+     
     except Exception as e:
-        traceback.print_exc()
-        transaction.abort()
         raise(e)
 
     return flag
-'''
+
 
 def set_string_format(str_param, char_format='_'):
     ''' format given string to replace space with underscore character
@@ -703,7 +714,7 @@ def update_readme_files_with_urls(readme_name, update_all=False):
                 
                 if readme_file:
                     update_urls_helper(readme_file)   
-                    transaction.commit()
+                    #transaction.commit()
         else:
             all_files = DBSession.query(Dbentity).all()
 
@@ -711,7 +722,7 @@ def update_readme_files_with_urls(readme_name, update_all=False):
                 if _file.display_name.endswith('.README'):
                     update_urls_helper(_file)
             
-            transaction.commit()
+            #transaction.commit()
 
     except Exception as e:
         logging.error(e)
@@ -823,9 +834,12 @@ def upload_new_file(req_obj, session=None):
             readme_file = {}
             other_files = []
             readme_file_id = None
+            username = req_obj['uname']
+            curator_session = get_curator_session(username)
             for key, val in req_obj.iteritems():
                 if key.endswith('.README'):
-                    existing_reademe_meta = get_existing_meta_data(req_obj['displayName'])
+                    existing_reademe_meta = get_existing_meta_data(
+                        req_obj['displayName'], curator_session)
                     keywords = re.split(',|\|', req_obj['keywords'])
                     if existing_reademe_meta:
                         existing_reademe_meta.display_name = req_obj['displayName']
@@ -838,7 +852,17 @@ def upload_new_file(req_obj, session=None):
                         existing_reademe_meta.upload_file_to_s3(
                             val, req_obj['displayName'])
                         add_keywords(req_obj['displayName'],
-                                     keywords, req_obj['source_id'], req_obj['uname'])
+                                     keywords, req_obj['source_id'], username)
+                        update_obj = {
+                            'display_name': req_obj['displayName'],
+                            'created_by': username,
+                            's3_url': existing_reademe_meta.s3_url,
+                            'activity_category': 'download',
+                            'dbentity_id': existing_reademe_meta.dbentity_id,
+                            'json': json.dumps({"file curation data": existing_reademe_meta.to_dict()}),
+                        }
+                        msg = 'Add readme file for file curation'
+                        update_curator_feed(update_obj, msg)
                     '''else:
                         #TODO: finish this method after getting metadata from Mike
                         new_obj = {
@@ -863,10 +887,22 @@ def upload_new_file(req_obj, session=None):
                 
             if len(other_files) > 0:
                 for item in other_files:
-                    db_file = get_existing_meta_data(item['display_name'])
+                    db_file = get_existing_meta_data(
+                        item['display_name'], curator_session)
                     if db_file:
-                        add_file_meta_db(db_file, item, db_file.readme_file_id)
-
+                        add_file_meta_db(
+                            db_file, item, db_file.readme_file_id, curator_session)
+                        # update activities
+                        update_obj = {
+                            'display_name': item['display_name'],
+                            'created_by': username,
+                            's3_url': db_file.s3_url,
+                            'activity_category': 'download',
+                            'dbentity_id': db_file.dbentity_id,
+                            'json': json.dumps({'file curation data': db_file.to_dict()}),
+                        }
+                        msg = 'Add file for file curation'
+                        update_curator_feed(update_obj, msg, curator_session)
             transaction.commit()
             DBSession.flush()
             return True
@@ -875,8 +911,10 @@ def upload_new_file(req_obj, session=None):
         raise(e)
 
 
-def add_file_meta_db(db_file, obj, readme_id=None):
+def add_file_meta_db(db_file, obj, readme_id=None, curator_session=None):
     try:
+        if curator_session is None:
+            curator_session = DBSession
         if db_file and obj:
             db_file.display_name = obj['display_name']
             db_file.description = obj['description']
@@ -884,25 +922,29 @@ def add_file_meta_db(db_file, obj, readme_id=None):
             db_file.is_public = True
             db_file.is_in_spell = False
             db_file.is_in_browser = False
-            db_file.upload_file_to_s3(
+            flag = db_file.upload_file_to_s3(
                 obj['file'], obj['display_name'])
             if readme_id:
                 db_file.readme_file_id = readme_id
-                readme_file = DBSession.query(Filedbentity).filter(
+                readme_file = curator_session.query(Filedbentity).filter(
                     Filedbentity.dbentity_id == readme_id).one_or_none()
                 if readme_file:
-                    update_readme_files_with_urls(readme_file.display_name)
+                    if flag:
+                        update_readme_files_with_urls(readme_file.display_name)
 
     except Exception as e:
         raise(e)
 
     
 
-def get_existing_meta_data(display_name=None):
+def get_existing_meta_data(display_name=None, curator_session=None):
 
     result = None
+    if curator_session is None:
+        curator_session = DBSession
     if display_name:
-        result = DBSession.query(Filedbentity).filter(Filedbentity.display_name == display_name).one_or_none()
+        result = curator_session.query(Filedbentity).filter(
+            Filedbentity.display_name == display_name).one_or_none()
     
     return result
 

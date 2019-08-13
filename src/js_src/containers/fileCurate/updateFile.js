@@ -29,6 +29,7 @@ class FileCurateUpdate extends Component {
 
 
   componentDidMount(){
+
     let urlStr = this.getParam();
     fetchData(`${GET_FILE_URL}/${urlStr}`, {
       type: 'GET',
@@ -100,7 +101,7 @@ class FileCurateUpdate extends Component {
       return false;
     }
     else{
-      return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} fileData={this.state.fileData} /></div></CurateLayout>);
+      return (<CurateLayout><div className='row'><FileCurateForm onFileUploadSubmit={this.handleFileUploadSubmit} fileData={this.state.fileData} location={this.props.location} /></div></CurateLayout>);
     }
   }
 }

@@ -67,12 +67,12 @@ class FileCurateForm extends Component{
       return(
           <form ref='upForm' onSubmit={this.handleSubmit.bind(this)} name='test'>
             <div>
-              <h1>Upload README File to S3</h1>
+              <h1>Upload Files to S3</h1>
               <hr />
               <h5>Directions</h5>
               <ul>
                 <li>Make sure file name is valid</li>
-                <li>Keywrods can be comma separated</li>
+                <li>Keywords can be comma separated</li>
                 <li>Acceptable file formats:
                   <span className={'label'}>README</span>
                   <span className={'label'}>SRA</span>
@@ -85,7 +85,7 @@ class FileCurateForm extends Component{
 
             <div className={'row'} >
               <div className={'columns small-6'}>
-                <StringField id='dname' className={'columns small-6'} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716'} isRequired={true} />
+                <StringField id='dname' className={'columns small-6'} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716.README'} isRequired={true} />
               </div>
               <div className={'columns small-6'}>
                 <StringField id='status' className={'columns small-6'} paramName={'status'} displayName={'status'} defaultValue={'active'} placeholder={'Active or Archive'} isRequired={true} />      </div>
@@ -138,17 +138,14 @@ class FileCurateForm extends Component{
       return(
           <form ref='upForm' onSubmit={this.handleSubmit.bind(this)} name='test'>
             <div>
-              <h1>Upload Files to S3</h1>
+              <h1>Upload README Files to S3</h1>
               <hr />
               <h5>Directions</h5>
               <ul>
                 <li>Make sure file name(s) is valid</li>
-                <li>Keywrods can be comma separated</li>
+                <li>Keywords can be comma separated</li>
                 <li>Acceptable file formats:
                   <span className={'label'}>README</span>
-                  <span className={'label'}>SRA</span>
-                  <span className={'label'}>ZIP</span>
-                  <span className={'label'}>TAR</span>
                 </li>
               </ul>
             </div>
@@ -158,7 +155,7 @@ class FileCurateForm extends Component{
 
             <div className={'row'} >
               <div className={'columns small-6'}>
-                <StringField id='dname' className={'columns small-6'} defaultValue={displayName} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716'} isRequired={true} />
+                <StringField id='dname' className={'columns small-6'} defaultValue={displayName} paramName={'displayName'} displayName={'Display Name'} placeholder={'El Hage_2014_PMID_24532716.README'} isRequired={true} />
               </div>
               <div className={'columns small-6'}>
                 <StringField id='status' className={'columns small-6'} paramName={'status'} displayName={'status'} defaultValue={status} placeholder={'Active or Archive'} isRequired={true} />      </div>
@@ -210,7 +207,8 @@ class FileCurateForm extends Component{
 FileCurateForm.propTypes = {
   onFileUploadSubmit: React.PropTypes.func,
   dispatch: React.PropTypes.func,
-  fileData: React.PropTypes.object
+  fileData: React.PropTypes.object,
+  location: React.PropTypes.object
 };
 
 export default FileCurateForm;

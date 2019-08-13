@@ -1761,7 +1761,6 @@ def upload_tar_file(request):
 
         obj['uname'] = request.session['username']
         obj['source_id'] = SGD_SOURCE_ID
-
         return upload_new_file(obj)
     except Exception as e:
          return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')

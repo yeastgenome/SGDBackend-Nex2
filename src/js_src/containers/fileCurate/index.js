@@ -13,6 +13,8 @@ import { connect } from 'react-redux';
 import CurateLayout from '../curateHome/layout';
 import fetchData from '../../lib/fetchData';
 import { clearError, setError } from '../../actions/metaActions';
+import LoadingPage from '../../components/loadingPage';
+
 
 import { Route, Redirect } from 'react-router';
 
@@ -65,7 +67,7 @@ class FileCurate extends Component {
       }
 
     }).catch( (data) => {
-      let errorMEssage = data ? data.error: 'Error occured';
+      let errorMEssage = data ? data.error: 'Error occured: connection timed out';
       this.props.dispatch(setError(errorMEssage));
       this.setState({ isPending: false});
     });
@@ -76,13 +78,15 @@ class FileCurate extends Component {
     if(this.state.toHome){
       window.location.href = '/';
       return false;
-
+    }
+    else if(this.state.isPending){
+      return ( <LoadingPage />);
     }
     else{
       return (
         <CurateLayout>
           <div className='row'>
-            <FileCurateForm fileData={{}} onFileUploadSubmit={this.handleFileUploadSubmit} />
+            <FileCurateForm fileData={{}} onFileUploadSubmit={this.handleFileUploadSubmit} location={this.props.location} />
           </div>
         </CurateLayout>);
     }
@@ -91,7 +95,8 @@ class FileCurate extends Component {
 
 FileCurate.propTypes = {
   csrfToken: React.PropTypes.string,
-  dispatch: React.PropTypes.func
+  dispatch: React.PropTypes.func,
+  location: React.PropTypes.object
 };
 
 function mapStateToProps(state) {

@@ -2566,6 +2566,10 @@ class Filedbentity(Dbentity):
         u'Edam', primaryjoin='Filedbentity.topic_id == Edam.edam_id')
 
     def to_dict(self):
+        readme_file_url = ''
+        if self.readme_file_id:
+            readme_file_url = self.readme_file.s3_url
+
         obj = {
             "id":
                 self.dbentity_id,
@@ -2591,10 +2595,11 @@ class Filedbentity(Dbentity):
                 self.s3_url if self.s3_url else '',
             "description":
                 self.description if self.description else '',
-            "year":
-                self.year,
+            "year": self.year,
             "display_name": self.display_name,
-            "status": self.dbentity_status
+            "status": 
+                self.dbentity_status,
+            "readme_file_url": readme_file_url
         }
         return obj
 
@@ -2654,14 +2659,17 @@ class Filedbentity(Dbentity):
                 if local_md5sum != etag_md5_s3:
                     transaction.abort()
                     raise Exception('MD5sum check failed.')
-                self.md5sum = etag_md5_s3
-                # get file size
-                file.seek(0, os.SEEK_END)
-                file_size = file.tell()
-                file.seek(0)
-                self.file_size = file_size
-                self.s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
-                transaction.commit()
+                if self.md5sum != etag_md5_s3:
+                    self.md5sum = etag_md5_s3
+                    # get file size
+                    file.seek(0, os.SEEK_END)
+                    file_size = file.tell()
+                    file.seek(0)
+                    self.file_size = file_size
+                    self.s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
+                    return True
+                return False
+                    #transaction.commit()
         except Exception as e:
             logging.debug(e)
             print(e)
