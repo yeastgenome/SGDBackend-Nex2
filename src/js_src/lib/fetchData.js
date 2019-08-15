@@ -23,8 +23,8 @@ export default function fetchData(_url, options={}) {
       success: data => {
         resolve(data);
       },
-      error: (e) => {
-        if (e === 'abort' || 'timeout') {
+      error: (response,e) => {
+        if (e === 'abort') {
           return;
         }
 
