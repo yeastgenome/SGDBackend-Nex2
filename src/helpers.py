@@ -580,17 +580,26 @@ def update_curator_feed(update_obj, msg=None, curator_session=None):
         exists = curator_session.query(CuratorActivity).filter(
             CuratorActivity.dbentity_id == update_obj['dbentity_id']).one_or_none()
         if exists:
-            msg = "updated"
-        new_curator_activity = CuratorActivity(
-            display_name=update_obj['display_name'],
-            obj_url=update_obj['s3_url'],
-            activity_category=update_obj['activity_category'],
-            dbentity_id=update_obj['dbentity_id'],
-            message=msg,
-            json=update_obj['json'],
-            created_by=update_obj['created_by']
-        )
-        curator_session.add(new_curator_activity)
+            exists.display_name = update_obj['display_name']
+            exists.obj_url = update_obj['s3_url']
+            exists.activity_category = update_obj['activity_category']
+            exists.dbentity_id = update_obj['dbentity_id']
+            exists.message = 'updated'
+            exists.json = update_obj['json']
+            exists.created_by = update_obj['created_by']
+        
+        else:
+            new_curator_activity = CuratorActivity(
+                display_name=update_obj['display_name'],
+                obj_url=update_obj['s3_url'],
+                activity_category=update_obj['activity_category'],
+                dbentity_id=update_obj['dbentity_id'],
+                message='Added',
+                json=update_obj['json'],
+                created_by=update_obj['created_by']
+            )
+            curator_session.add(new_curator_activity)
+
         flag = True
      
     except Exception as e:
@@ -886,11 +895,12 @@ def upload_new_file(req_obj, session=None):
                         })
                 
             if len(other_files) > 0:
+                update_from_s3 = None
                 for item in other_files:
                     db_file = get_existing_meta_data(
                         item['display_name'], curator_session)
                     if db_file:
-                        add_file_meta_db(
+                        update_from_s3 = add_file_meta_db(
                             db_file, item, db_file.readme_file_id, curator_session)
                         # update activities
                         update_obj = {

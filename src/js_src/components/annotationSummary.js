@@ -50,7 +50,7 @@ class AnnotationSummary extends Component {
 
   renderAnnotations() {
     let nodes = this.props.annotations.map( (d, i) => {
-      let previewUrl = `${PREVIEW_URL}${d.href}`;
+      let previewUrl = d.category =='download' ? d.href : `${PREVIEW_URL}${d.href}`;
       let curateNode = null;
       if (d.category === 'reference' || d.category === 'locus') {
         let curateUrl = `/curate${d.href}`.replace(/regulation|phenotype/, '');
@@ -61,6 +61,8 @@ class AnnotationSummary extends Component {
         linkNode = <span>{d.name}</span>;
       }
       if (d.category =='download'){
+        /*eslint-disable no-debugger */
+        debugger;
         curateNode = <Link to={{pathname:'file_curate_update', search:`?name=${d.name.replace(/<[^>]*>?/gm, '')}`}}><i className='fa fa-edit' /> Curate</Link>;
       }
       return (

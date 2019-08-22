@@ -2655,6 +2655,7 @@ class Filedbentity(Dbentity):
                     hash_md5.update(chunk)
                 local_md5sum = hash_md5.hexdigest()
                 file.seek(0)
+
                 # compare m5sum, save if match
                 if local_md5sum != etag_md5_s3:
                     transaction.abort()
@@ -2666,10 +2667,11 @@ class Filedbentity(Dbentity):
                     file_size = file.tell()
                     file.seek(0)
                     self.file_size = file_size
-                    self.s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
+                    mod_s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
+                    self.s3_url = re.sub(r'\?.+', '', mod_s3_url).strip()
+                    transaction.commit()
                     return True
                 return False
-                    #transaction.commit()
         except Exception as e:
             logging.debug(e)
             print(e)
