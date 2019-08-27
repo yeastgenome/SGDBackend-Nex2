@@ -6,11 +6,11 @@ import { PREVIEW_URL } from '../constants';
 import DetaiLList from './detailList';
 
 import TagList from './tagList';
-/* eslint-disable no-debugger */
+import moment from 'moment';
 class AnnotationSummary extends Component {
   renderUpdatedBy(d) {
     if (d.date_created && d.created_by) {
-      return <span>on {d.date_created} by {d.created_by}</span>;
+      return <span>on <b>{moment(d.time_created).format('MM-DD-YYYY h:mm A')}</b> by {d.created_by}</span>;
     }
     return null;
   }
@@ -62,7 +62,7 @@ class AnnotationSummary extends Component {
       }
       if (d.category =='download'){
         /*eslint-disable no-debugger */
-        debugger;
+
         curateNode = <Link to={{pathname:'file_curate_update', search:`?name=${d.name.replace(/<[^>]*>?/gm, '')}`}}><i className='fa fa-edit' /> Curate</Link>;
       }
       return (
