@@ -7,10 +7,11 @@ import DetaiLList from './detailList';
 
 import TagList from './tagList';
 import moment from 'moment';
+import 'moment-timezone';
 class AnnotationSummary extends Component {
   renderUpdatedBy(d) {
     if (d.date_created && d.created_by) {
-      return <span>on <b>{moment(d.time_created).format('MM-DD-YYYY h:mm A')}</b> by {d.created_by}</span>;
+      return <span>on <b>{moment(d.time_created).tz('America/Los_Angeles').format('MM-DD-YYYY h:mmA z')}</b> by {d.created_by}</span>;
     }
     return null;
   }

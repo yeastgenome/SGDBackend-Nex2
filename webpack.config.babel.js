@@ -56,8 +56,15 @@ let config = {
         test: /\.(jpg|png|ttf|eot|woff|woff2|svg)$/,
         exclude: /node_modules/,
         loader: 'url?limit=100000'
+      },
+      {
+        test: /\.json$/,
+        loader: 'json-loader'
       }
     ]
+  },
+  resolve: {
+    extensions: ['', '.json', '.jsx', '.js']
   },
   plugins: [
     new ExtractTextPlugin('[name].[chunkhash].css'),
@@ -78,7 +85,7 @@ if (isProduction) {
     }),
     new ExtractTextPlugin('[name].[chunkhash].css'),
     new BundleTracker({ filename: buildOutputPath + '/stats.json' })
-  ]
+  ];
 }
 
 export default config;
