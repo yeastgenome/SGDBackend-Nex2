@@ -2602,7 +2602,39 @@ class Filedbentity(Dbentity):
             "readme_file_url": readme_file_url
         }
         return obj
+    
+    def to_simple_dict(self):
 
+        readme_file_url = ''
+        if self.readme_file_id:
+            readme_file_url = self.readme_file.s3_url
+
+        obj = {
+            "id":
+                self.dbentity_id,
+            "data_id":
+                self.data_id if self.format_id else 0,
+            "format_id":
+                self.format_id if self.format_id else 0,
+            "readme_file_id":
+                self.readme_file_id if self.readme_file_id else '',
+            "file_size":
+                self.file_size if self.file_size else 0,
+            "is_public":
+                str(self.is_public),
+            "file_extension":
+                self.file_extension if self.file_extension else '',
+            "s3_url":
+                self.s3_url if self.s3_url else '',
+            "description":
+                self.description if self.description else '',
+            "year": self.year,
+            "display_name": self.display_name,
+            "status": 
+                self.dbentity_status,
+            "readme_file_url": readme_file_url
+        }
+        return obj
 
     def upload_file_to_s3(self, file, filename, file_path=None):
         """ uploads files to s3 

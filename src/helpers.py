@@ -868,7 +868,7 @@ def upload_new_file(req_obj, session=None):
                             's3_url': existing_readme_meta.s3_url,
                             'activity_category': 'download',
                             'dbentity_id': existing_readme_meta.dbentity_id,
-                            'json': json.dumps({"file curation data": existing_readme_meta.to_dict()}),
+                            'json': json.dumps({"file curation data": existing_readme_meta.to_simple_dict()}),
                         }
                         msg = 'Add readme file for file curation'
                         update_curator_feed(update_obj, msg)
@@ -908,7 +908,7 @@ def upload_new_file(req_obj, session=None):
                             's3_url': db_file.s3_url,
                             'activity_category': 'download',
                             'dbentity_id': db_file.dbentity_id,
-                            'json': json.dumps({'file curation data': db_file.to_dict()}),
+                            'json': json.dumps({'file curation data': db_file.to_simple_dict()}),
                         }
                         msg = 'Add file for file curation'
                         update_curator_feed(update_obj, msg, curator_session)
