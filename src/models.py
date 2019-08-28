@@ -2701,7 +2701,6 @@ class Filedbentity(Dbentity):
                     self.file_size = file_size
                     mod_s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
                     self.s3_url = re.sub(r'\?.+', '', mod_s3_url).strip()
-                    transaction.commit()
                     return True
                 return False
         except Exception as e:
