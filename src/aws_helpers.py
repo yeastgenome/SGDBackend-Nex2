@@ -12,7 +12,7 @@ from optparse import OptionParser
 import subprocess
 import contextlib
 from multiprocessing.pool import ThreadPool
-
+import re
 
 VOLUME_PATH = '/genomes'
 S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
@@ -130,7 +130,7 @@ def update_s3_readmefile(s3_urls, dbentity_id, sgdid, readme_name, s3_bucket):
             local_md5sum = hash_md5.hexdigest()
             updated_s3_url = file_s3.generate_url(expires_in=0, query_auth=False)
             obj["md5sum"] = etag_md5_s3
-            obj["s3_url"] = updated_s3_url
+            obj["s3_url"] = re.sub(r'\?.+', '', updated_s3_url).strip()
             obj["sgdid"] = sgdid
             obj["readme_name"] = readme_name
             obj["dbentity_id"] = dbentity_id
