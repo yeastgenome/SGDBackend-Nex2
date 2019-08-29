@@ -2566,9 +2566,7 @@ class Filedbentity(Dbentity):
         'Edam', primaryjoin='Filedbentity.topic_id == Edam.edam_id')
 
     def to_dict(self):
-        readme_file_url = ''
-        if self.readme_file_id:
-            readme_file_url = self.readme_file.s3_url
+
         obj = {
             "id":
                 self.dbentity_id,
@@ -2596,11 +2594,12 @@ class Filedbentity(Dbentity):
                 self.description if self.description else '',
             "year": self.year,
             "display_name": self.display_name,
-            "status":
-                self.dbentity_status,
-            "readme_file_url": readme_file_url
+            "status": self.dbentity_status,
+            "readme_file_url": self.readme_file.s3_url if self.readme_file else None
         }
         return obj
+
+
     def to_simple_dict(self):
         readme_file_url = ''
         if self.readme_file_id:
@@ -2626,9 +2625,8 @@ class Filedbentity(Dbentity):
                 self.description if self.description else '',
             "year": self.year,
             "display_name": self.display_name,
-            "status": 
-                self.dbentity_status,
-            "readme_file_url": readme_file_url
+            "status": self.dbentity_status,
+            "readme_file_url": self.readme_file.s3_url if self.readme_file else None
         }
         return obj
 
@@ -3856,7 +3854,7 @@ class Locusdbentity(Dbentity):
         ids_from_keys = list(set(ids_from_keys))
         # format nodes
         nodes = []
-        all_gene_info = DBSession.query(Dbentity.dbentity_id, Dbentity.dispGay_name, Dbentity.format_name, Dbentity.obj_url).filter(Dbentity.dbentity_id.in_(ids_from_keys)).all()
+        all_gene_info = DBSession.query(Dbentity.dbentity_id, Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter(Dbentity.dbentity_id.in_(ids_from_keys)).all()
         # ensure self is first
         def self_sort_fn(x):
             if x[0] == self.dbentity_id:
