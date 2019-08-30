@@ -120,7 +120,7 @@ def update_s3_readmefile(s3_urls, dbentity_id, sgdid, readme_name, s3_bucket):
         with open(s3_file_path, 'a+') as mod_file:
             mod_file.write(s3_str)
 
-        with open(s3_file_path, 'r') as updated_file:
+        with open(s3_file_path, 'rb') as updated_file:
             key_item.set_contents_from_filename(s3_file_path)
             key_item.make_public()
             etag_md5_s3 = file_s3.etag.strip('"').strip("'")
@@ -131,7 +131,7 @@ def update_s3_readmefile(s3_urls, dbentity_id, sgdid, readme_name, s3_bucket):
             local_md5sum = hash_md5.hexdigest()
             updated_s3_url = file_s3.generate_url(
                 expires_in=0, query_auth=False)
-            obj["md5sum"] = etag_md5_s3
+            obj["md5sum"] = local_md5sum
             obj["s3_url"] = re.sub(r'\?.+', '', updated_s3_url).strip()
             obj["sgdid"] = sgdid
             obj["readme_name"] = readme_name
@@ -340,3 +340,66 @@ def get_s3_url(name, sgdid):
     file_s3 = bucket.get_key(file_key)
     url = file_s3.generate_url(expires_in=0, query_auth=False)
     return url
+
+
+def get_s3_file_etag(s3_file_path_name):
+    """ Get s3 file etag """
+
+    try:
+        conn = boto.connect_s3(S3_ACCESS_KEY, S3_ACCESS_KEY)
+        bucket = conn.get_bucket(S3_BUCKET)
+        file_key = Key(bucket)
+        file_key.key = s3_file_path_name
+        s3_file_etag_md5 = bucket.get_key(file_key.key).etag.strip('"').strip("'")
+        return s3_file_etag_md5
+
+    except Exception as e:
+        raise e
+
+
+def get_checksum(file_obj, is_file=False):
+    """ Get checksum of a local file """
+    try:
+        if is_file:
+            checksum = hashlib.md5(open(file_obj).read()).hexdigest()
+            return checksum
+        else:
+            checksum = hashlib.md5(file_obj.read1()).hexdigest()
+            return checksum
+
+    except Exception as e:
+        raise e
+
+
+def calculate_checksum_s3_file(s3_path, file_name, s3_bucket):
+    """ Get checksum for file on s3
+
+    Notes:
+        etag may or may not be checksum. depends how the file was uploaded
+        As such it's not reliable to use as checksum
+    """
+    try:
+        pass
+        local_file_md5sum = None
+        local_s3_file_path = './scripts/loading/data/' + file_name
+        s3_conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
+        bucket = s3_conn.get_bucket(s3_bucket)
+        key_item = Key(bucket)
+        key_item.key = s3_path
+        file_s3 = bucket.get_key(key_item.key)
+        key_item.get_contents_to_filename(local_s3_file_path)
+        hash_md5 = hashlib.md5()
+        with open(local_s3_file_path, 'rb') as file:
+            for chunk in iter(lambda: file.read(4096), b""):
+                hash_md5.update(chunk)
+            local_file_md5sum = hash_md5.hexdigest()
+        
+        if os.path.exists(local_s3_file_path):
+            os.remove(local_s3_file_path)
+        else:
+            logging.error('file not found: ' + local_s3_file_path)
+        return local_file_md5sum
+    except Exception as e:
+        logging.error(e)
+        return None
+

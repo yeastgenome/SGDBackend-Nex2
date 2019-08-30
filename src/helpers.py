@@ -36,6 +36,7 @@ FILE_EXTENSIONS = [
     'wrl', 'xls', 'xlsx', 'xml', 'sql', 'txt', 'html', 'gz', 'tsv'
 ]
 MAX_QUERY_ATTEMPTS = 3
+S3_BUCKET = os.environ['S3_BUCKET']
 
 import redis
 disambiguation_table = redis.Redis()
@@ -999,3 +1000,5 @@ def add_keywords(name, keywords, src_id, uname, curator_session=None):
 
     except Exception as e:
         logging.error(e)
+
+

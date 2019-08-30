@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from zope.sqlalchemy import ZopeTransactionExtension
 from elasticsearch import Elasticsearch
 import os
+import io
 from math import floor, log
 import json
 import copy
@@ -25,7 +26,7 @@ from urllib.error import URLError, HTTPError
 from src.curation_helpers import ban_from_cache, get_author_etc, link_gene_names, get_curator_session, clear_list_empty_values
 from scripts.loading.util import link_gene_complex_names
 
-from src.aws_helpers import simple_s3_upload
+from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
@@ -2669,25 +2670,23 @@ class Filedbentity(Dbentity):
                 # make content-type 'text/plain' if it's a README
                 if self.readme_file_id is None:
                     k.content_type = 'text/plain'
-                k.set_contents_from_file(file, rewind=True)
+                file_bytes = io.BytesIO(file.read1())
+                k.set_contents_from_file(file_bytes, rewind=True)
                 k.make_public()
                 file_s3 = bucket.get_key(k.key)
-                # s3 md5sum
-                etag_md5_s3 = file_s3.etag.strip('"').strip("'")
+        
                 # get local md5sum https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
                 hash_md5 = hashlib.md5()
+                local_md5 = get_checksum(file)
                 file.seek(0)
                 for chunk in iter(lambda: file.read(4096), b""):
                     hash_md5.update(chunk)
+
                 local_md5sum = hash_md5.hexdigest()
                 file.seek(0)
-
-                # compare m5sum, save if match
-                if local_md5sum != etag_md5_s3:
-                    transaction.abort()
-                    raise Exception('MD5sum check failed.')
-                if self.md5sum != etag_md5_s3:
-                    self.md5sum = etag_md5_s3
+                
+                if self.md5sum != local_md5sum:
+                    self.md5sum = local_md5sum
                     # get file size
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()
