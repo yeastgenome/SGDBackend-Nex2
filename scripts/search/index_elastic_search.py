@@ -829,8 +829,7 @@ def index_downloads():
     bulk_data = []
     dbentity_file_obj = IndexESHelper.get_file_dbentity_keyword()
     files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
-                                                 Filedbentity.s3_url != None,
-                                                 Filedbentity.readme_file_id != None).all()
+                                                 Filedbentity.s3_url != None).all()
     print(("indexing " + str(len(files)) + " download files"))
     for x in files:
         try:
