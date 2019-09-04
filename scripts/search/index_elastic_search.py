@@ -884,8 +884,6 @@ def index_downloads():
                 bulk_data = []
         
         except Exception as e:
-            import pdb
-            pdb.set_trace()
             logging.error(e.message)
 
     if len(bulk_data) > 0:
@@ -983,9 +981,7 @@ if __name__ == "__main__":
 
     cleanup()
     setup()
-    index_downloads()
-    '''t1 = Thread(target=index_part_1)
+    t1 = Thread(target=index_part_1)
     t2 = Thread(target=index_part_2)
     t1.start()
-    t2.start()'''
-    
+    t2.start()
