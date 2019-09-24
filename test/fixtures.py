@@ -1941,7 +1941,7 @@ class CuratorActivityFactory(factory.alchemy.SQLAlchemyModelFactory):
     display_name = "display name"
     obj_url = 'http://example.org/1'
     activity_category = 'activity category'
-    dbentity_id = 1
+    dbentity_id = None
     message = 'message message'
     json = '{"key":"value"}'
     date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())

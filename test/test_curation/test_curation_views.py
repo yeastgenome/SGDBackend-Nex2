@@ -68,6 +68,7 @@ class CurationViewsTest(unittest.TestCase):
     request.params['everyone'] = True
     request.session['username'] = "OTTO"
     response = get_recent_annotations(request)
+    
     response[0]['time_created'] = response[0]['time_created'][0:-9]
 
 

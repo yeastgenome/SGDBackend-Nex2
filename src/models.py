@@ -29,7 +29,7 @@ from scripts.loading.util import link_gene_complex_names
 
 from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
-handler = logging.handlers.WatchedFileHandler(os.environ.get("APP_LOG_FILE"))
+handler = logging.handlers.WatchedFileHandler(os.environ.get("APP_LOG_FILE", './app.log'))
 formatter = logging.Formatter(logging.BASIC_FORMAT)
 
 handler.setFormatter(formatter)
@@ -1260,19 +1260,34 @@ class CuratorActivity(Base):
 
     def to_dict(self):
         href = self.obj_url
-        if self.activity_category == 'download':
-            href = re.sub(r'\?.+', '', href).strip()
-        return {
-            'category': self.activity_category,
-            'created_by': self.created_by,
-            'href': href,
-            'date_created': self.date_created.strftime("%Y-%m-%d"),
-            'time_created': datetime.strptime(json.loads(self.json)["modified_date"], '%Y-%m-%d %H:%M:%S.%f').isoformat(),
-            'name': self.display_name,
-            'type': self.message,
-            'is_curator_activity': True,
-            'data': json.loads(self.json)
-        }
+        time_created = self.date_created.strftime("%Y-%m-%d")
+        if self.dbentity_id:
+            if self.activity_category == 'download':
+                href = re.sub(r'\?.+', '', href).strip()
+            return {
+                'category': self.activity_category,
+                'created_by': self.created_by,
+                'href': href,
+                'date_created': self.date_created.strftime("%Y-%m-%d"),
+                'time_created': datetime.strptime(json.loads(self.json)["modified_date"], '%Y-%m-%d %H:%M:%S.%f').isoformat(),
+                'name': self.display_name,
+                'type': self.message,
+                'is_curator_activity': True,
+                'data': json.loads(self.json)
+            }
+        else:
+            return {
+                'category': self.activity_category,
+                'created_by': self.created_by,
+                'href': href,
+                'date_created': self.date_created.strftime("%Y-%m-%d"),
+                'time_created': time_created,
+                'name': self.display_name,
+                'type': self.message,
+                'is_curator_activity': True,
+                'data': json.loads(self.json)
+            }
+
 
 class ColleagueKeyword(Base):
     __tablename__ = 'colleague_keyword'
