@@ -13,7 +13,6 @@ const GET_FILE_URL = '/get_file';
 const UPLOAD_TIMEOUT = 120000;
 //const DROP_DOWN_URL = '/file_curate_menus';
 
-
 class FileCurateUpdate extends Component {
   constructor(props){
     super(props);

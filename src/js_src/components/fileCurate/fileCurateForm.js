@@ -6,6 +6,7 @@ import Dropzone from 'react-dropzone';
 import style from '../style.css';
 import LoadingPage from '../../components/loadingPage';
 import PropTypes from 'prop-types';
+import moment from 'moment';
 //import fetchData from '../../lib/fetchData';
 //import {setError} from '../../actions/metaActions';
 //import Select from 'react-select';
@@ -16,10 +17,17 @@ class FileCurateForm extends Component{
     super(props);
     this.handleClear = this.handleClear.bind(this);
     this.renderFileDrop = this.renderFileDrop.bind(this);
+    this.handleDateChange = this.handleDateChange.bind(this);
+
     this.state = {
       files: [],
-      menus: undefined
+      menus: undefined,
+      date: moment().format('YYYY-MM-DD')
     };
+  }
+
+  handleDateChange(date){
+    this.setState({date:moment(date).format('YYYY-MM-DD')});
   }
 
   handleClear(){
@@ -36,6 +44,9 @@ class FileCurateForm extends Component{
       this.state.files.map( item => {
         data.append(item.name, item);
       });
+      if(this.state.date){
+        data.append('file_date', this.state.date);
+      }
       this.props.onFileUploadSubmit(data);
     }
   }
@@ -105,7 +116,7 @@ class FileCurateForm extends Component{
             <div className={'row'}>
               <div className={`columns small-6 ${style.dateComponent}`}>
                 <label htmlFor="dPicker"> File Date </label>
-                <FormDatePicker id="dPicker" /></div>
+                <FormDatePicker date={this.state.date} onDateChange={this.handleDateChange} id="dPicker" /></div>
               <div className={'columns small-6 small-offset-5'}>
               </div>
             </div>
@@ -175,7 +186,7 @@ class FileCurateForm extends Component{
             <div className={'row'}>
               <div className={`columns small-6 ${style.dateComponent}`}>
                 <label htmlFor="dPicker"> File Date </label>
-                <FormDatePicker id="dPicker" /></div>
+                <FormDatePicker date={this.state.date} onDateChange={this.handleDateChange} id="dPicker" /></div>
               <div className={'columns small-6 small-offset-5'}>
               </div>
             </div>
