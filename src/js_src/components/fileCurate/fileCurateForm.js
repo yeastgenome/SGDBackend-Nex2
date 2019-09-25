@@ -7,10 +7,7 @@ import style from '../style.css';
 import LoadingPage from '../../components/loadingPage';
 import PropTypes from 'prop-types';
 import moment from 'moment';
-//import fetchData from '../../lib/fetchData';
-//import {setError} from '../../actions/metaActions';
-//import Select from 'react-select';
-//const DROP_DOWN_URL = '/file_curate_menus';
+
 
 class FileCurateForm extends Component{
   constructor(props){

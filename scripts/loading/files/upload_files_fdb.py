@@ -233,8 +233,6 @@ def upload_file_obj_db_s3():
 
     except Exception as e:
         logging.error("Exception occurred", exc_info=True)
-        print(e)
-        #DBSession.rollback()
 
 
 def add_path_entries(file_name, file_path, src_id, uname):

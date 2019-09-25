@@ -421,9 +421,7 @@ def upload_file_obj_db_s3():
                             db_session.flush()
 
     except Exception as e:
-
         logging.error("Exception occurred", exc_info=True)
-        print(e)
 
 
 def upload_file_helper(CREATED_BY, remote_file, obj):
