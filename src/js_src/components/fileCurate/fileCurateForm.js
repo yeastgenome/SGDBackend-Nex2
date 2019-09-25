@@ -8,7 +8,6 @@ import LoadingPage from '../../components/loadingPage';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 
-
 class FileCurateForm extends Component{
   constructor(props){
     super(props);
