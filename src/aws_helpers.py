@@ -13,6 +13,9 @@ import subprocess
 import contextlib
 from multiprocessing.pool import ThreadPool
 import re
+from apply import apply
+import traceback
+from src.boto3_upload import boto3_multi_upload
 
 VOLUME_PATH = '/genomes'
 S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
@@ -132,7 +135,8 @@ def update_s3_readmefile(s3_urls, dbentity_id, sgdid, readme_name, s3_bucket):
             updated_s3_url = file_s3.generate_url(
                 expires_in=0, query_auth=False)
             obj["md5sum"] = local_md5sum
-            obj["s3_url"] = re.sub(r'\?.+', '', updated_s3_url).strip()
+            obj["s3_url"] = re.sub(
+                r'\?.+', '', updated_s3_url).replace(':433', '').strip()
             obj["sgdid"] = sgdid
             obj["readme_name"] = readme_name
             obj["dbentity_id"] = dbentity_id
@@ -167,8 +171,7 @@ def multi_part_upload_s3(file_path, bucket_name, s3_key_name=None, use_rr=True, 
 
     # get file size
     file_size_MB = os.path.getsize(file_path) / 1e6
-
-    if file_size_MB < 7000:
+    if file_size_MB < 5000:
         standard_s3_file_transfer(
             s3_bucket, s3_key_name, file_path, file_size_MB, use_rr)
 
@@ -217,11 +220,14 @@ def multipart_s3_file_transfer(bucket, s3_key_name, tarball, mb_size, use_rr=Tru
     # part file
     multi_part_file = bucket.initiate_multipart_upload(
         s3_key_name, reduced_redundancy=use_rr)
-    with multimap(cores) as pmap:
-        for _ in pmap(transfer_part, ((multi_part_file.id, multi_part_file.key_name, multi_part_file.bucket_name, i, part) for (i, part) in enumerate(split_file(tarball, mb_size, cores)))):
-            pass
+    try:
+        with multimap(cores) as pmap:
+            for _ in pmap(transfer_part, ((multi_part_file.id, multi_part_file.key_name, multi_part_file.bucket_name, i, part) for (i, part) in enumerate(split_file(tarball, mb_size, cores)))):
+                pass
 
-    multi_part_file.complete_upload()
+        multi_part_file.complete_upload()
+    except Exception as e:
+        print(traceback.format_exc())
 
 
 def map_wrap(f):
@@ -293,42 +299,40 @@ def simple_s3_upload(file_path, file_key_name, make_public=True, aws_s3_key=None
     cores = multiprocessing.cpu_count()
     conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
     bucket = conn.get_bucket(S3_BUCKET)
+    bucket_location = bucket.get_location()
+
+    if bucket_location:
     #bucket_name = s3.get_bucket(s3_bucket)
     #key_name = bucket_name.new_key(file_key_name)
-    mb_size = os.path.getsize(file_path) / 1e6
+        mb_size = os.path.getsize(file_path) / 1e6
+        if mb_size < 5000:
+            standard_s3_file_transfer(
+                bucket, file_key_name, file_path, mb_size, True)
 
-    if mb_size < 8000:
-        standard_s3_file_transfer(
-            bucket, file_key_name, file_path, mb_size, True)
+        else:
+            boto3_multi_upload(file_path, file_key_name)
+            '''mp = bucket.initiate_multipart_upload(
+                file_key_name, reduced_redundancy=True)
 
-    else:
-        mp = bucket.initiate_multipart_upload(
-            file_key_name, reduced_redundancy=True)
+            def split_file(in_file, mb_size, split_num=5):
+                prefix = os.path.join(os.path.dirname(in_file),
+                                    "%sS3PART" % (os.path.basename(file_key_name)))
+                split_size = int(min(mb_size / (split_num * 2.0), 250))
+                if not os.path.exists("%saa" % prefix):
+                    cl = ["split", "-b%sm" % split_size, in_file, prefix]
+                    subprocess.check_call(cl)
 
-        def split_file(in_file, mb_size, split_num=5):
-            prefix = os.path.join(os.path.dirname(in_file),
-                                  "%sS3PART" % (os.path.basename(file_key_name)))
-            split_size = int(min(mb_size / (split_num * 2.0), 250))
-            if not os.path.exists("%saa" % prefix):
-                cl = ["split", "-b%sm" % split_size, in_file, prefix]
-                subprocess.check_call(cl)
+                return sorted(glob("%s*" % prefix))
 
-            return sorted(glob("%s*" % prefix))
+            with multimap(cores) as pmap:
+                for _ in pmap(transfer_part, ((mp.id, mp.key_name, mp.bucket_name, i, part)for (i, part) in enumerate(split_file(file_path, mb_size, cores)))):
 
-        with multimap(cores) as pmap:
-            for _ in pmap(transfer_part,
-                          ((mp.id, mp.key_name, mp.bucket_name, i, part)
-                           for (i, part) in
-                           enumerate(split_file(file_path, mb_size, cores))
-                           )
-                          ):
+                    pass
 
-                pass
-
-        mp.complete_upload()
-    s3_key = bucket.get_key(file_key_name)
-    if make_public:
-        s3_key.set_acl("public-read")
+            mp.complete_upload()'''
+        s3_key = bucket.get_key(file_key_name)
+        if make_public:
+            s3_key.set_acl("public-read")
 
 
 def get_s3_url(name, sgdid):
@@ -339,7 +343,7 @@ def get_s3_url(name, sgdid):
     file_key = sgdid + "/" + name
     file_s3 = bucket.get_key(file_key)
     url = file_s3.generate_url(expires_in=0, query_auth=False)
-    url = re.sub(r'\?.+', '', url).strip()
+    url = re.sub(r'\?.+', '', url).replace(':433', '').strip()
     return url
 
 
