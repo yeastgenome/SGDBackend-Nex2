@@ -1261,30 +1261,31 @@ class CuratorActivity(Base):
         time_created = self.date_created.strftime("%Y-%m-%d")
         if self.dbentity_id != 1 or self.dbentity_id == None:
             if self.activity_category == 'download':
-                href = re.sub(r'\?.+', '', href).strip()
-            return {
-                'category': self.activity_category,
-                'created_by': self.created_by,
-                'href': href,
-                'date_created': self.date_created.strftime("%Y-%m-%d"),
-                'time_created': datetime.strptime(json.loads(self.json)["modified_date"], '%Y-%m-%d %H:%M:%S.%f').isoformat(),
-                'name': self.display_name,
-                'type': self.message,
-                'is_curator_activity': True,
-                'data': json.loads(self.json)
-            }
-        else:
-            return {
-                'category': self.activity_category,
-                'created_by': self.created_by,
-                'href': href,
-                'date_created': self.date_created.strftime("%Y-%m-%d"),
-                'time_created': time_created,
-                'name': self.display_name,
-                'type': self.message,
-                'is_curator_activity': True,
-                'data': json.loads(self.json)
-            }
+                href = re.sub(r'\?.+', '', href).replace(':433', '').strip()
+                return {
+                    'category': self.activity_category,
+                    'created_by': self.created_by,
+                    'href': href,
+                    'date_created': self.date_created.strftime("%Y-%m-%d"),
+                    'time_created': datetime.strptime(json.loads(self.json)["modified_date"], '%Y-%m-%d %H:%M:%S.%f').isoformat(),
+                    'name': self.display_name,
+                    'type': self.message,
+                    'is_curator_activity': True,
+                    'data': json.loads(self.json)
+
+                }
+       
+        return {
+            'category': self.activity_category,
+            'created_by': self.created_by,
+            'href': href,
+            'date_created': self.date_created.strftime("%Y-%m-%d"),
+            'time_created': time_created,
+            'name': self.display_name,
+            'type': self.message,
+            'is_curator_activity': True,
+            'data': json.loads(self.json)
+        }
 
 
 class ColleagueKeyword(Base):
@@ -2598,10 +2599,11 @@ class Filedbentity(Dbentity):
         mod_s3_url = ''
         readme_s3 = None
         if self.s3_url:
-            mod_s3_url = re.sub(r'\?.+', '', self.s3_url).strip()
+            mod_s3_url = re.sub(
+                r'\?.+', '', self.s3_url).replace(':433', '').strip()
         
         if self.readme_file:
-            readme_s3 = re.sub(r'\?.+', '', self.readme_file.s3_url).strip()
+            readme_s3 = re.sub(r'\?.+', '', self.readme_file.s3_url).replace(':433', '').strip()
 
         obj = {
             "id":
@@ -2639,9 +2641,9 @@ class Filedbentity(Dbentity):
         s3_url = ''
         
         if self.s3_url:
-            s3_url = re.sub(r'\?.+', '', self.s3_url).strip()
+            s3_url = re.sub(r'\?.+', '', self.s3_url).replace(':433', '').strip()
         if self.readme_file:
-            readme_s3 = re.sub(r'\?.+', '', self.readme_file.s3_url).strip()
+            readme_s3 = re.sub(r'\?.+', '', self.readme_file.s3_url).replace(':433', '').strip()
 
         obj = {
             "id":
@@ -2667,7 +2669,7 @@ class Filedbentity(Dbentity):
         }
         return obj
 
-    def upload_file_to_s3(self, file, filename, file_path=None):
+    def upload_file_to_s3(self, file, filename, is_web_file=False, file_path=None, flag=True):
         """ uploads files to s3 
         
         Notes
@@ -2680,26 +2682,34 @@ class Filedbentity(Dbentity):
         try:
             # get s3_url and upload
             s3_path = self.sgdid + '/' + filename
-            conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-            bucket = conn.get_bucket(S3_BUCKET)
-            k = Key(bucket)
-            k.key = s3_path
             if file_path:
                 new_s3_file = simple_s3_upload(file_path, s3_path, True)
+                conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
+                bucket = conn.get_bucket(S3_BUCKET)
+                k = Key(bucket)
+                k.key = s3_path
                 file_s3 = bucket.get_key(k.key)
                 etag_md5_s3 = file_s3.etag.strip('"').strip("'")
                 file.seek(0)
                 mod_s3_url = file_s3.generate_url(
-                    expires_in=0, query_auth=False)                
-                self.md5sum = etag_md5_s3
+                    expires_in=0, query_auth=False)
+                # multipart upload adds parts to 32 bit string making it break db constraint
+                # e.g: "md5sumgibberish-1000"
+                if "-" in etag_md5_s3:
+                    self.md5sum = etag_md5_s3.split('-')[0]
+                else:
+                    self.md5sum = etag_md5_s3
                 # get file size
                 file.seek(0, os.SEEK_END)
                 file_size = file.tell()
                 file.seek(0)
                 self.file_size = file_size
-                self.s3_url = re.sub(r'\?.+', '', mod_s3_url).strip()
-                transaction.commit()
-
+                self.s3_url = re.sub(r'\?.+', '', mod_s3_url).replace(':433', '').strip()
+                #TODO: Remove this after optimization of querries
+                if flag:
+                    # multiplte commits are fluching pending transactions
+                    transaction.commit()
+    
             else:
                 conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
                 bucket = conn.get_bucket(S3_BUCKET)
@@ -2719,11 +2729,10 @@ class Filedbentity(Dbentity):
                 file.seek(0)
                 for chunk in iter(lambda: file.read(4096), b""):
                     hash_md5.update(chunk)
-
                 local_md5sum = hash_md5.hexdigest()
                 file.seek(0)
 
-                if self.md5sum != local_md5sum:
+                if self.md5sum != local_md5sum or is_web_file:
                     self.md5sum = local_md5sum
                     # get file size
                     file.seek(0, os.SEEK_END)
@@ -2732,7 +2741,8 @@ class Filedbentity(Dbentity):
                     self.file_size = file_size
                     mod_s3_url = file_s3.generate_url(
                         expires_in=0, query_auth=False)
-                    self.s3_url = re.sub(r'\?.+', '', mod_s3_url).strip()
+                    self.s3_url = re.sub(
+                        r'\?.+', '', mod_s3_url).replace(':433', '').strip()
                     logging.info("Added file to s3")
                     return True
                 return False

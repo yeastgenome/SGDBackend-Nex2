@@ -20,7 +20,7 @@ import pandas as pd
 from src.aws_helpers import get_zip_files, get_sra_files, get_readme_files, get_file_from_path_collection, multi_part_upload_s3, simple_s3_upload
 
 engine = create_engine(os.environ["NEX2_URI"], pool_recycle=3600)
-DBSession.configure(bind=engine)
+DBSession.configure(bind=engine, autoflush=False)
 Base.metadata.bind = engine
 
 NEX2_URI = os.environ.get('NEX2_URI')
@@ -32,10 +32,11 @@ LOCAL_FILE_DIRECTORY = os.environ.get('LOCAL_FILE_DIRECTORY')
 S3_BUCKET = os.environ['S3_BUCKET']
 S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
 S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
+MISSING_FILES = os.environ.get('MISSING_FILES', None)
 
 log_filename = os.environ.get("SCRIPT_LOG_FILE")
 os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-handler = logging.handlers.WatchedFileHandler(os.environ.get(log_filename, "../../../logs/sgd_backend_script.log"), mode="w")
+handler = logging.handlers.WatchedFileHandler(os.environ.get("SCRIPT_LOG_FILE", "../../../logs/sgd_backend_script.log"), mode="w")
 formatter = logging.Formatter(logging.BASIC_FORMAT)
 handler.setFormatter(formatter)
 root = logging.getLogger()
@@ -46,6 +47,9 @@ root.addHandler(handler)
 def file_upload_to_obj():
     """ convert excel to list of objects """
 
+    temp_missing_files = []
+    if MISSING_FILES:
+        temp_missing_files = MISSING_FILES.split(',')
     temp = []
     file_content = pd.read_excel(INPUT_FILE_NAME).fillna(0).to_dict('records')
     sorted_content = sorted(file_content, key=itemgetter(
@@ -87,7 +91,11 @@ def file_upload_to_obj():
             'full_file_path': f_path,
             'new_path': f_path
         }
-        temp.append(obj)
+        if len(temp_missing_files) > 0:
+            if obj['display_name'] in temp_missing_files:
+                temp.append(obj)
+        else:
+            temp.append(obj)
 
     if len(temp) > 0:
         return temp
@@ -215,7 +223,7 @@ def upload_file_obj_db_s3():
                                 Filedbentity.display_name == item['display_name']).one_or_none()
                             # only upload s3 file if not defined
                             existing_file_meta_data.upload_file_to_s3(
-                                remote_file, item['display_name'], temp_file_path)
+                                file=remote_file, filename=item['display_name'], file_path=temp_file_path, flag=False)
 
                 add_path_entries(item['display_name'],
                                  item['new_path'], SGD_SOURCE_ID, CREATED_BY)
