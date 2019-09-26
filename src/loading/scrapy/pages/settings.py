@@ -13,6 +13,7 @@ BOT_NAME = 'pages'
 
 SPIDER_MODULES = ['pages.spiders']
 NEWSPIDER_MODULE = 'pages.spiders'
+DOWNLOAD_HANDLERS = {'s3': None, }
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
