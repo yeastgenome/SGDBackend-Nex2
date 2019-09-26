@@ -231,7 +231,7 @@ def load_csv_filedbentities():
 
             ### added by Shuai
             if len(val) < 14:
-                print val
+                print (val)
                 return
             ###
             raw_date = val[13]
