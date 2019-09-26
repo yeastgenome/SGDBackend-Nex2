@@ -1259,7 +1259,7 @@ class CuratorActivity(Base):
     def to_dict(self):
         href = self.obj_url
         time_created = self.date_created.strftime("%Y-%m-%d")
-        if self.dbentity_id:
+        if self.dbentity_id != 1 or self.dbentity_id == None:
             if self.activity_category == 'download':
                 href = re.sub(r'\?.+', '', href).strip()
             return {
