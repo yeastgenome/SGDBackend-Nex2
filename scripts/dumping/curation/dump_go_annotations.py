@@ -13,7 +13,7 @@ from urllib.request import urlretrieve
 from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
                        Go, Ro, EcoAlias, Source, Goannotation, Goextension, \
                        Gosupportingevidence, LocusAlias, Edam, Path, FilePath, \
-                       Filedbentity, ReferenceAlias
+                       Filedbentity, ReferenceAlias, Dnasequenceannotation, So
 from scripts.loading.database_session import get_session
 from src.helpers import upload_file
 
@@ -38,6 +38,18 @@ namespace_to_code = { "biological process": 'P',
                       "molecular function": 'F',
                       "cellular component": 'C' }
 
+so_to_col12 = { "ORF": "protein",
+                "transposable element gene": "protein",
+                "blocked reading frame": "protein",
+                "disabled reading frame": "protein",
+                "pseudogene": "protein",
+                "ncRNA gene": "ncRNA",
+                "snoRNA gene": "snoRNA",
+                "snRNA gene": "snRNA",
+                "tRNA gene": "tRNA",
+                "rRNA gene": "rRNA",
+                "telomerase RNA gene": "telomerase_RNA" }
+                
 DBID = 0
 NAME = 1
 QUALIFIER = 2
@@ -61,7 +73,6 @@ EMAIL = 'sgd-helpdesk@lists.stanford.edu'
 FUNDING = 'NHGRI at US NIH, grant number U41 HG001315'
 DB = 'SGD'
 TAXON_ID = '559292'
-NAME_TYPE = 'gene'
 
 def dump_data():
  
@@ -87,6 +98,9 @@ def dump_data():
     id_to_ro = dict([(x.ro_id, x.display_name) for x in nex_session.query(Ro).all()])
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     id_to_go_ref = dict([(x.reference_id, x.display_name) for x in nex_session.query(ReferenceAlias).filter(ReferenceAlias.display_name.like('GO_REF:%')).all()])
+    so_id_to_term = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
+    S288C_row = nex_session.query(Taxonomy).filter_by(format_name = 'Saccharomyces_cerevisiae_S288c').one_or_none()
+    S288C_taxonomy_id = S288C_row.taxonomy_id
 
     id_to_eco = {}
     for x in nex_session.query(EcoAlias).all():
@@ -102,6 +116,16 @@ def dump_data():
         else:
             alias_list = x.display_name
         id_to_alias_list[x.locus_id] = alias_list
+
+    locus_id_to_col12 = {}
+    for x in nex_session.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC').all():
+        so_term = so_id_to_term[x.so_id]
+        col12 = so_to_col12.get(so_term)
+        if col12 is not None:
+            if x.dbentity_id not in locus_id_to_col12:
+                locus_id_to_col12[x.dbentity_id] = col12
+            elif col12 != locus_id_to_col12[x.dbentity_id] and x.taxonomy_id == S288C_taxonomy_id:
+                locus_id_to_col12[x.dbentity_id] = col12
 
     annotation_id_to_extensions = {}
     group_id_to_extensions = {}
@@ -138,6 +162,10 @@ def dump_data():
         row = [None] * (LAST_FIELD+1)
 
         (feature_name, gene_name, headline, qualifier) = id_to_gene[x.dbentity_id]
+        name_type = locus_id_to_col12.get(x.dbentity_id)
+        if name_type is None:
+            print ("ERROR: No name_type found for dbentity_id=", x.dbentity_id)
+            continue
 
         # if qualifier == 'Dubious':
         #    continue
@@ -190,7 +218,7 @@ def dump_data():
             date_created = x.date_assigned
         row[DATE] = str(date_created).split(' ')[0].replace("-", "")
         row[TAXON] = "taxon:" + TAXON_ID
-        row[TAG] = NAME_TYPE
+        row[TAG] = name_type
 
         all_support_evidences = {"1": []}
         if x.annotation_id in annotation_id_to_evidences:
