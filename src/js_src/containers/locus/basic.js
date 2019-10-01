@@ -37,6 +37,10 @@ class LocusBasic extends Component {
   }
 
   handleSuccess(data) {
+    var headline = data.basic.headline;
+    let el = document.getElementsByClassName('field-headline')[0];
+    el.innerHTML = `<label>Headline</label>${headline}`;
+
     this.props.dispatch(updateData(data));
     this.props.dispatch(setMessage('Locus updated.'));
   }
