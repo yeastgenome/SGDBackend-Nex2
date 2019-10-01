@@ -76,7 +76,7 @@ class LocusBasic extends Component {
       name_description: t.maybe(t.String),
       name_description_pmids : t.maybe(t.String),
       aliases: t.list(Alias),
-      feature_type: t.maybe(t.enums.of(['blocked_reading_frame', 'long_terminal_repeat', 'gene_group', 'LTR_retrotransposon', 'origin_of_replication', 'ARS', 'intein_encoding_region', 'transposable_element_gene', 'centromere', 'disabled_reading_frame', 'ncRNA_gene', 'pseudogene', 'matrix_attachment_site', 'ORF', 'centromere_DNA_Element_I', 'centromere_DNA_Element_III', 'tRNA_gene', 'snoRNA_gene', 'rRNA_gene', 'centromere_DNA_Element_II', 'silent_mating_type_cassette_array', 'snRNA_gene', 'telomerase_RNA_gene', 'mating_type_region', 'telomere'])),
+      feature_type: t.maybe(t.enums.of(['blocked reading frame', 'long terminal repeat', 'gene group', 'LTR retrotransposon', 'origin of replication', 'ARS', 'intein encoding region', 'transposable element gene', 'centromere', 'disabled reading frame', 'ncRNA gene', 'pseudogene', 'matrix attachment site', 'ORF', 'centromere DNA Element I', 'centromere DNA Element III', 'tRNA gene', 'snoRNA gene', 'rRNA gene', 'centromere DNA Element II', 'silent mating type cassette array', 'snRNA gene', 'telomerase RNA gene', 'mating type region', 'telomere'])),
       qualifier: t.maybe(Qualifier),
       description: t.maybe(t.String),
       headline: t.maybe(t.String),
