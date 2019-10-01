@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 .pytest*
+.autogit
+.autogit/
 
 # C extensions
 *.so
@@ -107,6 +109,7 @@ index_*.png
 *.env
 src/Untitled*
 dev_variables*
-.pytest_cache/*
+.pytest_cache
+pytest_cache/
 test/default_T_dev.py
 users.txt
