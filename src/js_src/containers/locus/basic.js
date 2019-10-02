@@ -76,7 +76,7 @@ class LocusBasic extends Component {
       name_description: t.maybe(t.String),
       name_description_pmids : t.maybe(t.String),
       aliases: t.list(Alias),
-      feature_type: t.maybe(t.enums.of(['blocked reading frame', 'long terminal repeat', 'gene group', 'LTR retrotransposon', 'origin of replication', 'ARS', 'intein encoding region', 'transposable element gene', 'centromere', 'disabled reading frame', 'ncRNA gene', 'pseudogene', 'matrix attachment site', 'ORF', 'centromere DNA Element I', 'centromere DNA Element III', 'tRNA gene', 'snoRNA gene', 'rRNA gene', 'centromere DNA Element II', 'silent mating type cassette array', 'snRNA gene', 'telomerase RNA gene', 'mating type region', 'telomere'])),
+      feature_type: t.maybe(t.enums.of(['ARS','LTR retrotransposon','ORF','blocked reading frame','centromere','disabled reading frame','gene group','intein encoding region','long terminal repeat','mating type region', 'matrix attachment site','ncRNA gene','origin of replication','pseudogene','rRNA gene','silent mating type cassette array','snRNA gene','snoRNA gene','tRNA gene','telomerase RNA gene','telomere','transposable element gene'])),
       qualifier: t.maybe(Qualifier),
       description: t.maybe(t.String),
       headline: t.maybe(t.String),
