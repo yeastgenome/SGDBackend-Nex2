@@ -311,6 +311,7 @@ def simple_s3_upload(file_path, file_key_name, make_public=True, aws_s3_key=None
 
         else:
             boto3_multi_upload(file_path, file_key_name)
+            #TODO: Add multi-core threading in boto3_multi_upload using below in nexr release
             '''mp = bucket.initiate_multipart_upload(
                 file_key_name, reduced_redundancy=True)
 
