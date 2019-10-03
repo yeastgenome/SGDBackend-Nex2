@@ -2472,7 +2472,7 @@ class Referencedbentity(Dbentity):
                 activity_category = 'reference',
                 dbentity_id = self.dbentity_id,
                 message = message,
-                json = json.dumps({ 'tags': tags_obj, 'modified_date':str(datetime.datetime.now())}),
+                json = json.dumps({ 'tags': tags_obj, 'modified_date':str(datetime.now())}),
                 created_by = username
             )
             curator_session.add(new_curate_activity)
@@ -5114,7 +5114,7 @@ class Locusdbentity(Dbentity):
                     activity_category = 'locus',
                     dbentity_id = self.dbentity_id,
                     message = 'updated locus information',
-                    json = json.dumps({ 'keys': update_dict, 'modified_date': str(datetime.datetime.now())}),
+                    json = json.dumps({ 'keys': update_dict, 'modified_date': str(datetime.now())}),
                     created_by = username
                 )
                 curator_session.add(new_curate_activity)
@@ -5176,7 +5176,7 @@ class Locusdbentity(Dbentity):
                 activity_category = 'locus',
                 dbentity_id = self.dbentity_id,
                 message = 'updated  ' + summary_type + ' summary',
-                json = json.dumps({ 'keys': { 'summary': text },'modified_date': str(datetime.datetime.now()) }),
+                json = json.dumps({ 'keys': { 'summary': text },'modified_date': str(datetime.now()) }),
                 created_by = username
             )
             curator_session.add(new_curate_activity)
@@ -10063,7 +10063,7 @@ class Reservedname(Base):
                 activity_category = 'locus',
                 dbentity_id = locus.dbentity_id,
                 message = 'standardized gene name',
-                json = json.dumps({ 'keys': { 'gene_name': self.display_name }, 'modified_date': str(datetime.datetime.now())}),
+                json = json.dumps({ 'keys': { 'gene_name': self.display_name }, 'modified_date': str(datetime.now())}),
                 created_by = username
             )
             curator_session.add(new_curate_activity)
@@ -10310,7 +10310,7 @@ class ReservednameTriage(Base):
                 display_name = new_res.display_name,
                 obj_url = new_res.obj_url,
                 activity_category = 'reserved_name',
-                json = json.dumps({'summary text': new_res.description , 'modified_date':str(datetime.datetime.now())}),
+                json = json.dumps({'summary text': new_res.description , 'modified_date':str(datetime.now())}),
                 message = 'gene name reservation added',
                 created_by = username
             )
