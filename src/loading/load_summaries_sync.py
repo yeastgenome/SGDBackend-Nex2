@@ -218,7 +218,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
                     'display_name': gene.format_name,
                     'obj_url': preview_url,
                     'activity_category': summary.summary_type,
-                    'json': json.dumps({ 'summary_data': item}),
+                    'json': json.dumps({'summary_data': item, 'modified_date': str(datetime.datetime.now())}),
                     'created_by': username,
                     'dbentity_id': gene.dbentity_id
                 }
