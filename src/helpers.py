@@ -862,6 +862,7 @@ def upload_new_file(req_obj, session=None):
                     existing_readme_meta = get_existing_meta_data(
                         req_obj['displayName'], curator_session)
                     keywords = re.split(',|\|', req_obj['keywords'])
+
                     if existing_readme_meta:
                         existing_readme_meta.display_name = req_obj['displayName']
                         existing_readme_meta.description = req_obj['description']
@@ -872,8 +873,12 @@ def upload_new_file(req_obj, session=None):
                         existing_readme_meta.file_date = datetime.datetime.strptime(
                             req_obj['file_date'], '%Y-%m-%d')
                         readme_file_id = existing_readme_meta.dbentity_id
-                        existing_readme_meta.upload_file_to_s3(
-                            val, req_obj['displayName'])
+                        if existing_readme_meta.s3_url is None:
+                            existing_readme_meta.upload_file_to_s3(
+                                file=val, filename=req_obj['displayName'], is_web_file=True)
+                        else:
+                            existing_readme_meta.upload_file_to_s3(
+                                val, req_obj['displayName'])
                         add_keywords(req_obj['displayName'],
                                      keywords, req_obj['source_id'], username, curator_session)
                         update_obj = {
