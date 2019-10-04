@@ -1258,9 +1258,10 @@ class CuratorActivity(Base):
 
     def to_dict(self):
         href = self.obj_url
-        time_created = self.date_created.strftime("%Y-%m-%d")
+        time_created = ''
         if self.dbentity_id != 1 or self.dbentity_id == None:
-            if self.activity_category == 'download':
+            is_mod_date = json.loads(self.json).get('modified_date', None)
+            if is_mod_date: #self.activity_category == 'download':
                 href = re.sub(r'\?.+', '', href).replace(':433', '').strip()
                 return {
                     'category': self.activity_category,
@@ -2471,7 +2472,7 @@ class Referencedbentity(Dbentity):
                 activity_category = 'reference',
                 dbentity_id = self.dbentity_id,
                 message = message,
-                json = json.dumps({ 'tags': tags_obj }),
+                json = json.dumps({ 'tags': tags_obj, 'modified_date':str(datetime.now())}),
                 created_by = username
             )
             curator_session.add(new_curate_activity)
@@ -5113,7 +5114,7 @@ class Locusdbentity(Dbentity):
                     activity_category = 'locus',
                     dbentity_id = self.dbentity_id,
                     message = 'updated locus information',
-                    json = json.dumps({ 'keys': update_dict }),
+                    json = json.dumps({ 'keys': update_dict, 'modified_date': str(datetime.now())}),
                     created_by = username
                 )
                 curator_session.add(new_curate_activity)
@@ -5175,7 +5176,7 @@ class Locusdbentity(Dbentity):
                 activity_category = 'locus',
                 dbentity_id = self.dbentity_id,
                 message = 'updated  ' + summary_type + ' summary',
-                json = json.dumps({ 'keys': { 'summary': text } }),
+                json = json.dumps({ 'keys': { 'summary': text },'modified_date': str(datetime.now()) }),
                 created_by = username
             )
             curator_session.add(new_curate_activity)
@@ -10062,7 +10063,7 @@ class Reservedname(Base):
                 activity_category = 'locus',
                 dbentity_id = locus.dbentity_id,
                 message = 'standardized gene name',
-                json = json.dumps({ 'keys': { 'gene_name': self.display_name } }),
+                json = json.dumps({ 'keys': { 'gene_name': self.display_name }, 'modified_date': str(datetime.now())}),
                 created_by = username
             )
             curator_session.add(new_curate_activity)
@@ -10309,7 +10310,7 @@ class ReservednameTriage(Base):
                 display_name = new_res.display_name,
                 obj_url = new_res.obj_url,
                 activity_category = 'reserved_name',
-                json = json.dumps({}),
+                json = json.dumps({'summary text': new_res.description , 'modified_date':str(datetime.now())}),
                 message = 'gene name reservation added',
                 created_by = username
             )
