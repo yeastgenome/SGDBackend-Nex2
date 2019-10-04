@@ -1258,7 +1258,7 @@ class CuratorActivity(Base):
 
     def to_dict(self):
         href = self.obj_url
-        time_created = ''#self.date_created.strftime("%Y-%m-%d")
+        time_created = ''
         if self.dbentity_id != 1 or self.dbentity_id == None:
             is_mod_date = json.loads(self.json).get('modified_date', None)
             if is_mod_date: #self.activity_category == 'download':
