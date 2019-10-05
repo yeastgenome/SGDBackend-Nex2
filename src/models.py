@@ -1670,6 +1670,7 @@ class CurationReference(Base):
         'go': 'GO information',
         'classical_phenotype': 'Classical phenotype information',
         'headline_information': 'Headline information',
+        'other_primary': 'Other Primary Information',
         'gene_model': 'Gene model',
         'headline_needs_review': 'Headline needs review',
         'htp_phenotype': 'HTP phenotype',
@@ -2357,7 +2358,7 @@ class Referencedbentity(Dbentity):
             # Don't append to tags if primary and already in tags.
             gene_is_tagged_primary_internal = False
             for tag in tags:
-                is_primary = tag['name'] in ['go', 'classical_phenotype', 'headline_information']
+                is_primary = tag['name'] in ['go', 'classical_phenotype', 'headline_information', 'other_primary']
                 if tag['locus_name'] == locus_name and is_primary:
                     gene_is_tagged_primary_internal = True
                     break
