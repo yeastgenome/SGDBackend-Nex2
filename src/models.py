@@ -1670,7 +1670,6 @@ class CurationReference(Base):
         'go': 'GO information',
         'classical_phenotype': 'Classical phenotype information',
         'headline_information': 'Headline information',
-        'other_primary': 'Other primary information',
         'gene_model': 'Gene model',
         'headline_needs_review': 'Headline needs review',
         'htp_phenotype': 'HTP phenotype',
