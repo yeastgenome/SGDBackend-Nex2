@@ -31,7 +31,7 @@ export const allTags = [
   },
   {
     name: 'other_primary',
-    label: 'Other Primary Information (Primary Literature)',
+    label: 'Other primary information (Primary Literature)',
     hasGenes: true,
     inTriage: true,
     noComments: true
