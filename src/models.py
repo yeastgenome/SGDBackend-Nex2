@@ -2346,23 +2346,26 @@ class Referencedbentity(Dbentity):
             locus = x.Locusdbentity
             if locus:
                 locus_name = locus.get_name()
-            obj = {
-                'name': x.Literatureannotation.get_name(),
-                'locus_name': locus_name,
-                'comment': None
-            }
-            # ignore omics tags bc already have internal
-            if obj['name'] in ['non_phenotype_htp', 'htp_phenotype']:
+
+            name = x.Literatureannotation.get_name()
+            # ignore omics tags bc already have internal   
+            if name in ['non_phenotype_htp', 'htp_phenotype']:
                 continue
-            # Don't append to tags if primary and already in tags.
-            gene_is_tagged_primary_internal = False
-            for tag in tags:
-                is_primary = tag['name'] in ['other_primary', 'go', 'classical_phenotype', 'headline_information']
-                if tag['locus_name'] == locus_name and is_primary:
-                    gene_is_tagged_primary_internal = True
-                    break
-            if not gene_is_tagged_primary_internal:
-                tags.append(obj)
+            # Don't append to tags if it is a primary and already in tags.  
+            if name in ['other_primary', 'go', 'classical_phenotype', 'headline_information']:
+                found = 0
+                for tag in tags:
+                    if tag['name'] in ['go', 'classical_phenotype', 'headline_information']:
+                        found = 1
+                        break
+                if found == 0:
+                    # it is a other_primary tag since it is not one of ['go', 'classical_phenotype', 'headline_information']
+                    tags.append(
+                        { 'name':  'other_primary',
+                          'locus_name': locus_name,
+                          'comment': None
+                    })
+
         tag_list = []
         for k, g in groupby(tags, lambda x: x['name']):
             g_tags = list(g)
