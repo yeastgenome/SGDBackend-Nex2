@@ -2357,7 +2357,7 @@ class Referencedbentity(Dbentity):
                 for tag in tags:
                     if tag['name'] in ['go', 'classical_phenotype', 'headline_information']:
                         found = 1
-                        continue
+                        break
                 if found == 0:
                     # it is a other_primary tag since it is not one of ['go', 'classical_phenotype', 'headline_information']
                     tags.append(
