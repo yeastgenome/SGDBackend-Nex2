@@ -2355,7 +2355,7 @@ class Referencedbentity(Dbentity):
             if name in ['other_primary', 'go', 'classical_phenotype', 'headline_information']:
                 found = 0
                 for tag in tags:
-                    if tag['name'] in ['go', 'classical_phenotype', 'headline_information']:
+                    if tag['name'] in ['go', 'classical_phenotype', 'headline_information'] and tag['locus_name'] == locus_name:
                         found = 1
                         break
                 if found == 0:
