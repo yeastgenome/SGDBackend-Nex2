@@ -2365,6 +2365,13 @@ class Referencedbentity(Dbentity):
                           'locus_name': locus_name,
                           'comment': None
                     })
+            else:
+                tags.append(
+                    { 'name':  name,
+                      'locus_name': locus_name,
+                      'comment': None
+                    })
+
 
         tag_list = []
         for k, g in groupby(tags, lambda x: x['name']):
