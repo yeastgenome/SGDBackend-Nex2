@@ -1260,33 +1260,33 @@ class CuratorActivity(Base):
         href = self.obj_url
         time_created = ''
         if self.dbentity_id != 1 or self.dbentity_id == None:
-            if self.activity_category == 'download':
-                href = re.sub(r'\?.+', '', href).strip()
-            if("modified_date" in self.json):
-                time_created = datetime.strptime(json.loads(self.json)["modified_date"], '%Y-%m-%d %H:%M:%S.%f').isoformat()
-            return {
-                'category': self.activity_category,
-                'created_by': self.created_by,
-                'href': href,
-                'date_created': self.date_created.strftime("%Y-%m-%d"),
-                'time_created': time_created,
-                'name': self.display_name,
-                'type': self.message,
-                'is_curator_activity': True,
-                'data': json.loads(self.json)
-            }
-        else:
-            return {
-                'category': self.activity_category,
-                'created_by': self.created_by,
-                'href': href,
-                'date_created': self.date_created.strftime("%Y-%m-%d"),
-                'time_created': time_created,
-                'name': self.display_name,
-                'type': self.message,
-                'is_curator_activity': True,
-                'data': json.loads(self.json)
-            }
+            is_mod_date = json.loads(self.json).get('modified_date', None)
+            if is_mod_date: #self.activity_category == 'download':
+                href = re.sub(r'\?.+', '', href).replace(':433', '').strip()
+                return {
+                    'category': self.activity_category,
+                    'created_by': self.created_by,
+                    'href': href,
+                    'date_created': self.date_created.strftime("%Y-%m-%d"),
+                    'time_created': datetime.strptime(json.loads(self.json)["modified_date"], '%Y-%m-%d %H:%M:%S.%f').isoformat(),
+                    'name': self.display_name,
+                    'type': self.message,
+                    'is_curator_activity': True,
+                    'data': json.loads(self.json)
+
+                }
+       
+        return {
+            'category': self.activity_category,
+            'created_by': self.created_by,
+            'href': href,
+            'date_created': self.date_created.strftime("%Y-%m-%d"),
+            'time_created': time_created,
+            'name': self.display_name,
+            'type': self.message,
+            'is_curator_activity': True,
+            'data': json.loads(self.json)
+        }
 
 
 class ColleagueKeyword(Base):
