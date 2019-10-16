@@ -81,7 +81,7 @@ class LocusBasic extends Component {
       description: t.maybe(t.String),
       headline: t.maybe(t.String),
       description_pmids: t.maybe(t.String),
-      ncbi_protein_name: t.maybe(t.String)
+      // ncbi_protein_name: t.maybe(t.String)
     });
     let aliasLayout = locals => {
       return (
