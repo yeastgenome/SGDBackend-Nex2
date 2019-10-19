@@ -58,6 +58,7 @@ class LocusBasic extends Component {
     let data = this.props.data;
     if (!data || this.props.isPending) return <Loader />;
     let Alias = t.struct({
+      alias_id:t.maybe(t.Number),
       alias: t.String,
       pmids: t.maybe(t.String),
       type: t.enums.of([
@@ -87,6 +88,7 @@ class LocusBasic extends Component {
       return (
         <div className='row'>
           {this.renderAliasWarning()}
+          <div className='columns small-2 hide'>{locals.inputs.alias_id}</div>
           <div className='columns small-2'>{locals.inputs.alias}</div>
           <div className='columns small-3'>{locals.inputs.type}</div>
           <div className='columns small-5'>{locals.inputs.pmids}</div>
@@ -118,6 +120,9 @@ class LocusBasic extends Component {
           item: {
             template: aliasLayout,
             fields: {
+              alias_id:{
+                label:'ID'
+              },
               pmids: {
                 label: 'PMIDS'
               }
