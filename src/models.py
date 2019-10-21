@@ -5092,9 +5092,12 @@ class Locusdbentity(Dbentity):
                         for alias in old_aliases:
                             if alias['alias_id'] not in new_ids:
                                 alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                note = '<b>Name:</b> '+alias['alias']
+                                aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
+                                curator_session.query(LocusnoteReference).filter(LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
                                 curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == alias['alias_id']).delete(synchronize_session=False)
                                 curator_session.delete(alias_in_db)
-
+                        
                         curator_session.flush()
 
                         #TODO: Work on add/updating alias,aliasreference,notes
