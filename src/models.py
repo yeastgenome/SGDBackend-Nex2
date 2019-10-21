@@ -5137,16 +5137,17 @@ class Locusdbentity(Dbentity):
 
                             #Update exisiting LocusAlias, LocusAliasReference, Locusnote, Locusnote_reference
                             elif alias['alias_id'] in existing_ids:
+                                    note = '<b>Name:</b> '+existing_aliases_dict[alias['alias_id']]['alias']
+                                    alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                    aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==self.dbentity_id,Locusnote.note == note)).one_or_none()
                                     #Only check for alias and type
                                     if alias['alias'] != existing_aliases_dict[alias['alias_id']]['alias'] or alias['type'] != existing_aliases_dict[alias['alias_id']]['type']:
-                                        alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
-                                        note = '<b>Name:</b> '+alias_in_db.display_name
                                         alias_in_db.display_name = alias['alias']
                                         alias_in_db.alias_type = alias['type']
                                         
-                                        aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
-                                        note = '<b>Name:</b> '+alias['alias']
-                                        aliasnote_in_db.note = note
+                                        if aliasnote_in_db:    
+                                            note = '<b>Name:</b> '+alias['alias']
+                                            aliasnote_in_db.note = note
                                     
                                     #Check if pmids are add or deleted
                                     existing_pmids = convert_space_separated_pmids_to_list(existing_aliases_dict[alias['alias_id']]['pmids'])
@@ -5159,11 +5160,23 @@ class Locusdbentity(Dbentity):
                                                                                        reference_id = new_ref_id,
                                                                                        source_id = SGD_SOURCE_ID,
                                                                                        created_by = username)
+                                            if aliasnote_in_db:    
+                                                new_locus_note_ref = LocusnoteReference(note_id = aliasnote_in_db.note_id,
+                                                                                        reference_id = new_ref_id,
+                                                                                        source_id = SGD_SOURCE_ID,
+                                                                                        created_by = username)
+                                                curator_session.add(new_locus_note_ref)    
                                             curator_session.add(new_locus_alias_ref)
                                     for old in existing_pmids:
                                         if old not in new_pmids:
                                             old_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
                                             old_locus_alias_ref = curator_session.query(LocusAliasReferences).filter(and_(LocusAliasReferences.alias_id==alias_in_db.alias_id,LocusAliasReferences.reference_id==old_ref_id)).one_or_none()
+                                            
+                                            if aliasnote_in_db:
+                                                #delete any locus note reference 
+                                                old_locus_note_ref = curator_session.query(LocusnoteReference).filter(and_(LocusnoteReference.note_id==aliasnote_in_db.note_id,LocusnoteReference.reference_id==old_ref_id)).one_or_none()
+                                                curator_session.delete(old_locus_note_ref)
+                                            
                                             curator_session.delete(old_locus_alias_ref)
 
                         # old_aliases = curator_session.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).all()
