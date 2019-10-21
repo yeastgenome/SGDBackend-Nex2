@@ -5112,13 +5112,23 @@ class Locusdbentity(Dbentity):
 
                                 int_pmids = convert_space_separated_pmids_to_list(alias['pmids'])
                                 
+                                #Add Locusnote
+                                note = '<b>Name:</b> '+alias['alias']
+                                locusnote = Locusnote(source_id = SGD_SOURCE_ID,locus_id = self.dbentity_id,note_class = 'Locus',
+                                                      note_type = 'Name',note = note,created_by = username)
+                                curator_session.add(locusnote)
+                                curator_session.flush()
+
                                 for p in int_pmids:
                                     new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
                                     new_locus_alias_ref = LocusAliasReferences(alias_id = new_alias.alias_id,
                                                                                reference_id = new_ref_id,
                                                                                source_id = SGD_SOURCE_ID,
                                                                                created_by = username)
+                                    #Add LocusnoteReference
+                                    new_locus_note_ref = LocusnoteReference(note_id = locusnote.note_id,reference_id = new_ref_id,source_id = SGD_SOURCE_ID,created_by = username)
                                     curator_session.add(new_locus_alias_ref)
+                                    curator_session.add(new_locus_note_ref)
 
                             elif alias['alias_id'] in existing_ids:
                                     if alias['alias'] != existing_aliases_dict[alias['alias_id']] or alias['alias'] != existing_aliases_dict[alias['alias_id']]:
