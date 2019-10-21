@@ -5094,7 +5094,8 @@ class Locusdbentity(Dbentity):
                                 alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
                                 note = '<b>Name:</b> '+alias['alias']
                                 aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
-                                curator_session.query(LocusnoteReference).filter(LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
+                                if aliasnote_in_db:
+                                    curator_session.query(LocusnoteReference).filter(LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
                                 curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == alias['alias_id']).delete(synchronize_session=False)
                                 curator_session.delete(alias_in_db)
                         
@@ -5103,6 +5104,7 @@ class Locusdbentity(Dbentity):
                         #TODO: Work on add/updating alias,aliasreference,notes
                         #add or update the one in new_aliases
                         for alias in new_aliases:
+                            #Adding new LocusAlias, LocusAliasReference, Locusanote, Locusnote_reference
                             if alias['alias_id'] is None:
                                 new_alias = LocusAlias(display_name = alias['alias'],
                                                        locus_id = self.dbentity_id,
@@ -5133,13 +5135,20 @@ class Locusdbentity(Dbentity):
                                     curator_session.add(new_locus_alias_ref)
                                     curator_session.add(new_locus_note_ref)
 
+                            #Update exisiting LocusAlias, LocusAliasReference, Locusnote, Locusnote_reference
                             elif alias['alias_id'] in existing_ids:
-                                    if alias['alias'] != existing_aliases_dict[alias['alias_id']] or alias['alias'] != existing_aliases_dict[alias['alias_id']]:
+                                    #Only check for alias and type
+                                    if alias['alias'] != existing_aliases_dict[alias['alias_id']]['alias'] or alias['type'] != existing_aliases_dict[alias['alias_id']]['type']:
                                         alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                        note = '<b>Name:</b> '+alias_in_db.display_name
                                         alias_in_db.display_name = alias['alias']
                                         alias_in_db.alias_type = alias['type']
+                                        
+                                        aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
+                                        note = '<b>Name:</b> '+alias['alias']
+                                        aliasnote_in_db.note = note
                                     
-                                    #TODO:PMIDS WILL ONLY BE ADD/DELETED
+                                    #Check if pmids are add or deleted
                                     existing_pmids = convert_space_separated_pmids_to_list(existing_aliases_dict[alias['alias_id']]['pmids'])
                                     new_pmids = convert_space_separated_pmids_to_list(alias['pmids'])
                                     
