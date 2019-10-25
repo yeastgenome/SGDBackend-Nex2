@@ -5142,6 +5142,7 @@ class Locusdbentity(Dbentity):
                                 aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
                                 if aliasnote_in_db:
                                     curator_session.query(LocusnoteReference).filter(LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
+                                    curator_session.delete(aliasnote_in_db)    
                                 curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == alias['alias_id']).delete(synchronize_session=False)
                                 curator_session.delete(alias_in_db)
                         
