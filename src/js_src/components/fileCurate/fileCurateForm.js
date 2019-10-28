@@ -157,7 +157,7 @@ class FileCurateForm extends Component{
               </ul>
             </div>
             <hr />
-            {url ? <a href={url} target='_blank' rel='noopener noreferrer'>File source</a>: ''}
+            {url ? <a href={url} target='_blank' rel='noopener noreferrer'>Current readme source <i className='fa fa-external-link'></i></a>: ''}
             <hr />
 
             <div className={'row'} >
