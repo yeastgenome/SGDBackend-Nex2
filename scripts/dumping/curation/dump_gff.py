@@ -414,7 +414,7 @@ def write_header(fw, datestamp):
     fw.write("# Created by Saccharomyces Genome Database (http://www.yeastgenome.org/)\n")
     fw.write("#\n")
     fw.write("# Weekly updates of this file are available for download from:\n")
-    fw.write("# https://yeastgenome.org/latest/saccharomyces_cerevisiae.gff\n")
+    fw.write("# https://downloads.yeastgenome.org/latest/saccharomyces_cerevisiae.gff.gz\n")
     fw.write("#\n")
     fw.write("# Please send comments and suggestions to sgd-helpdesk@lists.stanford.edu\n")
     fw.write("#\n")
