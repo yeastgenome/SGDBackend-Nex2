@@ -19,13 +19,18 @@ def load_pathway():
 
     nex_session = get_session()
 
+    print ("quering data from database...")
+
     biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])    
+
+    pathway_name_to_dbentity_id = dict([(x.display_name, x.dbentity_id) for x in nex_session.query(Dbentity).filter_by(subclass='PATHWAY').all()])
+
     pathway_id_to_pathwaysummary = dict([(x.pathway_id, x) for x in nex_session.query(Pathwaysummary).all()])    
     source_to_id = dict([(x.format_name, x.source_id) for x in nex_session.query(Source).all()])
     taxonomy = nex_session.query(Taxonomy).filter_by(taxid='TAX:4932').one_or_none()
     taxonomy_id = taxonomy.taxonomy_id
 
-    pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
+    # pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
 
     gene_to_locus_id = {}
     for x in nex_session.query(Locusdbentity).all():
@@ -64,9 +69,13 @@ def load_pathway():
     f = open(data_file)
     fw = open(log_file, "w")
 
-    new_pmid_to_reference_id = {}
-
     biocycIdList = []
+
+    nex_session.close()
+    nex_session = get_session()
+
+    print ("reading data from datafile...")
+
 
     for line in f:
         if line.startswith('pathwayID'):
@@ -85,16 +94,25 @@ def load_pathway():
         if created_by is None:
             created_by = CREATED_BY
         if pathway_id is None:
+            pathway_id = pathway_name_to_dbentity_id.get(display_name)
+            if pathway_id:
+                update_pathwaydbentity(nex_session, fw, pathway_id, biocycID)
+
+        if pathway_id is None:
+
+            print ("adding new pathway: " + biocycID)
+
             add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, 
-                        display_name, genes, pmids, summary, pmids4summary, 
-                        synonyms, created_by, pmid_to_reference_id, 
-                        gene_to_locus_id, new_pmid_to_reference_id)
+                            display_name, genes, pmids, summary, pmids4summary, 
+                            synonyms, created_by, gene_to_locus_id)
         else:
+
+            print ("updating data for pathway: " + biocycID)
+
             update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_name, genes, 
                            pmids, summary, pmids4summary, synonyms, created_by, source_to_id, 
-                           pathway_id_to_alias_list, pmid_to_reference_id, 
-                           summary_id_to_reference_id_list, biocycID_to_locus_id_list, gene_to_locus_id,
-                           key_to_annotation, new_pmid_to_reference_id)
+                           pathway_id_to_alias_list, summary_id_to_reference_id_list, 
+                           biocycID_to_locus_id_list, gene_to_locus_id, key_to_annotation)
 
     f.close()
     fw.close()
@@ -106,8 +124,13 @@ def load_pathway():
     nex_session.rollback()
     # nex_session.commit()
 
+def update_pathwaydbentity(nex_session, fw, pathway_id, biocycID):
 
-def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_name, genes, pmids, summary, pmids4summary, synonyms, created_by, source_to_id, pathway_id_to_alias_list, pmid_to_reference_id, summary_id_to_reference_id_list, biocycID_to_locus_id_list, gene_to_locus_id, key_to_annotationDB, new_pmid_to_reference_id):    
+    nex_session.query(Pathwaydbentity).filter_by(dbentity_id=pathway_id).update({'biocyc_id': biocycID})
+    
+    fw.write("The biocyc_id has been updated to " + biocycID + " for pathway_id=" + str(pathway_id) + ".") 
+    
+def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_name, genes, pmids, summary, pmids4summary, synonyms, created_by, source_to_id, pathway_id_to_alias_list, summary_id_to_reference_id_list, biocycID_to_locus_id_list, gene_to_locus_id, key_to_annotationDB):    
     
     ## dbentity 
     x = nex_session.query(Dbentity).filter_by(dbentity_id=pathway_id).one_or_none()
@@ -159,9 +182,7 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
 
         reference_id = None
         if pmid.isdigit():
-            reference_id = pmid_to_reference_id.get(int(pmid))
-            if reference_id is None:
-                reference_id = new_pmid_to_reference_id.get(int(pmid))
+            reference_id = get_reference_id_from_db(nex_session, int(pmid))
         else:
             continue
         if reference_id is None:
@@ -169,8 +190,6 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
             if reference_id is None:
                 print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                 continue
-            else:
-                new_pmid_to_reference_id[pmid] = reference_id
         order = order + 1
         reference_id_to_order[reference_id] = order
         if reference_id not in reference_id_to_orderDB:
@@ -199,9 +218,7 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
         for pmid in pmids:
             reference_id = None
             if pmid.isdigit():
-                reference_id = pmid_to_reference_id.get(int(pmid))
-                if reference_id is None:
-                    reference_id = new_pmid_to_reference_id.get(int(pmid))
+                reference_id = get_reference_id_from_db(nex_session, int(pmid))
             else:
                 continue
             if reference_id is None:
@@ -209,8 +226,6 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
                 if reference_id is None:
                     print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                     continue
-                else:
-                    new_pmid_to_reference_id[pmid] = reference_id
             key_to_annotation[(pathway_id, locus_id, reference_id)] = 1
             if (pathway_id, locus_id, reference_id) not in key_to_annotationDB:
                 insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id,
@@ -224,7 +239,7 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
         if (pathway_id, locus_id, reference_id) not in key_to_annotation:
             nex_session.query(Pathwayannotation).filter_by(pathway_id=pathway_id, dbentity_id=locus_id, reference_id=reference_id).delete()
 
-def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_name, genes, pmids, summary,  pmids4summary, synonyms, created_by, pmid_to_reference_id, gene_to_locus_id, new_pmid_to_reference_id):
+def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_name, genes, pmids, summary,  pmids4summary, synonyms, created_by, gene_to_locus_id):
 
     ## dbentity & pathwaydbentity 
     pathway_id = insert_pathway_dbentity(nex_session, fw, biocycID, display_name, source_to_id['SGD'], 
@@ -254,9 +269,7 @@ def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_na
 
         reference_id = None
         if pmid.isdigit():
-            reference_id = pmid_to_reference_id.get(int(pmid))
-            if reference_id is None:
-                reference_id = new_pmid_to_reference_id.get(int(pmid))
+            reference_id = get_reference_id_from_db(nex_session, int(pmid))
         else:
             continue
         if reference_id is None:
@@ -264,8 +277,6 @@ def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_na
             if reference_id is None:
                 print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                 continue
-            else:
-                new_pmid_to_reference_id[pmid] = reference_id
 
         order = order + 1
         insert_pathwaysummary_reference(nex_session, fw, summary_id, reference_id, order, 
@@ -280,9 +291,7 @@ def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_na
         for pmid in pmids:
             reference_id = None
             if pmid.isdigit():
-                reference_id = pmid_to_reference_id.get(int(pmid))
-                if reference_id is None:
-                    reference_id = new_pmid_to_reference_id.get(int(pmid))
+                reference_id = get_reference_id_from_db(nex_session, int(pmid))
             else:
                 continue
             if reference_id is None:
@@ -290,12 +299,19 @@ def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_na
                 if reference_id is None:
                     print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                     continue
-                else:
-                    new_pmid_to_reference_id[pmid] = reference_id
+
             insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id, 
                                      locus_id, reference_id, pathway_id, created_by)
 
         insert_locus_alias(nex_session, fw, source_to_id['MetaCyc'], locus_id, biocycID, created_by)
+
+def get_reference_id_from_db(nex_session, pmid):
+
+    x = nex_session.query(Referencedbentity).filter_by(pmid=pmid).one_or_none()
+    if x is None:
+        return None
+    else:
+        return x.dbentity_id
 
 def insert_locus_alias(nex_session, fw, source_id, locus_id, biocycID, created_by):
 
