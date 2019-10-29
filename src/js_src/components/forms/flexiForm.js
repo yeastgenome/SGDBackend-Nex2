@@ -17,6 +17,10 @@ class FlexiForm extends Component {
     };
   }
 
+  componentWillReceiveProps(nextProps){
+    this.setState({data:nextProps.defaultData});
+  }
+
   handleSubmit(e) {
     e.preventDefault();
     let value = this.formInput.getValue();

@@ -4894,6 +4894,7 @@ class Locusdbentity(Dbentity):
             a_pmids = DBSession.query(LocusAliasReferences, Referencedbentity.pmid).filter(LocusAliasReferences.alias_id==x.alias_id).outerjoin(Referencedbentity).all()
             pmids_results = [str(y[1]) for y in a_pmids]
             aliases_list.append({
+                'alias_id':x.alias_id,
                 'alias': x.display_name,
                 'pmids': SEPARATOR.join(pmids_results),
                 'type': x.alias_type
@@ -4968,7 +4969,7 @@ class Locusdbentity(Dbentity):
             new_alias_type = new_info['old_gene_name_alias_type']
             new_alias = { 'alias': old_info['gene_name'], 'pmids': old_info['gene_name_pmids'], 'type': new_alias_type }
             new_info['aliases'].append(new_alias)
-            keys_to_update.append('aliases')
+            keys_to_update.append('aliases')        
         if len(keys_to_update) == 0:
             raise ValueError('Nothing has been changed.')
         else:
@@ -5051,62 +5052,210 @@ class Locusdbentity(Dbentity):
                             curator_session.add(new_locus_ref)
                     elif key == 'description_pmids':
                         # delete the old name description PMIDS
-                        curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='description')).delete(synchronize_session=False)
-                        pmid_list = convert_space_separated_pmids_to_list(new_info['description_pmids'])
-                        # add new entries
-                        for p in pmid_list:
-                            new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
-                            new_locus_ref = LocusReferences(
-                                reference_id = new_ref_id,
-                                locus_id = self.dbentity_id,
-                                source_id = SGD_SOURCE_ID,
-                                reference_class = 'description',
-                                created_by = username
-                            )
-                            curator_session.add(new_locus_ref)
+                        old_pmid_list = convert_space_separated_pmids_to_list(old_info['description_pmids'])
+                        new_pmid_list = convert_space_separated_pmids_to_list(new_info['description_pmids'])
+                        
+                        for old in old_pmid_list:
+                            if old not in new_pmid_list:
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
+                                if ref_id:
+                                    curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='description',LocusReferences.reference_id == ref_id)).delete(synchronize_session=False)
+
+
+                        for new in new_pmid_list:
+                            if new not in old_pmid_list:
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == new).scalar()
+                                if ref_id:
+                                    new_locus_ref = LocusReferences(reference_id = ref_id,
+                                                                    locus_id = self.dbentity_id,
+                                                                    source_id = SGD_SOURCE_ID,
+                                                                    reference_class = 'description',
+                                                                    created_by = username
+                                                                    )
+                                    curator_session.add(new_locus_ref)
+
+                        # curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='description')).delete(synchronize_session=False)
+                        # pmid_list = convert_space_separated_pmids_to_list(new_info['description_pmids'])
+                        # # add new entries
+                        # for p in pmid_list:
+                        #     new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
+                        #     new_locus_ref = LocusReferences(
+                        #         reference_id = new_ref_id,
+                        #         locus_id = self.dbentity_id,
+                        #         source_id = SGD_SOURCE_ID,
+                        #         reference_class = 'description',
+                        #         created_by = username
+                        #     )
+                        #     curator_session.add(new_locus_ref)
+
                     elif key == 'name_description_pmids':
                         # delete the old name name_description PMIDS
-                        curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='name_description')).delete(synchronize_session=False)
-                        pmid_list = convert_space_separated_pmids_to_list(new_info['name_description_pmids'])
-                        # add new entries
-                        for p in pmid_list:
-                            new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
-                            new_locus_ref = LocusReferences(
-                                reference_id = new_ref_id,
-                                locus_id = self.dbentity_id,
-                                source_id = SGD_SOURCE_ID,
-                                reference_class = 'name_description',
-                                created_by = username
-                            )
-                            curator_session.add(new_locus_ref)
+                        
+                        old_pmid_list = convert_space_separated_pmids_to_list(old_info['name_description_pmids'])
+                        new_pmid_list = convert_space_separated_pmids_to_list(new_info['name_description_pmids'])
+                        
+                        for old in old_pmid_list:
+                            if old not in new_pmid_list:
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
+                                if ref_id:
+                                    curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='name_description',LocusReferences.reference_id == ref_id)).delete(synchronize_session=False)
+
+
+                        for new in new_pmid_list:
+                            if new not in old_pmid_list:
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == new).scalar()
+                                if ref_id:
+                                    new_locus_ref = LocusReferences(reference_id = ref_id,
+                                                                    locus_id = self.dbentity_id,
+                                                                    source_id = SGD_SOURCE_ID,
+                                                                    reference_class = 'name_description',
+                                                                    created_by = username
+                                                                    )
+                                    curator_session.add(new_locus_ref)
+                        
+                        # curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='name_description')).delete(synchronize_session=False)
+                        # pmid_list = convert_space_separated_pmids_to_list(new_info['name_description_pmids'])
+                        # # add new entries
+                        # for p in pmid_list:
+                        #     new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
+                        #     new_locus_ref = LocusReferences(
+                        #         reference_id = new_ref_id,
+                        #         locus_id = self.dbentity_id,
+                        #         source_id = SGD_SOURCE_ID,
+                        #         reference_class = 'name_description',
+                        #         created_by = username
+                        #     )
+                        #     curator_session.add(new_locus_ref)
                     elif key == 'aliases':
                         # delete old aliases and references
-                        old_aliases = curator_session.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).all()
-                        for a in old_aliases:
-                            curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == a.alias_id).delete(synchronize_session=False)
-                            curator_session.delete(a)
+                        old_aliases = old_info['aliases']
+                        new_aliases = new_info['aliases']
+                        existing_ids = [ i['alias_id'] for i in old_aliases]
+                        new_ids = [ i['alias_id'] for i in new_aliases]
+                        existing_aliases_dict = {i['alias_id'] : i for i in old_aliases}
+                        
+                        #delete the one removed from the new_aliases
+                        for alias in old_aliases:
+                            if alias['alias_id'] not in new_ids:
+                                alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                note = '<b>Name:</b> '+alias['alias']
+                                aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
+                                if aliasnote_in_db:
+                                    curator_session.query(LocusnoteReference).filter(LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
+                                    curator_session.delete(aliasnote_in_db)    
+                                curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == alias['alias_id']).delete(synchronize_session=False)
+                                curator_session.delete(alias_in_db)
+                        
                         curator_session.flush()
-                        for a in new_info['aliases']:
-                            new_alias = LocusAlias(
-                                display_name = a['alias'],
-                                locus_id = self.dbentity_id,
-                                alias_type = a['type'],
-                                has_external_id_section = False,
-                                source_id = SGD_SOURCE_ID,
-                                created_by = username
-                            )
-                            curator_session.add(new_alias)
-                            curator_session.flush()
-                            int_pmids = convert_space_separated_pmids_to_list(a['pmids'])
-                            for p in int_pmids:
-                                new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
-                                new_locus_alias_ref = LocusAliasReferences(
-                                    alias_id = new_alias.alias_id,
-                                    reference_id = new_ref_id,
-                                    source_id = SGD_SOURCE_ID,
-                                    created_by = username
-                                )
-                                curator_session.add(new_locus_alias_ref)
+
+                        #TODO: Work on add/updating alias,aliasreference,notes
+                        #add or update the one in new_aliases
+                        for alias in new_aliases:
+                            #Adding new LocusAlias, LocusAliasReference, Locusanote, Locusnote_reference
+                            if alias['alias_id'] is None:
+                                new_alias = LocusAlias(display_name = alias['alias'],
+                                                       locus_id = self.dbentity_id,
+                                                       alias_type = alias['type'],
+                                                       has_external_id_section = False,
+                                                       source_id = SGD_SOURCE_ID,
+                                                       created_by = username)
+                                curator_session.add(new_alias)
+                                curator_session.flush()
+
+                                int_pmids = convert_space_separated_pmids_to_list(alias['pmids'])
+                                
+                                #Add Locusnote
+                                note = '<b>Name:</b> '+alias['alias']
+                                locusnote = Locusnote(source_id = SGD_SOURCE_ID,locus_id = self.dbentity_id,note_class = 'Locus',
+                                                      note_type = 'Name',note = note,created_by = username)
+                                curator_session.add(locusnote)
+                                curator_session.flush()
+
+                                for p in int_pmids:
+                                    new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
+                                    new_locus_alias_ref = LocusAliasReferences(alias_id = new_alias.alias_id,
+                                                                               reference_id = new_ref_id,
+                                                                               source_id = SGD_SOURCE_ID,
+                                                                               created_by = username)
+                                    #Add LocusnoteReference
+                                    new_locus_note_ref = LocusnoteReference(note_id = locusnote.note_id,reference_id = new_ref_id,source_id = SGD_SOURCE_ID,created_by = username)
+                                    curator_session.add(new_locus_alias_ref)
+                                    curator_session.add(new_locus_note_ref)
+
+                            #Update exisiting LocusAlias, LocusAliasReference, Locusnote, Locusnote_reference
+                            elif alias['alias_id'] in existing_ids:
+                                    note = '<b>Name:</b> '+existing_aliases_dict[alias['alias_id']]['alias']
+                                    alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                    aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==self.dbentity_id,Locusnote.note == note)).one_or_none()
+                                    #Only check for alias and type
+                                    if alias['alias'] != existing_aliases_dict[alias['alias_id']]['alias'] or alias['type'] != existing_aliases_dict[alias['alias_id']]['type']:
+                                        alias_in_db.display_name = alias['alias']
+                                        alias_in_db.alias_type = alias['type']
+                                        
+                                        if aliasnote_in_db:    
+                                            note = '<b>Name:</b> '+alias['alias']
+                                            aliasnote_in_db.note = note
+                                    
+                                    #Check if pmids are add or deleted
+                                    existing_pmids = convert_space_separated_pmids_to_list(existing_aliases_dict[alias['alias_id']]['pmids'])
+                                    new_pmids = convert_space_separated_pmids_to_list(alias['pmids'])
+                                    
+                                    for new in new_pmids:
+                                        if new not in existing_pmids:
+                                            new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == new).scalar()
+                                            new_locus_alias_ref = LocusAliasReferences(alias_id = alias_in_db.alias_id,
+                                                                                       reference_id = new_ref_id,
+                                                                                       source_id = SGD_SOURCE_ID,
+                                                                                       created_by = username)
+                                            if aliasnote_in_db:    
+                                                new_locus_note_ref = LocusnoteReference(note_id = aliasnote_in_db.note_id,
+                                                                                        reference_id = new_ref_id,
+                                                                                        source_id = SGD_SOURCE_ID,
+                                                                                        created_by = username)
+                                                curator_session.add(new_locus_note_ref)    
+                                            curator_session.add(new_locus_alias_ref)
+                                    for old in existing_pmids:
+                                        if old not in new_pmids:
+                                            old_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
+                                            old_locus_alias_ref = curator_session.query(LocusAliasReferences).filter(and_(LocusAliasReferences.alias_id==alias_in_db.alias_id,LocusAliasReferences.reference_id==old_ref_id)).one_or_none()
+                                            
+                                            if aliasnote_in_db:
+                                                #delete any locus note reference 
+                                                old_locus_note_ref = curator_session.query(LocusnoteReference).filter(and_(LocusnoteReference.note_id==aliasnote_in_db.note_id,LocusnoteReference.reference_id==old_ref_id)).one_or_none()
+                                                curator_session.delete(old_locus_note_ref)
+                                            
+                                            curator_session.delete(old_locus_alias_ref)
+
+                        # old_aliases = curator_session.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).all()
+                        # for a in old_aliases:
+                        #     curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == a.alias_id).delete(synchronize_session=False)
+                        #     curator_session.delete(a)
+                        # curator_session.flush()
+
+                        # for a in new_info['aliases']:
+                        #     new_alias = LocusAlias(
+                        #         display_name = a['alias'],
+                        #         locus_id = self.dbentity_id,
+                        #         alias_type = a['type'],
+                        #         has_external_id_section = False,
+                        #         source_id = SGD_SOURCE_ID,
+                        #         created_by = username
+                        #     )
+                        #     curator_session.add(new_alias)
+                        #     curator_session.flush()
+
+                        #     int_pmids = convert_space_separated_pmids_to_list(a['pmids'])
+                            
+                        #     for p in int_pmids:
+                        #         new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
+                        #         new_locus_alias_ref = LocusAliasReferences(
+                        #             alias_id = new_alias.alias_id,
+                        #             reference_id = new_ref_id,
+                        #             source_id = SGD_SOURCE_ID,
+                        #             created_by = username
+                        #         )
+                        #         curator_session.add(new_locus_alias_ref)
+
                 # create curator activity
                 update_dict = {}
                 for key in keys_to_update:
