@@ -1,3 +1,4 @@
+from datetime import datetime
 import sys
 import os
 from src.models import Dbentity, Pathwaydbentity, PathwayUrl, PathwayAlias, Pathwaysummary,\
@@ -19,6 +20,7 @@ def load_pathway():
 
     nex_session = get_session()
 
+    print (datetime.now())
     print ("quering data from database...")
 
     biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])    
@@ -32,11 +34,17 @@ def load_pathway():
 
     # pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
 
+    print (datetime.now())
+    print ("quering Locusdbentity table from database again...")
+
     gene_to_locus_id = {}
     for x in nex_session.query(Locusdbentity).all():
         gene_to_locus_id[x.systematic_name] = x.dbentity_id
         if x.gene_name:
             gene_to_locus_id[x.gene_name] = x.dbentity_id
+
+    print (datetime.now())
+    print ("quering PathwayAlias table from database again...")
 
     pathway_id_to_alias_list = {}
     for x in nex_session.query(PathwayAlias).all():
@@ -46,6 +54,9 @@ def load_pathway():
         alias_list.append(x.display_name)
         pathway_id_to_alias_list[x.pathway_id] = alias_list
     
+    print (datetime.now())
+    print ("quering PathwaysummaryReference table from database again...")
+
     summary_id_to_reference_id_list = {}
     for x in nex_session.query(PathwaysummaryReference).all():
         reference_id_list = []
@@ -54,6 +65,9 @@ def load_pathway():
         reference_id_list.append((x.reference_id, x.reference_order))
         summary_id_to_reference_id_list[x.summary_id] = reference_id_list
 
+    print (datetime.now())
+    print ("quering LocusAlias table from database again...")
+
     biocycID_to_locus_id_list = {}
     for x in nex_session.query(LocusAlias).filter_by(alias_type='Pathway ID').all():
         locus_id_list = []
@@ -61,6 +75,9 @@ def load_pathway():
             locus_id_list = biocycID_to_locus_id_list[x.display_name]
         locus_id_list.append(x.locus_id)
         biocycID_to_locus_id_list[x.display_name] = locus_id_list
+
+    print (datetime.now())
+    print ("quering Pathwayannotation table from database again...")
 
     key_to_annotation = {}
     for x in nex_session.query(Pathwayannotation).all():
@@ -74,8 +91,8 @@ def load_pathway():
     nex_session.close()
     nex_session = get_session()
 
+    print (datetime.now())
     print ("reading data from datafile...")
-
 
     for line in f:
         if line.startswith('pathwayID'):
@@ -99,7 +116,8 @@ def load_pathway():
                 update_pathwaydbentity(nex_session, fw, pathway_id, biocycID)
 
         if pathway_id is None:
-
+            
+            print (datetime.now())
             print ("adding new pathway: " + biocycID)
 
             add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, 
@@ -107,6 +125,7 @@ def load_pathway():
                             synonyms, created_by, gene_to_locus_id)
         else:
 
+            print (datetime.now())
             print ("updating data for pathway: " + biocycID)
 
             update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_name, genes, 
