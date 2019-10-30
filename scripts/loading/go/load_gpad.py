@@ -562,8 +562,9 @@ def update_database_load_file_to_s3(nex_session, gpad_file, gpi_file, source_to_
     
     gpad_local_file = open(gpad_file, mode='rb')
     gpi_local_file = open(gpi_file, mode='rb')
-    gpad_md5sum = hashlib.md5(gpad_local_file.read()).hexdigest()
-    gpi_md5sum = hashlib.md5(gpi_local_file.read()).hexdigest()
+
+    gpad_md5sum = hashlib.md5(gpad_file.encode()).hexdigest()
+    gpi_md5sum = hashlib.md5(gpi_file.encode()).hexdigest()
 
     gpad_row = nex_session.query(Filedbentity).filter_by(md5sum = gpad_md5sum).one_or_none()
     gpi_row = nex_session.query(Filedbentity).filter_by(md5sum = gpi_md5sum).one_or_none()
@@ -601,7 +602,8 @@ def update_database_load_file_to_s3(nex_session, gpad_file, gpi_file, source_to_
                     is_in_spell='0',
                     is_in_browser='0',
                     file_date=datetime.now(),
-                    source_id=source_to_id['SGD'])
+                    source_id=source_to_id['SGD'],
+                    md5sum=gpad_md5sum)
                     
     if gpi_row is None:
         upload_file(CREATED_BY, gpi_local_file,
@@ -617,7 +619,8 @@ def update_database_load_file_to_s3(nex_session, gpad_file, gpi_file, source_to_
                     is_in_spell='0',
                     is_in_browser='0',
                     file_date=datetime.now(),
-                    source_id=source_to_id['SGD'])
+                    source_id=source_to_id['SGD'],
+                    md5sum=gpi_md5sum)
 
 
 def write_summary_and_send_email(annotation_update_log, new_pmids, bad_ref, fw, annot_type):

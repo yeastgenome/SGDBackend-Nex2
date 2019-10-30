@@ -330,7 +330,7 @@ def update_database_load_file_to_s3(nex_session, ontology_file, source_to_id, ed
     local_file = open(gzip_file, mode='rb')
 
     import hashlib
-    go_md5sum = hashlib.md5(local_file.read()).hexdigest()
+    go_md5sum = hashlib.md5(ontology_file.encode()).hexdigest()
     go_row = nex_session.query(Filedbentity).filter_by(md5sum = go_md5sum).one_or_none()
 
     if go_row is not None:
@@ -361,7 +361,8 @@ def update_database_load_file_to_s3(nex_session, ontology_file, source_to_id, ed
                 is_in_spell='0',
                 is_in_browser='0',
                 file_date=datetime.now(),
-                source_id=source_to_id['SGD'])
+                source_id=source_to_id['SGD'],
+                md5sum=go_md5sum)
 
 
 
