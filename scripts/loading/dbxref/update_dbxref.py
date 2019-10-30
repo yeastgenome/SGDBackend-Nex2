@@ -271,7 +271,7 @@ def update_database_load_file_to_s3(nex_session, data_file, source_to_id, edam_t
     local_file = open(data_file, mode='rb')
 
     import hashlib
-    dx_md5sum = hashlib.md5(local_file.read()).hexdigest()
+    dx_md5sum = hashlib.md5(data_file.encode()).hexdigest()
     dx_row = nex_session.query(Filedbentity).filter_by(md5sum = dx_md5sum).one_or_none()
 
     if dx_row is not None:
@@ -304,7 +304,8 @@ def update_database_load_file_to_s3(nex_session, data_file, source_to_id, edam_t
                 is_in_spell='0',
                 is_in_browser='0',
                 file_date=datetime.now(),
-                source_id=source_to_id['SGD'])
+                source_id=source_to_id['SGD'],
+                md5sum=dx_md5sum)
 
     
 def read_uniprot_file(infile, source_to_id):
