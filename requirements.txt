@@ -61,7 +61,7 @@ venusian==1.0
 waitress==0.8.10
 WebOb==1.5.1
 WebTest==2.0.20
-Werkzeug==0.11.2
+Werkzeug==0.15.3
 wheel==0.24.0
 xmltodict==0.9.2
 zope.deprecation==4.1.2
