@@ -74,13 +74,15 @@ def search(request):
         }
 
     # see if we can search for a simple gene name in db without using ES
+    aliases_count = 0 
     if is_quick_flag == 'true':
         t_query = query.strip().upper()
         sys_pattern = re.compile(r'(?i)^y.{2,}')
         is_sys_name_match = sys_pattern.match(t_query)
         if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
             maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
-            if maybe_gene_url:
+            aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
+            if aliases_count == 0 and  maybe_gene_url:
                 fake_search_obj = {
                     'href': maybe_gene_url,
                     'is_quick': True
@@ -179,7 +181,7 @@ def search(request):
 
     for key in list(request.params.keys()):
         args[key] = request.params.getall(key)
-
+    
     es_query = build_search_query(query, search_fields, category,
                                   category_filters, args)
 

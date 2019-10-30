@@ -23,7 +23,7 @@ from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
     ReferenceFile, Disease, CuratorActivity, Source
 from src.curation_helpers import ban_from_cache, get_curator_session
-from src.aws_helpers import update_s3_readmefile, get_s3_url
+from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
 
 
 import logging
@@ -291,6 +291,7 @@ def upload_file(username, file, **kwargs):
     readme_file_id = kwargs.get('readme_file_id', None)
     full_file_path = kwargs.get('full_file_path', None)
     md5sum = kwargs.get('md5sum', None)
+    is_web_file = kwargs.get('is_web_file', False)
     # get file size
     file.seek(0, os.SEEK_END)
     file_size = file.tell()
@@ -331,7 +332,7 @@ def upload_file(username, file, **kwargs):
         DBSession.flush()
         fdb = DBSession.query(Filedbentity).filter(
             Filedbentity.dbentity_id == did).one_or_none()
-        fdb.upload_file_to_s3(file, filename, full_file_path)
+        fdb.upload_file_to_s3(file=file, filename=filename, is_web_file=is_web_file, file_path=full_file_path, flag=False)
     except Exception as e:
         DBSession.rollback()
         DBSession.remove()
@@ -550,21 +551,32 @@ def update_curate_activity(locus_summary_object):
         curator_session = get_curator_session(locus_summary_object['created_by'])
         existing = curator_session.query(CuratorActivity).filter(CuratorActivity.dbentity_id == locus_summary_object['dbentity_id']).one_or_none()
         message = 'added'
+        new_curate_activity = None
         if existing:
             #curator_session.delete(existing)
             message = 'updated'
-        new_curate_activity = CuratorActivity(
-            display_name=locus_summary_object['display_name'],
-            obj_url=locus_summary_object['obj_url'],
-            activity_category=locus_summary_object['activity_category'],
-            dbentity_id=locus_summary_object['dbentity_id'],
-            message=message,
-            json=locus_summary_object['json'],
-            created_by=locus_summary_object['created_by']
-        )
-        curator_session.add(new_curate_activity)
-        transaction.commit()
-        flag = True
+            new_curate_activity = CuratorActivity(
+                display_name=locus_summary_object['display_name'],
+                obj_url=locus_summary_object['obj_url'],
+                activity_category=locus_summary_object['activity_category'],
+                dbentity_id=locus_summary_object['dbentity_id'],
+                message=message,
+                json=locus_summary_object['json'],
+            )
+        else:
+            new_curate_activity = CuratorActivity(
+                display_name=locus_summary_object['display_name'],
+                obj_url=locus_summary_object['obj_url'],
+                activity_category=locus_summary_object['activity_category'],
+                dbentity_id=locus_summary_object['dbentity_id'],
+                message=message,
+                json=locus_summary_object['json'],
+                created_by=locus_summary_object['created_by']
+            )
+        if new_curate_activity:
+            curator_session.add(new_curate_activity)
+            transaction.commit()
+            flag = True
     except Exception as e:
         traceback.print_exc()
         transaction.abort()
@@ -687,7 +699,6 @@ def update_curator_feed(update_obj, msg=None, curator_session=None):
             exists.dbentity_id = update_obj['dbentity_id']
             exists.message = 'updated'
             exists.json = update_obj['json']
-            exists.created_by = update_obj['created_by']
 
         else:
             new_curator_activity = CuratorActivity(
@@ -851,6 +862,7 @@ def upload_new_file(req_obj, session=None):
                     existing_readme_meta = get_existing_meta_data(
                         req_obj['displayName'], curator_session)
                     keywords = re.split(',|\|', req_obj['keywords'])
+
                     if existing_readme_meta:
                         existing_readme_meta.display_name = req_obj['displayName']
                         existing_readme_meta.description = req_obj['description']
@@ -861,8 +873,12 @@ def upload_new_file(req_obj, session=None):
                         existing_readme_meta.file_date = datetime.datetime.strptime(
                             req_obj['file_date'], '%Y-%m-%d')
                         readme_file_id = existing_readme_meta.dbentity_id
-                        existing_readme_meta.upload_file_to_s3(
-                            val, req_obj['displayName'])
+                        if existing_readme_meta.s3_url is None:
+                            existing_readme_meta.upload_file_to_s3(
+                                file=val, filename=req_obj['displayName'], is_web_file=True)
+                        else:
+                            existing_readme_meta.upload_file_to_s3(
+                                val, req_obj['displayName'])
                         add_keywords(req_obj['displayName'],
                                      keywords, req_obj['source_id'], username, curator_session)
                         update_obj = {
@@ -875,17 +891,19 @@ def upload_new_file(req_obj, session=None):
                         }
                         msg = 'Add readme file for file curation'
                         update_curator_feed(update_obj, msg)
-                    '''else:
-                        #TODO: finish this method after getting metadata from Mike
+                    else:
                         new_obj = {
                             'display_name': req_obj['displayName'],
                             'description': req_obj['description'],
                             'status': req_obj['status'],
                             'is_public': True,
                             'is_in_spell': False,
-                            'is_in_browser': False
+                            'is_in_browser': False,
+                            'file_date': req_obj['file_date'],
+                            'file': val,
                         }
-                    '''
+                        other_files.append(new_obj)
+                    
                 if key.endswith(other_extensions):
                     other_files.append(
                         {
@@ -916,6 +934,76 @@ def upload_new_file(req_obj, session=None):
                         }
                         msg = 'Add file for file curation'
                         update_curator_feed(update_obj, msg, curator_session)
+                    else:
+                        if item['display_name']:
+                            temp_file = item['file']
+                            # regex to find matching metadata for new file
+                            mod_display_name = re.sub('[^a-zA-Z0-9 \n\.]','_', item['display_name'])
+                            search_string = re.search('(?:19|20)\d{2}\_\w+[0-9]{4}', mod_display_name).group(0)
+                            alt_string = search_string.replace('_', '-', 1)
+                            pattern = '(%s|%s)' %(search_string, alt_string)
+                            matches = curator_session.query(Filedbentity).filter(Filedbentity.display_name.op('~*')(pattern)).all()
+                            
+                            new_obj = None
+                            new_file_extension = item['display_name'].split('.')[1]
+                            file_date = datetime.datetime.strptime(
+                                    item['file_date'], '%Y-%m-%d')
+                            if len(matches) > 0:
+                                try:
+                                    match = None
+                                    file_size = 0
+                                    for file_item in matches:
+                                        if file_item.file_extension == new_file_extension:
+                                            match = file_item
+                                            break
+
+                                    temp_file.seek(0, os.SEEK_END)
+                                    file_size = temp_file.tell()
+                                    temp_file.seek(0)
+
+                                    new_obj = {
+                                        'filename': item['display_name'],
+                                        'description': item['description'],
+                                        'status': item['status'].capitalize(),
+                                        'is_public': True,
+                                        'is_in_spell': False,
+                                        'is_in_browser': False,
+                                        'file_date': file_date,
+                                        'file_extension': new_file_extension,
+                                        'json': match.json,
+                                        'year': match.year,
+                                        'source_id': match.source_id,
+                                        'display_name': item['display_name'],
+                                        'readme_file_id': match.readme_file_id,
+                                        'full_file_path': None,
+                                        'md5sum': get_checksum(item['file']),
+                                        'file_size': file_size,
+                                        'data_id': match.data_id,
+                                        'format_id': match.format_id,
+                                        'topic_id': match.topic_id,
+                                        'is_web_file': True
+                                    }
+
+                                    upload_file(username, item['file'], **new_obj)
+                                    transaction.commit()
+
+                                    db_new_file = get_existing_meta_data(item['display_name'], curator_session)
+
+                                    update_obj = {
+                                        'display_name': item['display_name'],
+                                        'created_by': username,
+                                        's3_url': db_new_file.s3_url,
+                                        'activity_category': 'download',
+                                        'dbentity_id': db_new_file.dbentity_id,
+                                        'json': json.dumps({'file curation data': db_new_file.to_simple_dict(), "modified_date": str(datetime.datetime.now())}),
+                                    }
+                                    msg = 'Add new file for file curation'
+                                    update_curator_feed(update_obj, msg, curator_session)
+
+                                except Exception as e:
+                                    transaction.abort()
+                                    raise(e)
+
             transaction.commit()
             DBSession.flush()
             return True
@@ -926,6 +1014,7 @@ def upload_new_file(req_obj, session=None):
 
 def add_file_meta_db(db_file, obj, readme_id=None, curator_session=None):
     try:
+
         if curator_session is None:
             curator_session = DBSession
         if db_file and obj:

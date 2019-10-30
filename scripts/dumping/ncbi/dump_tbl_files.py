@@ -280,7 +280,8 @@ def tar_files(datestamp, format):
             tf.add("chr0" + str(i) + "." + format)
         else:
             tf.add("chr" + str(i) + "." + format)
-    tf.add("chrmt." + format)
+    if format == 'tbl':
+        tf.add("chrmt." + format)
 
     tf.close()
 
@@ -389,7 +390,8 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
     files[chrnum].write(TABS + "locus_tag\t" + systematic_name + "\n")
 
     product = systematic_name
-    if feature_type != 'tRNA_gene':
+
+    if feature_type != 'tRNA gene':
         if systematic_name.startswith('ETS') or systematic_name.startswith('ITS'):
             type = 'misc_RNA'
         files[chrnum].write(str(start)+"\t"+str(stop)+"\t" + type + "\n")
@@ -398,6 +400,7 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
             files[chrnum].write(str(start)+"\t"+str(stop)+"\ttRNA\n")
         else:
             for row in annotation_id_to_cds_data[annotation_id]:
+                row = row.replace("noncoding_exon", "tRNA")
                 files[chrnum].write(row + "\n")
 
     if type == 'ncRNA':
@@ -631,6 +634,10 @@ def get_cds_data(nex_session, annotation_id_to_strand, type_mapping):
 
 def get_go_data(nex_session):
 
+    sgdid_to_locus_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
+
+    locus_id_to_tpa_id = dict([(x.locus_id, x.display_name) for x in nex_session.query(LocusAlias).filter_by(alias_type='TPA protein version ID').all()])
+
     code_mapping = get_col4_5_for_code()
 
     reference_id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
@@ -646,15 +653,23 @@ def get_go_data(nex_session):
     annotation_id_to_supportingevidence = {}
 
     for x in nex_session.query(Gosupportingevidence).all():
-        if x.dbxref_id.startswith("PANTHER:"):
-            if x.annotation_id in annotation_id_to_panther:
-                annotation_id_to_panther[x.annotation_id] = annotation_id_to_panther[x.annotation_id] + "|" + x.dbxref_id
+        if x.dbxref_id.startswith("UniProtKB:") or x.dbxref_id.startswith("SGD:") or x.dbxref_id.startswith("protein_id:"):
+            if x.dbxref_id.startswith("SGD:"):
+                sgdid = x.dbxref_id.replace("SGD:", "")
+                locus_id = sgdid_to_locus_id.get(sgdid)
+                if locus_id is None:
+                    continue
+                tpa_id = locus_id_to_tpa_id.get(locus_id)
+                if tpa_id is None:
+                    continue
+                dbxref_id = "INSD:" + tpa_id
             else:
-                annotation_id_to_panther[x.annotation_id] = x.dbxref_id
-        if x.annotation_id in annotation_id_to_supportingevidence:
-            annotation_id_to_supportingevidence[x.annotation_id] = annotation_id_to_supportingevidence[x.annotation_id] + "|" + x.dbxref_id
-        else:
-            annotation_id_to_supportingevidence[x.annotation_id] = x.dbxref_id
+                dbxref_id = x.dbxref_id
+
+            if x.annotation_id in annotation_id_to_supportingevidence:
+                annotation_id_to_supportingevidence[x.annotation_id] = annotation_id_to_supportingevidence[x.annotation_id] + "," + dbxref_id
+            else:
+                annotation_id_to_supportingevidence[x.annotation_id] = dbxref_id
         
     locus_id_to_go_section = {}
     go_to_pmid_list = {}
@@ -674,16 +689,14 @@ def get_go_data(nex_session):
             continue
 
         (col4Text, col5Text) = code_mapping[eco]
-        # goline = TABS + col4Text + "\t" + col5Text + ", "
         goline = TABS + col4Text + "\t" + col5Text + ":"
-        if eco == "IBA": 
-            if x.annotation_id in annotation_id_to_panther:
-                goline = goline + annotation_id_to_panther[x.annotation_id]
-            else:
-                continue
-        elif eco in ['ISS', 'ISM', 'ISA', 'ISO']:
+        if eco in ['ISS', 'ISM', 'ISA', 'ISO']:
             if x.annotation_id in annotation_id_to_supportingevidence:
-                goline = goline + annotation_id_to_supportingevidence[x.annotation_id]
+                supportingevidence = annotation_id_to_supportingevidence[x.annotation_id]
+                if 'protein_id' in supportingevidence:
+                    supportingevidence = supportingevidence.replace("protein_id", "INSD")
+                    goline = goline.replace(" DNA ", " AA ")
+                goline = goline + supportingevidence
             else:
                 continue
         else:
@@ -727,11 +740,12 @@ def get_col4_5_for_code():
     #          "IBA": ("inference",  "protein family"),
     #          "TAS": ("inference",  "EXISTENCE:author statement"),
     #          "NAS": ("inference",  "EXISTENCE:author statement"),
-    return { "ISS": ("inference",  "similar to DNA sequence"),
-             "ISM": ("inference",  "similar to DNA sequence"),
-             "ISA": ("inference",  "similar to DNA sequence"),
-             "ISO": ("inference",  "similar to DNA sequence"),
-             "IDA": ("experiment", "EXISTENCE:direct assay"),
+    #
+    #          "ISS": ("inference",  "similar to DNA sequence"),
+    #          "ISM": ("inference",  "similar to DNA sequence"),
+    #          "ISA": ("inference",  "similar to DNA sequence"),
+    #          "ISO": ("inference",  "similar to DNA sequence"),
+    return { "IDA": ("experiment", "EXISTENCE:direct assay"),
              "IMP": ("experiment", "EXISTENCE:mutant phenotype"),
              "HDA": ("experiment", "EXISTENCE:direct assay"),
              "IGI": ("experiment", "EXISTENCE:genetic interaction"),
@@ -823,7 +837,8 @@ def update_database_load_file_to_s3(nex_session, gzip_file, source_to_id, edam_t
                 is_in_spell='0',
                 is_in_browser='0',
                 file_date=datetime.now(),
-                source_id=source_to_id['SGD'])
+                source_id=source_to_id['SGD'],
+                md5sum=file_md5sum)
 
     file = nex_session.query(Dbentity).filter_by(display_name=gzip_file, dbentity_status='Active').one_or_none()
     if file is None:
