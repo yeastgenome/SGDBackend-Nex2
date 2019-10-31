@@ -37,7 +37,7 @@ class GeneNameReservation extends Component {
   handleExtend(e) {
     e.preventDefault();
     if (window.confirm('Are you sure you want to extend the gene name reservation?')) {
-      let url = `${DATA_BASE_URL}/${this.props.params.id}/extend`;
+      let url = `${DATA_BASE_URL}/${this.props.match.params.id}/extend`;
       let reqOptions = {
         type: 'PUT',
         headers: {
@@ -140,7 +140,6 @@ class GeneNameReservation extends Component {
 }
 
 GeneNameReservation.propTypes = {
-  params: PropTypes.object,
   dispatch: PropTypes.func,
   match: PropTypes.object
 };
