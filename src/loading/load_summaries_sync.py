@@ -153,7 +153,7 @@ def validate_file_content_and_process(file_content, nex_session, username):
             #file_summary_type = item.get(
             #      'Summary Type (phenotype, regulation)', '')
             file_summary_val = item.get('Summary', '')
-
+            
             file_summary_html = link_gene_names(file_summary_val, locus_names_ids)
             if file_id:
                 gene = nex_session.query(Locusdbentity).filter_by(format_name=file_id).one_or_none()
@@ -161,12 +161,12 @@ def validate_file_content_and_process(file_content, nex_session, username):
                 summaries = nex_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=gene.dbentity_id, summary_type=file_summary_type).all()
                 # update
                 summary = None
+                mod_summary_type = file_summary_type.lower().capitalize()
                 if len(summaries):
                     summary = summaries[0]
                     nex_session.query(Locussummary).filter_by(summary_id=summary.summary_id).update({'text': file_summary_val, 'html': file_summary_html})
                     updates += 1
                 else:
-                    mod_summary_type = file_summary_type.lower().capitalize()
                     new_summary = Locussummary(
                         locus_id=gene.dbentity_id,
                         summary_type=mod_summary_type,
