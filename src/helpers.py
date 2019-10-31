@@ -360,7 +360,7 @@ def link_gene_names(raw, locus_names_ids):
         display_name = d[0]
         sgdid = d[1]
         locus_names_object[display_name] = sgdid
-    processed = raw
+    processed = []
     words = raw.split(' ')
     delete_dict = {sp_character: '' for sp_character in string.punctuation}
     table = str.maketrans(delete_dict)
@@ -370,9 +370,13 @@ def link_gene_names(raw, locus_names_ids):
         if wupper in list(locus_names_object.keys()) and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
             url = '/locus/' + sgdid
-            new_str = '<a href="' + url + '">' + wupper + '</a>'
-            processed = processed.replace(original_word, new_str)
-    return processed
+            new_str = '<a href="' + url + '">' + wupper.lower() + '</a>'
+            processed.append(new_str)
+        else:
+            processed.append(p_original_word)
+    
+    processedString = ' '.join(processed)
+    return processedString
 
 
 def primer3_parser(primer3_results):
