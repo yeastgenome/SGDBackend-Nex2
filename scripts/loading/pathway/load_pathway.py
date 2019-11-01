@@ -15,6 +15,7 @@ data_file = "scripts/loading/pathway/data/processed_pathways.txt"
 summary_type = "Metabolic"
 
 CREATED_BY = os.environ['DEFAULT_USER']
+max_to_commit = 25
 
 def load_pathway():
 
@@ -88,11 +89,10 @@ def load_pathway():
 
     biocycIdList = []
 
-    nex_session.close()
-    nex_session = get_session()
-
     print (datetime.now())
     print ("reading data from datafile...")
+
+    count = 0
 
     for line in f:
         if line.startswith('pathwayID'):
@@ -132,16 +132,51 @@ def load_pathway():
                            pmids, summary, pmids4summary, synonyms, created_by, source_to_id, 
                            pathway_id_to_alias_list, summary_id_to_reference_id_list, 
                            biocycID_to_locus_id_list, gene_to_locus_id, key_to_annotation)
+        count = count + 1
 
+        if count == max_to_commit:
+            nex_session.commit()
+            nex_session.close()
+            nex_session = get_session()
+            count = 0
+            print ("Just committed " + str(max_to_commit) + "rows.")
+            
     f.close()
     fw.close()
     
     for biocycId in biocyc_id_to_dbentity_id:
         if biocycId not in biocycIdList:
-            print (biocyc_id + " is not in the new pathway file.")
+            print (biocycId + " is not in the new pathway file.")
+            pathwayId = biocyc_id_to_dbentity_id[biocycId]
+            delete_obsolete_biocyc_id(nex_session, fw, biocycId, pathwayId)
 
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
+
+
+def delete_obsolete_biocyc_id(nex_session, fw, biocycId, pathwayId):
+    
+    ## delete from locus_alias 
+    nex_session.query(LocusAlias).filter_by(alias_type='Pathway ID', display_name=biocycId).delete()
+
+    ## delete from pathway_alias
+    nex_session.query(PathwayAlias).filter_by(pathway_id=pathwayId).delete()
+
+    ## delete from pathwayannotation
+    nex_session.query(Pathwayannotation).filter_by(pathway_id=pathwayId).delete()
+
+    ## delete from pathwaysummary + pathwaysummary_reference
+    summary_ids = nex_session.query(Pathwaysummary.summary_id).filter_by(pathway_id=pathwayId).all()
+    nex_session.query(PathwaysummaryReference).filter(PathwaysummaryReference.summary_id.in_(summary_ids)).delete()
+    nex_session.query(Pathwaysummary).filter_by(pathway_id=pathwayId).delete()
+
+    ## delete from pathwaydbentity
+    nex_session.query(Pathwaydbentity).filter_by(dbentity_id=pathwayId).delete()
+
+    ## delete from dbentity
+    nex_session.query(Dbentity).filter_by(dbentity_id=pathwayId).delete()
+
+    fw.write("The biocyc_id=" + biocycId + " has been deleted from database.")
 
 def update_pathwaydbentity(nex_session, fw, pathway_id, biocycID):
 
