@@ -298,7 +298,7 @@ def upload_file(username, file, **kwargs):
     file.seek(0)
 
     try:
-        if md5sum is None:
+        if md5sum is None and full_file_path is not None:
             with open(full_file_path, 'rb') as f:
                 print("file path: " + full_file_path)
                 md5sum = hashlib.md5(f.read()).hexdigest()
@@ -330,8 +330,7 @@ def upload_file(username, file, **kwargs):
         did = fdb.dbentity_id
         transaction.commit()
         DBSession.flush()
-        fdb = DBSession.query(Filedbentity).filter(
-            Filedbentity.dbentity_id == did).one_or_none()
+        fdb = DBSession.query(Filedbentity).filter(Filedbentity.dbentity_id == did).one_or_none()
         fdb.upload_file_to_s3(file=file, filename=filename, is_web_file=is_web_file, file_path=full_file_path, flag=False)
     except Exception as e:
         DBSession.rollback()
@@ -360,7 +359,7 @@ def link_gene_names(raw, locus_names_ids):
         display_name = d[0]
         sgdid = d[1]
         locus_names_object[display_name] = sgdid
-    processed = raw
+    processed = []
     words = raw.split(' ')
     delete_dict = {sp_character: '' for sp_character in string.punctuation}
     table = str.maketrans(delete_dict)
@@ -370,9 +369,13 @@ def link_gene_names(raw, locus_names_ids):
         if wupper in list(locus_names_object.keys()) and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
             url = '/locus/' + sgdid
-            new_str = '<a href="' + url + '">' + wupper + '</a>'
-            processed = processed.replace(original_word, new_str)
-    return processed
+            new_str = '<a href="' + url + '">' + wupper.lower() + '</a>'
+            processed.append(new_str)
+        else:
+            processed.append(p_original_word)
+    
+    processedString = ' '.join(processed)
+    return processedString
 
 
 def primer3_parser(primer3_results):
