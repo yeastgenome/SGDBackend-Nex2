@@ -142,7 +142,6 @@ def load_pathway():
             print ("Just committed " + str(max_to_commit) + "rows.")
             
     f.close()
-    fw.close()
     
     for biocycId in biocyc_id_to_dbentity_id:
         if biocycId not in biocycIdList:
@@ -153,6 +152,7 @@ def load_pathway():
     # nex_session.rollback()
     nex_session.commit()
 
+    fw.close()
 
 def delete_obsolete_biocyc_id(nex_session, fw, biocycId, pathwayId):
     
@@ -162,12 +162,18 @@ def delete_obsolete_biocyc_id(nex_session, fw, biocycId, pathwayId):
     ## delete from pathway_alias
     nex_session.query(PathwayAlias).filter_by(pathway_id=pathwayId).delete()
 
+    ## delete from pathway_url                                                                                       
+    nex_session.query(PathwayUrl).filter_by(pathway_id=pathwayId).delete()
+
     ## delete from pathwayannotation
     nex_session.query(Pathwayannotation).filter_by(pathway_id=pathwayId).delete()
 
     ## delete from pathwaysummary + pathwaysummary_reference
     summary_ids = nex_session.query(Pathwaysummary.summary_id).filter_by(pathway_id=pathwayId).all()
-    nex_session.query(PathwaysummaryReference).filter(PathwaysummaryReference.summary_id.in_(summary_ids)).delete()
+    # nex_session.query(PathwaysummaryReference).filter(PathwaysummaryReference.summary_id.in_(summary_ids)).delete()
+    for summary_id in summary_ids:
+        nex_session.query(PathwaysummaryReference).filter_by(summary_id=summary_id).delete() 
+
     nex_session.query(Pathwaysummary).filter_by(pathway_id=pathwayId).delete()
 
     ## delete from pathwaydbentity
