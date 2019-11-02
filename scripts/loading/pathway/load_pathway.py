@@ -21,6 +21,7 @@ def load_pathway():
 
     nex_session = get_session()
 
+    # print (datetime.now(), flush=True)
     print (datetime.now())
     print ("quering data from database...")
 
@@ -143,6 +144,12 @@ def load_pathway():
             
     f.close()
     
+    # nex_session.rollback()
+    nex_session.commit()
+
+    ## some biocyc_ids have been updated so have to retrieve data from database
+    biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])
+
     for biocycId in biocyc_id_to_dbentity_id:
         if biocycId not in biocycIdList:
             print (biocycId + " is not in the new pathway file.")
@@ -374,6 +381,10 @@ def get_reference_id_from_db(nex_session, pmid):
         return x.dbentity_id
 
 def insert_locus_alias(nex_session, fw, source_id, locus_id, biocycID, created_by):
+
+    x = nex_session.query(LocusAlias).filter_by(locus_id=locus_id, display_name=biocycID, alias_type='Pathway ID').one_or_none()
+    if x is not None:
+        return 
 
     x = LocusAlias(locus_id = locus_id,
                    display_name = biocycID,
