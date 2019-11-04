@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
 from primer3 import bindings, designPrimers
 from collections import defaultdict
+from sqlalchemy.orm import joinedload
 
 import os
 import re
@@ -18,7 +19,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query
 from .models_helpers import ModelsHelper
@@ -904,6 +905,30 @@ def locus_posttranslational_details(request):
         return locus.posttranslational_details()
     else:
         return HTTPNotFound()
+
+@view_config(route_name='reference_posttranslational_details', renderer='json', request_method='GET')
+def reference_posttranslational_details(request):
+    id = extract_id_request(request, 'reference')
+    reference = DBSession.query(Referencedbentity).filter_by(dbentity_id = id).one_or_none()
+    if reference:
+        
+        ptms = DBSession.query(Posttranslationannotation).filter_by(reference_id = reference.dbentity_id).options(joinedload('psimod'),joinedload('modifier'),joinedload('dbentity')).all()
+        ptms_return_value = []
+        for ptm in ptms:
+            obj = {
+                    'protein':ptm.dbentity.display_name,
+                    'site_residue':ptm.site_residue,
+                    'site_index':ptm.site_index,
+                    'modification':ptm.psimod.display_name,
+                    'modifier':None
+                  }
+            if ptm.modifier:
+                obj['modifier'] = ptm.modifier.display_name
+            ptms_return_value.append(obj)
+        return ptms_return_value
+    else:
+        return HTTPNotFound()
+
 
 @view_config(route_name='locus_ecnumber_details', renderer='json', request_method='GET')
 def locus_ecnumber_details(request):
