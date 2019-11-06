@@ -345,16 +345,13 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
     ##########################################################################
 
     import hashlib
-    gaf_md5sum = hashlib.md5(gaf_file.encode()).hexdigest()
-
+    gaf_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()  
     row = nex_session.query(Filedbentity).filter_by(md5sum = gaf_md5sum).one_or_none()
 
     if row is not None:
         return
 
     gzip_file = gzip_file.replace("scripts/dumping/curation/data/", "")
-
-    # nex_session.query(Dbentity).filter_by(display_name=gzip_file, dbentity_status='Active').update({"dbentity_status": 'Archived'})
 
     if is_public == '1':
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('gene_association.sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')

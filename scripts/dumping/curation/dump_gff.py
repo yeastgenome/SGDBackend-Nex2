@@ -4,7 +4,6 @@ import os
 import sys
 import importlib
 importlib.reload(sys)  # Reload does the trick!
-# sys.setdefaultencoding('UTF8') # only for python2
 import boto
 from boto.s3.key import Key
 import transaction
@@ -332,7 +331,7 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
     ##########################################################################
 
     import hashlib
-    gff_md5sum = hashlib.md5(gff_file.encode()).hexdigest()
+    gff_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()
     row = nex_session.query(Filedbentity).filter_by(md5sum = gff_md5sum).one_or_none()
 
     if row is not None:
