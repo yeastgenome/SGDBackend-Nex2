@@ -5,8 +5,8 @@ const DEFAULT_STATE = fromJS({
   message: null,
   isReady: true,
   isPending: false,
-  colleagueCount:10,
-  geneCount:2
+  colleagueCount:0,
+  geneCount:0
 });
 
 export default function metaReducer(state = DEFAULT_STATE, action) {
