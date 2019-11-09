@@ -2487,3 +2487,15 @@ def upload_tar_file(request):
 def file_curate_menus(request):
 
     return get_file_curate_dropdown_data()
+
+@view_config(route_name="triage_count", renderer='json', request_method='GET')
+@authenticate
+def triage_count(request):
+    try:
+        colleagueCount = DBSession.query(Colleaguetriage).count()
+        geneCount = DBSession.query(ReservednameTriage).count() + DBSession.query(Reservedname).count()
+        returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount}
+        return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
+
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))

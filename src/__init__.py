@@ -198,6 +198,7 @@ def main(global_config, **settings):
     config.add_route('regulations_by_filters','/get_regulations',request_method='POST')
     config.add_route('regulation_delete','/regulation/{id}', request_method='DELETE')
     config.add_route('regulation_file','/regulation_file',request_method='POST')
+    config.add_route('triage_count','/triage_count',request_method='GET')
    
     config.add_route('healthcheck', '/healthcheck')
 
