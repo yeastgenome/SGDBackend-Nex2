@@ -560,6 +560,10 @@ def new_gene_name_reservation(request):
             )
             DBSession.add(new_res)
         transaction.commit()
+        geneCount = DBSession.query(ReservednameTriage).count() + DBSession.query(Reservedname).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','geneCount',{'message':geneCount})
+
         return True
     except Exception as e:
         traceback.print_exc()
