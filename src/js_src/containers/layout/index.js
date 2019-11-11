@@ -12,47 +12,45 @@ import { clearError, clearMessage } from '../../actions/metaActions';
 import {updateColleagueCount,updateGeneCount, setError} from '../../actions/metaActions';
 import getPusherClient from '../../lib/getPusherClient';
 const CHANNEL = 'sgd';
-const COUNTEVENT = 'counts';
+const GENECOUNTEVENT = 'geneCount';
+const COLLEAGUECOUNTEVENT = 'colleagueCount';
 
 class LayoutComponent extends Component {
-  constructor(props){
-    super(props);
-    if(window.performance){
-      if (window.performance.navigation.type == 1){
-        this.handleCounts();
-      }
-    }
-  }
-
   componentDidMount(){
-    if(this.props.isAuthenticated){
-      this.listenForUpdates();
-    }
+    this.listenForUpdates();
   }
   
   componentWillUnmount(){
-    this.channel.unbind(COUNTEVENT);
+    this.channel.unbind(GENECOUNTEVENT);
+    this.channel.unbind(COLLEAGUECOUNTEVENT);
   }
 
   handleCounts(){
-    fetch('/triage_count')
-    .then(count =>   count.json())
-    .then(count => {
-      if(count.hasOwnProperty('message')){
-        this.props.dispatch(setError(count.message));
+    if(window.performance){
+      if(window.performance.navigation.type == 1){  
+        fetch('/triage_count')
+        .then(count =>   count.json())
+        .then(count => {
+          if(count.hasOwnProperty('message')){
+            this.props.dispatch(setError(count.message));
+          }
+          else{
+            this.props.dispatch(updateColleagueCount(count.colleagueCount));
+            this.props.dispatch(updateGeneCount(count.geneCount));
+          }
+        });
       }
-      else{
-        this.props.dispatch(updateColleagueCount(count.colleagueCount));
-        this.props.dispatch(updateGeneCount(count.geneCount));
-      }
-    });
+    }
   }
 
   listenForUpdates(){
     let pusher = getPusherClient();
     this.channel = pusher.subscribe(CHANNEL);
-    this.channel.bind(COUNTEVENT,(data)=>{
+    this.channel.bind(GENECOUNTEVENT,(data)=>{
       this.props.dispatch(updateGeneCount(data.message));
+    });
+    this.channel.bind(COLLEAGUECOUNTEVENT,(data)=>{
+      this.props.dispatch(updateColleagueCount(data.message));
     });
   }
 
@@ -146,6 +144,7 @@ class LayoutComponent extends Component {
   render() {
     // init auth nodes, either login or logout links
     let menuNode = this.props.isAuthenticated ? this.renderAuthedMenu() : this.renderPublicMenu();
+    this.props.isAuthenticated ? this.handleCounts() : '';
     let devNoticeNode = null;
     if (process.env.DEMO_ENV === 'development') {
       devNoticeNode = <div className={`warning callout ${style.demoWarning}`}><i className='fa fa-exclamation-circle' /> Demo</div>;
