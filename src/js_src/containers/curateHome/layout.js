@@ -5,32 +5,50 @@ import PropTypes from 'prop-types';
 import style from './style.css';
 import { SMALL_COL_CLASS, LARGE_COL_CLASS,ml_12 } from '../../constants';
 import Badge from '@material-ui/core/Badge';
-import {updateColleagueCount,updateGeneCount, setError} from '../../actions/metaActions';
+// import {updateColleagueCount,updateGeneCount, setError} from '../../actions/metaActions';
+// import getPusherClient from '../../lib/getPusherClient';
+// const CHANNEL = 'sgd';
+// const COUNTEVENT = 'counts';
 
 class CurateLayout extends Component {
-  constructor(props){
-    super(props);
-    if(window.performance){
-      if (window.performance.navigation.type == 1){
-        this.handleCounts();
-      }
-    }
-  }
+  // constructor(props){
+  //   super(props);
+  //   if(window.performance){
+  //     if (window.performance.navigation.type == 1){
+  //       this.handleCounts();
+  //     }
+  //   }
+  // }
 
-  handleCounts(){
-    console.log('fetching counts');
-    fetch('/triage_count')
-    .then(count =>   count.json())
-    .then(count => {
-      if(count.hasOwnProperty('message')){
-        this.props.dispatch(setError(count.message));
-      }
-      else{
-        this.props.dispatch(updateColleagueCount(count.colleagueCount));
-        this.props.dispatch(updateGeneCount(count.geneCount));
-      }
-    });
-  }
+  // componentDidMount(){
+  //   this.listenForUpdates();
+  // }
+
+  // componentWillUnmount(){
+  //   this.channel.unbind(COUNTEVENT);
+  // }
+
+  // handleCounts(){
+  //   fetch('/triage_count')
+  //   .then(count =>   count.json())
+  //   .then(count => {
+  //     if(count.hasOwnProperty('message')){
+  //       this.props.dispatch(setError(count.message));
+  //     }
+  //     else{
+  //       this.props.dispatch(updateColleagueCount(count.colleagueCount));
+  //       this.props.dispatch(updateGeneCount(count.geneCount));
+  //     }
+  //   });
+  // }
+
+  // listenForUpdates(){
+  //   let pusher = getPusherClient();
+  //   this.channel = pusher.subscribe(CHANNEL);
+  //   this.channel.bind(COUNTEVENT,(data)=>{
+  //     this.props.dispatch(updateGeneCount(data.message));
+  //   });
+  // }
 
   render() {
     let location = this.props.location ? this.props.location.pathname : '';

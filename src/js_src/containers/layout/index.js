@@ -9,7 +9,53 @@ import curateLogo from './curateLogo.png';
 import Loader from './loader/index';
 import { clearError, clearMessage } from '../../actions/metaActions';
 
+import {updateColleagueCount,updateGeneCount, setError} from '../../actions/metaActions';
+import getPusherClient from '../../lib/getPusherClient';
+const CHANNEL = 'sgd';
+const COUNTEVENT = 'counts';
+
 class LayoutComponent extends Component {
+  constructor(props){
+    super(props);
+    if(window.performance){
+      if (window.performance.navigation.type == 1){
+        this.handleCounts();
+      }
+    }
+  }
+
+  componentDidMount(){
+    if(this.props.isAuthenticated){
+      this.listenForUpdates();
+    }
+  }
+  
+  componentWillUnmount(){
+    this.channel.unbind(COUNTEVENT);
+  }
+
+  handleCounts(){
+    fetch('/triage_count')
+    .then(count =>   count.json())
+    .then(count => {
+      if(count.hasOwnProperty('message')){
+        this.props.dispatch(setError(count.message));
+      }
+      else{
+        this.props.dispatch(updateColleagueCount(count.colleagueCount));
+        this.props.dispatch(updateGeneCount(count.geneCount));
+      }
+    });
+  }
+
+  listenForUpdates(){
+    let pusher = getPusherClient();
+    this.channel = pusher.subscribe(CHANNEL);
+    this.channel.bind(COUNTEVENT,(data)=>{
+      this.props.dispatch(updateGeneCount(data.message));
+    });
+  }
+
   renderSearch () {
     if (this.props.isAuthenticated) {
       return (
