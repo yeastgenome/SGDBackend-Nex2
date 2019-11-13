@@ -842,7 +842,11 @@ def reserved_name_promote(request):
     req_id = request.matchdict['id'].upper()
     res = DBSession.query(ReservednameTriage).filter(ReservednameTriage.curation_id == req_id).one_or_none()
     try:
-        return res.promote(request.session['username'])
+        if(res.promote(request.session['username'])):
+            geneCount = DBSession.query(ReservednameTriage).count()
+            pusher = get_pusher_client() 
+            pusher.trigger('sgd','geneCount',{'message':geneCount})
+            return True
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
