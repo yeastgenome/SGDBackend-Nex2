@@ -560,7 +560,7 @@ def new_gene_name_reservation(request):
             )
             DBSession.add(new_res)
         transaction.commit()
-        geneCount = DBSession.query(ReservednameTriage).count() + DBSession.query(Reservedname).count()
+        geneCount = DBSession.query(ReservednameTriage).count()
         pusher = get_pusher_client() 
         pusher.trigger('sgd','geneCount',{'message':geneCount})
 
@@ -783,7 +783,7 @@ def reserved_name_standardize(request):
         res = DBSession.query(Reservedname).filter(Reservedname.reservedname_id == req_id).one_or_none()
         res.standardize(request.session['username'])
 
-        geneCount = DBSession.query(ReservednameTriage).count() + DBSession.query(Reservedname).count()
+        geneCount = DBSession.query(ReservednameTriage).count()
         pusher = get_pusher_client() 
         pusher.trigger('sgd','geneCount',{'message':geneCount})
         return True
@@ -821,7 +821,7 @@ def reserved_name_delete(request):
             if ref_count == 0 and ref_note_count == 0 and personal_communication_ref.publication_status != 'Published':
                 personal_communication_ref.delete_with_children(username)           
         
-        geneCount = DBSession.query(ReservednameTriage).count() + DBSession.query(Reservedname).count()
+        geneCount = DBSession.query(ReservednameTriage).count()
         pusher = get_pusher_client() 
         pusher.trigger('sgd','geneCount',{'message':geneCount})
 
