@@ -39,6 +39,8 @@ class LocusSummaries extends Component {
       phenotype_summary: t.maybe(t.String),
       regulation_summary: t.maybe(t.String),
       regulation_summary_pmids: t.maybe(t.String),
+      protein_summary:t.maybe(t.String),
+      sequence_summary:t.maybe(t.String),
       interaction_summary:t.maybe(t.String),
       disease_summary:t.maybe(t.String)
     });
@@ -52,6 +54,12 @@ class LocusSummaries extends Component {
         },
         regulation_summary_pmids: {
           label: 'Regulation summary PMIDs (space-separated)'
+        },
+        protein_summary:{
+          type:'textarea'
+        },
+        sequence_summary:{
+          type:'textarea'
         },
         interaction_summary:{
           type:'textarea'
