@@ -2519,7 +2519,7 @@ def file_curate_menus(request):
 def triage_count(request):
     try:
         colleagueCount = DBSession.query(Colleaguetriage).count()
-        geneCount = DBSession.query(ReservednameTriage).count() + DBSession.query(Reservedname).count()
+        geneCount = DBSession.query(ReservednameTriage).count()
         returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount}
         return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
 
