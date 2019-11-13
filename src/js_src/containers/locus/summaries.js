@@ -38,7 +38,9 @@ class LocusSummaries extends Component {
     let FormSchema = t.struct({
       phenotype_summary: t.maybe(t.String),
       regulation_summary: t.maybe(t.String),
-      regulation_summary_pmids: t.maybe(t.String)
+      regulation_summary_pmids: t.maybe(t.String),
+      interaction_summary:t.maybe(t.String),
+      disease_summary:t.maybe(t.String)
     });
     let options = {
       fields: {
@@ -50,6 +52,12 @@ class LocusSummaries extends Component {
         },
         regulation_summary_pmids: {
           label: 'Regulation summary PMIDs (space-separated)'
+        },
+        interaction_summary:{
+          type:'textarea'
+        },
+        disease_summary:{
+          type:'textarea'
         }
       }
     };
