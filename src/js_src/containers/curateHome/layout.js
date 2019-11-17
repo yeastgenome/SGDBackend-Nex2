@@ -8,6 +8,7 @@ import { SMALL_COL_CLASS, LARGE_COL_CLASS } from '../../constants';
 class CurateLayout extends Component {
   render() {
     let location = this.props.location ? this.props.location.pathname : '';
+    // console.log(this.props.location);
     return (
       <div className='row'>
         <div className={SMALL_COL_CLASS}>
@@ -24,6 +25,7 @@ class CurateLayout extends Component {
             <li><Link className={(location === '/ptm') ? style.activeLink : null} to='/ptm'><span><i className="fa fa-upload" /> PTM</span></Link></li>
             <li><Link className={(location === '/regulation') ? style.activeLink : null} to='/regulation'><span><i className="fa fa-upload" /> Regulation</span></Link></li>
             <li><Link className={(location === '/file_curate') ? style.activeLink : null} to='/file_curate'><span><i className='fa fa-file-text' /> File Curate</span></Link></li>
+            <li><span><Link className={(location === '/new_phenotype') ? style.activeLink : null} to='/new_phenotype'><i className='fa fa-sticky-note' /> Phenotype New</Link> | <Link className={(location === '/search_phenotype') ? style.activeLink : null} to='/search_phenotype'>Update</Link></span></li>
           </ul>
         </div>
         <div className={LARGE_COL_CLASS}>
