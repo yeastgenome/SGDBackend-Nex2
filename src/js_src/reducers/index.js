@@ -6,7 +6,7 @@ import searchReducer from './searchReducer';
 import ptmReducer from './ptmReducer';
 import newsLetterReducer from './newsLetterReducer';
 import regulationReducer from './regulationReducer';
-
+import phenotypeReducer from './phenotypeReducer';
 
 export default {
   auth: authReducer,
@@ -16,5 +16,6 @@ export default {
   search: searchReducer,
   ptm:ptmReducer,
   newsLetter:newsLetterReducer,
-  regulation:regulationReducer
+  regulation:regulationReducer,
+  phenotype:phenotypeReducer
 };

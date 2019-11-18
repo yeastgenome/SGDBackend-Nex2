@@ -39,9 +39,13 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      Referencetriage, Referencedeleted, Locusdbentity,\
      CurationReference, Locussummary, validate_tags,\
      convert_space_separated_pmids_to_list, Psimod,\
-     Posttranslationannotation, Regulationannotation
+     Posttranslationannotation, Regulationannotation, \
+     Apo, Allele, Reporter, Chebi, Eco, Source
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
+from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
+      delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
+
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -1497,6 +1501,92 @@ def ptm_by_gene(request):
 
     return HTTPOk(body=json.dumps({'ptms' :list_of_ptms}),content_type='text/json')
 
+@view_config(route_name='get_observable', renderer='json', request_method='GET')
+def get_observable(request):
+    try:
+        all_apo = DBSession.query(Apo).filter_by(apo_namespace='observable').order_by(Apo.display_name).all()
+        data = []
+        for apo in all_apo:
+            data.append({"observable_id": apo.apo_id,
+                         "format_name":apo.format_name,
+                         "display_name": apo.display_name})
+
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+@view_config(route_name='get_allele', renderer='json', request_method='GET')
+def get_allele(request):
+    try:
+        all_allele = DBSession.query(Allele).order_by(Allele.display_name).all()
+        data = []
+        for a in all_allele:
+            data.append({"allele_id": a.allele_id,
+                         "format_name":a.format_name,
+                         "display_name": a.display_name})
+
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+@view_config(route_name='get_reporter', renderer='json', request_method='GET')
+def get_reporter(request):
+    try:
+        all_reporter = DBSession.query(Reporter).order_by(Reporter.display_name).all()
+        data = []
+        for r in all_reporter:
+            data.append({"reporter_id": r.reporter_id,
+                         "format_name":r.format_name,
+                         "display_name": r.display_name})
+
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+
+@view_config(route_name='get_chebi', renderer='json', request_method='GET')
+def get_chebi(request):
+    try:
+        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete='0').order_by(Chebi.display_name).all()
+        data = []
+        for c in all_chemical:
+            data.append({"chebi_id": c.chebi_id,
+                         "format_name":c.format_name,
+                         "display_name": c.display_name})
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+@view_config(route_name='get_eco', renderer='json', request_method='GET')
+def get_eco(request):
+    try:
+        # all_eco = DBSession.query(Eco).filter_by(is_obsolete='0').order_by(Eco.display_name).all()
+        all_eco = DBSession.query(Eco).order_by(Eco.display_name).all()
+        data = []
+        for e in all_eco:
+            data.append({"eco_id": e.eco_id,
+                         "format_name":e.format_name,
+                         "assay_name": e.display_name,
+                         "display_name": e.display_name})
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+@view_config(route_name='get_apo', renderer='json', request_method='GET')
+def get_apo(request):
+    try:
+        namespace = request.matchdict['namespace']
+        ns = namespace
+        if namespace == 'experiment_type-yeast':
+            ns = 'experiment_type'
+        all_apo = DBSession.query(Apo).filter_by(apo_namespace=ns).order_by(Apo.display_name).all()
+        if namespace == 'experiment_type-yeast':
+            return dict([(x.display_name, x.apo_id) for x in all_apo])
+        else:
+            return [ {'display_name': x.display_name, 'apo_id': x.apo_id } for x in all_apo ]
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
 @view_config(route_name='get_strains', renderer='json', request_method='GET')
 def get_strains(request):
     try:
@@ -1764,6 +1854,37 @@ def get_all_eco_for_regulations(request):
     eco_in_db = models_helper.get_all_eco()
     obj = [{'eco_id':e.eco_id, 'format_name': e.format_name,'display_name':e.display_name} for e in eco_in_db]
     return HTTPOk(body=json.dumps({'success':obj}),content_type='text/json')
+
+
+@view_config(route_name='phenotype_add', renderer='json', request_method='POST')
+@authenticate
+def phenotype_add(request):
+
+    return add_phenotype_annotations(request)
+
+
+@view_config(route_name='get_phenotypes',renderer='json',request_method='GET')
+def get_phenotypes(request):
+
+    return get_list_of_phenotypes(request)
+
+@view_config(route_name='get_phenotype',renderer='json',request_method='GET')
+def get_phenotype(request):
+
+    return get_one_phenotype(request)
+
+@view_config(route_name='phenotype_update', renderer='json', request_method='POST')
+@authenticate
+def phenotype_update(request):
+
+    return update_phenotype_annotations(request)
+
+
+@view_config(route_name='phenotype_delete',renderer='json',request_method='POST')
+@authenticate
+def phenotype_delete(request):
+
+    return delete_phenotype_annotations(request)
 
 
 @view_config(route_name='regulation_insert_update', renderer='json', request_method='POST')
