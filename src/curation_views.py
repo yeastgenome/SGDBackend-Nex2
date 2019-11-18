@@ -564,6 +564,10 @@ def new_gene_name_reservation(request):
             )
             DBSession.add(new_res)
         transaction.commit()
+        geneCount = DBSession.query(ReservednameTriage).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','geneCount',{'message':geneCount})
+
         return True
     except Exception as e:
         traceback.print_exc()
@@ -625,6 +629,10 @@ def colleague_update(request):
                 curator_session.add(new_c_triage)
                 colleague.is_in_triage = True
             transaction.commit()
+
+            colleagueCount = DBSession.query(Colleaguetriage).count()
+            pusher = get_pusher_client() 
+            pusher.trigger('sgd','colleagueCount',{'message':colleagueCount})
             return { 'colleague_id': req_id }
         else:
             return { 'colleague_id': req_id }
@@ -778,6 +786,10 @@ def reserved_name_standardize(request):
             res.associate_published_reference(name_desc_ref.dbentity_id, username, 'name_description')
         res = DBSession.query(Reservedname).filter(Reservedname.reservedname_id == req_id).one_or_none()
         res.standardize(request.session['username'])
+
+        geneCount = DBSession.query(ReservednameTriage).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','geneCount',{'message':geneCount})
         return True
     except Exception as e:
         transaction.abort()
@@ -812,6 +824,11 @@ def reserved_name_delete(request):
             personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.dbentity_id == personal_com_id).one_or_none()
             if ref_count == 0 and ref_note_count == 0 and personal_communication_ref.publication_status != 'Published':
                 personal_communication_ref.delete_with_children(username)           
+        
+        geneCount = DBSession.query(ReservednameTriage).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','geneCount',{'message':geneCount})
+
         return True
     except Exception as e:
         transaction.abort()
@@ -829,7 +846,11 @@ def reserved_name_promote(request):
     req_id = request.matchdict['id'].upper()
     res = DBSession.query(ReservednameTriage).filter(ReservednameTriage.curation_id == req_id).one_or_none()
     try:
-        return res.promote(request.session['username'])
+        if(res.promote(request.session['username'])):
+            geneCount = DBSession.query(ReservednameTriage).count()
+            pusher = get_pusher_client() 
+            pusher.trigger('sgd','geneCount',{'message':geneCount})
+            return True
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
@@ -935,6 +956,9 @@ def colleague_triage_promote(request):
 
         curator_session.delete(c_triage)
         transaction.commit()
+        colleagueCount = DBSession.query(Colleaguetriage).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','colleagueCount',{'message':colleagueCount})
         return True
     except IntegrityError as e:
         transaction.abort()
@@ -964,6 +988,9 @@ def colleague_triage_delete(request):
             return HTTPNotFound()
         curator_session.delete(c_triage)
         transaction.commit()
+        colleagueCount = DBSession.query(Colleaguetriage).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','colleagueCount',{'message':colleagueCount})
         return True
     except Exception as e:
         transaction.abort()
@@ -1025,6 +1052,9 @@ def add_new_colleague_triage(request):
         )
         curator_session.add(new_c_triage)
         transaction.commit()
+        colleagueCount = DBSession.query(Colleaguetriage).count()
+        pusher = get_pusher_client() 
+        pusher.trigger('sgd','colleagueCount',{'message':colleagueCount})
         return {'colleague_id': 0}
     except IntegrityError as IE:
         transaction.abort()
@@ -2608,3 +2638,15 @@ def upload_tar_file(request):
 def file_curate_menus(request):
 
     return get_file_curate_dropdown_data()
+
+@view_config(route_name="triage_count", renderer='json', request_method='GET')
+@authenticate
+def triage_count(request):
+    try:
+        colleagueCount = DBSession.query(Colleaguetriage).count()
+        geneCount = DBSession.query(ReservednameTriage).count()
+        returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount}
+        return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
+
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
