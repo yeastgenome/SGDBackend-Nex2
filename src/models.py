@@ -4327,7 +4327,7 @@ class Locusdbentity(Dbentity):
         obj["urls"] = [u.to_dict() for u in urls]
         obj["urls"].append({
             "category": "LOCUS_SEQUENCE",
-            "link": "/cgi-bin/seqTools?back=1&seqname=" + self.systematic_name,
+            "link": "/seqTools?seqname=" + self.systematic_name,
             "display_name": "Gene/Sequence Resources"
         })
         obj["urls"].append({
