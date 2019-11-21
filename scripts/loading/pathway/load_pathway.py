@@ -281,7 +281,8 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
         locus_id_list.append(locus_id)
         if locus_id not in locus_id_listDB:
             insert_locus_alias(nex_session, fw, source_to_id['MetaCyc'], locus_id, biocycID, created_by)
-        
+
+        has_pmids = 0
         for pmid in pmids:
             reference_id = None
             if pmid.isdigit():
@@ -293,10 +294,14 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
                 if reference_id is None:
                     print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                     continue
+            has_pmids = 1
             key_to_annotation[(pathway_id, locus_id, reference_id)] = 1
             if (pathway_id, locus_id, reference_id) not in key_to_annotationDB:
                 insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id,
                                          locus_id, reference_id, pathway_id, created_by)
+        if has_pmids == 0:
+            insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id,
+                                     locus_id, None, pathway_id, created_by)
 
     for locus_id in locus_id_listDB:
         if locus_id not in locus_id_list:
@@ -355,6 +360,8 @@ def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_na
         if locus_id is None:
             print ("The gene name = " + gene + " is not in the database.")
             continue
+
+        has_pmids = 0
         for pmid in pmids:
             reference_id = None
             if pmid.isdigit():
@@ -367,8 +374,13 @@ def add_pathway(nex_session, fw, taxonomy_id, source_to_id, biocycID, display_na
                     print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                     continue
 
+            has_pmids = 1
+                
             insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id, 
                                      locus_id, reference_id, pathway_id, created_by)
+        if has_pmids == 0:
+            insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id,
+                                     locus_id, None, pathway_id, created_by)
 
         insert_locus_alias(nex_session, fw, source_to_id['MetaCyc'], locus_id, biocycID, created_by)
 
@@ -402,12 +414,20 @@ def insert_locus_alias(nex_session, fw, source_id, locus_id, biocycID, created_b
 
 def insert_pathwayannotation(nex_session, fw, source_id, taxonomy_id, locus_id, reference_id, pathway_id, created_by):
 
-    x = Pathwayannotation(dbentity_id = locus_id,
-                          source_id = source_id,
-                          taxonomy_id = taxonomy_id,
-                          reference_id = reference_id,
-                          pathway_id = pathway_id,
-                          created_by = created_by)
+    x = None
+    if reference_id is None:
+        x = Pathwayannotation(dbentity_id = locus_id,
+                              source_id = source_id,
+                              taxonomy_id = taxonomy_id,
+                              pathway_id = pathway_id,
+                              created_by = created_by)
+    else:
+        x = Pathwayannotation(dbentity_id = locus_id,
+                              source_id = source_id,
+                              taxonomy_id = taxonomy_id,
+                              reference_id = reference_id,
+                              pathway_id = pathway_id,
+                              created_by = created_by)
 
     nex_session.add(x)
     nex_session.flush()
