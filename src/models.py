@@ -8138,8 +8138,8 @@ class Phenotypeannotation(Base):
             if number_conditions.get(annotation.annotation_id, 0) > 1:
                 add = number_conditions.get(annotation.annotation_id, 0)
 
-
-            mt[annotation.mutant.display_name][annotation.experiment.namespace_group] += add
+            if annotation.experiment.namespace_group:
+                mt[annotation.mutant.display_name][annotation.experiment.namespace_group] += add
 
         experiment_categories = []
         for key in list(mt.keys()):
