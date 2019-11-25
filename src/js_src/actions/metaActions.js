@@ -29,3 +29,11 @@ export function setReady () {
 export function finishPending () {
   return { type: 'FINISH_PENDING' };
 }
+
+export function updateColleagueCount(count){
+  return {type:'UPDATE_COLLEAGUE_COUNT',payload:count};
+}
+
+export function updateGeneCount(count){
+  return {type:'UPDATE_GENE_COUNT',payload:count};
+}

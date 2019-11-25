@@ -40,6 +40,7 @@ def main(global_config, **settings):
     config.add_route('reference_disease_details', '/reference/{id}/disease_details', request_method='GET')
     config.add_route('reference_regulation_details', '/reference/{id}/regulation_details', request_method='GET')
     config.add_route('reference_list', '/reference_list')
+    config.add_route('reference_posttranslational_details', '/reference/{id}/posttranslational_details', request_method='GET')
 
     config.add_route('author', '/author/{format_name}', request_method='GET')
 
@@ -197,6 +198,18 @@ def main(global_config, **settings):
     config.add_route('regulations_by_filters','/get_regulations',request_method='POST')
     config.add_route('regulation_delete','/regulation/{id}', request_method='DELETE')
     config.add_route('regulation_file','/regulation_file',request_method='POST')
+    config.add_route('triage_count','/triage_count',request_method='GET')
+    config.add_route('get_apo','/get_apo/{namespace}',request_method='GET')
+    config.add_route('get_observable','/get_observable',request_method='GET')
+    config.add_route('get_allele','/get_allele',request_method='GET')
+    config.add_route('get_reporter','/get_reporter',request_method='GET')
+    config.add_route('get_chebi','/get_chebi',request_method='GET')
+    config.add_route('get_eco','/get_eco',request_method='GET')
+    config.add_route('get_phenotypes','/get_phenotypes/{gene}/{reference}', request_method='GET')
+    config.add_route('get_phenotype','/get_phenotype/{annotation_id}/{group_id}', request_method='GET')
+    config.add_route('phenotype_add','/phenotype_add', request_method='POST')
+    config.add_route('phenotype_update','/phenotype_update', request_method='POST')
+    config.add_route('phenotype_delete','/phenotype_delete', request_method='POST')
    
     config.add_route('healthcheck', '/healthcheck')
 

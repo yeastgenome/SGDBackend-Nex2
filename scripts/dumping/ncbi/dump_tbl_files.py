@@ -404,7 +404,7 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
                 files[chrnum].write(row + "\n")
 
     if type == 'ncRNA':
-        type = feature_type.replace("_gene", "")
+        type = feature_type.replace("_gene", "").replace(" gene", "")
         # class = ncRNA_class_mapping.get(gene_name, 'other')
         files[chrnum].write(TABS + "ncRNA_class\t" + type + "\n")
         product = gene_name if gene_name else systematic_name
@@ -594,8 +594,6 @@ def get_cds_data(nex_session, annotation_id_to_strand, type_mapping):
             cde_data.append(str(start)+"\t"+str(end)+"\tcentromere")
             display_name = "REPLACE_THIS_CDE" + x.display_name.replace("centromere_DNA_Element_", "") + " of REPLACE_THIS"
             cde_data.append(TABS + "note\t" + display_name)
-            # cde_data.append(TABS + "evidence\tnot_experimental")
-            cde_data.append(TABS + "no experiment") 
             annotation_id_to_cde_data[x.annotation_id] = cde_data
 
         # if x.display_name not in ['CDS']:

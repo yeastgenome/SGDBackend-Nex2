@@ -3,3 +3,4 @@ export const LARGE_COL_CLASS = 'columns small-8 medium-9';
 export const NON_HIGHLIGHTED_FIELDS = ['sourceHref', 'href', 'category', 'homologs', 'paralogs', 'orthologs', 'homologs.symbol', 'homologs.panther_family'];
 export const SMALL_COL_CLASS = 'columns small-4 medium-3';
 export const PREVIEW_URL = process.env.PREVIEW_URL || 'https://www.yeastgenome.org';
+export const ml_12 = {marginLeft:'12px'};

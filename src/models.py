@@ -2228,7 +2228,8 @@ class Referencedbentity(Dbentity):
             "go": DBSession.query(Goannotation).filter_by(reference_id=self.dbentity_id).count(),
             "phenotype": DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).count(),
             "disease": DBSession.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).count(),
-            "regulation": DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).count()
+            "regulation": DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).count(),
+            "ptms":DBSession.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).count()
         }
 
         return obj
@@ -4326,7 +4327,7 @@ class Locusdbentity(Dbentity):
         obj["urls"] = [u.to_dict() for u in urls]
         obj["urls"].append({
             "category": "LOCUS_SEQUENCE",
-            "link": "/cgi-bin/seqTools?back=1&seqname=" + self.systematic_name,
+            "link": "/seqTools?seqname=" + self.systematic_name,
             "display_name": "Gene/Sequence Resources"
         })
         obj["urls"].append({
@@ -8137,8 +8138,8 @@ class Phenotypeannotation(Base):
             if number_conditions.get(annotation.annotation_id, 0) > 1:
                 add = number_conditions.get(annotation.annotation_id, 0)
 
-
-            mt[annotation.mutant.display_name][annotation.experiment.namespace_group] += add
+            if annotation.experiment.namespace_group:
+                mt[annotation.mutant.display_name][annotation.experiment.namespace_group] += add
 
         experiment_categories = []
         for key in list(mt.keys()):

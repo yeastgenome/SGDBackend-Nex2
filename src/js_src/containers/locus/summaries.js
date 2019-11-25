@@ -13,7 +13,7 @@ class LocusSummaries extends Component {
     e.preventDefault();
     let value = this.formInput.getValue();
     if (value) {
-      let id = this.props.params.id;
+      let id = this.props.match.params.id;
       let url = `/locus/${id}/curate`;
       this.props.dispatch(setPending());
       fetchData(url, { type: 'PUT', data: value }).then( (data) => {

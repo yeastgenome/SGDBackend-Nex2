@@ -1432,6 +1432,12 @@ def reference_side_effect(*args, **kwargs):
                 mock.Locusdbentity = locus_dbentity
                 mock.Literatureannotation = literature_annotation
                 return MockQuery([mock])
+            elif len(args) == 1 and str(args[0]) == "<class 'src.models.Posttranslationannotation'>":
+                ptm = factory.PosttranslationannotationFactory()
+                return MockQuery(ptm)
+            else:
+                print("the problem is the condition!!!!")
+                print(args)
 
 def reference_phenotype_side_effect(*args, **kwargs):
     
