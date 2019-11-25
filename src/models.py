@@ -2745,7 +2745,7 @@ class Filedbentity(Dbentity):
                 file.seek(0)
 
                 if self.md5sum != local_md5sum or is_web_file:
-                    self.md5sum = local_md5sum
+                    # self.md5sum = local_md5sum
                     # get file size
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()

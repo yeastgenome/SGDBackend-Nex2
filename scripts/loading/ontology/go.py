@@ -75,9 +75,9 @@ def load_ontology(ontology_file):
                                                  fw)
     
 
-    log.info("Uploading file to S3...")
+    # log.info("Uploading file to S3...")
 
-    update_database_load_file_to_s3(nex_session, ontology_file, source_to_id, edam_to_id)
+    # update_database_load_file_to_s3(nex_session, ontology_file, source_to_id, edam_to_id)
 
     log.info("Writing loading summary...")
 

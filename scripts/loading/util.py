@@ -305,7 +305,136 @@ def get_strain_taxid_mapping():
              'Other':           "TAX:4932",
              'other':           "TAX:4932" }
 
-def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_sgdid_list, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_with_uniprot=None, bad_ref=None):
+def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, bad_ref=None):
+
+    from src.models import Referencedbentity, Locusdbentity, Go, Eco
+
+    goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
+
+    pmid_to_reference_id = {}
+
+    sgdid_to_reference_id = {}
+    for x in nex_session.query(Referencedbentity).all():
+        pmid_to_reference_id[x.pmid] = x.dbentity_id
+        sgdid_to_reference_id[x.sgdid] = x.dbentity_id
+
+    sgdid_to_locus_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Locusdbentity).all()])
+
+    f = None
+    if filename.endswith('.gz'):
+        f = gzip.open(filename, 'rt')
+    else:
+        f = open(filename)
+        
+    read_line = {}
+    data = []
+
+    for line in f:
+
+        if line.startswith('!'):
+            continue
+
+        field = line.strip().split('\t')
+
+        ## get rid of duplicate lines...
+        if line in read_line:
+            continue
+        read_line[line] = 1
+
+        ## SGDID
+        sgdid = field[1]
+        locus_id = sgdid_to_locus_id.get(sgdid)
+        if locus_id is None:
+            # print "The sgdid = ", sgdid, " is not in LOCUSDBENTITY table."
+            continue
+ 
+        ## go_qualifier
+        go_qualifier = field[2]
+        if 'NOT' in go_qualifier:
+            go_qualifier = 'NOT'
+        else: 
+            go_qualifier = go_qualifier.replace('_', ' ')
+
+        ## go_id
+        goid = field[3]
+        go_id = goid_to_go_id.get(goid)
+        if go_id is None:
+            print("The GOID = ", goid, " is not in GO table.")
+            continue
+
+        ## eco_id
+        eco = field[5]
+        eco_id = format_name_to_eco_id.get(eco)
+        if eco_id is None:
+            print("The eco ID = ", eco, " is not in the ECO table.")
+            continue
+        
+        ## source
+        source = field[9]
+
+        ## created_by
+        annot_prop_dict = annot_prop_to_dict(field[11])
+        orcid = annot_prop_dict.get('contributor').replace('http://orcid.org/', '')
+        created_by = curator_id.get(orcid)
+                
+        ## reference_id
+        reference_id = None
+        pmid = None
+        if field[4].startswith('PMID:'):
+            pmid = field[4][5:]    # PMID:1234567; need to be 1234567
+            reference_id = pmid_to_reference_id.get(int(pmid))
+        else:
+            ref_sgdid = go_ref_mapping.get(field[4])
+            if ref_sgdid is None:
+                if bad_ref is not None and field[4] not in bad_ref:
+                    bad_ref.append(field[4])
+                continue
+            reference_id = sgdid_to_reference_id.get(ref_sgdid)
+        if reference_id is None:
+            if pmid is None:
+                print("NO REFERENCE: line=", line)
+                continue
+            print("The PMID = " + str(pmid) + " is not in the REFERENCEDBENTITY table.")
+            if new_pmids is not None:
+                if pmid not in new_pmids:
+                    new_pmids.append(pmid)
+                    for dbentity_id in dbentity_ids:
+                        dbentity_with_new_pmid[dbentity_id] = 1
+            continue
+
+        ## date_created
+        date_created = str(field[8][0:4]) + '-' + str(field[8][4:6]) + '-' + str(field[8][6:])
+        date_assigned = sgdid_to_date_assigned.get(sgdid)
+        if date_assigned is None:
+            date_assigned = date_created
+        annotation_type = 'manually curated'
+
+        key = (locus_id, go_id, reference_id, eco_id, field[6], field[10])
+
+        if key not in foundAnnotation:
+                 
+            entry = { 'source': source,
+                      'dbentity_id': locus_id,
+                      'reference_id': reference_id,
+                      'go_id': go_id,
+                      'eco_id': eco_id,
+                      'annotation_type': annotation_type,
+                      'go_qualifier': go_qualifier,
+                      'date_assigned': date_assigned,
+                      'date_created': date_created,
+                      'created_by': created_by }
+
+            if get_extension == 1 and field[10] != '':
+                entry['goextension'] = field[10]
+            if get_support == 1 and field[6] != '':
+                entry['gosupport'] = field[6]
+            data.append(entry)
+        
+    return data
+
+
+def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_sgdid_list, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_with_uniprot=None, bad_ref=None):
 
     from src.models import Referencedbentity, Locusdbentity, Go, EcoAlias
     # import src.scripts.loading.config
@@ -349,12 +478,10 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
 
         ## go_qualifier                                                                                     
         go_qualifier = field[2]
-        if go_qualifier == 'part_of':
-            go_qualifier = 'part of'
-        if go_qualifier == 'involved_in':
-            go_qualifier = 'involved in'
         if 'NOT' in go_qualifier:
             go_qualifier = 'NOT'
+        else:
+            go_qualifier = go_qualifier.replace('_', ' ')
 
         ## go_id                                                                                            
         goid = field[3]
@@ -466,7 +593,10 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
                 entry['gosupport'] = field[6]
 
             data.append(entry)
-       
+   
+            key = (locus_id, go_id, reference_id, eco_id, field[6], field[10])
+            foundAnnotation[key] = 1
+
     return data
 
 def annot_prop_to_dict(annot_prop):
