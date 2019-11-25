@@ -12,7 +12,8 @@ from src.models import Go, Taxonomy, Source, Goannotation, Gosupportingevidence,
 from scripts.loading.database_session import get_session
 from src.helpers import upload_file
 from scripts.loading.util import get_relation_to_ro_id, read_gpi_file, \
-                                read_gpad_file, get_go_extension_link
+                                 read_gpad_file, read_noctua_gpad_file, \
+                                 get_go_extension_link
 
 __author__ = 'sweng66'
 
@@ -27,7 +28,7 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-def load_go_annotations(gpad_file, gpi_file, annotation_type, log_file):
+def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, log_file):
 
     nex_session = get_session()
 
@@ -85,11 +86,33 @@ def load_go_annotations(gpad_file, gpi_file, annotation_type, log_file):
     dbentity_id_with_new_pmid = {}
     dbentity_id_with_uniprot = {}
     bad_ref = []
+    foundAnnotation = {}
     data = read_gpad_file(gpad_file, nex_session, uniprot_to_date_assigned, 
-    	   	          uniprot_to_sgdid_list, yes_goextension, yes_gosupport, 
+    	   	          uniprot_to_sgdid_list, foundAnnotation, 
+                          yes_goextension, yes_gosupport, 
 			  new_pmids, dbentity_id_with_new_pmid, 
                           dbentity_id_with_uniprot, bad_ref)
-    
+
+    noctua_data = []
+    if annotation_type == 'manually curated':
+        log.info(str(datetime.now()))
+        log.info("Reading noctua GPAD file...")
+
+        fw.write(str(datetime.now()) + "\n")
+        fw.write("reading noctua gpad file...\n")
+
+        sgdid_to_date_assigned = {}
+        for uniprot in uniprot_to_date_assigned:
+            date_assigned = uniprot_to_date_assigned[uniprot]
+            sgdid_list = uniprot_to_sgdid_list.get(uniprot, [])
+            for sgdid in sgdid_list:
+                sgdid_to_date_assigned[sgdid] = date_assigned
+
+        noctua_data = read_noctua_gpad_file(noctua_gpad_file, nex_session, 
+                                            sgdid_to_date_assigned, foundAnnotation,
+                                            yes_goextension, yes_gosupport, new_pmids, 
+                                            dbentity_id_with_new_pmid, bad_ref)
+
     nex_session.close()
 
     log.info(str(datetime.now()))
@@ -98,8 +121,8 @@ def load_go_annotations(gpad_file, gpi_file, annotation_type, log_file):
     # load the new data into the database
     fw.write(str(datetime.now()) + "\n")
     fw.write("loading the new data into the database...\n")
-    [hasGoodAnnot, annotation_update_log] = load_new_data(data, source_to_id, annotation_type,
-                                                          key_to_annotation, 
+    [hasGoodAnnot, annotation_update_log] = load_new_data(data, noctua_data, source_to_id, 
+                                                          annotation_type, key_to_annotation, 
                                                           annotation_id_to_extensions, 
                                                           annotation_id_to_support_evidences, 
                                                           taxonomy_id, go_id_to_aspect, fw)
@@ -120,10 +143,20 @@ def load_go_annotations(gpad_file, gpi_file, annotation_type, log_file):
                                 fw)
 
     if annotation_type == 'manually curated':
+
         log.info(str(datetime.now()))
         log.info("Uploading GPAD/GPI files to AWS...")
-        update_database_load_file_to_s3(nex_session, gpad_file, gpi_file, 
-                                        source_to_id, edam_to_id)
+
+        ENGINE_CREATED = 0
+
+        update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, 
+                                        edam_to_id, ENGINE_CREATED)
+
+        update_database_load_file_to_s3(nex_session, gpi_file, source_to_id,
+                                        edam_to_id, ENGINE_CREATED)
+
+        update_database_load_file_to_s3(nex_session, noctua_gpad_file, source_to_id, 
+                                        edam_to_id, ENGINE_CREATED)
 
     log.info(str(datetime.now()))
     log.info("Writing summary...")
@@ -138,7 +171,7 @@ def load_go_annotations(gpad_file, gpi_file, annotation_type, log_file):
     log.info("Done!\n\n")
 
 
-def load_new_data(data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, fw):
+def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, fw):
 
     annotation_update_log = {}
     for count_name in ['annotation_updated', 'annotation_added', 'annotation_deleted',
@@ -162,7 +195,7 @@ def load_new_data(data, source_to_id, annotation_type, key_to_annotation, annota
     key_to_annotation_id = {}
     annotation_id_to_extension = {}
     annotation_id_to_support = {}
-    for x in data:
+    for x in data + noctua_data:
         if x['annotation_type'] not in allowed_types:
             continue
         source_id = source_to_id.get(x['source'])
@@ -555,72 +588,56 @@ def delete_extensions_evidences(nex_session, annotation_id):
     for x in to_delete_list:
         nex_session.delete(x)
 
-
-def update_database_load_file_to_s3(nex_session, gpad_file, gpi_file, source_to_id, edam_to_id):
+def update_database_load_file_to_s3(nex_session, go_file, source_to_id, edam_to_id, ENGINE_CREATED):
 
     import hashlib
+
+    desc = "Gene Product Association Data (GPAD)"
+    if "gp_information" in go_file:
+        desc = "Gene Product Information (GPI)"
+
+    go_local_file = open(go_file, mode='rb')
+   
+    go_md5sum = hashlib.md5(go_file.encode()).hexdigest()
     
-    gpad_local_file = open(gpad_file, mode='rb')
-    gpi_local_file = open(gpi_file, mode='rb')
-
-    gpad_md5sum = hashlib.md5(gpad_file.encode()).hexdigest()
-    gpi_md5sum = hashlib.md5(gpi_file.encode()).hexdigest()
-
-    gpad_row = nex_session.query(Filedbentity).filter_by(md5sum = gpad_md5sum).one_or_none()
-    gpi_row = nex_session.query(Filedbentity).filter_by(md5sum = gpi_md5sum).one_or_none()
-  
-    if gpad_row is not None and gpi_row is not None:
+    go_row = nex_session.query(Filedbentity).filter_by(md5sum = go_md5sum).one_or_none()
+    
+    if go_row is not None:
+        log.info("The current version of " + go_file + " is already in the database.\n")
         return
+    
+    log.info("Adding " + go_file + " to the database.\n")
 
-    if gpad_row is None:
-        nex_session.query(Dbentity).filter_by(display_name=gpad_file, dbentity_status='Active').update({"dbentity_status": 'Archived'})
-        nex_session.commit()
-    if gpi_row is None:
-        nex_session.query(Dbentity).filter_by(display_name=gpi_file, dbentity_status='Active').update({"dbentity_status": 'Archived'})
-        nex_session.commit()
+    nex_session.query(Dbentity).filter_by(display_name=go_file, dbentity_status='Active').update({"dbentity_status": 'Archived'})
+    nex_session.commit()
 
     data_id = edam_to_id.get('EDAM:2353')   ## data:2353 Ontology data
     topic_id = edam_to_id.get('EDAM:0089')  ## topic:0089 Ontology and terminology
     format_id = edam_to_id.get('EDAM:3475') ## format:3475 TSV
 
-    from sqlalchemy import create_engine
-    from src.models import DBSession
-    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
-    DBSession.configure(bind=engine)
+    if ENGINE_CREATED == 0:
+        from sqlalchemy import create_engine
+        from src.models import DBSession
+        engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
+        DBSession.configure(bind=engine)
+        ENGINE_CREATED = 1
 
-    if gpad_row is None:
-        upload_file(CREATED_BY, gpad_local_file,
-                    filename=gpad_file,
+    if go_row is None:
+        upload_file(CREATED_BY, go_local_file,
+                    filename=go_file,
                     file_extension='.gz',
-                    description='Gene Product Association Data (GPAD)',
-                    display_name=gpad_file,
+                    description=desc,
+                    display_name=go_file,
                     data_id=data_id,
                     format_id=format_id,
                     topic_id=topic_id,
                     status='Active',
-                    is_public='0',
+                    is_public='1',
                     is_in_spell='0',
                     is_in_browser='0',
                     file_date=datetime.now(),
                     source_id=source_to_id['SGD'],
-                    md5sum=gpad_md5sum)
-                    
-    if gpi_row is None:
-        upload_file(CREATED_BY, gpi_local_file,
-                    filename=gpi_file,
-                    file_extension='gz',
-                    description='Gene Product Information (GPI)',
-                    display_name=gpi_file,
-                    data_id=data_id,
-                    format_id=format_id,
-                    topic_id=topic_id,
-                    status='Active',
-                    is_public='0',
-                    is_in_spell='0',
-                    is_in_browser='0',
-                    file_date=datetime.now(),
-                    source_id=source_to_id['SGD'],
-                    md5sum=gpi_md5sum)
+                    md5sum=go_md5sum)
 
 
 def write_summary_and_send_email(annotation_update_log, new_pmids, bad_ref, fw, annot_type):
@@ -658,16 +675,27 @@ if __name__ == "__main__":
         
     # ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz
     # ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz
+    # http://current.geneontology.org/products/annotations/noctua_sgd.gpad.gz
+
+    datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
 
     url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
     gpad_file = 'gp_association.559292_sgd.gz'
+    dated_gpad_file = 'gp_association.559292_sgd_' + datestamp + '.gz' 
     gpi_file = 'gp_information.559292_sgd.gz'
-    urllib.request.urlretrieve(url_path + gpad_file, gpad_file)
+    dated_gpi_file = 'gp_information.559292_sgd_' + datestamp + '.gz'
+    urllib.request.urlretrieve(url_path + gpad_file, dated_gpad_file)
     urllib.request.urlcleanup()
-    urllib.request.urlretrieve(url_path + gpi_file, gpi_file)
+    urllib.request.urlretrieve(url_path + gpi_file, dated_gpi_file)
 
-    gpadFileInfo = os.stat(gpad_file)
-    gpiFileInfo = os.stat(gpi_file)
+    noctua_path = 'http://current.geneontology.org/products/annotations/'
+    noctua_gpad_file = 'noctua_sgd.gpad.gz'
+    dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
+    urllib.request.urlcleanup()
+    urllib.request.urlretrieve(noctua_path + noctua_gpad_file, dated_noctua_gpad_file)
+
+    gpadFileInfo = os.stat(dated_gpad_file)
+    gpiFileInfo = os.stat(dated_gpi_file)
     
     if gpadFileInfo.st_size < 1700000:
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
@@ -688,7 +716,7 @@ if __name__ == "__main__":
     
     log_file = "scripts/loading/go/logs/GPAD_loading_" + annotation_type.replace(" ", "-") + ".log"
 
-    load_go_annotations(gpad_file, gpi_file, annotation_type, log_file)
+    load_go_annotations(dated_gpad_file, dated_noctua_gpad_file, dated_gpi_file, annotation_type, log_file)
 
 
     

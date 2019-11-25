@@ -28,11 +28,24 @@ curator_id = {'Rama Balakrishnan'   : 'RAMA',
               'Emily Heald'         : 'EMILYJC',
               'Suzi Aleksander'     : 'SUZIA',
               'Joanna Argasinska'   : 'JOANNA',
-              'Micheal Alexander'   : 'MICHEAL'}
+              'Micheal Alexander'   : 'MICHEAL',
+              'Barbara Dunn'        : 'BDUNN',
+              'Patrick Ng'          : 'PCNG',
+              '0000-0002-2657-8762' : 'KMACPHER',
+              '0000-0001-6787-2901' : 'SUZIA',
+              '0000-0003-3841-4324' : 'MICHEAL',
+              '0000-0003-2678-2824' : 'JOANNA',
+              '0000-0002-7041-0035' : 'BDUNN',
+              '0000-0001-5472-917X' : 'STACIA',
+              '0000-0002-5299-5308' : 'SAGEH',
+              '0000-0002-3726-7441' : 'NASH',
+              '0000-0001-8208-652X' : 'PCNG',
+              '0000-0001-6749-615X' : 'MAREK',
+              '0000-0001-9799-5523' : 'EDITH' }
 
 computational_created_by = 'OTTO'
 email_receiver = ['sweng@stanford.edu']
-email_subject = 'GPAD loading summary from pastry'
+email_subject = 'GPAD loading summary'
 
 go_db_code_mapping = {
     'EC'                 : ['IUBMB', 'EC number'],
