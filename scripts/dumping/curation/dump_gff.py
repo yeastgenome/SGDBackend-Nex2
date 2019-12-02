@@ -230,7 +230,10 @@ def dump_data():
                 fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand + "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
 
     # output 17 chr sequences at the end 
-    
+
+    fw.write("###\n")
+    fw.write("##FASTA\n")
+
     for chr in chromosomes:
         seq = chr_to_seq[chr]
         if chr == 'Mito':
