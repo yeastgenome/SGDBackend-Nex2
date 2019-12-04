@@ -19,7 +19,7 @@ fi
 
 case "$1" in
     start)
-        /bin/su deploy -c "cd /data/www/SGDFrontend/current && export WORKON_HOME=/data/envs/ && source virtualenvwrapper.sh && workon sgdf && /usr/bin/make run-prod"
+        /bin/su deploy -c "cd /data/www/SGDFrontend/current && export WORKON_HOME=/data/envs/ && source virtualenvwrapper.sh && workon sgdf3 && /usr/bin/make run-prod"
         ;;
     stop)
         /bin/kill `/bin/cat $PIDFILE`
