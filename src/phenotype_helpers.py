@@ -62,6 +62,10 @@ def insert_phenotype(curator_session, CREATED_BY, source_id, format_name, displa
 
 def insert_allele(curator_session, CREATED_BY, source_id, allele):
 
+    a = curator_session.query(Allele).filter_by(display_name=allele).one_or_none()
+    if a is not None:
+        return a.allele_id
+
     isSuccess = False
     returnValue = ""
     allele_id = None
@@ -214,6 +218,9 @@ def insert_phenotypeannotation(curator_session, CREATED_BY, source_id, dbentity_
 
     if isSuccess:
         return [annotation_id, None, 1]
+    else:
+        return [returnValue, None, 0]
+
 
 def insert_phenotypeannotation_cond(curator_session, CREATED_BY, annotation_id, group_id, condition_class, condition_name, condition_value, condition_unit):
 
@@ -693,10 +700,14 @@ def add_phenotype_annotations(request):
         ## reporter_comment 
         reporter_comment = request.params.get('reporter_comment')
 
+        # return HTTPBadRequest(body=json.dumps({'error': "TEST-1"}), content_type='text/json')
+
         success_message= ""
 
         ## adding phenotype if not in database already   
         [status, returnValue, phenotype] = check_phenotype(curator_session, CREATED_BY, source_id, observable_id, qualifier_id)
+
+        # return HTTPBadRequest(body=json.dumps({'error': "TEST-2"}), content_type='text/json') 
 
         phenotype_id = None
         if status == 0:
@@ -706,6 +717,8 @@ def add_phenotype_annotations(request):
             success_message = "The new phenotype '" + phenotype + "' has been added into the database."
         else:
             return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+
+        # return HTTPBadRequest(body=json.dumps({'error': "TEST-3"}), content_type='text/json') 
 
         ## adding allele if it is not in the database yet
         allele_id = None
@@ -723,6 +736,8 @@ def add_phenotype_annotations(request):
                         return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             else:
                 return err
+
+        # return HTTPBadRequest(body=json.dumps({'error': "TEST-4"}), content_type='text/json') 
 
         ## adding reporter if it is not in the database yet
         reporter_id = None
@@ -745,6 +760,8 @@ def add_phenotype_annotations(request):
         else:
             conditions = data
 
+        # return HTTPBadRequest(body=json.dumps({'error': "TEST-5"}), content_type='text/json') 
+
         ## loop through each gene and check to see if the annotation is in the database; 
         ## if not, insert it
         index = 0
@@ -758,6 +775,7 @@ def add_phenotype_annotations(request):
                                                                       strain_name, experiment_comment,
                                                                       details, allele_id, allele_comment,
                                                                       reporter_id, reporter_comment)
+
             annotation_id = None
             if str(returnValue).isdigit():
                 annotation_id = returnValue
