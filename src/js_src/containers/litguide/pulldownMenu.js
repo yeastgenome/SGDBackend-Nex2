@@ -74,7 +74,6 @@ class PulldownMenu extends Component {
 
 PulldownMenu.propTypes = {
   dispatch: PropTypes.func,
-  sec_title: PropTypes.string,
   name: PropTypes.string,
   value: PropTypes.string,
   onOptionChange: PropTypes.func
