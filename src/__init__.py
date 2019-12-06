@@ -218,6 +218,8 @@ def main(global_config, **settings):
     config.add_route('phenotype_delete','/phenotype_delete', request_method='POST')
     
     config.add_route('add_author_response','/add_author_response', request_method='POST')
+    config.add_route('all_author_responses','/author_responses', request_method='GET')
+    config.add_route('one_author_response', '/author_responses/{id}', request_method='GET')
 
     config.add_route('healthcheck', '/healthcheck')
 

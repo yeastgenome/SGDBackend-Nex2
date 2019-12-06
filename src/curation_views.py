@@ -45,7 +45,7 @@ from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
-from .author_response_helpers import insert_author_response
+from .author_response_helpers import insert_author_response, get_author_responses
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 
 logging.basicConfig()
@@ -1935,6 +1935,23 @@ def literature_guide_update(request):
 def literature_guide_add(request):
 
     return add_litguide(request)
+
+@view_config(route_name='add_author_response',renderer='json',request_method='POST')
+def add_author_response(request):
+
+    return insert_author_response(request)
+
+@view_config(route_name='all_author_responses',renderer='json',request_method='GET')
+def all_author_responses(request):
+
+    return get_author_responses()
+
+@view_config(route_name='one_author_response',renderer='json',request_method='GET')
+def one_author_response(request):
+
+    curation_id = request.matchdict['id']
+
+    return get_author_responses(curation_id)
 
 @view_config(route_name='regulation_insert_update', renderer='json', request_method='POST')
 @authenticate
