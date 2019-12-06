@@ -16,31 +16,31 @@ def get_author_responses(curation_id=None):
         else:
             all = DBSession.query(Authorresponse).filter_by(curation_id=int(curation_id)).all()
         data = []
-        for x in all:
+        for row in all:
             reference_id = None
             if curation_id is not None:
-                r = DBSession.query(Referencedbentity).filter_by(pmid=int(x.pmid)).one_or_none()
+                r = DBSession.query(Referencedbentity).filter_by(pmid=int(row.pmid)).one_or_none()
                 if r is not None:
                     reference_id = r.dbentity_id
-            if x.curator_checked_datasets == '1' and curator_checked_genelist == '1':
+            if row.curator_checked_datasets == '1' and curator_checked_genelist == '1':
                 continue
-            genes = x.gene_list
-            if x.gene_list:
+            genes = row.gene_list
+            if row.gene_list:
                 genes = genes.replace('|', ' ')
-            data.append({ 'curation_id': x.curation_id,
-                          'author_email': x.author_email,
-                          'pmid': x.pmid,
-                          'no_action_required': x.no_action_required,
-                          'has_novel_research': x.has_novel_research,
-                          'has_large_scale_data': x.has_large_scale_data,
-                          'has_fast_track_tag': x.has_fast_track_tag,
-                          'curator_checked_datasets': x.curator_checked_datasets,
-                          'curator_checked_genelist': x.curator_checked_genelist,
-                          'research_results': x.research_results,
+            data.append({ 'curation_id': row.curation_id,
+                          'author_email': row.author_email,
+                          'pmid': row.pmid,
+                          'no_action_required': row.no_action_required,
+                          'has_novel_research': row.has_novel_research,
+                          'has_large_scale_data': row.has_large_scale_data,
+                          'has_fast_track_tag': row.has_fast_track_tag,
+                          'curator_checked_datasets': row.curator_checked_datasets,
+                          'curator_checked_genelist': row.curator_checked_genelist,
+                          'research_results': row.research_results,
                           'gene_list': genes,
-                          'dataset_description': x.dataset_description,
-                          'other_description': x.other_description,
-                          'date_created': str(x.date_created).split(' ')[0] })
+                          'dataset_description': row.dataset_description,
+                          'other_description': row.other_description,
+                          'date_created': str(row.date_created).split(' ')[0] })
         if curation_id is not None:
             row = data[0]
             row['reference_id'] = reference_id
