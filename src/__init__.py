@@ -205,12 +205,20 @@ def main(global_config, **settings):
     config.add_route('get_reporter','/get_reporter',request_method='GET')
     config.add_route('get_chebi','/get_chebi',request_method='GET')
     config.add_route('get_eco','/get_eco',request_method='GET')
+    config.add_route('get_publication_year','/get_publication_year',request_method='GET')
+    config.add_route('get_curation_tag','/get_curation_tag',request_method='GET')
+    config.add_route('get_literature_topic','/get_literature_topic',request_method='GET')
+    config.add_route('get_papers_by_tag','/get_papers_by_tag/{tag}/{gene}/{year}',request_method='GET')
+    config.add_route('literature_guide_update','/literature_guide_update', request_method='POST')
+    config.add_route('literature_guide_add','/literature_guide_add', request_method='POST')
     config.add_route('get_phenotypes','/get_phenotypes/{gene}/{reference}', request_method='GET')
     config.add_route('get_phenotype','/get_phenotype/{annotation_id}/{group_id}', request_method='GET')
     config.add_route('phenotype_add','/phenotype_add', request_method='POST')
     config.add_route('phenotype_update','/phenotype_update', request_method='POST')
     config.add_route('phenotype_delete','/phenotype_delete', request_method='POST')
-   
+    
+    config.add_route('add_author_response','/add_author_response', request_method='POST')
+
     config.add_route('healthcheck', '/healthcheck')
 
     #swagger
