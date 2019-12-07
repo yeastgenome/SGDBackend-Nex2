@@ -50,6 +50,66 @@ def get_author_responses(curation_id=None):
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
 
+def update_author_response(request):
+
+    try:
+        CREATED_BY = request.session['username']
+        curator_session = get_curator_session(request.session['username'])
+        
+        curation_id = request.params.get('curation_id')
+        
+        has_novel_research = '0'
+        if request.params.get('has_novel_research'):
+            has_novel_research = '1'
+        has_large_scale_data = '0'
+        if request.params.get('has_large_scale_data'):
+            has_large_scale_data = '1'
+        has_fast_track_tag = '0'
+        if request.params.get('has_fast_track_tag'):
+            has_fast_track_tag = '1'
+        curator_checked_datasets = '0'
+        if request.params.get('curator_checked_datasets'):
+            curator_checked_datasets = '1'
+        curator_checked_genelist = '0'
+        if request.params.get('curator_checked_genelist'):
+            curator_checked_genelist = '1'
+        no_action_required = '0'
+        if request.params.get('no_action_required'):
+            no_action_required = '1'
+
+        row = curator_session.query(Authorresponse).filter_by(curation_id=curation_id).one_or_none()
+        
+        cols_changed = []
+        if row.has_novel_research != has_novel_research:
+            row.has_novel_research = has_novel_research
+            cols_changed.append('has_novel_research')
+        if row.has_large_scale_data != has_large_scale_data:
+            row.has_large_scale_data = has_large_scale_data
+            cols_changed.append('has_large_scale_data')
+        if row.has_fast_track_tag != has_fast_track_tag:
+            row.has_fast_track_tag = has_fast_track_tag
+            cols_changed.append('has_fast_track_tag')
+        if row.curator_checked_datasets != curator_checked_datasets:
+            row.curator_checked_datasets = curator_checked_datasets
+            cols_changed.append('curator_checked_datasets')
+        if row.curator_checked_genelist != curator_checked_genelist:
+            row.curator_checked_genelist = curator_checked_genelist
+            cols_changed.append('curator_checked_genelist')
+        if row.no_action_required != no_action_required:
+            row.no_action_required = no_action_required
+            cols_changed.append('no_action_required')
+        if len(cols_changed) > 0:
+            curator_session.add(row)
+            transaction.commit()
+            success_message = "The, ".join(cols_changed) + " got updated in authorresponse table."
+        else:
+            success_message = "Nothing is changed in authorresponse table."
+        return HTTPOk(body=json.dumps({'success': success_message, 'authorResponse': "AUTHORRESPONSE"}), content_type='text/json')
+    except Exception as e:
+        transaction.abort()
+        return HTTPBadRequest(body=json.dumps({'error': "ERROR: " + str(e)}), content_type='text/json')
+
+
 def insert_author_response(request):
 
     try:
