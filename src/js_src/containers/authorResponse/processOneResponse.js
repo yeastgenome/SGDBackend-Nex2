@@ -155,8 +155,8 @@ class ProcessOneResponse extends Component {
           <strong>Gene List: </strong> { data['gene_list'] } <br></br>
           <strong>Dataset Description: </strong> { data['dataset_description'] } <br></br>
           <strong>Other Description: </strong> { data['other_description'] } <br></br>
-          <strong>Has novel research? </strong> { data['has_novel_research'] } <br></br>
-          <strong>Has large scale data? </strong>{ data['has_large_scale_data'] } <br></br>
+          <strong>Has novel research? </strong> { (data['has_novel_research'])? 'Yes':'No' } <br></br>
+          <strong>Has large scale data? </strong>{ (data['has_large_scale_data'])? 'Yes':'No' } <br></br>
           <strong>Date created: </strong>{ data['date_created'] } <br></br>
           { this.checkboxList() }
           <input type='hidden' name='curation_id' value={data['curation_id']} />
