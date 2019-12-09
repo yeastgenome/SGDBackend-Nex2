@@ -109,15 +109,6 @@ class ProcessOneResponse extends Component {
     }
   }
 
-  setBool(val) {
-    if (val) {
-      return 'Yes';
-    }
-    else {
-      return 'No';
-    }
-  }
-
   checkboxList() {
     return (
       <div className='row'>
@@ -138,7 +129,8 @@ class ProcessOneResponse extends Component {
   }
 
   addButtons() {
-    let addTagURL = '/#/add_litguide';
+    let data = this.state.data;
+    let addTagURL = '/#/add_litguide?' + data['pmid'];
     return (
       <div className='row'>
         <div className='columns medium-6 small-6'>
@@ -163,8 +155,8 @@ class ProcessOneResponse extends Component {
           <strong>Gene List: </strong> { data['gene_list'] } <br></br>
           <strong>Dataset Description: </strong> { data['dataset_description'] } <br></br>
           <strong>Other Description: </strong> { data['other_description'] } <br></br>
-          <strong>Has novel research? </strong> { this.setBool(data['has_novel_research']) } <br></br>
-          <strong>Has large scale data? </strong>{ this.setBool(data['has_large_scale_data']) } <br></br>
+          <strong>Has novel research? </strong> { data['has_novel_research'] } <br></br>
+          <strong>Has large scale data? </strong>{ data['has_large_scale_data'] } <br></br>
           <strong>Date created: </strong>{ data['date_created'] } <br></br>
           { this.checkboxList() }
           <input type='hidden' name='curation_id' value={data['curation_id']} />
