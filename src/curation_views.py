@@ -45,7 +45,7 @@ from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
-from .author_response_helpers import insert_author_response, get_author_responses
+from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 
 logging.basicConfig()
@@ -1952,6 +1952,12 @@ def one_author_response(request):
     curation_id = request.matchdict['id']
 
     return get_author_responses(curation_id)
+
+@view_config(route_name='edit_author_response',renderer='json',request_method='POST')
+@authenticate
+def edit_author_response(request):
+
+    return update_author_response(request)
 
 @view_config(route_name='regulation_insert_update', renderer='json', request_method='POST')
 @authenticate

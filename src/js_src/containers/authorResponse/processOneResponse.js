@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import fetchData from '../../lib/fetchData';
-// import { connect } from 'react-redux';
-// import { Link } from 'react-router-dom';
-import { setError } from '../../actions/metaActions';
+import { connect } from 'react-redux';
+import { setMessage, setError } from '../../actions/metaActions';
 import { setData } from '../../actions/authorResponseActions';
 
 const GET_DATA = '/author_responses/';
-const UPDATE_DATA = '/update_author_response';
+const UPDATE_DATA = '/edit_author_response';
 
 const TIMEOUT = 240000;
 
@@ -17,9 +16,17 @@ class ProcessOneResponse extends Component {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.onChange4tag = this.onChange4tag.bind(this);
+    this.onChange4datasets = this.onChange4datasets.bind(this);
+    this.onChange4genelist = this.onChange4genelist.bind(this);
+    this.onChange4action = this.onChange4action.bind(this);
     this.state = {
       data: {},
-      curation_id: null
+      curation_id: null,
+      has_fast_track_tag: '0',
+      curator_checked_datasets: '0',
+      curator_checked_genelist: '0',
+      no_action_required: '0'
     };    
     this.getData();
   }
@@ -29,7 +36,13 @@ class ProcessOneResponse extends Component {
     let id = urlList[urlList.length-1];
     let url = GET_DATA + id;
     fetchData(url, { timeout: TIMEOUT }).then( (data) => {
-      this.setState({ data: data, curation_id: id });
+      this.setState({ data: data, 
+        curation_id: id, 
+        has_fast_track_tag: data['has_fast_track_tag'],
+        curator_checked_datasets: data['curator_checked_datasets'],
+        curator_checked_genelist: data['curator_checked_genelist'],
+        no_action_required: data['no_action_required']
+      });
     })
     .catch(err => this.props.dispatch(setError(err.error)));
   }
@@ -40,16 +53,37 @@ class ProcessOneResponse extends Component {
     for(let key in this.props.authorResponse){
       formData.append(key,this.props.authorResponse[key]);
     }
+    formData.append('curation_id', this.state.curation_id);
     fetchData(UPDATE_DATA, {
       type: 'POST',
       data: formData,
       processData: false,
       contentType: false
     }).then((data) => {
-      this.setState({ isComplete: true, data: data });
+      this.props.dispatch(setMessage(data.success));
     }).catch((err) => {
       this.props.dispatch(setError(err.error));
     });
+  }
+
+  onChange4tag() {
+    this.setState({ has_fast_track_tag: !this.state.has_fast_track_tag });
+    this.onChange();
+  }
+
+  onChange4datasets() {
+    this.setState({ curator_checked_datasets: !this.state.curator_checked_datasets });
+    this.onChange();
+  }
+
+  onChange4genelist() {
+    this.setState({ curator_checked_genelist: !this.state.curator_checked_genelist });
+    this.onChange();
+  }
+
+  onChange4action() {
+    this.setState({ no_action_required: !this.state.no_action_required });
+    this.onChange();
   }
 
   onChange() {
@@ -75,26 +109,29 @@ class ProcessOneResponse extends Component {
     }
   }
 
-  checkboxList(data) {
+  setBool(val) {
+    if (val) {
+      return 'Yes';
+    }
+    else {
+      return 'No';
+    }
+  }
+
+  checkboxList() {
     return (
       <div className='row'>
-        <div className='columns medium-4 small-4'>
-          Has novel research? <input type="checkbox" name='has_novel_research' value={ data['has_novel_research'] } onChange={this.onChange} />
+        <div className='columns medium-6 small-6'>
+          Has fast track tag? <input type="checkbox" name='has_fast_track_tag' value={this.state.has_fast_track_tag} checked={this.state.has_fast_track_tag} onChange={this.onChange4tag} />
         </div>
-        <div className='columns medium-4 small-4'>
-          Has large scale data? <input type="checkbox" name='has_large_scale_data' value={ data['has_large_scale_data'] } onChange={this.onChange} />
+        <div className='columns medium-6 small-6'>
+          Curator checked datasets? <input type="checkbox" name='curator_checked_datasets' value={this.state.curator_checked_datasets} checked={this.state.curator_checked_datasets} onChange={this.onChange4datasets} />
         </div>
-        <div className='columns medium-4 small-4'>
-          Has fast track tag? <input type="checkbox" name='has_fast_track_tag' value={ data['has_fast_track_tag'] } onChange={this.onChange} />
+        <div className='columns medium-6 small-6'>
+          Curator checked genelist? <input type="checkbox" name='curator_checked_genelist' value={this.state.curator_checked_genelist} checked={this.state.curator_checked_genelist} onChange={this.onChange4genelist} />
         </div>
-        <div className='columns medium-4 small-4'>
-          Curator checked datasets? <input type="checkbox" name='curator_checked_datasets' value={ data['curator_checked_datasets'] } onChange={this.onChange} />
-        </div>
-        <div className='columns medium-4 small-4'>
-          Curator checked genelist? <input type="checkbox" name='curator_checked_genelist' value={ data['curator_checked_genelist'] } onChange={this.onChange} />
-        </div>
-        <div className='columns medium-4 small-4'>
-          No action required? <input type="checkbox" name='no_action_required' value={ data['no_action_required'] } onChange={this.onChange} />
+        <div className='columns medium-6 small-6'>
+          No action required? <input type="checkbox" name='no_action_required' value={this.state.no_action_required} checked={this.state.no_action_required} onChange={this.onChange4action} />
         </div>
       </div>
     );									       
@@ -105,7 +142,7 @@ class ProcessOneResponse extends Component {
     return (
       <div className='row'>
         <div className='columns medium-6 small-6'>
-          <button type='submit' id='submit' className="button expanded" onClick={this.onSubmit.bind(this)} > Update AuthorResponse Row </button>
+          <button type='submit' className="button expanded"> Update AuthorResponse Row </button>
         </div>
         <div className='columns medium-6 small-6'>
           <button type='button' className='button expanded' onClick={()=>window.open(addTagURL, '_blank', 'location=yes,height=600,width=800,scrollbars=yes,status=yes')}> Add curation_tag/topic </button>    
@@ -126,8 +163,11 @@ class ProcessOneResponse extends Component {
           <strong>Gene List: </strong> { data['gene_list'] } <br></br>
           <strong>Dataset Description: </strong> { data['dataset_description'] } <br></br>
           <strong>Other Description: </strong> { data['other_description'] } <br></br>
-          { this.checkboxList(data) }
-          <input type='hidden' name='curation_id' value={this.state.curation_id} />
+          <strong>Has novel research? </strong> { this.setBool(data['has_novel_research']) } <br></br>
+          <strong>Has large scale data? </strong>{ this.setBool(data['has_large_scale_data']) } <br></br>
+          <strong>Date created: </strong>{ data['date_created'] } <br></br>
+          { this.checkboxList() }
+          <input type='hidden' name='curation_id' value={data['curation_id']} />
           <hr></hr>
           { this.addPaperLink(data['pmid'], data['reference_id']) }
           { this.addButtons() }
@@ -150,9 +190,17 @@ class ProcessOneResponse extends Component {
 }
 
 ProcessOneResponse.propTypes = {
-  dispatch: PropTypes.func
+  dispatch: PropTypes.func,
+  authorResponse: PropTypes.object
 };
 
-export default ProcessOneResponse;
+function mapStateToProps(state) {
+  return {
+    authorResponse: state.authorResponse['currentData']
+  };
+}
+
+export default connect(mapStateToProps)(ProcessOneResponse);
+
 
 
