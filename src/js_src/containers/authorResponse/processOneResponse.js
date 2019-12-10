@@ -69,21 +69,25 @@ class ProcessOneResponse extends Component {
   onChange4tag(newVal) {
     this.setState({ has_fast_track_tag: newVal });
     this.onChange();
+    return true;
   }
 
   onChange4datasets(newVal) {
     this.setState({ curator_checked_datasets: newVal });
     this.onChange();
+    return true;
   }
 
   onChange4genelist(newVal) {
     this.setState({ curator_checked_genelist: newVal });
     this.onChange();
+    return true;
   }
 
   onChange4action(newVal) {
     this.setState({ no_action_required: newVal });
     this.onChange();
+    return true;
   }
 
   onChange() {
