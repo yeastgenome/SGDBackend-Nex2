@@ -67,22 +67,26 @@ class ProcessOneResponse extends Component {
   }
 
   onChange4tag() {
-    this.setState({ has_fast_track_tag: !this.state.has_fast_track_tag });
+    let newVal = !this.state.has_fast_track_tag;
+    this.setState({ has_fast_track_tag: newVal });
     this.onChange();
   }
 
   onChange4datasets() {
-    this.setState({ curator_checked_datasets: !this.state.curator_checked_datasets });
+    let newVal = !this.state.curator_checked_datasets;
+    this.setState({ curator_checked_datasets: newVal });
     this.onChange();
   }
 
   onChange4genelist() {
-    this.setState({ curator_checked_genelist: !this.state.curator_checked_genelist });
+    let newVal = !this.state.curator_checked_genelis;
+    this.setState({ curator_checked_genelist: newVal });
     this.onChange();
   }
 
   onChange4action() {
-    this.setState({ no_action_required: !this.state.no_action_required });
+    let newVal = !this.state.no_action_required;
+    this.setState({ no_action_required: newVal });
     this.onChange();
   }
 
