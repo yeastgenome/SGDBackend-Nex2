@@ -66,9 +66,8 @@ class ProcessOneResponse extends Component {
     });
   }
 
-  onChange4tag() {
-    const {has_fast_track_tag} = this.state;
-    this.setState({ has_fast_track_tag: !has_fast_track_tag });
+  onChange4tag(newVal) {
+    this.setState({ has_fast_track_tag: newVal });
     this.onChange();
   }
 
@@ -126,7 +125,7 @@ class ProcessOneResponse extends Component {
           Curator checked genelist? <input type="checkbox" name='curator_checked_genelist' value={this.state.curator_checked_genelist} checked={this.state.curator_checked_genelist} onChange={this.onChange4genelist} />
         </div>
         <div className='columns medium-6 small-6'>
-          No action required? <input type="checkbox" name='no_action_required' value={this.state.no_action_required} checked={this.state.no_action_required} onChange={this.onChange4action} />
+          No action required? <input type="checkbox" name='no_action_required' value={this.state.no_action_required} checked={this.state.no_action_required} onChange={this.onChange4action(!this.state.no_action_required)} />
         </div>
       </div>
     );									       
