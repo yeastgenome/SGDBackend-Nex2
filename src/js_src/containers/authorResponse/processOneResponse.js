@@ -67,8 +67,8 @@ class ProcessOneResponse extends Component {
   }
 
   onChange4tag() {
-    let newVal = !this.state.has_fast_track_tag;
-    this.setState({ has_fast_track_tag: newVal });
+    const {has_fast_track_tag} = this.state;
+    this.setState({ has_fast_track_tag: !has_fast_track_tag });
     this.onChange();
   }
 
