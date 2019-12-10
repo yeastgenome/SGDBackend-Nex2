@@ -16,11 +16,12 @@ class AddLitGuide extends Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleUpdate = this.handleUpdate.bind(this);
-    let urlList = window.location.href.split('/');
-    let pmid = urlList[urlList.length-1];
-    this.state = {
-      pmid: pmid,
-    };
+    let urlList = window.location.href.split('?');
+    if (urlList.length > 1) {
+      let pmid = urlList[urlList.length-1];
+      let currentData = { 'pmid': pmid };
+      this.props.dispatch(setData(currentData));
+    }
   }
 
   handleChange() {

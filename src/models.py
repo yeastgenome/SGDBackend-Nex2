@@ -671,7 +671,7 @@ class Authorresponse(Base):
     __table_args__ = {'schema': 'nex'}
 
     curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
-    reference_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, unique=True)
+    pmid = Column(BigInteger)
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
     author_email = Column(String(100), nullable=False)
@@ -689,7 +689,6 @@ class Authorresponse(Base):
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
-    reference = relationship('Dbentity', uselist=False)
     source = relationship('Source')
 
 

@@ -5,10 +5,15 @@ const DEFAULT_STATE = {
     citation: '',
     has_novel_research: '0',
     has_large_scale_data: '0',
+    has_fast_track_tag: '0',
+    curator_checked_datasets: '0',
+    curator_checked_genelist: '0',
+    no_action_required: '0',
     research_results:     '',
     genes: '',
     dateset_desc: '',
-    other_desc: ''
+    other_desc: '',
+    curation_id: null
   }
 };
 

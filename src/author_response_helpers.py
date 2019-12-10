@@ -50,6 +50,53 @@ def get_author_responses(curation_id=None):
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
 
+def set_val(val):
+    if val or val is True:
+        return '1'
+    else:
+        return '0'
+    
+def update_author_response(request):
+
+    try:
+        CREATED_BY = request.session['username']
+        curator_session = get_curator_session(request.session['username'])
+        
+        curation_id = request.params.get('curation_id')
+        
+        has_fast_track_tag = set_val(request.params.get('has_fast_track_tag'))
+        curator_checked_datasets = set_val(request.params.get('curator_checked_datasets'))
+        curator_checked_genelist = set_val(request.params.get('curator_checked_genelist'))
+        no_action_required = set_val(request.params.get('no_action_required'))
+
+        row = curator_session.query(Authorresponse).filter_by(curation_id=int(curation_id)).one_or_none()
+    
+        cols_changed = []
+        if set_val(row.has_fast_track_tag) != has_fast_track_tag:
+            row.has_fast_track_tag = has_fast_track_tag
+            cols_changed.append('has_fast_track_tag')
+        if set_val(row.curator_checked_datasets) != curator_checked_datasets:
+            row.curator_checked_datasets = curator_checked_datasets
+            cols_changed.append('curator_checked_datasets')
+        if set_val(row.curator_checked_genelist) != curator_checked_genelist:
+            row.curator_checked_genelist = curator_checked_genelist
+            cols_changed.append('curator_checked_genelist')
+        if set_val(row.no_action_required) != no_action_required:
+            row.no_action_required = no_action_required
+            cols_changed.append('no_action_required')
+
+        if len(cols_changed) > 0:
+            curator_session.add(row)
+            transaction.commit()
+            success_message = "The column <strong>" + ", ".join(cols_changed) + "</strong> got updated in authorresponse table."
+        else:
+            success_message = "Nothing is changed in authorresponse table."
+        return HTTPOk(body=json.dumps({'success': success_message, 'authorResponse': "AUTHORRESPONSE"}), content_type='text/json')
+    except Exception as e:
+        transaction.abort()
+        return HTTPBadRequest(body=json.dumps({'error': "ERROR: " + str(e)}), content_type='text/json')
+
+
 def insert_author_response(request):
 
     try:

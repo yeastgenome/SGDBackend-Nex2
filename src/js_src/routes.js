@@ -44,6 +44,8 @@ import NewPhenotype from './containers/phenotype/new';
 import SearchPhenotype from './containers/phenotype/search';
 import EditPhenotype from './containers/phenotype/edit';
 import SubmitData from './containers/authorResponse/index';
+import AuthorResponseShow from './containers/authorResponse/show';
+import AuthorResponseProcess from './containers/authorResponse/process';
 import LitGuide from './containers/litguide/search';
 import AddLitGuide from './containers/litguide/add';
 import EditLitGuide from './containers/litguide/edit';
@@ -84,6 +86,8 @@ export default (
           <Route component={requireAuthentication(GeneNameReservation)} path='/reservations/:id' exact />
           <Route component={requireAuthentication(GeneNameReservationEdit)} path='/reservations/:id/edit' exact />
           <Route component={requireAuthentication(GeneNameReservationStandardize)} path='/reservations/:id/standardize' exact />
+          <Route component={requireAuthentication(AuthorResponseShow)} path='/author_responses' exact />
+          <Route component={requireAuthentication(AuthorResponseProcess)} path='/author_responses/:id' exact/>
           <Route component={requireAuthentication(CurateHome)} path='/' exact/>
           <Route component={NotFound} path='*' />
         </Switch>
