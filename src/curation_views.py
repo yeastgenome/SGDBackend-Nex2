@@ -45,7 +45,8 @@ from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
-
+from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
+from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -1587,6 +1588,35 @@ def get_apo(request):
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
 
+@view_config(route_name='get_publication_year', renderer='json', request_method='GET')
+def get_publication_year(request):
+    try:
+        all_years = DBSession.query(Referencedbentity.year).distinct(Referencedbentity.year).order_by(Referencedbentity.year.desc()).all()
+        data = [x[0] for x in all_years]  
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+@view_config(route_name='get_curation_tag', renderer='json', request_method='GET')
+def get_curation_tag(request):
+    try:
+        all_tags = DBSession.query(CurationReference.curation_tag).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all()
+        data = [x[0] for x in all_tags]
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+@view_config(route_name='get_literature_topic', renderer='json', request_method='GET')
+def get_literature_topic(request):
+    try:
+        all_topics = DBSession.query(Literatureannotation.topic).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all()
+        data = [x[0] for x in all_topics]
+        return HTTPOk(body=json.dumps(data),content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+
+
+
 @view_config(route_name='get_strains', renderer='json', request_method='GET')
 def get_strains(request):
     try:
@@ -1855,6 +1885,10 @@ def get_all_eco_for_regulations(request):
     obj = [{'eco_id':e.eco_id, 'format_name': e.format_name,'display_name':e.display_name} for e in eco_in_db]
     return HTTPOk(body=json.dumps({'success':obj}),content_type='text/json')
 
+@view_config(route_name='get_papers_by_tag',renderer='json',request_method='GET')
+def get_papers_by_tag(request):
+
+    return get_list_of_papers(request)
 
 @view_config(route_name='phenotype_add', renderer='json', request_method='POST')
 @authenticate
@@ -1879,13 +1913,51 @@ def phenotype_update(request):
 
     return update_phenotype_annotations(request)
 
-
 @view_config(route_name='phenotype_delete',renderer='json',request_method='POST')
 @authenticate
 def phenotype_delete(request):
 
     return delete_phenotype_annotations(request)
 
+@view_config(route_name='add_author_response',renderer='json',request_method='POST')
+def add_author_response(request):
+
+    return insert_author_response(request)
+
+@view_config(route_name='literature_guide_update', renderer='json', request_method='POST')
+@authenticate
+def literature_guide_update(request):
+
+    return update_litguide(request)
+
+@view_config(route_name='literature_guide_add', renderer='json', request_method='POST')
+@authenticate
+def literature_guide_add(request):
+
+    return add_litguide(request)
+
+@view_config(route_name='add_author_response',renderer='json',request_method='POST')
+def add_author_response(request):
+
+    return insert_author_response(request)
+
+@view_config(route_name='all_author_responses',renderer='json',request_method='GET')
+def all_author_responses(request):
+
+    return get_author_responses()
+
+@view_config(route_name='one_author_response',renderer='json',request_method='GET')
+def one_author_response(request):
+
+    curation_id = request.matchdict['id']
+
+    return get_author_responses(curation_id)
+
+@view_config(route_name='edit_author_response',renderer='json',request_method='POST')
+@authenticate
+def edit_author_response(request):
+
+    return update_author_response(request)
 
 @view_config(route_name='regulation_insert_update', renderer='json', request_method='POST')
 @authenticate

@@ -28,7 +28,9 @@ class CurateLayout extends Component {
             <li><Link className={(location === '/ptm') ? style.activeLink : null} to='/ptm'><span><i className="fa fa-upload" /> PTM</span></Link></li>
             <li><Link className={(location === '/regulation') ? style.activeLink : null} to='/regulation'><span><i className="fa fa-upload" /> Regulation</span></Link></li>
             <li><Link className={(location === '/file_curate') ? style.activeLink : null} to='/file_curate'><span><i className='fa fa-file-text' /> File Curate</span></Link></li>
-            <li><span><Link className={(location === '/new_phenotype') ? style.activeLink : null} to='/new_phenotype'><i className='fa fa-sticky-note' /> Phenotype New</Link> | <Link className={(location === '/search_phenotype') ? style.activeLink : null} to='/search_phenotype'>Update</Link></span></li>
+            <li><span><Link className={(location === '/new_phenotype') ? style.activeLink : null} to='/new_phenotype'><i className='fa fa-sticky-note' />Phenotype NEW</Link> | <Link className={(location === '/search_phenotype') ? style.activeLink : null} to='/search_phenotype'>UPDATE</Link></span></li>
+            <li><span><Link className={(location === '/litguide_todo') ? style.activeLink : null} to='/litguide_todo'><i className='fa fa-sticky-note' />LitGuide TODO</Link> | <Link className={(location === '/add_litguide') ? style.activeLink : null} to='/add_litguide'>ADD</Link></span></li>
+            <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response </span></Link></li>
           </ul>
         </div>
         <div className={LARGE_COL_CLASS}>
