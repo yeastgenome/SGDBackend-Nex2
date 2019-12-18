@@ -1,8 +1,5 @@
 import os
 import sys
-import importlib
-importlib.reload(sys)  # Reload does the trick!
-sys.setdefaultencoding('UTF8')
 from src.models import Dataset, Datasetsample, Taxonomy, Source
 from scripts.loading.database_session import get_session
 
@@ -12,7 +9,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 log_file = "scripts/loading/dataset/logs/load_datasetsample.log"
 
-files_to_load = ["scripts/loading/dataset/data/datasample_metadata_20190419.tsv"]
+files_to_load = ["scripts/loading/dataset/data/datasamplesFromGEOtoload.tsv"]
 
 def load_data():
 
