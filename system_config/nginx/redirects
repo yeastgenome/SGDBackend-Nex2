@@ -18,9 +18,9 @@ location = /cache/yeastLabs.html {
     return 410;
 }
 
-#location = /cgi-bin/chromosomeHistory.pl {
-#    proxy_pass http://heritage.yeastgenome.org/cgi-bin/chromosomeHistory.pl;
-#}
+location = /cgi-bin/chromosomeHistory.pl {
+    return 301 https://wiki.yeastgenome.org/index.php/Summary_of_Chromosome_Sequence_and_Annotation_Updates;
+}
 
 location = /cgi-bin/colleague/colleagueInfoSearch {
     return 301 /search?q=&category=colleague;
@@ -94,9 +94,9 @@ location = /cgi-bin/seqTools {
     return 301 /seqTools;
 }
 
-#location = /cgi-bin/submitData.pl {
-#    proxy_pass http://heritage.yeastgenome.org/cgi-bin/submitData.pl;
-#}
+location = /cgi-bin/submitData.pl {
+    return 301 /submitData;
+}
 
 location = /cgi-bin/web-primer {
     return 301 /primer3;
