@@ -1,7 +1,7 @@
-location /cgi-bin/chromosomeHistory.pl {
-    proxy_pass http://heritage.yeastgenome.org/cgi-bin/chromosomeHistory.pl;
-}
+#location /cgi-bin/chromosomeHistory.pl {
+#    proxy_pass http://heritage.yeastgenome.org/cgi-bin/chromosomeHistory.pl;
+#}
 
-location /cgi-bin/submitData.pl {
-    proxy_pass http://heritage.yeastgenome.org/cgi-bin/submitData.pl;
-}
+#location /cgi-bin/submitData.pl {
+#    proxy_pass http://heritage.yeastgenome.org/cgi-bin/submitData.pl;
+#}
