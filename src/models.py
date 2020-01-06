@@ -4873,6 +4873,8 @@ class Locusdbentity(Dbentity):
         sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Sequence').one_or_none()
         interaction_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Interaction').one_or_none()
         disease_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Disease').one_or_none()
+        function_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id,summary_type='Function').one_or_none()
+
         if not phenotype_summary:
             phenotype_summary = ''
             phenotype_summary_pmids = ''
@@ -4899,6 +4901,8 @@ class Locusdbentity(Dbentity):
             interaction_summary = interaction_summary.text
         if disease_summary:
             disease_summary = disease_summary.text 
+        if function_summary:
+            function_summary = function_summary.text    
         aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).all()
         aliases_list = []
         for x in aliases:
@@ -4941,7 +4945,8 @@ class Locusdbentity(Dbentity):
                 'protein_summary':protein_summary,
                 'sequence_summary':sequence_summary,
                 'interaction_summary':interaction_summary,
-                'disease_summary':disease_summary
+                'disease_summary':disease_summary,
+                'function_summary':function_summary
             },
             'basic': {
                 'aliases': aliases_list,
