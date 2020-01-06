@@ -92,6 +92,8 @@ def locus_curate_summaries(request):
         new_sequence_summary = request.params.get('sequence_summary')
         new_interaction_summary = request.params.get('interaction_summary')
         new_disease_summary = request.params.get('disease_summary')
+        new_function_summary = request.params.get('function_summary')
+
         locus.update_summary('Phenotype', request.session['username'], new_phenotype_summary)
         locus = get_locus_by_id(id)
         locus.update_summary('Regulation', request.session['username'], new_regulation_summary, new_regulation_pmids)
@@ -104,6 +106,9 @@ def locus_curate_summaries(request):
         locus = get_locus_by_id(id)
         locus.update_summary('Disease', request.session['username'], new_disease_summary)
         locus = get_locus_by_id(id)
+        locus.update_summary('Function',request.session['username'],new_function_summary)
+        locus = get_locus_by_id(id)
+        
         locus.ban_from_cache()
         pusher = get_pusher_client()
         pusher.trigger('sgd', 'curateHomeUpdate', {})
