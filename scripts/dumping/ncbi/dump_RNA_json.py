@@ -66,7 +66,9 @@ def dump_data():
             pmid_list = dbentity_id_to_pmid_list[x.dbentity_id]
         pmid = reference_id_to_pmid[x.reference_id]
         if pmid:
-            pmid_list.append(pmid)
+            pmidStr = "PMID:"+str(pmid)
+            if pmidStr not in pmid_list:
+                pmid_list.append(pmidStr)
         dbentity_id_to_pmid_list[x.dbentity_id] = pmid_list
              
     log.info("Getting all features from the database...")
@@ -83,6 +85,7 @@ def dump_data():
     ## get all features with 'GENOMIC' sequence in S288C
     for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
         locus = dbentity_id_to_locus[x.dbentity_id]
+        
         (soid, soTerm) = so_id_to_so[x.so_id]
         if 'RNA' not in soTerm:
             continue
@@ -121,6 +124,13 @@ def dump_data():
         }]
         if x.dbentity_id in locus_id_to_ncbi_protein_name:
             row["name"] = locus_id_to_ncbi_protein_name[x.dbentity_id]
+        elif locus.name_description:
+            row["name"] = locus.name_description
+        elif locus.headline:
+            row["name"] = locus.headline
+        else: 
+            row["name"] = None
+
         row["url"] = "https://www.yeastgenome.org/locus/" + sgdid
         if x.dbentity_id in dbentity_id_to_pmid_list:
             row["publications"] = dbentity_id_to_pmid_list[x.dbentity_id]
