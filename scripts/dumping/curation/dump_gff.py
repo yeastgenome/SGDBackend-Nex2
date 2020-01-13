@@ -298,6 +298,7 @@ def do_escape(text):
     text = text.replace(" ", "%20").replace("(", "%28").replace(")", "%29")
     text = text.replace(",", "%2C")
     text = text.replace(";", "%3B")
+    text = text.rstrip()
     return text
 
 
