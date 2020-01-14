@@ -4,6 +4,11 @@ import tarfile
 import os
 import sys
 import json
+import boto
+from boto.s3.key import Key
+import transaction
+import gzip
+import shutil
 from src.models import Taxonomy, Source, Edam, Path, Filedbentity, FilePath, So, Dbentity,\
                        Dnasequenceannotation, Locusdbentity, LocusAlias, Referencedbentity,\
                        Literatureannotation, Contig                          
@@ -16,13 +21,19 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
+S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
+S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
+S3_BUCKET = os.environ['S3_BUCKET']
+
 CREATED_BY = os.environ['DEFAULT_USER']
 
-data_file = "scripts/dumping/ncbi/data/SGD_RNA.json"
+data_file = "scripts/dumping/ncbi/data/RNAcentral.json"
 
 taxonId = "NCBITaxon:559292"
 TAXON = "TAX:559292"
 assembly = "R64-2-1"
+
+obsolete_pmids = ['PMID:25423496', 'PMID:27651461', 'PMID:28068213', 'PMID:31088842']
 
 def dump_data():
  
@@ -32,7 +43,10 @@ def dump_data():
 
     log.info(str(datetime.now()))
     log.info("Getting basic data from the database...")
-    
+
+    source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
+    edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
+
     taxon = nex_session.query(Taxonomy).filter_by(taxid = TAXON).one_or_none()
     taxonomy_id = taxon.taxonomy_id
     so_id_to_so = dict([(x.so_id, (x.soid, x.display_name)) for x in nex_session.query(So).all()])
@@ -67,7 +81,7 @@ def dump_data():
         pmid = reference_id_to_pmid[x.reference_id]
         if pmid:
             pmidStr = "PMID:"+str(pmid)
-            if pmidStr not in pmid_list:
+            if pmidStr not in pmid_list and pmidStr not in obsolete_pmids:
                 pmid_list.append(pmidStr)
         dbentity_id_to_pmid_list[x.dbentity_id] = pmid_list
              
@@ -143,6 +157,94 @@ def dump_data():
     f.write(json.dumps(jsonData, indent=4, sort_keys=True))
     f.close()
 
+    datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
+
+    gzip_file = data_file.replace('.json', '') + '.' + datestamp + ".json.gz"
+
+    with open(data_file, 'rb') as f_in, gzip.open(gzip_file, 'wb') as f_out:
+         shutil.copyfileobj(f_in, f_out)
+
+    upload_file_to_latest_s3(data_file)
+
+    update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id)
+
+def upload_file_to_latest_s3(data_file):
+
+    file = open(data_file)
+    s3_path = "latest/RNAcentral.json"
+    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
+    bucket = conn.get_bucket(S3_BUCKET)
+    k = Key(bucket)
+    k.key = s3_path
+    k.set_contents_from_file(file, rewind=True)
+    k.make_public()
+    transaction.commit()
+
+def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id):
+
+    local_file = open(gzip_file, mode='rb')
+
+    import hashlib
+    gff_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()
+    row = nex_session.query(Filedbentity).filter_by(md5sum = gff_md5sum).one_or_none()
+
+    if row is not None:
+        return
+
+    gzip_file = gzip_file.replace("scripts/dumping/ncbi/data/", "")
+
+    nex_session.query(Dbentity).filter(Dbentity.display_name.like('RNAcentral.%.json.gz')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+    nex_session.commit()
+
+    data_id = edam_to_id.get('EDAM:3495')   ## data:3495    RNA sequence                     
+    topic_id = edam_to_id.get('EDAM:0099')  ## topic:0099   RNA
+    format_id = edam_to_id.get('EDAM:3464') ## format:3464  JSON format 
+                                     
+    from sqlalchemy import create_engine
+    from src.models import DBSession
+    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
+    DBSession.configure(bind=engine)
+        
+    upload_file(CREATED_BY, local_file,
+                filename=gzip_file,
+                file_extension='gz',
+                description='JSON file for yeast RNA genes',
+                display_name=gzip_file,
+                data_id=data_id,
+                format_id=format_id,
+                topic_id=topic_id,
+                status='Active',
+                readme_file_id=None,
+                is_public='1',
+                is_in_spell='0',
+                is_in_browser='0',
+                file_date=datetime.now(),
+                source_id=source_to_id['SGD'],
+                md5sum=gff_md5sum)
+
+    rnaFile = nex_session.query(Dbentity).filter_by(display_name=gzip_file, dbentity_status='Active').one_or_none()
+
+    if rnaFile is None:
+        log.info("The " + gzip_file + " is not in the database.")
+        return
+
+    file_id = rnaFile.dbentity_id
+
+    path = nex_session.query(Path).filter_by(path="/reports/chromosomal-features").one_or_none()
+    if path is None:
+        log.info("The path: /reports/chromosomal-features is not in the database.")
+        return
+    path_id = path.path_id
+
+    x = FilePath(file_id = file_id,
+                 path_id = path_id,
+                 source_id = source_to_id['SGD'],
+                 created_by = CREATED_BY)
+
+    nex_session.add(x)
+    nex_session.commit()
+
+    log.info("Done uploading " + data_file)
 
 if __name__ == '__main__':
     
