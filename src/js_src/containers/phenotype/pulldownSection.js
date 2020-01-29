@@ -56,7 +56,7 @@ class PulldownSection extends Component {
         '___large-scale survey',
         '_____competitive growth',
         '_______heterozygous diploid, competitive growth',
-        '_______homozygous diploid,competitive growth',
+        '_______homozygous diploid, competitive growth',
         '____heterozygous diploid, large-scale survey',
         '_____homozygous diploid, large-scale survey',
         '____systematic mutation set',
