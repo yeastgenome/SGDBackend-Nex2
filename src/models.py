@@ -8277,7 +8277,7 @@ class Phenotypeannotation(Base):
                     chebi_url = chemical.obj_url
                 else:
                     if chebi_urls == None:
-                        chebi_url = DBSession.query(Chebi.obj_url).filter_by(display_name=condition_item.condition_name).one_or_none()
+                        chebi_url = DBSession.query(Chebi.obj_url).filter_by(display_name=condition_item.condition_name, is_obsolete='0').one_or_none()
                     else:
                         chebi_url = chebi_urls.get(
                             condition_item.condition_name)

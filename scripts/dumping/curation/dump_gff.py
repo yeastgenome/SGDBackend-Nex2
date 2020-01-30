@@ -49,6 +49,8 @@ def dump_data():
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
     so_id_to_display_name = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
+    so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
+    gene_soid = so.soid
     locus_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS', dbentity_status='Active').all()])
     
     log.info(str(datetime.now()))
@@ -177,7 +179,7 @@ def dump_data():
             if x.dbentity_id in locus_id_to_goids:
                 goids = sorted(locus_id_to_goids[x.dbentity_id])
                 goid_list = ",".join(goids)
-                fw.write(";Ontology_term=" + goid_list)
+                fw.write(";Ontology_term=" + goid_list + "," + gene_soid)
             if description:
                 fw.write(";Note=" + do_escape(description))
             if headline:
@@ -407,7 +409,9 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
 def write_header(fw, datestamp):
     
     fw.write("##gff-version 3\n")
-    fw.write("#date " + datestamp.split(".")[0] + "\n")
+    fw.write("#!date-produced " + datestamp.split(".")[0] + "\n")
+    fw.write("#!data-source SGD\n")
+    fw.write("#!assembly R64-2-1\n")
     fw.write("#\n")
     fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-2-1)\n")
     fw.write("#\n")
