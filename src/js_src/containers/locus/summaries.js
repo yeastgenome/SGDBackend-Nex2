@@ -34,12 +34,20 @@ class LocusSummaries extends Component {
 
   render() {
     let data = this.props.data;
+    
     if (this.props.isPending || !data) return <Loader />;
+    
     let FormSchema = t.struct({
       phenotype_summary: t.maybe(t.String),
       regulation_summary: t.maybe(t.String),
-      regulation_summary_pmids: t.maybe(t.String)
+      regulation_summary_pmids: t.maybe(t.String),
+      protein_summary:t.maybe(t.String),
+      sequence_summary:t.maybe(t.String),
+      interaction_summary:t.maybe(t.String),
+      disease_summary:t.maybe(t.String),
+      function_summary:t.maybe(t.String)
     });
+    
     let options = {
       fields: {
         phenotype_summary: {
@@ -50,9 +58,25 @@ class LocusSummaries extends Component {
         },
         regulation_summary_pmids: {
           label: 'Regulation summary PMIDs (space-separated)'
+        },
+        protein_summary:{
+          type:'textarea'
+        },
+        sequence_summary:{
+          type:'textarea'
+        },
+        interaction_summary:{
+          type:'textarea'
+        },
+        disease_summary:{
+          type:'textarea'
+        },
+        function_summary:{
+          type:'textarea'
         }
       }
     };
+
     return (
       <div className='sgd-curate-form row'>
         <div className='columns small-12 medium-6'>
