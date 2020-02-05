@@ -147,14 +147,13 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
         log.info(str(datetime.now()))
         log.info("Uploading GPAD/GPI files to AWS...")
 
-        ENGINE_CREATED = 0
-
+        ENGINE_CREATED = 1
         update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, 
                                         edam_to_id, ENGINE_CREATED)
-
+        ENGINE_CREATED = 1
         update_database_load_file_to_s3(nex_session, gpi_file, source_to_id,
                                         edam_to_id, ENGINE_CREATED)
-
+        ENGINE_CREATED = 1
         update_database_load_file_to_s3(nex_session, noctua_gpad_file, source_to_id, 
                                         edam_to_id, ENGINE_CREATED)
 
@@ -608,20 +607,24 @@ def update_database_load_file_to_s3(nex_session, go_file, source_to_id, edam_to_
     
     log.info("Adding " + go_file + " to the database.\n")
 
-    nex_session.query(Dbentity).filter_by(display_name=go_file, dbentity_status='Active').update({"dbentity_status": 'Archived'})
+    if "gp_association" in go_file:
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_association.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+    elif "gp_information" in go_file:
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('information.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+    elif "noctua_sgd.gpad" in go_file:
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('noctua_sgd.gpad%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     nex_session.commit()
 
     data_id = edam_to_id.get('EDAM:2353')   ## data:2353 Ontology data
     topic_id = edam_to_id.get('EDAM:0089')  ## topic:0089 Ontology and terminology
     format_id = edam_to_id.get('EDAM:3475') ## format:3475 TSV
 
-    if ENGINE_CREATED == 0:
-        from sqlalchemy import create_engine
-        from src.models import DBSession
-        engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
-        DBSession.configure(bind=engine)
-        ENGINE_CREATED = 1
-
+    # if ENGINE_CREATED == 0:
+    from sqlalchemy import create_engine
+    from src.models import DBSession
+    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
+    DBSession.configure(bind=engine)
+        
     if go_row is None:
         upload_file(CREATED_BY, go_local_file,
                     filename=go_file,
@@ -681,9 +684,9 @@ if __name__ == "__main__":
 
     url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
     gpad_file = 'gp_association.559292_sgd.gz'
-    dated_gpad_file = 'gp_association.559292_sgd_' + datestamp + '.gz' 
+    dated_gpad_file = 'gp_association.559292_sgd_' + datestamp + '.gpad.gz' 
     gpi_file = 'gp_information.559292_sgd.gz'
-    dated_gpi_file = 'gp_information.559292_sgd_' + datestamp + '.gz'
+    dated_gpi_file = 'gp_information.559292_sgd_' + datestamp + '.gpi.gz'
     urllib.request.urlretrieve(url_path + gpad_file, dated_gpad_file)
     urllib.request.urlcleanup()
     urllib.request.urlretrieve(url_path + gpi_file, dated_gpi_file)
