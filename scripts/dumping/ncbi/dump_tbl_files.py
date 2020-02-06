@@ -247,20 +247,24 @@ def dump_data():
 
     gbf_tar_file = tar_files(datestamp, "gbf")
 
-    log.info(str(datetime.now()))
-    log.info("Uploading ncbi tbl files to S3...")
+    ## don't upload the files to s3, only upload the files when Barbara/Leigh used the 
+    ## version and updated S. cerevisiae S288C, so commented the following out for now 
+    ## and will run a separate script to upload the files. 
 
-    update_database_load_file_to_s3(nex_session, tbl_tar_file, source_to_id, edam_to_id)
+    # log.info(str(datetime.now()))
+    # log.info("Uploading ncbi tbl files to S3...")
+
+    # update_database_load_file_to_s3(nex_session, tbl_tar_file, source_to_id, edam_to_id)
     
-    log.info(str(datetime.now()))
-    log.info("Uploading ncbi asn1 files to S3...")
+    # log.info(str(datetime.now()))
+    # log.info("Uploading ncbi asn1 files to S3...")
 
-    update_database_load_file_to_s3(nex_session, sqn_tar_file, source_to_id, edam_to_id)
+    # update_database_load_file_to_s3(nex_session, sqn_tar_file, source_to_id, edam_to_id)
 
-    log.info(str(datetime.now()))
-    log.info("Uploading ncbi gbf files to S3...")
+    # log.info(str(datetime.now()))
+    # log.info("Uploading ncbi gbf files to S3...")
 
-    update_database_load_file_to_s3(nex_session, gbf_tar_file, source_to_id, edam_to_id)
+    # update_database_load_file_to_s3(nex_session, gbf_tar_file, source_to_id, edam_to_id)
 
     nex_session.close()
 

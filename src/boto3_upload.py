@@ -15,13 +15,17 @@ session = boto3.Session(aws_access_key_id=S3_ACCESS_KEY,
 boto3.set_stream_logger('boto3.resources', logging.INFO)
 s3 = session.resource('s3')
 
+def boto3_copy_file(srcBucket, srcFile, dstBucket, dstFile):
+
+    copy_source = { 'Bucket': srcBucket,
+                    'Key':    srcFile }
+    s3.meta.client.copy(copy_source, dstBucket, dstFile, ExtraArgs={'ACL': 'public-read'})
 
 def boto3_multi_upload(file_path, s3_path):
     config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10, multipart_chunksize=1024 * 25, use_threads=True)
     s3.meta.client.upload_file(file_path, S3_BUCKET, s3_path,
                                ExtraArgs={'ACL': 'public-read', }, Config=config, Callback=ProgressPercentage(file_path))
     
-
 class ProgressPercentage(object):
     def __init__(self, filename):
         self._filename = filename

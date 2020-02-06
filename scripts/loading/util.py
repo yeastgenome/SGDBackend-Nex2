@@ -399,8 +399,6 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             if new_pmids is not None:
                 if pmid not in new_pmids:
                     new_pmids.append(pmid)
-                    for dbentity_id in dbentity_ids:
-                        dbentity_with_new_pmid[dbentity_id] = 1
             continue
 
         ## date_created
