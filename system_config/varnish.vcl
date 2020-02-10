@@ -65,6 +65,11 @@ sub vcl_recv {
     if (req.url ~ "^/locus/S000005085$") {
         return (pass);
     }
+    
+    # don't cache any path starting with /search
+    if (req.url ~ "^/search") {
+        return (pass);
+    }
 }
 
 sub vcl_backend_response {
