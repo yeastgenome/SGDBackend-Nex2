@@ -1447,7 +1447,9 @@ def get_one_phenotype(request):
 
         data['experiment_comment'] = row.experiment_comment
 
-        conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id=row.annotation_id, group_id=group_id).all()
+        conditions = []
+        if str(group_id).isdigit():
+            conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id=row.annotation_id, group_id=group_id).all()
 
         for condition in conditions:
             condition_name = condition.condition_name
