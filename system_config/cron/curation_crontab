@@ -20,14 +20,20 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
-MAILTO=sgd-programmers@lists.stanford.edu
-0 * * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/restart.sh
+#Comment restart every hour as it is internal.
+#0 * * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/restart.sh | echo 'Backend restarted on curation - prod'
 0 0 * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/index_disambiguation.sh
-0 1 * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/index_elasticsearch.sh
-30 17 * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/refresh_cache.sh
-0 18 * * FRI /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/load_reference_triage.sh
+#move index right before refresh_cache - 2/7/2020
+30 17 * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/index_elasticsearch.sh
+30 18 * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/refresh_cache.sh > /data/www/logs/refresh_cache.log 2>&1
+# assume the refresh_cache script is done running after 8hrs
+30 2 * * * /usr/bin/tail -62 /data/www/logs/refresh_cache.log
+0 18 * * 5 /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/load_reference_triage.sh
 30 17 * * 1 /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/go_update.sh
-30 19 * * 1 /bin/cp /data/www/SGDBackend-NEX2/current/scripts/dumping/curation/data/gene_association* /data/www/GO/
 29 17 * * 5 /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/reference_update.sh
-30 17 15 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/dbxref_update.sh
+29 17 11 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/data_dump.sh
+29 17 13 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/ontology_update.sh
+29 17 15 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/dbxref_update.sh
+
+
 
