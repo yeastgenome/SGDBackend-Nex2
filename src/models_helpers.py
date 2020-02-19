@@ -410,7 +410,7 @@ class ModelsHelper(object):
     def get_common_strains(self):
         strain_to_taxonomy_id = {}
         strains_in_db = self.get_all_strains()
-        filtered_strains = list([strain for strain in strains_in_db if strain.strain_type == 'Alternative Reference' or strain.strain_type =='Reference' or strain.dbentity_id == 1364635])
+        filtered_strains = list([strain for strain in strains_in_db if strain.strain_type == 'Alternative Reference' or strain.strain_type =='Reference' or ( strain.taxonomy.taxid == 'TAX:4932' and strain.display_name.upper() == 'OTHER')])
         
         for  s in filtered_strains:
             strain_to_taxonomy_id[s.display_name.upper()] = s.taxonomy_id
