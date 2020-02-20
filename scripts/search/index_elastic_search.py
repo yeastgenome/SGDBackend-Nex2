@@ -56,7 +56,7 @@ def index_toolbar_links():
         ("Gene/Sequence Resources","/seqTools", []),
         ("Download Genome","https://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/","download"),
         ("Genome Snapshot", "/genomesnapshot",[]),
-        ("Chromosome History","https://wiki.yeastgenome.org/index.php/Summary_of_Chromosome_Sequence_and_Annotation_Updates", [])
+        ("Chromosome History","https://wiki.yeastgenome.org/index.php/Summary_of_Chromosome_Sequence_and_Annotation_Updates", []),
         ("Systematic Sequencing Table", "/cache/chromosomes.shtml",[]),
         ("Original Sequence Papers","http://wiki.yeastgenome.org/index.php/Original_Sequence_Papers",[]),
         ("Variant Viewer", "/variant-viewer",[]),
