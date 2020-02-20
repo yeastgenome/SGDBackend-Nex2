@@ -9,7 +9,7 @@ import curateLogo from './curateLogo.png';
 import Loader from './loader/index';
 import { clearError, clearMessage } from '../../actions/metaActions';
 
-import {updateColleagueCount,updateGeneCount, setError} from '../../actions/metaActions';
+import {updateColleagueCount,updateGeneCount} from '../../actions/metaActions';
 import getPusherClient from '../../lib/getPusherClient';
 const CHANNEL = 'sgd';
 const GENECOUNTEVENT = 'geneCount';
