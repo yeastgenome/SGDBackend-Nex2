@@ -25,24 +25,6 @@ class LayoutComponent extends Component {
     this.channel.unbind(COLLEAGUECOUNTEVENT);
   }
 
-  handleCounts(){
-    if(window.performance){
-      if(window.performance.navigation.type == 1){  
-        fetch('/triage_count')
-        .then(count =>   count.json())
-        .then(count => {
-          if(count.hasOwnProperty('message')){
-            this.props.dispatch(setError(count.message));
-          }
-          else{
-            this.props.dispatch(updateColleagueCount(count.colleagueCount));
-            this.props.dispatch(updateGeneCount(count.geneCount));
-          }
-        });
-      }
-    }
-  }
-
   listenForUpdates(){
     let pusher = getPusherClient();
     this.channel = pusher.subscribe(CHANNEL);
@@ -144,7 +126,6 @@ class LayoutComponent extends Component {
   render() {
     // init auth nodes, either login or logout links
     let menuNode = this.props.isAuthenticated ? this.renderAuthedMenu() : this.renderPublicMenu();
-    this.props.isAuthenticated ? this.handleCounts() : '';
     let devNoticeNode = null;
     if (process.env.DEMO_ENV === 'development') {
       devNoticeNode = <div className={`warning callout ${style.demoWarning}`}><i className='fa fa-exclamation-circle' /> Demo</div>;

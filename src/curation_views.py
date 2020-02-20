@@ -2738,4 +2738,6 @@ def triage_count(request):
         return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
 
     except Exception as e:
+        log.exception('DB error corrected. Rollingback previous error in db connection')
+        DBSession.rollback()
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
