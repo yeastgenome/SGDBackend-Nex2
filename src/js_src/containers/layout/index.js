@@ -17,23 +17,27 @@ const COLLEAGUECOUNTEVENT = 'colleagueCount';
 
 class LayoutComponent extends Component {
   componentDidMount(){
-    this.listenForUpdates();
+    // this.listenForUpdates();
   }
   
-  componentWillUnmount(){
-    this.channel.unbind(GENECOUNTEVENT);
-    this.channel.unbind(COLLEAGUECOUNTEVENT);
+  componentWillUnmount() {
+    if (this.channel !== undefined) {
+      this.channel.unbind(GENECOUNTEVENT);
+      this.channel.unbind(COLLEAGUECOUNTEVENT);
+    }
   }
 
-  listenForUpdates(){
-    let pusher = getPusherClient();
-    this.channel = pusher.subscribe(CHANNEL);
-    this.channel.bind(GENECOUNTEVENT,(data)=>{
-      this.props.dispatch(updateGeneCount(data.message));
-    });
-    this.channel.bind(COLLEAGUECOUNTEVENT,(data)=>{
-      this.props.dispatch(updateColleagueCount(data.message));
-    });
+  listenForUpdates() {
+    if (this.channel == undefined) {
+      let pusher = getPusherClient();
+      this.channel = pusher.subscribe(CHANNEL);
+      this.channel.bind(GENECOUNTEVENT, (data) => {
+        this.props.dispatch(updateGeneCount(data.message));
+      });
+      this.channel.bind(COLLEAGUECOUNTEVENT, (data) => {
+        this.props.dispatch(updateColleagueCount(data.message));
+      });
+    }
   }
 
   renderSearch () {
@@ -126,6 +130,7 @@ class LayoutComponent extends Component {
   render() {
     // init auth nodes, either login or logout links
     let menuNode = this.props.isAuthenticated ? this.renderAuthedMenu() : this.renderPublicMenu();
+    this.props.isAuthenticated ? this.listenForUpdates() : '';
     let devNoticeNode = null;
     if (process.env.DEMO_ENV === 'development') {
       devNoticeNode = <div className={`warning callout ${style.demoWarning}`}><i className='fa fa-exclamation-circle' /> Demo</div>;
