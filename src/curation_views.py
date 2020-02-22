@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import cgi
 import string
+import psycopg2
 
 from .helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
@@ -352,7 +353,7 @@ def db_sign_in(request):
         Temp_session = scoped_session(session_factory)
         user = Temp_session.query(Dbuser).filter_by(username=username.upper()).one_or_none()
         if user is None:
-            raise ValueError('Invalid login')
+            raise ValueError('User not found')
         curator = curator_or_none(user.email)
         if curator is None:
             return HTTPForbidden(body=json.dumps({'error': 'User is not authorized on SGD'}))
@@ -364,9 +365,16 @@ def db_sign_in(request):
             'username': session['username'],
             'csrfToken': request.session.get_csrf_token()
         }
-    except:
-        traceback.print_exc()
-        return HTTPForbidden(body=json.dumps({'error': 'Incorrect login details.'}))
+    except ValueError as e:
+        log.exception('User not found')
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        if hasattr(e,'orig') and isinstance(e.orig,psycopg2.OperationalError) and "password authentication" in e.orig.__str__():
+            #Can read the code from e.orig.pgcode
+            log.error(f"Incorrect username or password for {username}")
+            return HTTPBadRequest(body=json.dumps({'error': 'Incorrect login details'}))
+        log.exception('Error occured during log-in.')
+        return HTTPBadRequest(body=json.dumps({'error': 'Unable to log in, please contact programmers.'}))
     finally:
         if Temp_session:
             Temp_session.close()
