@@ -371,7 +371,7 @@ def db_sign_in(request):
     except Exception as e:
         if hasattr(e,'orig') and isinstance(e.orig,psycopg2.OperationalError) and "password authentication" in e.orig.__str__():
             #Can read the code from e.orig.pgcode
-            log.error(f"Incorrect username or password for {username}")
+            log.error("Incorrect username or password for user " + username)
             return HTTPBadRequest(body=json.dumps({'error': 'Incorrect login details'}))
         log.exception('Error occured during log-in.')
         return HTTPBadRequest(body=json.dumps({'error': 'Unable to log in, please contact programmers.'}))
