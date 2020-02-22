@@ -356,7 +356,8 @@ def db_sign_in(request):
             raise ValueError('User not found')
         curator = curator_or_none(user.email)
         if curator is None:
-            return HTTPForbidden(body=json.dumps({'error': 'User is not authorized on SGD'}))
+            log.error('User is not authorized on SGD, username is '+ username)
+            return HTTPBadRequest(body=json.dumps({'error': 'User is not authorized on SGD'}))
         session = request.session
         session['email'] = curator.email
         session['username'] = curator.username
