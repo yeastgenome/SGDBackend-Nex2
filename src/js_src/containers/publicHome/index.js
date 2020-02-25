@@ -31,6 +31,9 @@ class Login extends Component {
       this.props.dispatch(authenticateUser(data));
       this.props.dispatch(push(nextUrl));
     };
+    let _onError = (data) => {
+      this.props.dispatch(setError(data.error));
+    };
     
     let getCounts = () => {
       fetch('/triage_count')
@@ -51,7 +54,7 @@ class Login extends Component {
         <h5>Option 1</h5>
         <p>Enter your database username and password.</p>
         <div style={{ margin: '0 auto', maxWidth: '20rem', textAlign: 'left' }}>
-          <FlexiForm requestMethod='POST' tFormOptions={loginOptions} tFormSchema={loginSchema} onSuccess={_onSuccess} submitText='Login' updateUrl='/db_sign_in' />
+          <FlexiForm requestMethod='POST' tFormOptions={loginOptions} tFormSchema={loginSchema} onSuccess={_onSuccess} onError={_onError} submitText='Login' updateUrl='/db_sign_in' />
         </div>
       </div>
     );
