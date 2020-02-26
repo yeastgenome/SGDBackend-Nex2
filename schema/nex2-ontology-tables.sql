@@ -1034,6 +1034,7 @@ CREATE TABLE nex.so (
 	so_id bigint NOT NULL DEFAULT nextval('object_seq'),
 	format_name varchar(100) NOT NULL,
 	display_name varchar(500) NOT NULL,
+	term_name varchar(500) NOT NULL,
 	obj_url varchar(500) NOT NULL,
 	source_id bigint NOT NULL,
 	soid varchar(20) NOT NULL,
@@ -1048,6 +1049,7 @@ COMMENT ON COLUMN nex.so.format_name IS 'Unique name to create download files.';
 COMMENT ON COLUMN nex.so.obj_url IS 'URL of the object (relative for local links or complete for external links).';
 COMMENT ON COLUMN nex.so.so_id IS 'Unique identifier (serial number).';
 COMMENT ON COLUMN nex.so.display_name IS 'Public display name.';
+COMMENT ON COLUMN nex.so.term_name IS 'SO term name as-is.';
 COMMENT ON COLUMN nex.so.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.so.soid IS 'Sequence Ontology identifier (e.g., SO:0000368).';
 COMMENT ON COLUMN nex.so.is_obsolete IS 'Whether the ontology term is obsolete.';

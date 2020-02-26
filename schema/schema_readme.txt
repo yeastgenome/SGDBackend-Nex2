@@ -12,6 +12,7 @@ psql -U postgres sgd -c "GRANT CURATOR to OTTO"
 
 psql -U postgres sgd -c "CREATE SCHEMA nex AUTHORIZATION nex"
 psql -U postgres sgd -c "GRANT USAGE ON SCHEMA nex TO CURATOR"
+psql -U postgres sgd -c "GRANT USAGE ON SCHEMA nex TO DBSELECT"
 
 psql -d sgd -U nex
 
