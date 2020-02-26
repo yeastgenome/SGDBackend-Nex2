@@ -216,7 +216,6 @@ def new_reference(request):
     except Exception as e:
         transaction.abort()
         log.error(e, exc_info=True)
-        console
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 @view_config(route_name='reference_triage_id_delete', renderer='json', request_method='DELETE')
