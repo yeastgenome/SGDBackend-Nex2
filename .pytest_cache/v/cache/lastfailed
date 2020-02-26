@@ -2,6 +2,7 @@
   "test/test_curation/test_curation_views.py": true, 
   "test/test_functional.py": true, 
   "test/test_helpers.py": true, 
+  "test/test_logs/test_log_helpers.py": true, 
   "test/test_views/test_author.py": true, 
   "test/test_views/test_chemical.py": true, 
   "test/test_views/test_complex.py": true, 
