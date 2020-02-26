@@ -17,6 +17,9 @@ tests:
 	npm test
 	source test_variables.sh && nosetests -s
 
+test-logs:
+	source dev_variables.sh && python -m unittest ./test/test_logs/test_log_helpers.py
+
 qa-index-redis:
 	source dev_variables.sh && NEX2_URI=$$QA_NEX2_URI && cap qa deploy:redis
 
