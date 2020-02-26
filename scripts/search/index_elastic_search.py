@@ -810,7 +810,7 @@ def index_references(limit=False):
 
 
 def index_chemicals(limit=False):
-    all_chebi_data = DBSession.query(Chebi).limit(200).all()
+    all_chebi_data = DBSession.query(Chebi).all()
     _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
     bulk_data = []
     search_debug_logger.debug(
