@@ -1,8 +1,8 @@
-import os
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 from mapping import mapping
+import os
 import requests
 from threading import Thread
 import json
@@ -10,8 +10,7 @@ import collections
 from index_es_helpers import IndexESHelper
 import concurrent.futures
 import uuid
-from pathlib import Path
-from custom_logger import setup_logger
+import logging
 
 
 engine = create_engine(os.environ["NEX2_URI"], pool_recycle=3600)
@@ -23,37 +22,26 @@ DOC_TYPE = "searchable_item"
 ES_URI = os.environ["WRITE_ES_URI"]
 es = Elasticsearch(ES_URI, retry_on_timeout=True)
 
-str_format = '%(asctime)s: %(levelname)-5.5s: %(name)s: %(funcName)s: %(message)s'
-debug_format = '%(asctime)s: %(levelname)-5.5s: %(message)s'
-file_path = os.environ.get("SCRIPT_LOG_FILE", "/python_custom_script.log")
-ENV = os.environ.get("ENV")
-mod_path = file_path
-if ENV == "dev" or ENV == "test":
-    mod_path = os.path.join(Path.cwd(), file_path[1:])
-search_logger = setup_logger("search_log", mod_path, str_format)
-search_debug_logger = setup_logger(
-    "search_debug_log", mod_path, debug_format, 'DEBUG', False)
-
 
 def delete_mapping():
-    search_debug_logger.debug("Deleting mapping...")
+    print("Deleting mapping...")
     response = requests.delete(ES_URI + INDEX_NAME + "/")
     if response.status_code != 200:
-        search_logger.error('Error occured: ' + str(response.json()))
+        print(("ERROR: " + str(response.json())))
     else:
-        search_debug_logger.debug('ES Mapping deleted')
+        print("SUCCESS")
 
 
 def put_mapping():
-    search_debug_logger.debug("Putting mapping... ")
+    print("Putting mapping... ")
     response = requests.put(ES_URI + INDEX_NAME + "/", json=mapping)
     if response.status_code != 200:
-        search_logger.error('Error occured: ' + str(response.json()))
+        print(("ERROR: " + str(response.json())))
     else:
-        search_debug_logger.debug('ES mapping added')
+        print("SUCCESS")
 
 
-def index_toolbar_links(limit=False):
+def index_toolbar_links():
     links = [
         ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do",[]),
         ("Yeastmine", "https://yeastmine.yeastgenome.org","yeastmine"),
@@ -100,8 +88,7 @@ def index_toolbar_links(limit=False):
         ("Resources","http://wiki.yeastgenome.org/index.php/External_Links",[])
     ]
 
-    search_debug_logger.debug(
-        ("Indexing " + str(len(links)) + " toolbar links"))
+    print(("Indexing " + str(len(links)) + " toolbar links"))
 
     for l in links:
         obj = {
@@ -114,18 +101,13 @@ def index_toolbar_links(limit=False):
         es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=l[1])
 
 
-def index_colleagues(limit=False):
-    colleagues = None
-    if limit:
-        colleagues = DBSession.query(Colleague).limit(200).all()
-    else:
-        colleagues = DBSession.query(Colleague).all()
+def index_colleagues():
+    colleagues = DBSession.query(Colleague).all()
     _locus_ids = IndexESHelper.get_colleague_locus()
     _locus_names = IndexESHelper.get_colleague_locusdbentity()
     _combined_list = IndexESHelper.combine_locusdbentity_colleague(
         colleagues, _locus_names, _locus_ids)
-    search_debug_logger.debug(
-        ("Indexing " + str(len(colleagues)) + " colleagues"))
+    print(("Indexing " + str(len(colleagues)) + " colleagues"))
     bulk_data = []
     for item_k, item_v in list(_combined_list.items()):
         bulk_data.append({
@@ -137,38 +119,21 @@ def index_colleagues(limit=False):
         })
 
         bulk_data.append(item_v)
-        if len(bulk_data) == 1000 and limit is False:
+        if len(bulk_data) == 1000:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data = []
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
-
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_genes(limit=False):
+def index_genes():
     # Indexing just the S228C genes
     # dbentity: 1364643 (id) -> straindbentity -> 274901 (taxonomy_id)
     # list of dbentities comes from table DNASequenceAnnotation with taxonomy_id 274901
     # feature_type comes from DNASequenceAnnotation as well
-    gene_ids_so = None
-    not_s288c = None
-    all_genes = None
-    feature_types_db = None
-    tc_numbers_db = None
-    ec_numbers_db = None
-    if limit:
-        gene_ids_so = DBSession.query(
-            Dnasequenceannotation.dbentity_id, Dnasequenceannotation.so_id).filter(
-                Dnasequenceannotation.taxonomy_id == 274901).limit(200).all()
-    else:
-        gene_ids_so = DBSession.query(
-            Dnasequenceannotation.dbentity_id, Dnasequenceannotation.so_id).filter(
-                Dnasequenceannotation.taxonomy_id == 274901).all()
+    gene_ids_so = DBSession.query(
+        Dnasequenceannotation.dbentity_id, Dnasequenceannotation.so_id).filter(
+            Dnasequenceannotation.taxonomy_id == 274901).all()
     dbentity_ids_to_so = {}
     dbentity_ids = set([])
     so_ids = set([])
@@ -177,45 +142,28 @@ def index_genes(limit=False):
         so_ids.add(gis[1])
         dbentity_ids_to_so[gis[0]] = gis[1]
     # add some non S288C genes
-    if limit:
-        not_s288c = DBSession.query(Locusdbentity.dbentity_id).filter(
-            Locusdbentity.not_in_s288c == True).limit(200).all()
-    else:
-        not_s288c = DBSession.query(Locusdbentity.dbentity_id).filter(
-            Locusdbentity.not_in_s288c == True).all()
+    not_s288c = DBSession.query(Locusdbentity.dbentity_id).filter(
+        Locusdbentity.not_in_s288c == True).all()
     for id in not_s288c:
         dbentity_ids.add(id[0])
         # assume non S288C features to be ORFs
         dbentity_ids_to_so[id[0]] = 263757
-    if limit:
-        all_genes = DBSession.query(Locusdbentity).filter(
-            Locusdbentity.dbentity_id.in_(list(dbentity_ids))).limit(200).all()
-    else:
-        all_genes = DBSession.query(Locusdbentity).filter(
-            Locusdbentity.dbentity_id.in_(list(dbentity_ids))).all()
+    all_genes = DBSession.query(Locusdbentity).filter(
+        Locusdbentity.dbentity_id.in_(list(dbentity_ids))).all()
 
     # make list of merged/deleted genes so they don"t redirect when they show up as an alias
     merged_deleted_r = DBSession.query(Locusdbentity.format_name).filter(
         Locusdbentity.dbentity_status.in_(["Merged", "Deleted"])).all()
     merged_deleted = [d[0] for d in merged_deleted_r]
 
-    if limit:
-        feature_types_db = DBSession.query(
-            So.so_id, So.display_name).filter(So.so_id.in_(list(so_ids))).limit(200).all()
-    else:
-        feature_types_db = DBSession.query(
-            So.so_id, So.display_name).filter(So.so_id.in_(list(so_ids))).all()
+    feature_types_db = DBSession.query(
+        So.so_id, So.display_name).filter(So.so_id.in_(list(so_ids))).all()
     feature_types = {}
     for ft in feature_types_db:
         feature_types[ft[0]] = ft[1]
 
-    if limit:
-        tc_numbers_db = DBSession.query(LocusAlias).filter_by(
-            alias_type="TC number").limit(200).all()
-    else:
-        tc_numbers_db = DBSession.query(LocusAlias).filter_by(
-            alias_type="TC number").all()
-    
+    tc_numbers_db = DBSession.query(LocusAlias).filter_by(
+        alias_type="TC number").all()
     tc_numbers = {}
     for tc in tc_numbers_db:
         if tc.locus_id in tc_numbers:
@@ -223,13 +171,8 @@ def index_genes(limit=False):
         else:
             tc_numbers[tc.locus_id] = [tc.display_name]
 
-    if limit:
-        ec_numbers_db = DBSession.query(LocusAlias).filter_by(
-            alias_type="EC number").limit(200).all()
-    else:
-        ec_numbers_db = DBSession.query(LocusAlias).filter_by(
-            alias_type="EC number").all()
-    
+    ec_numbers_db = DBSession.query(LocusAlias).filter_by(
+        alias_type="EC number").all()
     ec_numbers = {}
     for ec in ec_numbers_db:
         if ec.locus_id in ec_numbers:
@@ -249,7 +192,7 @@ def index_genes(limit=False):
 
     bulk_data = []
 
-    search_debug_logger.debug(("Indexing " + str(len(all_genes)) + " genes"))
+    print(("Indexing " + str(len(all_genes)) + " genes"))
     ##### test newer methods ##########
     _summary = IndexESHelper.get_locus_dbentity_summary()
     _protein = IndexESHelper.get_locus_dbentity_alias(["NCBI protein name"])
@@ -422,25 +365,19 @@ def index_genes(limit=False):
 
         bulk_data.append(obj)
 
-        if len(bulk_data) == 1000 and limit is False:
+        if len(bulk_data) == 1000:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data = []
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_phenotypes(limit=False):
+def index_phenotypes():
     bulk_data = []
     phenotypes = DBSession.query(Phenotype).all()
     _result = IndexESHelper.get_pheno_annotations(phenotypes)
-    search_debug_logger.debug(
-        ("Indexing " + str(len(_result)) + " phenotypes"))
+    print(("Indexing " + str(len(_result)) + " phenotypes"))
     for phenotype_item in _result:
         bulk_data.append({
             "index": {
@@ -450,24 +387,18 @@ def index_phenotypes(limit=False):
             }
         })
         bulk_data.append(phenotype_item)
-        if len(bulk_data) == 50 and limit is False:
+        if len(bulk_data) == 50:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data = []
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_observables(limit=False):
+def index_observables():
     observables = DBSession.query(Apo).filter_by(
         apo_namespace="observable").all()
 
-    search_debug_logger.debug(
-        ("Indexing " + str(len(observables)) + " observables"))
+    print(("Indexing " + str(len(observables)) + " observables"))
     bulk_data = []
 
     for observable in observables:
@@ -489,23 +420,18 @@ def index_observables(limit=False):
 
         bulk_data.append(obj)
 
-        if len(bulk_data) == 300 and limit is False:
+        if len(bulk_data) == 300:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data = []
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_strains(limit=False):
+def index_strains():
     strains = DBSession.query(Straindbentity).all()
 
-    search_debug_logger.debug(("Indexing " + str(len(strains)) + " strains"))
+    print(("Indexing " + str(len(strains)) + " strains"))
     for strain in strains:
         key_values = [
             strain.display_name, strain.format_name, strain.genbank_id
@@ -534,12 +460,11 @@ def index_strains(limit=False):
             index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
 
 
-def index_reserved_names(limit=False):
+def index_reserved_names():
     # only index reservednames that do not have a locus associated with them
     reserved_names = DBSession.query(Reservedname).all()
 
-    search_debug_logger.debug(
-        ("Indexing " + str(len(reserved_names)) + " reserved names"))
+    print(("Indexing " + str(len(reserved_names)) + " reserved names"))
     for reserved_name in reserved_names:
         name = reserved_name.display_name
         href = reserved_name.obj_url
@@ -563,12 +488,11 @@ def index_reserved_names(limit=False):
             index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
 
 
-def index_reserved_names(limit=False):
+def index_reserved_names():
     # only index reservednames that do not have a locus associated with them
     reserved_names = DBSession.query(Reservedname).all()
 
-    search_debug_logger.debug(
-        ("Indexing " + str(len(reserved_names)) + " reserved names"))
+    print(("Indexing " + str(len(reserved_names)) + " reserved names"))
     for reserved_name in reserved_names:
         name = reserved_name.display_name
         href = reserved_name.obj_url
@@ -597,13 +521,12 @@ def load_go_id_blacklist(list_filename):
     return go_id_blacklist
 
 
-def index_go_terms(limit=False):
+def index_go_terms():
     go_id_blacklist = load_go_id_blacklist("scripts/search/go_id_blacklist.lst")
 
     gos = DBSession.query(Go).all()
 
-    search_debug_logger.debug(
-        ("Indexing " + str(len(gos) - len(go_id_blacklist)) + " GO terms"))
+    print(("Indexing " + str(len(gos) - len(go_id_blacklist)) + " GO terms"))
 
     bulk_data = []
     for go in gos:
@@ -656,23 +579,17 @@ def index_go_terms(limit=False):
 
         bulk_data.append(obj)
 
-        if len(bulk_data) == 800 and limit is False:
+        if len(bulk_data) == 800:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-            bulk_data = []
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
+            bulk_data=[]
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
-
-def index_disease_terms(limit=False):
+def index_disease_terms():
     dos = DBSession.query(Disease).all()
 
-    search_debug_logger.debug(("Indexing " + str(len(dos)) + " DO terms"))
+    print(("Indexing " + str(len(dos)) + " DO terms"))
 
     bulk_data = []
     for do in dos:
@@ -718,20 +635,15 @@ def index_disease_terms(limit=False):
 
         bulk_data.append(obj)
 
-        if len(bulk_data) == 800 and limit is False:
+        if len(bulk_data) == 800:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data=[]
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_references(limit=False):
+def index_references():
     _ref_loci = IndexESHelper.get_dbentity_locus_note()
     _references = DBSession.query(Referencedbentity).all()
     _abstracts = IndexESHelper.get_ref_abstracts()
@@ -739,8 +651,7 @@ def index_references(limit=False):
     _aliases = IndexESHelper.get_ref_aliases()
 
     bulk_data = []
-    search_debug_logger.debug(
-        ("Indexing " + str(len(_references)) + " references"))
+    print(("Indexing " + str(len(_references)) + " references"))
 
     for reference in _references:
         reference_loci = []
@@ -795,25 +706,19 @@ def index_references(limit=False):
             }
         })
         bulk_data.append(obj)
-        if len(bulk_data) == 1000 and limit is False:
+        if len(bulk_data) == 1000:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data = []
-        else:
-            if len(bulk_data) == 100 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_chemicals(limit=False):
+def index_chemicals():
     all_chebi_data = DBSession.query(Chebi).all()
     _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
     bulk_data = []
-    search_debug_logger.debug(
-        ("Indexing " + str(len(all_chebi_data)) + " chemicals"))
+    print(("Indexing " + str(len(all_chebi_data)) + " chemicals"))
     for item_key, item_v in list(_result.items()):
         if item_v is not None:
             obj = {
@@ -833,14 +738,9 @@ def index_chemicals(limit=False):
             })
 
             bulk_data.append(obj)
-            if len(bulk_data) == 300 and limit is False:
+            if len(bulk_data) == 300:
                 es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
                 bulk_data = []
-            else:
-                if len(bulk_data) == 200 and (limit is True):
-                    es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                    bulk_data = []
-                    break
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
@@ -858,14 +758,14 @@ def setup():
         put_mapping()
 
 
-def index_not_mapped_genes(limit=False):
+
+def index_not_mapped_genes():
     url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
     bulk_data = []
     with open("./scripts/search/not_mapped.json",
               "r") as json_data:
         _data = json.load(json_data)
-        search_debug_logger.debug(
-            ("indexing " + str(len(_data)) + " not physically mapped genes"))
+        print(("indexing " + str(len(_data)) + " not physically mapped genes"))
         for item in _data:
             temp_aliases = []
             if len(item["FEATURE_NAME"]) > 0:
@@ -886,27 +786,20 @@ def index_not_mapped_genes(limit=False):
                     }
                 })
                 bulk_data.append(obj)
-                if len(bulk_data) == 300 and limit is False:
+                if len(bulk_data) == 300:
                     es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
                     bulk_data = []
-                else:
-                    if len(bulk_data) == 200 and limit is True:
-                        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                        bulk_data = []
-                        break
-
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_downloads(limit=False):
+def index_downloads():
     bulk_data = []
     dbentity_file_obj = IndexESHelper.get_file_dbentity_keyword()
     files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
                                                  Filedbentity.s3_url != None).all()
-    search_debug_logger.debug(
-        ("indexing " + str(len(files)) + " download files"))
+    print(("indexing " + str(len(files)) + " download files"))
     for x in files:
         try:
             keyword = []
@@ -955,26 +848,20 @@ def index_downloads(limit=False):
             })
 
             bulk_data.append(obj)
-            if len(bulk_data) == 50 and limit is False:
+            if len(bulk_data) == 50:
                 es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
                 bulk_data = []
-            else:
-                if len(bulk_data) == 200 and limit is True:
-                    es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                    bulk_data = []
-                    break
         
         except Exception as e:
-            search_logger.error(e, exc_info=True)
+            logging.error(e.message)
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
        
 
-def index_complex_names(limit=False):
+def index_complex_names():
     complexes = DBSession.query(Complexdbentity).all()
-    search_debug_logger.debug(
-        ("Indexing " + str(len(complexes)) + " complex names"))
+    print(("Indexing " + str(len(complexes)) + " complex names"))
     
     bulk_data = []
 
@@ -1027,15 +914,9 @@ def index_complex_names(limit=False):
 
         bulk_data.append(obj)
 
-        if len(bulk_data) == 800 and limit is False:
+        if len(bulk_data) == 800:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data=[]
-        else:
-            if len(bulk_data) == 200 and limit is True:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-                break
-
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
@@ -1059,43 +940,6 @@ def index_part_2():
     index_complex_names()
     index_references()
 
-def index_limited_docs():
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_references(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_phenotypes(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_downloads(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_not_mapped_genes(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_genes(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_colleagues(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_chemicals(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_toolbar_links(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_observables(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_go_terms(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_disease_terms(True)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        index_complex_names(True)
-
 
 if __name__ == "__main__":
     '''
@@ -1103,8 +947,9 @@ if __name__ == "__main__":
         with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
             index_references()
     '''
+
     cleanup()
-    setup()  
+    setup()
     t1 = Thread(target=index_part_1)
     t2 = Thread(target=index_part_2)
     t1.start()

@@ -133,7 +133,7 @@ def locus_curate_basic(request):
         return locus.update_basic(params, username)
     except Exception as e:
         traceback.print_exc()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 @view_config(route_name='get_new_reference_info', renderer='json', request_method='POST')
@@ -176,7 +176,7 @@ def get_new_reference_info(request):
         }
     except Exception as e:
         traceback.print_exc()
-        log.error(e, exc_info=True)
+        log.error(e)
         DBSession.rollback()
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
@@ -202,8 +202,7 @@ def new_reference(request):
             ref.sync_to_curate_activity(username)
     except Exception as e:
         transaction.abort()
-        log.error(e, exc_info=True)
-        console
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 @view_config(route_name='reference_triage_id_delete', renderer='json', request_method='DELETE')
@@ -235,7 +234,7 @@ def reference_triage_id_delete(request):
             transaction.abort()
             if curator_session:
                 curator_session.rollback()
-            log.error(e, exc_info=True)
+            log.error(e)
             return HTTPBadRequest(body=json.dumps({'error': str(e) }))
         finally:
             if curator_session:
@@ -303,7 +302,7 @@ def reference_triage_promote(request):
             transaction.commit()
         except Exception as e:
             traceback.print_exc()
-            log.error(e, exc_info=True)
+            log.error(e)
             transaction.abort()
             DBSession.rollback()
             return HTTPBadRequest(body=json.dumps({'error': str(e) }))
@@ -313,7 +312,7 @@ def reference_triage_promote(request):
             new_reference = curator_session.query(Referencedbentity).filter_by(dbentity_id=new_reference_id).one_or_none()
             new_reference.update_tags(tags, username)
         except IntegrityError as e:
-            log.error(e, exc_info=True)
+            log.error(e)
             curator_session.rollback()
         finally:
             curator_session.close()
@@ -368,14 +367,14 @@ def db_sign_in(request):
             'csrfToken': request.session.get_csrf_token()
         }
     except ValueError as e:
-        log.error(e, exc_info=True)
+        log.exception('User not found')
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
     except Exception as e:
         if hasattr(e,'orig') and isinstance(e.orig,psycopg2.OperationalError) and "password authentication" in e.orig.__str__():
             #Can read the code from e.orig.pgcode
             log.error("Incorrect username or password for user " + username)
             return HTTPBadRequest(body=json.dumps({'error': 'Incorrect login details'}))
-        log.error(e, exc_info=True)
+        log.exception('Error occured during log-in.')
         return HTTPBadRequest(body=json.dumps({'error': 'Unable to log in, please contact programmers.'}))
     finally:
         if Temp_session:
@@ -453,7 +452,7 @@ def update_reference_tags(request):
         curator_session.remove()
         return processed_tags
     except Exception as e:
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
 
 @view_config(route_name='get_recent_annotations', request_method='GET', renderer='json')
@@ -600,7 +599,7 @@ def new_gene_name_reservation(request):
     except Exception as e:
         traceback.print_exc()
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 # not authenticated to allow the public submission
@@ -667,7 +666,7 @@ def colleague_update(request):
     except Exception as e:
         traceback.print_exc()
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 '''
 # not authenticated to allow the public submission
@@ -727,7 +726,7 @@ def new_colleague(request):
         return { 'colleague_id': new_colleague_id }
     except Exception as e:
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 '''
 
@@ -778,7 +777,7 @@ def reserved_name_update(request):
     try:
         return res.update(params, username)
     except Exception as e:
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 @view_config(route_name='reserved_name_standardize', renderer='json', request_method='POST')
@@ -822,7 +821,7 @@ def reserved_name_standardize(request):
     except Exception as e:
         transaction.abort()
         traceback.print_exc()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 
@@ -860,7 +859,7 @@ def reserved_name_delete(request):
         return True
     except Exception as e:
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
     finally:
         if curator_session:
@@ -880,7 +879,7 @@ def reserved_name_promote(request):
             pusher.trigger('sgd','geneCount',{'message':geneCount})
             return True
     except Exception as e:
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 @view_config(route_name='extend_reserved_name', renderer='json', request_method='PUT')
@@ -893,7 +892,7 @@ def extend_reserved_name(request):
     try:
         return res.extend(request.session['username'])
     except Exception as e:
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
 
 
@@ -990,11 +989,11 @@ def colleague_triage_promote(request):
         return True
     except IntegrityError as e:
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({'message': 'Error: Duplicate record detected, Please contact sgd-helpdesk@lists.stanford.edu if issue persists'}), content_type='text/json')
     except Exception as e:
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({'message': str(e)}), content_type='text/json')
     finally:
         if curator_session:
@@ -1022,7 +1021,7 @@ def colleague_triage_delete(request):
         return True
     except Exception as e:
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({ 'message': str(e) }), content_type='text/json')
     finally:
         if curator_session:
@@ -1096,7 +1095,7 @@ def add_new_colleague_triage(request):
         return HTTPBadRequest(body=json.dumps({'message': 'Orcid or Email already exists, if error persist Please contact sgd-helpdesk@lists.stanford.edu'}), content_type='text/json')
     except Exception as e:
         transaction.abort()
-        log.error(e, exc_info=True)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({'message': str(e) + ' something bad happened'}), content_type='text/json')
 
 # @view_config(route_name='upload', request_method='POST', renderer='json')
@@ -2820,6 +2819,6 @@ def triage_count(request):
         return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
 
     except Exception as e:
-        log.error('DB error corrected. Rollingback previous error in db connection')
+        log.exception('DB error corrected. Rollingback previous error in db connection')
         DBSession.rollback()
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
