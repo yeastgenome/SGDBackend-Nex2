@@ -14,7 +14,6 @@ import traceback
 import transaction
 import logging
 import logging.handlers
-from pathlib import Path
 
 from datetime import datetime, timedelta
 from itertools import groupby
@@ -30,26 +29,12 @@ from scripts.loading.util import link_gene_complex_names
 
 from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
-file_path = os.environ.get("WORKER_LOG_FILE", "/worker.log")
-# use to set where to send logs
-dev_env = os.environ.get("ENV", "prod")
-if not os.path.exists(file_path):
-    try:
-        original_umask = os.umask(0)
-        if dev_env == "dev" or dev_env == "test":
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-    except IOError as PE:
-        with open(os.path.join(Path.cwd(), "temp.log"), "w"):
-            file_path = os.path.join(Path.cwd(), "temp.log")
-    finally:
-        os.umask(original_umask)
-handler = logging.handlers.WatchedFileHandler(file_path)
-formatter = logging.Formatter('%(asctime)s: %(levelname)-5.5s: %(name)s: %(funcName)s: %(message)s')
+handler = logging.handlers.WatchedFileHandler(os.environ.get("APP_LOG_FILE", './app.log'))
+formatter = logging.Formatter('%(asctime)s %(levelname)-5.5s [%(name)s][%(threadName)s] %(message)s')
 
 handler.setFormatter(formatter)
-root = logging.getLogger(__name__)
-root.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
+root = logging.getLogger()
+root.setLevel(os.environ.get("LOGLEVEL", "INFO"))
 root.addHandler(handler)
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
