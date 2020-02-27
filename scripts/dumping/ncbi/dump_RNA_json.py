@@ -187,6 +187,7 @@ def upload_file_to_latest_archive(data_file, gzip_file):
     ## to archive directory under sgd-archive.yeastgenome.org bucket 
     s3.meta.client.upload_file(gzip_file, S3_BUCKET2, s3_archive_dir + "archive/" + gzip_file, ExtraArgs={'ACL': 'public-read'})
 
+
 def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id):
 
     local_file = open(gzip_file, mode='rb')
