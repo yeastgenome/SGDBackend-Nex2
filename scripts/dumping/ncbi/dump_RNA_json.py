@@ -6,6 +6,7 @@ import sys
 import json
 import boto
 from boto.s3.key import Key
+import boto3
 import transaction
 import gzip
 import shutil
@@ -24,10 +25,13 @@ log.setLevel(logging.INFO)
 S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
 S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
 S3_BUCKET = os.environ['S3_BUCKET']
+S3_BUCKET2 = os.environ['ARCHIVE_S3_BUCKET']
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
 data_file = "scripts/dumping/ncbi/data/RNAcentral.json"
+
+s3_archive_dir = "curation/chromosomal_feature/"
 
 taxonId = "NCBITaxon:559292"
 TAXON = "TAX:559292"
@@ -164,21 +168,25 @@ def dump_data():
     with open(data_file, 'rb') as f_in, gzip.open(gzip_file, 'wb') as f_out:
          shutil.copyfileobj(f_in, f_out)
 
-    upload_file_to_latest_s3(data_file)
+    upload_file_to_latest_archive(data_file, gzip_file)
 
     update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id)
 
-def upload_file_to_latest_s3(data_file):
+def upload_file_to_latest_archive(data_file, gzip_file):
 
-    file = open(data_file)
-    s3_path = "latest/RNAcentral.json"
-    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = s3_path
-    k.set_contents_from_file(file, rewind=True)
-    k.make_public()
-    transaction.commit()
+    session = boto3.Session(
+        aws_access_key_id=S3_ACCESS_KEY,
+        aws_secret_access_key=S3_SECRET_KEY
+    )
+    s3 = session.resource('s3')
+    
+    ## to latest:
+    s3.meta.client.upload_file(data_file, S3_BUCKET, "/latest/" + data_file, ExtraArgs={'ACL': 'public-read'})
+    ## to current directoty under sgd-archive.yeastgenome.org bucket
+    s3.meta.client.upload_file(data_file, S3_BUCKET2, s3_archive_dir + data_file, ExtraArgs={'ACL': 'public-read'})
+    ## to archive directory under sgd-archive.yeastgenome.org bucket 
+    s3.meta.client.upload_file(gzip_file, S3_BUCKET2, s3_archive_dir + "archive/" + gzip_file, ExtraArgs={'ACL': 'public-read'})
+
 
 def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id):
 

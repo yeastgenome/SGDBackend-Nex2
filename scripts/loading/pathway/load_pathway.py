@@ -102,7 +102,7 @@ def load_pathway():
         biocycID = pieces[0]
         biocycIdList.append(biocycID)
         pathway_id = biocyc_id_to_dbentity_id.get(biocycID)
-        display_name = pieces[1]
+        display_name = pieces[1].replace("<i>", "").replace("</i>", "")
         genes = pieces[2].split('|')
         pmids = pieces[3].split('|')
         summary = pieces[4]
@@ -482,7 +482,10 @@ def insert_pathway_url(nex_session, fw, pathway_id, url_type, source_id, created
 
 
 def insert_pathway_alias(nex_session, fw, pathway_id, synonym, source_id, created_by):
-    
+
+    if synonym == '':
+        return
+
     x = PathwayAlias(display_name = synonym,
                      source_id = source_id,
                      pathway_id = pathway_id,

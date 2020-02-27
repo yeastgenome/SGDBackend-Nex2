@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import cgi
 import string
+import psycopg2
 
 from .helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
@@ -88,14 +89,31 @@ def locus_curate_summaries(request):
         new_phenotype_summary = request.params.get('phenotype_summary')
         new_regulation_summary = request.params.get('regulation_summary')
         new_regulation_pmids = process_pmid_list(request.params.get('regulation_summary_pmids'))
+        new_protein_summary = request.params.get('protein_summary')
+        new_sequence_summary = request.params.get('sequence_summary')
+        new_interaction_summary = request.params.get('interaction_summary')
+        new_disease_summary = request.params.get('disease_summary')
+        new_function_summary = request.params.get('function_summary')
+
         locus.update_summary('Phenotype', request.session['username'], new_phenotype_summary)
         locus = get_locus_by_id(id)
         locus.update_summary('Regulation', request.session['username'], new_regulation_summary, new_regulation_pmids)
         locus = get_locus_by_id(id)
+        locus.update_summary('Protein', request.session['username'], new_protein_summary)
+        locus = get_locus_by_id(id)
+        locus.update_summary('Sequence', request.session['username'], new_sequence_summary)
+        locus = get_locus_by_id(id)
+        locus.update_summary('Interaction', request.session['username'], new_interaction_summary)
+        locus = get_locus_by_id(id)
+        locus.update_summary('Disease', request.session['username'], new_disease_summary)
+        locus = get_locus_by_id(id)
+        locus.update_summary('Function',request.session['username'],new_function_summary)
+        locus = get_locus_by_id(id)
+        
         locus.ban_from_cache()
         pusher = get_pusher_client()
         pusher.trigger('sgd', 'curateHomeUpdate', {})
-        return locus.get_summary_dict()
+        return locus.to_curate_dict()
     except ValueError as e:
         return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
 
@@ -335,10 +353,11 @@ def db_sign_in(request):
         Temp_session = scoped_session(session_factory)
         user = Temp_session.query(Dbuser).filter_by(username=username.upper()).one_or_none()
         if user is None:
-            raise ValueError('Invalid login')
+            raise ValueError('User not found')
         curator = curator_or_none(user.email)
         if curator is None:
-            return HTTPForbidden(body=json.dumps({'error': 'User is not authorized on SGD'}))
+            log.error('User is not authorized on SGD, username is '+ username)
+            return HTTPBadRequest(body=json.dumps({'error': 'User is not authorized on SGD'}))
         session = request.session
         session['email'] = curator.email
         session['username'] = curator.username
@@ -347,9 +366,16 @@ def db_sign_in(request):
             'username': session['username'],
             'csrfToken': request.session.get_csrf_token()
         }
-    except:
-        traceback.print_exc()
-        return HTTPForbidden(body=json.dumps({'error': 'Incorrect login details.'}))
+    except ValueError as e:
+        log.exception('User not found')
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        if hasattr(e,'orig') and isinstance(e.orig,psycopg2.OperationalError) and "password authentication" in e.orig.__str__():
+            #Can read the code from e.orig.pgcode
+            log.error("Incorrect username or password for user " + username)
+            return HTTPBadRequest(body=json.dumps({'error': 'Incorrect login details'}))
+        log.exception('Error occured during log-in.')
+        return HTTPBadRequest(body=json.dumps({'error': 'Unable to log in, please contact programmers.'}))
     finally:
         if Temp_session:
             Temp_session.close()
@@ -2721,4 +2747,6 @@ def triage_count(request):
         return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
 
     except Exception as e:
+        log.exception('DB error corrected. Rollingback previous error in db connection')
+        DBSession.rollback()
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
