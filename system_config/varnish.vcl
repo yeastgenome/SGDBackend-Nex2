@@ -70,6 +70,12 @@ sub vcl_recv {
     if (req.url ~ "^/search") {
         return (pass);
     }
+    
+    # don't cache any path starting with /webservice/get_search_results
+    if (req.url ~ "^/webservice/get_search_results") {
+        return (pass);
+    }
+
 }
 
 sub vcl_backend_response {
