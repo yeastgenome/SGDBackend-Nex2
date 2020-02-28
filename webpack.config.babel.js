@@ -79,7 +79,7 @@ if (isProduction) {
       'process.env': {
         'DEMO_ENV': JSON.stringify(process.env.DEMO_ENV),
         'NODE_ENV': JSON.stringify('production'),
-        'PREVIEW_URL': JSON.stringify(process.env.PREVIEW_URL || 'https://www.yeastgenome.org')
+        'PREVIEW_URL': JSON.stringify(process.env.PREVIEW_URL || 'https://preview.yeastgenome.org')
       }
     }),
     new ExtractTextPlugin('[name].[chunkhash].css'),
