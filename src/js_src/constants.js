@@ -6,5 +6,5 @@ let URL = process.env.PREVIEW_URL;
 if (URL != 'https://preview.qa.yeastgenome.org') {
   URL = 'https://preview.yeastgenome.org';
 }
-export const PREVIEW_URL = URL
+export const PREVIEW_URL = URL;
 export const ml_12 = {marginLeft:'12px'};
