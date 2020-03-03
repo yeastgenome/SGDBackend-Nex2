@@ -6267,32 +6267,6 @@ class Dnasubsequence(Base):
         }
 
 
-class Dnasequencealignment(Base):
-    __tablename__ = 'dnasequencealignment'
-    __table_args__ = (
-        UniqueConstraint('locus_id', 'dna_type', 'aligned_order'),
-        {'schema': 'nex'}
-    )
-
-    alignment_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    contig_id = Column(ForeignKey('nex.contig.contig_id', ondelete='CASCADE'), nullable=False)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    display_name = Column(String(500), nullable=False)
-    dna_type = Column(String(50), nullable=False)
-    block_sizes = Column(String(250), nullable=True)
-    block_starts = Column(String(250), nullable=True)
-    contig_start_index = Column(Integer, nullable=False)
-    contig_end_index = Column(Integer, nullable=False)
-    aligned_sequence = Column(String(500000), nullable=False)
-    snp_sequence = Column(String(500000), nullable=False)
-    aligned_order = Column(Integer, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
-    created_by = Column(String(12), nullable=False)
-
-    contig = relationship('Contig')
-    locus = relationship('Locusdbentity')
-
-    
 class Ec(Base):
     __tablename__ = 'ec'
     __table_args__ = {'schema': 'nex'}
