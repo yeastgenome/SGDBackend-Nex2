@@ -199,7 +199,7 @@ def dump_data():
         row[REFERENCE] = reference
 
         go_qualifier = ""
-        if x.go_qualifier in ['NOT', 'contributes_to', 'colocalizes_with']:
+        if x.go_qualifier in ['NOT', 'contributes to', 'colocalizes with']:
             go_qualifier = x.go_qualifier
 
         row[QUALIFIER] = go_qualifier
