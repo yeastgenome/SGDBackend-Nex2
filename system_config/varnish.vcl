@@ -61,6 +61,14 @@ sub vcl_recv {
         set req.http.host = "www.yeastgenome.org";
     }
 
+    if (req.http.host == "www-2a.yeastgenome.org") {
+        set req.http.host = "www.yeastgenome.org";
+    }
+
+    if (req.http.host == "www-2b.yeastgenome.org") {
+        set req.http.host = "www.yeastgenome.org";
+    }
+
     # don't cache healthcheck
     if (req.url ~ "^/locus/S000005085$") {
         return (pass);
