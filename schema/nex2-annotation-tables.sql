@@ -188,6 +188,43 @@ CREATE INDEX dnasequenceanno_source_fk_index ON nex.dnasequenceannotation (sourc
 CREATE INDEX dnasequenceanno_so_fk_index ON nex.dnasequenceannotation (so_id);
 CREATE INDEX dnasequenceanno_genomerelease_fk_index ON nex.dnasequenceannotation (genomerelease_id);
 
+
+DROP TABLE IF EXISTS nex.dnasequencealignment CASCADE;
+CREATE TABLE nex.dnasequencealignment (
+	alignment_id bigint NOT NULL DEFAULT nextval('annotation_seq'),
+	locus_id bigint NOT NULL,
+	contig_id bigint NOT NULL,
+	display_name varchar(100) NOT NULL,
+	dna_type varchar(50) NOT NULL,
+	block_sizes varchar(250),
+	block_starts varchar(250),
+	contig_start_index integer NOT NULL,
+	contig_end_index integer NOT NULL,
+	aligned_sequence text NOT NULL,
+	snp_sequence text NOT NULL,
+	aligned_order varchar(50) NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT dnasequencealignment_pk PRIMARY KEY (alignment_id)
+) ;
+COMMENT ON TABLE nex.dnasequencealignment IS 'Multiple sequence alignment.';
+COMMENT ON COLUMN nex.dnasequencealignment.alignment_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.dnasequencealignment.display_name IS 'Display Name e.g. YFL039C_S288C, YOR028C_YOR029W_W303';
+COMMENT ON COLUMN nex.dnasequencealignment.block_starts IS '0,319    (only S288C has it).';
+COMMENT ON COLUMN nex.dnasequencealignment.block_sizes IS ' 10,1118  (only S288C has it) .';
+COMMENT ON COLUMN nex.dnasequencealignment.dna_type IS 'Type of DNA: allowed values: genomic, upstream IGR, downstream IGR.';
+COMMENT ON COLUMN nex.dnasequencealignment.aligned_sequence IS 'Aligned sequence.';
+COMMENT ON COLUMN nex.dnasequencealignment.snp_sequence IS 'SNP information.';
+COMMENT ON COLUMN nex.dnasequencealignment.aligned_order IS 'Order of the strain in the alignment.';
+COMMENT ON COLUMN nex.dnasequencealignment.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.dnasequencealignment.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.dnasequencealignment.alignment_id IS 'Unique identifier (serial number).';
+ALTER TABLE nex.dnasequencealignment ADD CONSTRAINT dnasequencealignment_uk UNIQUE (display_name, dna_type);
+ALTER TABLE nex.dnasequencealignment ADD CONSTRAINT dnasequencealignment_type_ck CHECK (DNA_TYPE IN ('genomic', 'upstream IGR','downstream IGR'));
+CREATE INDEX dnasequencealignment_locus_fk_index ON nex.dnasequencealignment (locus_id);
+CREATE INDEX dnasequencealignment_contig_fk_index ON nex.dnasequencealignment (contig_id);
+
+
 DROP TABLE IF EXISTS nex.dnasubsequence CASCADE;
 CREATE TABLE nex.dnasubsequence (
 	dnasubsequence_id bigint NOT NULL DEFAULT nextval('detail_seq'),
