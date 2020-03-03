@@ -513,6 +513,115 @@ BEFORE INSERT OR UPDATE ON nex.dnasequenceannotation FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_dnasequenceannotation_biur();
 
 
+DROP TRIGGER IF EXISTS dnasequencealignment_audr ON nex.dnasequencealignment CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_dnasequencealignment_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.locus_id != NEW.locus_id) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'LOCUS_ID'::text, OLD.alignment_id, OLD.locus_id::text, NEW.locus_id::text, USER);
+    END IF;
+
+    IF (OLD.contig_id != NEW.contig_id) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'CONTIG_ID'::text, OLD.alignment_id, OLD.contig_id::text, NEW.contig_id::text, USER);
+    END IF;
+
+    IF (OLD.display_name!= NEW.display_name) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'DISPLAY_NAME'::text, OLD.alignment_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+    IF (OLD.dna_type != NEW.dna_type) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'DNA_TYPE'::text, OLD.alignment_id, OLD.dna_type, NEW.dna_type, USER);
+    END IF;
+
+        IF (((OLD.block_sizes IS NULL) AND (NEW.block_sizes IS NOT NULL)) OR ((OLD.block_sizes IS NOT NULL) AND (NEW.block_sizes IS NULL)) OR (OLD.block_sizes != NEW.block_sizes)) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'BLOCK_SIZES'::text, OLD.alignment_id, OLD.block_sizes::text, NEW.block_sizes::text, USER);
+    END IF;
+
+        IF (((OLD.block_starts IS NULL) AND (NEW.block_starts IS NOT NULL)) OR ((OLD.block_starts IS NOT NULL) AND (NEW.block_starts IS NULL)) OR (OLD.block_starts != NEW.block_starts))THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'BLOCK_STARTS'::text, OLD.alignment_id, OLD.block_starts::text, NEW.block_starts::text, USER);
+    END IF;
+
+     IF (OLD.contig_start_index != NEW.contig_start_index) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'CONTIG_START_INDEX'::text, OLD.alignment_id, OLD.CONTIG_START_INDEX, NEW.CONTIG_START_INDEX, USER);
+    END IF;
+
+     IF (OLD.contig_end_index != NEW.contig_end_index) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'CONTIG_END_INDEX'::text, OLD.alignment_id, OLD.CONTIG_END_INDEX, NEW.CONTIG_END_INDEX, USER);
+    END IF;
+
+     IF (OLD.aligned_sequence != NEW.aligned_sequence) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'ALIGNED_SEQUENCE'::text, OLD.alignment_id, OLD.aligned_sequence, NEW.aligned_sequence, USER);
+    END IF;
+
+     IF (OLD.snp_sequence != NEW.snp_sequence) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'SNP_SEQUENCE'::text, OLD.alignment_id, OLD.snp_sequence, NEW.snp_sequence, USER);
+    END IF;
+
+     IF (OLD.aligned_order != NEW.aligned_order) THEN
+        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'ALIGNED_ORDER'::text, OLD.alignment_id, OLD.aligned_order, NEW.aligned_order, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.annotation_id || '[:]' || OLD.locus_id || '[:]' ||
+             OLD.contig_id || '[:]' || coalesce(OLD.seq_version,'') || '[:]' ||
+             coalesce(OLD.genomerelease_id,0) || '[:]' || OLD.file_header || '[:]' ||
+             OLD.download_filename || '[:]' || coalesce(OLD.file_id,0) || '[:]' ||
+             OLD.residues || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+           PERFORM nex.insertdeletelog('DNASEQUENCEALIGNMENT'::text, OLD.alignment_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER dnasequencealignment_audr
+AFTER UPDATE OR DELETE ON nex.dnasequencealignmentFOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_dnasequencealignment_audr();
+
+
+DROP TRIGGER IF EXISTS dnasequencealignment_biur ON nex.dnasequencealignment CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_dnasequencealignment_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.alignment_id != OLD.alignment_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER dnasequencealignment_biur
+BEFORE INSERT OR UPDATE ON nex.dnasequencealignment FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_dnasequencealignment_biur();
+
 
 DROP TRIGGER IF EXISTS dnasubsequence_audr ON nex.dnasubsequence CASCADE;
 CREATE OR REPLACE FUNCTION trigger_fct_dnasubsequence_audr() RETURNS trigger AS $BODY$

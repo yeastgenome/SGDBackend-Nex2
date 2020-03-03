@@ -437,6 +437,8 @@ ALTER TABLE nex.dnasequenceannotation ADD CONSTRAINT dnasequenceanno_contig_fk F
 ALTER TABLE nex.dnasequenceannotation ADD CONSTRAINT dnasequenceanno_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.dnasequenceannotation ADD CONSTRAINT dnasequenceanno_so_fk FOREIGN KEY (so_id) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.dnasequencealignment ADD CONSTRAINT dnasequencealignment_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.dnasequencealignment ADD CONSTRAINT dnasequencealignment_contig_fk FOREIGN KEY (contig_id) REFERENCES contig(contig_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.dnasubsequence ADD CONSTRAINT dnasubsequence_so_fk FOREIGN KEY (so_id) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.dnasubsequence ADD CONSTRAINT dnasubsequence_genomerelease_fk FOREIGN KEY (genomerelease_id) REFERENCES genomerelease(genomerelease_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;

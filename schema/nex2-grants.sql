@@ -70,6 +70,7 @@ GRANT SELECT,INSERT ON nex.arch_dnasequenceannotation TO curator;
 GRANT SELECT ON nex.arch_dnasequenceannotation TO PUBLIC;
 GRANT SELECT ON nex.arch_dnasequenceannotation TO DBSELECT;
 
+
 -- Set privilege on TABLE ARCH_DNASUBSEQUENCE
 ALTER TABLE nex.arch_dnasubsequence OWNER TO nex;
 GRANT ALL ON nex.arch_dnasubsequence TO nex;
@@ -357,6 +358,14 @@ REVOKE ALL ON nex.dnasequenceannotation FROM PUBLIC;
 GRANT SELECT,INSERT,UPDATE,DELETE ON nex.dnasequenceannotation TO curator;
 GRANT SELECT ON nex.dnasequenceannotation TO PUBLIC;
 GRANT SELECT ON nex.dnasequenceannotation TO DBSELECT;
+
+-- Set privilege on TABLE DNASEQUENCEALIGNMENT
+ALTER TABLE nex.dnasequencealignment OWNER TO nex;
+GRANT ALL ON nex.dnasequencealignment TO nex;
+REVOKE ALL ON nex.dnasequencealignment FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.dnasequencealignment TO curator;
+GRANT SELECT ON nex.dnasequencealignment TO PUBLIC;
+GRANT SELECT ON nex.dnasequencealignment TO DBSELECT;
 
 -- Set privilege on TABLE DNASUBSEQUENCE
 ALTER TABLE nex.dnasubsequence OWNER TO nex;
