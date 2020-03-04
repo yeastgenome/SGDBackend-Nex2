@@ -202,7 +202,6 @@ CREATE TABLE nex.dnasequencealignment (
 	contig_end_index integer NOT NULL,
 	aligned_sequence text NOT NULL,
 	snp_sequence text NOT NULL,
-	aligned_order varchar(50) NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
 	CONSTRAINT dnasequencealignment_pk PRIMARY KEY (alignment_id)
@@ -215,7 +214,6 @@ COMMENT ON COLUMN nex.dnasequencealignment.block_sizes IS ' 10,1118  (only S288C
 COMMENT ON COLUMN nex.dnasequencealignment.dna_type IS 'Type of DNA: allowed values: genomic, upstream IGR, downstream IGR.';
 COMMENT ON COLUMN nex.dnasequencealignment.aligned_sequence IS 'Aligned sequence.';
 COMMENT ON COLUMN nex.dnasequencealignment.snp_sequence IS 'SNP information.';
-COMMENT ON COLUMN nex.dnasequencealignment.aligned_order IS 'Order of the strain in the alignment.';
 COMMENT ON COLUMN nex.dnasequencealignment.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.dnasequencealignment.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.dnasequencealignment.alignment_id IS 'Unique identifier (serial number).';
@@ -982,6 +980,28 @@ COMMENT ON COLUMN nex.proteinsequence_detail.ile IS 'Number of isoleucines in th
 COMMENT ON COLUMN nex.proteinsequence_detail.carbon IS 'Number of carbon atoms in the protein atomic composition.';
 ALTER TABLE nex.proteinsequence_detail ADD CONSTRAINT proteinsequence_detail_uk UNIQUE (annotation_id);
 
+
+DROP TABLE IF EXISTS nex.proteinsequencealignment CASCADE;
+CREATE TABLE nex.proteinsequencealignment (
+	alignment_id bigint NOT NULL DEFAULT nextval('annotation_seq'),
+	locus_id bigint NOT NULL,
+	display_name varchar(100) NOT NULL,
+	aligned_sequence text NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT proteinsequencealignment_pk PRIMARY KEY (alignment_id)
+) ;
+COMMENT ON TABLE nex.proteinsequencealignment IS 'Multiple protein sequence alignment.';
+COMMENT ON COLUMN nex.proteinsequencealignment.alignment_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID';
+COMMENT ON COLUMN nex.proteinsequencealignment.display_name IS 'Display Name e.g. YFL039C_S288C';
+COMMENT ON COLUMN nex.proteinsequencealignment.aligned_sequence IS 'Aligned sequence.';
+COMMENT ON COLUMN nex.proteinsequencealignment.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.proteinsequencealignment.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.proteinsequencealignment.alignment_id IS 'Unique identifier (serial number).';
+ALTER TABLE nex.proteinsequencealignment ADD CONSTRAINT proteinsequencealignment_uk UNIQUE (display_name);
+CREATE INDEX proteinsequencealignment_locus_fk_index ON nex.proteinsequencealignment (locus_id);
+
+
 DROP TABLE IF EXISTS nex.regulationannotation CASCADE;
 CREATE TABLE nex.regulationannotation (
     annotation_id bigint NOT NULL DEFAULT nextval('annotation_seq'),
@@ -1025,3 +1045,35 @@ CREATE INDEX regulationanno_regulator_fk_index ON nex.regulationannotation (regu
 CREATE INDEX regulationanno_happpensduring_fk_index ON nex.regulationannotation (happens_during);
 CREATE INDEX regulationanno_ref_fk_index ON nex.regulationannotation (reference_id);
 CREATE INDEX regulationanno_eco_fk_index ON nex.regulationannotation (eco_id);
+
+
+DROP TABLE IF EXISTS nex.sequencevariant CASCADE;
+CREATE TABLE nex.sequencevariant (
+	variant_id bigint NOT NULL DEFAULT nextval('annotation_seq'),
+	locus_id bigint NOT NULL,
+	seq_type varchar(50) NOT NULL,
+	variant_type varchar(50) NOT NULL,
+	snp_type varchar(50) NOT NULL,
+	score integer NOT NULL,
+	start_index integer NOT NULL,
+	end_index integer NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT sequencevariant_pk PRIMARY KEY (variant_id)
+) ;
+COMMENT ON TABLE nex.sequencevariant IS 'Information needed for display of variant viewer.';
+COMMENT ON COLUMN nex.sequencevariant.locus_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.sequencevariant.seq_type IS 'allowed type: DNA, protein, upstream IGR, downstream IGR';
+COMMENT ON COLUMN nex.sequencevariant.variant_type IS 'allowed type: Deletion, Insertion, SNP';
+COMMENT ON COLUMN nex.sequencevariant.snp_type IS 'allowed type: synonymous, nonsynonymous, intron, untranslatable, intergenic';
+COMMENT ON COLUMN nex.sequencevariant.score IS 'Indicates number of strains with the variation.';
+COMMENT ON COLUMN nex.sequencevariant.start_index IS 'where variation starts';
+COMMENT ON COLUMN nex.sequencevariant.end_index IS 'where variation ends';
+COMMENT ON COLUMN nex.sequencevariant.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.sequencevariant.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.sequencevariant.variant_id IS 'Unique identifier (serial number).';
+ALTER TABLE nex.sequencevariant ADD CONSTRAINT sequencevariant_uk UNIQUE (locus_id,seq_type,snp_type, start_index, end_index);
+ALTER TABLE nex.sequencevariant ADD CONSTRAINT sequencevariant_seqtype_ck CHECK (SEQ_TYPE IN ('DNA', 'protein', 'upstream IGR','downstream IGR'));
+ALTER TABLE nex.sequencevariant ADD CONSTRAINT sequencevariant_varianttype_ck CHECK (VARIANT_TYPE IN ('Deletion', 'Insertion', 'SNP'));
+ALTER TABLE nex.sequencevariant ADD CONSTRAINT sequencevariant_snptype_ck CHECK (SNP_TYPE IN ('synonymous', 'nonsynonymous', 'intron', 'untranslatable','intergenic'));
+CREATE INDEX sequencevariant_locus_fk_index ON nex.sequencevariant (locus_id);
