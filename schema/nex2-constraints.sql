@@ -157,6 +157,7 @@ ALTER TABLE nex.so_relation ADD CONSTRAINT sorelation_source_fk FOREIGN KEY (sou
 ALTER TABLE nex.so_url ADD CONSTRAINT sourl_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.so_url ADD CONSTRAINT sourl_so_fk FOREIGN KEY (so_id) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.sequencevariant ADD CONSTRAINT sequencevariant_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.taxonomy ADD CONSTRAINT taxonomy_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -564,6 +565,8 @@ ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_ref
 ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_contig_fk FOREIGN KEY (contig_id) REFERENCES contig(contig_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_genomerelease_fk FOREIGN KEY (genomerelease_id) REFERENCES genomerelease(genomerelease_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE nex.proteinsequencealignment ADD CONSTRAINT proteinsequencealignment_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.proteinsequence_detail ADD CONSTRAINT proteinsequencedetail_anno_fk FOREIGN KEY (annotation_id) REFERENCES proteinsequenceannotation(annotation_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 

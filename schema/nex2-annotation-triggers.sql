@@ -560,19 +560,15 @@ BEGIN
         PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'SNP_SEQUENCE'::text, OLD.alignment_id, OLD.snp_sequence, NEW.snp_sequence, USER);
     END IF;
 
-     IF (OLD.aligned_order != NEW.aligned_order) THEN
-        PERFORM nex.insertupdatelog('DNASEQUENCEALIGNMENT'::text, 'ALIGNED_ORDER'::text, OLD.alignment_id, OLD.aligned_order, NEW.aligned_order, USER);
-    END IF;
-
     RETURN NEW;
 
   ELSIF (TG_OP = 'DELETE') THEN
 
-    v_row := OLD.annotation_id || '[:]' || OLD.locus_id || '[:]' ||
-             OLD.contig_id || '[:]' || coalesce(OLD.seq_version,'') || '[:]' ||
-             coalesce(OLD.genomerelease_id,0) || '[:]' || OLD.file_header || '[:]' ||
-             OLD.download_filename || '[:]' || coalesce(OLD.file_id,0) || '[:]' ||
-             OLD.residues || '[:]' ||
+     v_row := OLD.alignment_id || '[:]' || OLD.locus_id || '[:]' ||
+             OLD.contig_id || '[:]' || OLD.display_name || '[:]' ||   OLD.dna_type || '[:]' || 
+	         coalesce(OLD.block_sizes,'') || '[:]' || coalesce(OLD.block_starts,'') || '[:]' ||  
+             OLD.contig_start_index || '[:]' || OLD.contig_end_index || '[:]' ||
+             OLD.aligned_sequence || '[:]' || OLD.snp_sequence || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 
            PERFORM nex.insertdeletelog('DNASEQUENCEALIGNMENT'::text, OLD.alignment_id, v_row, USER);

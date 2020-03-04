@@ -975,6 +975,14 @@ GRANT SELECT,INSERT,UPDATE,DELETE ON nex.proteinsequenceannotation TO curator;
 GRANT SELECT ON nex.proteinsequenceannotation TO PUBLIC;
 GRANT SELECT ON nex.proteinsequenceannotation TO DBSELECT;
 
+-- Set privilege on TABLE PROTEINSEQUENCEALIGNMENT
+ALTER TABLE nex.proteinsequencealignment OWNER TO nex;
+GRANT ALL ON nex.proteinsequencealignment TO nex;
+REVOKE ALL ON nex.proteinsequencealignment FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.proteinsequencealignment TO curator;
+GRANT SELECT ON nex.proteinsequencealignment TO PUBLIC;
+GRANT SELECT ON nex.proteinsequencealignment TO DBSELECT;
+
 -- Set privilege on TABLE PROTEINSEQUENCE_DETAIL
 ALTER TABLE nex.proteinsequence_detail OWNER TO nex;
 GRANT ALL ON nex.proteinsequence_detail TO nex;
@@ -1191,6 +1199,15 @@ REVOKE ALL ON nex.so_url FROM PUBLIC;
 GRANT SELECT,INSERT,UPDATE,DELETE ON nex.so_url TO curator;
 GRANT SELECT ON nex.so_url TO PUBLIC;
 GRANT SELECT ON nex.so_url TO DBSELECT;
+
+-- Set privilege on TABLE SEQUENCEVARIANT
+ALTER TABLE nex.sequencevariant OWNER TO nex;
+GRANT ALL ON nex.sequencevariant TO nex;
+REVOKE ALL ON nex.sequencevariant FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.sequencevariant TO curator;
+GRANT SELECT ON nex.sequencevariant TO PUBLIC;
+GRANT SELECT ON nex.sequencevariant TO DBSELECT;
+
 
 -- Set privilege on TABLE STRAINDBENTITY
 ALTER TABLE nex.straindbentity OWNER TO nex;
