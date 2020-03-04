@@ -11,7 +11,6 @@ from zope.sqlalchemy import ZopeTransactionExtension
 
 logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
-log.setLevel(logging.ERROR)
 
 cache_urls = None
 if 'CACHE_URLS' in list(os.environ.keys()):
