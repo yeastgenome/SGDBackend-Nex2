@@ -70,7 +70,7 @@ def index_toolbar_links():
         ("YeastGFP", "https://yeastgfp.yeastgenome.org/","yeastgfp"),
         ("Full-text Search", "http://textpresso.yeastgenome.org/","texxtpresso"),
         ("New Yeast Papers", "/reference/recent",[]),
-        ("Genome-wide Analysis Papers", "https://yeastmine.yeastgenome.org/yeastmine/results.do",[]),
+        ("Genome-wide Analysis Papers", "https://yeastmine.yeastgenome.org/yeastmine/loadTemplate.do?name=GenomeWide_Papers&scope=all&method=results&format=tab",[]),
         ("Find a Colleague", "/search?q=&category=colleague",[]),
         ("Add or Update Info", "/colleague_update",[]),
         ("Career Resources","http://wiki.yeastgenome.org/index.php/Career_Resources", []),
