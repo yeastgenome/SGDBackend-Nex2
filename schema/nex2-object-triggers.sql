@@ -2623,3 +2623,85 @@ $BODY$ LANGUAGE 'plpgsql';
 CREATE TRIGGER reservedname_biur
 BEFORE INSERT OR UPDATE ON nex.reservedname FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_reservedname_biur();
+
+DROP TRIGGER IF EXISTS tools_audr ON nex.tools CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_tools_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.format_name!= NEW.format_name) THEN
+        PERFORM nex.insertupdatelog('TOOLS'::text, 'FORMAT_NAME'::text, OLD.tool_id, OLD.format_name, NEW.format_name, USER);
+    END IF;
+
+    IF (OLD.display_name!= NEW.display_name) THEN
+        PERFORM nex.insertupdatelog('TOOLS'::text, 'DISPLAY_NAME'::text, OLD.tool_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+    IF (OLD.link_url!= NEW.link_url) THEN
+        PERFORM nex.insertupdatelog('TOOLS'::text, 'LINK_URL'::text, OLD.tool_id, OLD.link_url, NEW.link_url, USER);
+    END IF;
+
+    IF (OLD.status!= NEW.status) THEN
+        PERFORM nex.insertupdatelog('TOOLS'::text, 'STATUS'::text, OLD.tool_id, OLD.status, NEW.status, USER);
+    END IF;
+
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.tool_id || '[:]' || 
+	       OLD.format_name || '[:]' ||
+             OLD.display_name || '[:]' ||
+             OLD.link_url|| '[:]' || OLD.status || '[:]' || 
+             OLD.date_created || '[:]' || OLD.created_by;
+
+           PERFORM nex.insertdeletelog('TOOLS'::text, OLD.tool_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+
+CREATE TRIGGER tools_audr
+AFTER UPDATE OR DELETE ON nex.tools FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_tools_audr();
+
+
+DROP TRIGGER IF EXISTS tools_biur ON nex.tools CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_tools_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.tool_id != OLD.tool_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER tools_biur
+BEFORE INSERT OR UPDATE ON nex.tools FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_tools_biur();
