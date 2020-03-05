@@ -2769,6 +2769,83 @@ CREATE TRIGGER proteinsequencedetail_biur
 BEFORE INSERT OR UPDATE ON nex.proteinsequence_detail FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_proteinsequencedetail_biur();
 
+DROP TRIGGER IF EXISTS proteinsequencealignment_audr ON nex.proteinsequencealignment CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_proteinsequencealignment_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.locus_id != NEW.locus_id) THEN
+        PERFORM nex.insertupdatelog('PROTEINSEQUENCEALIGNMENT'::text, 'LOCUS_ID'::text, OLD.alignment_id, OLD.locus_id::text, NEW.locus_id::text, USER);
+    END IF;
+
+    IF (OLD.display_name!= NEW.display_name) THEN
+        PERFORM nex.insertupdatelog('PROTEINSEQUENCEALIGNMENT'::text, 'DISPLAY_NAME'::text, OLD.alignment_id, OLD.display_name, NEW.display_name, USER);
+    END IF;
+
+     IF (OLD.aligned_sequence != NEW.aligned_sequence) THEN
+        PERFORM nex.insertupdatelog('PROTEINSEQUENCEALIGNMENT'::text, 'ALIGNED_SEQUENCE'::text, OLD.alignment_id, OLD.aligned_sequence, NEW.aligned_sequence, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.alignment_id || '[:]' || 
+	       OLD.locus_id || '[:]' ||
+             OLD.display_name || '[:]' ||
+             OLD.aligned_sequence || '[:]' || 
+             OLD.date_created || '[:]' || OLD.created_by;
+
+           PERFORM nex.insertdeletelog('PROTEINSEQUENCEALIGNMENT'::text, OLD.alignment_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+
+CREATE TRIGGER proteinsequencealignment_audr
+AFTER UPDATE OR DELETE ON nex.proteinsequencealignment FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_proteinsequencealignment_audr();
+
+
+DROP TRIGGER IF EXISTS proteinsequencealignment_biur ON nex.proteinsequencealignment CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_proteinsequencealignment_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.alignment_id != OLD.alignment_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER proteinsequencealignment_biur
+BEFORE INSERT OR UPDATE ON nex.proteinsequencealignment FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_proteinsequencealignment_biur();
+
 
 DROP TRIGGER IF EXISTS regulationannotation_audr ON nex.regulationannotation CASCADE;
 CREATE OR REPLACE FUNCTION trigger_fct_regulationannotation_audr() RETURNS trigger AS $BODY$
@@ -2914,3 +2991,98 @@ $BODY$ LANGUAGE 'plpgsql';
 CREATE TRIGGER regulationannotation_biur
 BEFORE INSERT OR UPDATE ON nex.regulationannotation FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_regulationannotation_biur();
+
+
+DROP TRIGGER IF EXISTS sequencevariant_audr ON nex.sequencevariant CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_sequencevariant_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.locus_id != NEW.locus_id) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANT'::text, 'LOCUS_ID'::text, OLD.variant_id, OLD.locus_id::text, NEW.locus_id::text, USER);
+    END IF;
+
+    IF (OLD.seq_type!= NEW.seq_type) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANT'::text, 'SEQ_TYPE'::text, OLD.variant_id, OLD.seq_type, NEW.seq_type, USER);
+    END IF;
+
+     IF (OLD.variant_type != NEW.variant_type) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANT'::text, 'VARIANT_TYPE'::text, OLD.variant_id, OLD.variant_type, NEW.variant_type, USER);
+    END IF;
+
+    IF (OLD.snp_type!= NEW.snp_type) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANT'::text, 'SNP_TYPE'::text, OLD.variant_id, OLD.snp_type, NEW.snp_type, USER);
+    END IF;
+
+    IF (OLD.score!= NEW.score) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANT'::text, 'SCORE'::text, OLD.variant_id, OLD.score, NEW.score, USER);
+    END IF;
+
+    IF (OLD.start_index!= NEW.start_index) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANT'::text, 'START_INDEX'::text, OLD.variant_id, OLD.start_index, NEW.start_index, USER);
+    END IF;
+
+    IF (OLD.END_INDEX!= NEW.end_index) THEN
+        PERFORM nex.insertupdatelog('SEQUENCEVARIANTT'::text, 'END_INDEX'::text, OLD.variant_id, OLD.end_index, NEW.end_index, USER);
+    END IF;
+
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.variant_id || '[:]' || 
+	       OLD.locus_id || '[:]' ||
+             OLD.seq_type || '[:]' ||
+             OLD.variant_type || '[:]' || OLD.snp_type|| '[:]' || OLD.score || '[:]' || OLD.start_index || '[:]' || OLD.end_index || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+           PERFORM nex.insertdeletelog('SEQUENCEVARIANT'::text, OLD.variant_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+
+CREATE TRIGGER sequencevariant_audr
+AFTER UPDATE OR DELETE ON nex.sequencevariant FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_sequencevariant_audr();
+
+
+DROP TRIGGER IF EXISTS sequencevariant_biur ON nex.sequencevariant CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_sequencevariant_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.variant_id != OLD.variant_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER sequencevariant_biur
+BEFORE INSERT OR UPDATE ON nex.sequencevariant FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_sequencevariant_biur();
