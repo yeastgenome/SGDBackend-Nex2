@@ -49,9 +49,8 @@ from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annot
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
-log = logging.getLogger()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+log = logging.getLogger('curation')
 models_helper = ModelsHelper()
 
 SGD_SOURCE_ID = 834
