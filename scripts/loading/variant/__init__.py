@@ -47,7 +47,7 @@ def translate(codon):
     codons = codon_table()
     
     if codon in codons():
-        return codon_table[codon]
+        return codons[codon]
     else:
         return None
 
