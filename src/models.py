@@ -27,6 +27,14 @@ from scripts.loading.util import link_gene_complex_names
 
 from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
+handler = logging.handlers.WatchedFileHandler(os.environ.get("APP_LOG_FILE", './app.log'))
+formatter = logging.Formatter('%(asctime)s %(levelname)-5.5s [%(name)s][%(threadName)s] %(message)s')
+
+handler.setFormatter(formatter)
+root = logging.getLogger()
+root.setLevel(os.environ.get("LOGLEVEL", "INFO"))
+root.addHandler(handler)
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
