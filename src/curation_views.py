@@ -1701,50 +1701,53 @@ def ptm_update(request):
 
         dbentity_id = str(request.params.get('dbentity_id'))
         if not dbentity_id:
-            return HTTPBadRequest(body=json.dumps({'error': "gene is blank"}), content_type='text/json')
+            raise ValueError('gene is blank')
 
-        taxonomy_id = str(request.params.get('taxonomy_id'))
+        taxonomy_id = str(request.params.get('taxonomy_id'))        
         if not taxonomy_id:
-            return HTTPBadRequest(body=json.dumps({'error': "taxonomy is blank"}), content_type='text/json')
-        taxonomy_id = int(taxonomy_id)
+            raise ValueError('taxonomy is blank')
+        elif taxonomy_id.isdigit():
+            taxonomy_id = int(taxonomy_id)
+        else:
+            raise ValueError('taxonomy is blank')
 
         reference_id = str(request.params.get('reference_id'))
         if not reference_id:
-            return HTTPBadRequest(body=json.dumps({'error': "reference is blank"}), content_type='text/json')
+            raise ValueError('reference is blank')
         
         site_index = str(request.params.get('site_index'))
         if not site_index:
-            return HTTPBadRequest(body=json.dumps({'error': "site index is blank"}), content_type='text/json')
+            raise ValueError('site index is blank')
         try:
             site_index = int(site_index)
         except:
-            return HTTPBadRequest(body=json.dumps({'error': "site index should be number."}), content_type='text/json')
+            raise ValueError('site index should be number')
         
         site_residue = str(request.params.get('site_residue'))
         if len(site_residue) == 1 and site_residue in string.ascii_letters:
             site_residue = site_residue.upper()
         else:
-            return HTTPBadRequest(body=json.dumps({'error': "site residue should be single letter."}), content_type='text/json')
+            raise ValueError('site residue should be single letter')
 
         psimod_id = str(request.params.get('psimod_id'))
         if not psimod_id:
-            return HTTPBadRequest(body=json.dumps({'error': "psimod is blank"}), content_type='text/json')
+            raise ValueError('psimod is blank')
         psimod_id = int(psimod_id)
  
         modifier_id = str(request.params.get('modifier_id'))        
 
         dbentity_in_db = None
-        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == dbentity_id,Dbentity.format_name == dbentity_id)).one_or_none()
+        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == dbentity_id,Dbentity.format_name == dbentity_id)).filter(Dbentity.subclass == 'LOCUS').one_or_none()
         if dbentity_in_db is not None:
             dbentity_id = dbentity_in_db.dbentity_id
         else:
-            return HTTPBadRequest(body=json.dumps({'error': "gene value not found in database"}), content_type='text/json')
+            raise ValueError('gene value not found in database')
             
         dbentity_in_db = None
         pmid_in_db = None
-        dbentity_in_db = DBSession.query(Dbentity).filter(Dbentity.sgdid == reference_id).one_or_none()
+        dbentity_in_db = DBSession.query(Dbentity).filter(and_(Dbentity.sgdid == reference_id, Dbentity.subclass == 'REFERENCE')).one_or_none()
         if dbentity_in_db is None:
-            dbentity_in_db = DBSession.query(Dbentity).filter(Dbentity.dbentity_id == int(reference_id)).one_or_none()
+            dbentity_in_db = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id == int(reference_id)).one_or_none()
         if dbentity_in_db is None:
             pmid_in_db = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == int(reference_id)).one_or_none()
 
@@ -1753,20 +1756,18 @@ def ptm_update(request):
         elif (pmid_in_db is not None):
             reference_id = pmid_in_db.dbentity_id
         else:
-            return HTTPBadRequest(body=json.dumps({'error': "reference value not found in database"}), content_type='text/json')
+            raise ValueError('reference value not found in database')
         
         if modifier_id: 
             dbentity_in_db = None
-            dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == modifier_id, Dbentity.format_name == modifier_id)).one_or_none()
+            dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == modifier_id, Dbentity.format_name == modifier_id)).filter(Dbentity.subclass == 'LOCUS').one_or_none()
             if dbentity_in_db is not None:
                 modifier_id = dbentity_in_db.dbentity_id
             else:
-                return HTTPBadRequest(body=json.dumps({'error': "Modifier value not found in database"}), content_type='text/json')
+                raise ValueError('Modifier value not found in database')
         else:
             modifier_id = None
         
-        isSuccess = False
-        returnValue = ''
         ptms_in_db = []
 
         if(int(id) > 0):
@@ -1783,28 +1784,29 @@ def ptm_update(request):
                 
                 curator_session.query(Posttranslationannotation).filter(Posttranslationannotation.annotation_id == id).update(update_ptm)
                 transaction.commit()
-                isSuccess = True
-                returnValue = 'Record updated successfully.'
                 ptms = models_helper.get_all_ptms_by_dbentity(dbentity_id)
                 ptms_in_db = get_list_of_ptms(ptms)
+                log.info('PTM updated '+ str(id))
+                return HTTPOk(body=json.dumps({'success': 'Record updated successfully', "ptms": ptms_in_db}), content_type='text/json')
             except IntegrityError as e:
+                log.exception(e)
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                isSuccess = False
-                returnValue = 'Updated failed, record already exists' 
+                return HTTPBadRequest(body=json.dumps({'error': 'Updated failed, record already exists' }), content_type='text/json')
             except DataError as e:
+                log.exception(e)
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                isSuccess = False
-                returnValue = 'Update failed, issue in data'
+                return HTTPBadRequest(body=json.dumps({'error': 'Update failed, issue in data'}), content_type='text/json')
             except Exception as e:
+                log.exception(e)
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                isSuccess = False
-                returnValue = 'Updated failed ' + str(e.message)
+                returnValue = 'Updated failed ' + str(e)
+                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             finally:
                 if curator_session:
                     curator_session.close()
@@ -1823,37 +1825,37 @@ def ptm_update(request):
                                               created_by=CREATED_BY)
                 curator_session.add(y)
                 transaction.commit()
-                isSuccess = True
-                returnValue = 'Record added successfully.'
+                log.info('PTM added '+ str(y.annotation_id))
+                return HTTPOk(body=json.dumps({'success': 'Record added successfully', "ptms": ptms_in_db}), content_type='text/json')
             except IntegrityError as e:
+                log.exception(e)
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                isSuccess = False
-                returnValue = 'Insert failed, record already exists'
+                return HTTPBadRequest(body=json.dumps({'error': 'Insert failed, record already exists'}), content_type='text/json')
             except DataError as e:
+                log.exception(e)
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                isSuccess = False
-                returnValue = 'Insert failed, issue in data'
+                return HTTPBadRequest(body=json.dumps({'error': 'Insert failed, issue in data'}), content_type='text/json')
             except Exception as e:
+                log.exception(e)
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                isSuccess = False
-                returnValue = 'Insert failed' + ' ' + str(e.message)
+                returnValue = 'Insert failed '+ str(e.message)
+                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             finally:
                 if curator_session:
                     curator_session.close()
 
-        if isSuccess:
-            return HTTPOk(body=json.dumps({'success': returnValue, "ptms": ptms_in_db}), content_type='text/json')
-
-        return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
-
+    except ValueError as e:
+        log.exception(e)
+        return HTTPBadRequest(body=json.dumps({'error':str(e)}), content_type = 'text/json')
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+        log.exception(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 
 @view_config(route_name="ptm_delete", renderer='json', request_method='DELETE')
