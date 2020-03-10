@@ -57,15 +57,10 @@ sub vcl_recv {
         set req.http.host = "www.staging.yeastgenome.org";
     }
 
-    if (req.http.host == "yeastgenome.org") {
-        set req.http.host = "www.yeastgenome.org";
-    }
-
-    if (req.http.host == "www-2a.yeastgenome.org") {
-        set req.http.host = "www.yeastgenome.org";
-    }
-
-    if (req.http.host == "www-2b.yeastgenome.org") {
+    if (req.http.host == "yeastgenome.org" ||
+	    req.http.host == "www-2a.yeastgenome.org" ||
+	    req.http.host == "www-2b.yeastgenome.org" ||
+	    req.http.host == "localhost" || req.http.host == "127.0.0.1") {
         set req.http.host = "www.yeastgenome.org";
     }
 
@@ -88,7 +83,7 @@ sub vcl_recv {
 }
 
 sub vcl_backend_response {
-    if (beresp.status != 200) {
+    if (beresp.status >= 500) {
         set beresp.ttl = 15s;
         return (deliver);
     }
