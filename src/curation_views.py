@@ -1844,7 +1844,7 @@ def ptm_update(request):
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
-                returnValue = 'Insert failed '+ str(e.message)
+                returnValue = 'Insert failed '+ str(e)
                 return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             finally:
                 if curator_session:
