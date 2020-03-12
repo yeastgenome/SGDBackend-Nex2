@@ -48,7 +48,7 @@ def dump_data():
 
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
-    so_id_to_display_name = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
+    so_id_to_term_name = dict([(x.so_id, x.term_name) for x in nex_session.query(So).all()])
     so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
     gene_soid = so.soid
     locus_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS', dbentity_status='Active').all()])
@@ -136,7 +136,7 @@ def dump_data():
 
             sgdid = "SGD:" + locus_id_to_sgdid[x.dbentity_id]
 
-            type = so_id_to_display_name[x.so_id]
+            type = so_id_to_term_name[x.so_id]
             if type == 'ORF':
                 type = 'gene'
             if type == 'gene_group':
