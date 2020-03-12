@@ -96,9 +96,13 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                print("UPDATED: ", y.soid, y.display_name, x['term'])
-            # else:
-            #    print "SAME: ", y.soid, y.display_name, x['definition'], x['aliases'], x['parents']
+            if y.term_name is None or x['term_orig'] != y.term_name.strip():
+                ## update term
+                fw.write("The term_name for " + x['id'] + " has been updated from " + str(y.term_name) + " to " + x['term_orig'] + "\n")
+                y.term_name = x['term_orig']
+                nex_session.add(y)
+                nex_session.flush()
+                update_log['updated'] = update_log['updated'] + 1
             active_soid.append(x['id'])
         else:
             fw.write("NEW entry = " + x['id'] + " " + x['term'] + "\n")
@@ -106,6 +110,7 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
                          format_name = x['id'],
                          soid = x['id'],
                          display_name = x['term'],
+                         term_name = x['term_orig'],
                          description = x['definition'],
                          obj_url = '/so/' + x['id'],
                          is_obsolete = '0',
@@ -114,7 +119,6 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
             nex_session.flush()
             so_id = this_x.so_id
             update_log['added'] = update_log['added'] + 1
-            # print "NEW: ", x['id'], x['term'], x['definition']
 
             ## add three URLs
             link_id = x['id'].replace(':', '_')
@@ -146,13 +150,11 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
                              alias_type, so_id, alias_just_added, fw)
 
         ## update RELATIONS
-        # print x['id'], "RELATION", so_id_to_parent.get(so_id), x['parents']
 
         update_relations(nex_session, so_id, so_id_to_parent.get(so_id), x['parents'], 
                          source_to_id[src], soid_to_so, ro_id, relation_just_added, fw)
                     
         ## update ALIASES
-        # print x['id'], "ALIAS", so_id_to_alias.get(so_id), x['aliases']
 
         update_aliases(nex_session, so_id, so_id_to_alias.get(so_id), x['aliases'],
                        source_to_id[src], soid_to_so, alias_just_added, fw)
@@ -288,8 +290,6 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
             summary = summary + "\t" + soid + " " + term + "\n"
                                           
     fw.write(summary)
-    print(summary)
-
 
 if __name__ == "__main__":
         
