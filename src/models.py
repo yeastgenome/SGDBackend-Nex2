@@ -10656,7 +10656,8 @@ class So(Base):
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
-
+    term_name = Column(String(500), nullable=False)
+    
     source = relationship('Source')
 
 
