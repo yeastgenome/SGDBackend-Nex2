@@ -32,6 +32,7 @@
 30 17 * * 1 /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/go_update.sh
 29 17 * * 5 /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/reference_update.sh
 29 17 11 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/data_dump.sh
+29 18 11 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/s3_copy_files.sh
 29 17 13 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/ontology_update.sh
 29 17 15 * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/dbxref_update.sh
 
