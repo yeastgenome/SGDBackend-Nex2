@@ -97,8 +97,14 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
                 print("UPDATED: ", y.soid, y.display_name, x['term'])
-            # else:
-            #    print "SAME: ", y.soid, y.display_name, x['definition'], x['aliases'], x['parents']
+            if y.term_name is None or x['term_orig'] != y.term_name.strip():
+                ## update term
+                fw.write("The term_name for " + x['id'] + " has been updated from " + str(y.term_name) + " to " + x['term_orig'] + "\n")
+                y.term_name = x['term_orig']
+                nex_session.add(y)
+                nex_session.flush()
+                update_log['updated'] = update_log['updated'] + 1
+                print("UPDATED: ", y.soid, y.term_name, x['term_orig'])
             active_soid.append(x['id'])
         else:
             fw.write("NEW entry = " + x['id'] + " " + x['term'] + "\n")
@@ -106,6 +112,7 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
                          format_name = x['id'],
                          soid = x['id'],
                          display_name = x['term'],
+                         term_name = x['term_orig'],
                          description = x['definition'],
                          obj_url = '/so/' + x['id'],
                          is_obsolete = '0',

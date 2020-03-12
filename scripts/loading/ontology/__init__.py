@@ -161,6 +161,7 @@ def read_owl(filename, ontology, is_sgd_term=None):
     other_parents = []
     aliases = []
     term = None
+    term_orig = None
     id = None
     namespace = None
     definition = None
@@ -250,7 +251,11 @@ def read_owl(filename, ontology, is_sgd_term=None):
                     if is_obsolete_id == 0 and id is not None and term is not None:
                         if definition is not None:
                             definition = definition.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace("&quot;", "'")
-                        data.append({ "term": term.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">"),
+                        ## no need to do so, but just in case
+                        term = term.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
+                        term_orig = term_orig.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
+                        data.append({ "term": term,
+                                      "term_orig": term_orig,
                                       "id": id,
                                       "namespace": namespace,
                                       "definition": definition,
@@ -262,6 +267,7 @@ def read_owl(filename, ontology, is_sgd_term=None):
                     other_parents = []
                     aliases = []
                     term = None
+                    term_orig = None
                     id = None
                     namespace = None
                     definition = None
@@ -327,10 +333,12 @@ def read_owl(filename, ontology, is_sgd_term=None):
         # <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mitochondrion inheritance</rdfs:label> 
         # <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">never in taxon</rdfs:label>              
         if '<rdfs:label' in line:
-            term = line.split('>')[1].split('<')[0].strip().replace('_', ' ').replace("&apos;", "'")
+            term_orig = line.split('>')[1].split('<')[0].strip().replace("&apos;", "'")
+            # term = line.split('>')[1].split('<')[0].strip().replace('_', ' ').replace("&apos;", "'")
+            term = term_orig.replace('_', ' ')
             if '#' in term:
                 term = None
-            
+                term_orig = None
         # <oboInOwl:hasExactSynonym rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mitochondrial inheritance</oboInOwl:hasExactSynonym>                                                                   
         # <oboInOwl:hasExactSynonym>has active substance</oboInOwl:hasExactSynonym>
         if 'ExactSynonym' in line or 'BroadSynonym' in line or 'NarrowSynonym' in line or 'RelatedSynonym' in line:
