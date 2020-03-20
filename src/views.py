@@ -365,7 +365,12 @@ def get_sequence_object(request):
     # id = request.matchdict['id'].upper()
     # return ESearch.get(index=request.registry.settings['elasticsearch.variant_viewer_index'], id=id)['_source']
 
-    return get_variant_data(request)
+    try:
+        data = get_variant_data(request)
+        return HTTPOk(body=json.dumps(data), content_type=‘text/json’)
+    except Exception as e:
+        logging.exception(str(e))
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
     
 @view_config(route_name='reserved_name', renderer='json', request_method='GET')
 def reserved_name(request):
