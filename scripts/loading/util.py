@@ -245,6 +245,22 @@ def make_fasta_file_starter(filename):
         f.close()
     return fasta_file_starter
 
+def strain_order():
+
+    return {
+        'S288C':      1,
+        'X2180-1A':   2,
+        'SEY6210':    3,
+        'W303':       4,
+        'JK9-3d':     5,
+        'FL100':      6,
+        'CEN.PK':     7,
+        'D273-10B':   8,
+        'Sigma1278b': 9,
+        'RM11-1a':    10,
+        'SK1':        11,
+        'Y55':        12
+    }
 
 def codon_table():
 

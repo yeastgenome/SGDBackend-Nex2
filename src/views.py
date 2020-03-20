@@ -24,6 +24,7 @@ from .helpers import extract_id_request, link_references_to_file, link_keywords_
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query
 from .models_helpers import ModelsHelper
 from .models import SGD_SOURCE_ID, TAXON_ID
+from .variant_helpers import get_variant_data
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -360,10 +361,12 @@ def search_sequence_objects(request):
 
 @view_config(route_name='get_sequence_object', renderer='json', request_method='GET')
 def get_sequence_object(request):
-    id = request.matchdict['id'].upper()
+    
+    # id = request.matchdict['id'].upper()
+    # return ESearch.get(index=request.registry.settings['elasticsearch.variant_viewer_index'], id=id)['_source']
 
-    return ESearch.get(index=request.registry.settings['elasticsearch.variant_viewer_index'], id=id)['_source']
-
+    return get_variant_data(request)
+    
 @view_config(route_name='reserved_name', renderer='json', request_method='GET')
 def reserved_name(request):
     id = extract_id_request(request, 'reservedname', 'id', True)
