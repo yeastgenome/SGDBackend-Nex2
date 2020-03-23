@@ -1,5 +1,6 @@
 MAX_AGG_SIZE = 999
 
+
 def build_autocomplete_search_body_request(query,
                                            category='locus',
                                            field='name'):
@@ -30,14 +31,15 @@ def build_autocomplete_search_body_request(query,
     }
 
     if category != '':
-        es_query["query"]["bool"]["must"].append({"match": {"category": category}})
+        es_query["query"]["bool"]["must"].append(
+            {"match": {"category": category}})
         if category != "locus":
             es_query["query"]["bool"].pop("should")
 
     if field != 'name':
         es_query['aggs'] = {}
         es_query['aggs'][field] = {
-            'terms': {'field': field + '.raw', 'size': 999}
+            'terms': {'field': field, 'size': 999}
         }
 
         es_query['query']['bool']['must'][0]['match'] = {}
@@ -67,7 +69,7 @@ def format_autocomplete_results(es_response, field='name'):
                 'href': hit['_source']['href'],
                 'category': hit['_source']['category']
             }
-            if 'institution' in list(hit['_source'].keys()):
+            if 'institution' in hit['_source'].keys():
                 obj['institution'] = hit['_source']['institution']
             if obj['category'] == 'colleague':
                 format_name = hit['_source']['href'].replace('/colleague/', '')
@@ -94,11 +96,11 @@ def build_es_aggregation_body_request(es_query, category, category_filters):
                 'terms': {'field': 'category', 'size': 50}
             }
         }
-    elif category in list(category_filters.keys()):
+    elif category in category_filters.keys():
         for subcategory in category_filters[category]:
             agg_query_body['aggs'][subcategory[1]] = {
                 'terms': {
-                    'field': subcategory[1] + '.raw',
+                    'field': subcategory[1],
                     'size': MAX_AGG_SIZE
                 }
             }
@@ -114,7 +116,7 @@ def format_aggregation_results(aggregation_results, category, category_filters):
             'values': [],
             'key': 'category'
         }
-        
+
         for bucket in aggregation_results['aggregations']['categories']['buckets']:
             category_obj['values'].append({
                 'key': bucket['key'],
@@ -122,7 +124,7 @@ def format_aggregation_results(aggregation_results, category, category_filters):
             })
 
         return [category_obj]
-    elif category in list(category_filters.keys()):
+    elif category in category_filters.keys():
         formatted_agg = []
 
         for subcategory in category_filters[category]:
@@ -185,27 +187,37 @@ def build_search_query(query, search_fields, category, category_filters, args):
     if category == '':
         return es_query
 
-    query = {
-        'filtered': {
-            'query': es_query,
-            'filter': {
-                'bool': {
-                    'must': [{'term': {'category': category}}]
+    if es_query != {"match_all": {}}:
+        query = es_query
+        query['bool']['filter']['bool']['must'] = [{
+            'term': {
+                'category': category,
+            }
+        }]
+    else:
+        query = {
+            'bool': {
+                'filter': {
+                    'bool': {
+                        'must': [{
+                            'term': {
+                                'category': category,
+                            }
+                        }]
+                    }
                 }
             }
         }
-    }
 
-    if category in list(category_filters.keys()):
+    if category in category_filters.keys():
         for item in category_filters[category]:
             if args.get(item[1]):
                 for param in args.get(item[1]):
-                    query['filtered']['filter']['bool']['must'].append({
+                    query['bool']['filter']['bool']['must'].append({
                         'term': {
-                            (item[1] + ".raw"): param
+                            (item[1]): param
                         }
                     })
-
     return query
 
 
@@ -213,12 +225,13 @@ def build_search_params(query, search_fields):
     if query == "":
         es_query = {"match_all": {}}
     else:
-        es_query = {'dis_max': {'queries': []}}
+        es_query = {
+            'bool': {'filter': {'bool': {'should': {'dis_max': {'queries': []}}}}}}
 
         if (query[0] in ('"', "'") and query[-1] in ('"', "'")):
             query = query[1:-1]
 
-        es_query['dis_max']['queries'] = []
+        es_query['bool']['filter']['bool']['should']['dis_max']['queries'] = []
 
         custom_boosts = {
             "name": 400,
@@ -244,9 +257,10 @@ def build_search_params(query, search_fields):
                 'query': query
             }
 
-            es_query['dis_max']['queries'].append({'match': match})
-            es_query['dis_max']['queries'].append({'match_phrase_prefix': partial_match})
-
+            es_query['bool']['filter']['bool']['should']['dis_max']['queries'].append({
+                                                                                      'match': match})
+            es_query['bool']['filter']['bool']['should']['dis_max']['queries'].append(
+                {'match_phrase_prefix': partial_match})
     return es_query
 
 
@@ -254,7 +268,7 @@ def filter_highlighting(highlight):
     if highlight is None:
         return None
 
-    for k in list(highlight.keys()):
+    for k in highlight.keys():
         if k.endswith(".symbol") and k.split(".")[0] in highlight:
             if highlight[k] == highlight[k.split(".")[0]]:
                 highlight.pop(k, None)
@@ -275,11 +289,11 @@ def format_search_results(search_results, json_response_fields, query):
 
         obj['highlights'] = filter_highlighting(r.get('highlight'))
         obj['id'] = r.get('_id')
-        
-        if raw_obj.get('keys'): # colleagues don't have keys
+
+        if raw_obj.get('keys'):  # colleagues don't have keys
             item = raw_obj.get('aliases')
 
-            if query.replace('"','').lower().strip() in raw_obj.get('keys'):
+            if query.replace('"', '').lower().strip() in raw_obj.get('keys'):
                 if obj["category"] == "locus":
                     if obj["is_quick_flag"]:
                         obj['is_quick'] = True
@@ -298,13 +312,13 @@ def format_search_results(search_results, json_response_fields, query):
 def build_sequence_objects_search_query(query):
     if query == '':
         search_body = {
-            'query': { 'match_all': {} },
-            'sort': { 'absolute_genetic_start': { 'order': 'asc' }}
+            'query': {'match_all': {}},
+            'sort': {'absolute_genetic_start': {'order': 'asc'}}
         }
     elif ',' in query:
         search_body = {
             'query': {
-                'filtered': {
+                'bool': {
                     'filter': {
                         'terms': {
                             '_all': [q.strip() for q in query.split(',')]
@@ -323,6 +337,7 @@ def build_sequence_objects_search_query(query):
             }
         }
 
-    search_body['_source'] = ['sgdid', 'name', 'href', 'absolute_genetic_start', 'format_name', 'dna_scores', 'protein_scores', 'snp_seqs']
+    search_body['_source'] = ['sgdid', 'name', 'href', 'absolute_genetic_start',
+                              'format_name', 'dna_scores', 'protein_scores', 'snp_seqs']
 
     return search_body

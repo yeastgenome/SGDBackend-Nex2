@@ -45,7 +45,7 @@ def index_toolbar_links():
     links = [
         ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do",[]),
         ("Yeastmine", "https://yeastmine.yeastgenome.org","yeastmine"),
-        ("Submit Data", "/submitData",[]),
+        ("Submit Data", "/submitData", []),
         ("SPELL", "https://spell.yeastgenome.org","spell"),
         ("BLAST", "/blast-sgd", "blast"),
         ("Fungal BLAST", "/blast-fungal","blast"),
@@ -751,6 +751,7 @@ def cleanup():
 
 
 def setup():
+    import pdb ; pdb.set_trace()
     # see if index exists, if not create it
     indices = list(es.indices.get_aliases().keys())
     index_exists = INDEX_NAME in indices
