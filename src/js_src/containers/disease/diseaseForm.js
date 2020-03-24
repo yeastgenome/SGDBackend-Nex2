@@ -19,7 +19,6 @@ const TIMEOUT = 120000;
 class DiseaseForm extends Component {
   constructor(props) {
     super(props);
-
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleToggleInsertUpdate = this.handleToggleInsertUpdate.bind(this);
@@ -138,7 +137,6 @@ class DiseaseForm extends Component {
     this.handleResetForm();
   }
 
-
   handleNextPrevious(value) {
     this.setState((prevState) => {
       return { pageIndex: prevState.pageIndex + value };
@@ -146,7 +144,6 @@ class DiseaseForm extends Component {
   }
 
   handleChange(){
-
     var data = new FormData(this.refs.form);
     var currentDisease = {};
     for (var key of data.entries()) {
@@ -208,7 +205,6 @@ class DiseaseForm extends Component {
         <Loader />
       );
     }
-
     if(this.state.isUpdate){
       var buttons = this.state.list_of_diseases.filter((i,index) => {
         return index >= (pageIndex * SKIP) && index < (pageIndex * SKIP) + SKIP;
@@ -253,7 +249,6 @@ class DiseaseForm extends Component {
   }
 
   render() {
-
     var annotation_types = ANNOTATION_TYPES.map((item) => <option key={item}>{item}</option>);
 
     return (
@@ -323,7 +318,6 @@ class DiseaseForm extends Component {
               </div>
             </div>
           }
-
 
         <div className='row'>
             <div className='columns medium-12'>
@@ -410,7 +404,6 @@ class DiseaseForm extends Component {
         </form>
 
       </div>
-
     );
   }
 }

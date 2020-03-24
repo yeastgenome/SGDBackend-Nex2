@@ -1,0 +1,161 @@
+# Maintainer: Felix Gondwe zungwala@gmail.com
+#
+# docker stack deploy -c elastic-stack.yml elastic
+#
+# The stack creates Elasticsearch cluster consiting of
+# - 1 dedicated primary nodes (3 recommended)
+# - 2 dedicated data nodes to manage CRUD,
+# - 1 coordination node acting like kind of load balancer in multi instance environments
+# - 1 kibana node
+# - 1 traefik node
+# - 1 visualizer node
+
+version: "3.7"
+
+services:
+  es-coordination:
+    container_name: es-coordination
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - esnet
+      - proxy
+    volumes:
+      - ./es-config/es-coordination.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9500:9200
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.es-coordination.entrypoints=esearch"
+      - "traefik.http.routers.es-coordination.rule=Host(`localhost`)"
+      - "traefik.http.services.es-coordination.loadbalancer.server.port=9200"
+
+  es-primary:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - esnet
+    volumes:
+      - es-primary:/usr/share/elasticsearch/data
+      - ./es-config/es-primary.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+  es-data1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+
+    networks:
+      - esnet
+    volumes:
+      - es-data1:/usr/share/elasticsearch/data
+      - ./es-config/es-data1.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+
+  es-data2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" 
+
+    networks:
+      - esnet
+    volumes:
+      - es-data2:/usr/share/elasticsearch/data
+      - ./es-config/es-data2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.5.0
+    networks:
+      - esnet
+      - proxy
+    volumes:
+      - ./es-config/es-kibana.yml:/usr/share/kibana/config/kibana.yml 
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kibana.entrypoints=ekibana"
+      - "traefik.http.routers.kibana.rule=Host(`localhost`)"
+      - "traefik.http.services.kibana.loadbalancer.server.port=5601"      
+
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    networks:
+      - esnet
+      - proxy
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./es-config/es-kibana.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.visualizer.entrypoints=web"
+      - "traefik.http.routers.visualizer.rule=Host(`localhost`)"
+      - "traefik.http.services.visualizer.loadbalancer.server.port=8080"
+ 
+  traefik:
+    image: traefik:v2.0
+    ports:
+      - "8085:8080"
+      - "85:80"
+      - "3001:5601"
+      - "3000:9200"
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      # - "--providers.docker.endpoint=tcp://127.0.0.1:2375"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.swarmMode=false"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=proxy"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.ekibana.address=:5601"
+      - "--entrypoints.esearch.address=:9200"
+      #- "--entryPoints.metrics.address=:8082"
+      #- "--metrics.prometheus=true"
+      #- "--metrics.prometheus.entryPoint=metrics"
+      #- "--accesslog=true"
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      #labels:
+      #  - "traefik.enable=true"
+      #  - "traefik.http.routers.api.rule=Host(`ec2-54-201-236-16.us-west-2.compute.amazonaws.com`)"
+      #  - "traefik.http.routers.api.service=api@internal"      
+
+networks:
+  esnet:
+    name: esnet
+  proxy:
+    name: proxy
+
+volumes:
+  es-primary:
+    driver: local
+  es-data1:
+    driver: local
+  es-data2:
+    driver: local
+  es-kibana:
+    driver: local
+
+configs:
+  es-coordination:
+    name: es-coordination
+    file: es-config/es-coordination.yml
+
+  es-primary:
+    name: es-primary1
+    file: es-config/es-primary.yml
+
+  es-data1:
+    name: es-data1
+    file: es-config/es-data1.yml
+  es-data2:
+    name: es-data2
+    file: es-config/es-data2.yml
+ 
+  es-kibana:
+    name: es-kibana1
+    file: es-config/es-kibana.yml

@@ -751,7 +751,6 @@ def cleanup():
 
 
 def setup():
-    import pdb ; pdb.set_trace()
     # see if index exists, if not create it
     indices = list(es.indices.get_aliases().keys())
     index_exists = INDEX_NAME in indices

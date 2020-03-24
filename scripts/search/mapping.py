@@ -1,4 +1,3 @@
-import pdb ; pdb.set_trace()
 mapping = {
     "settings": {
         "index": {
@@ -39,10 +38,10 @@ mapping = {
                 }
             },
             "number_of_replicas": "1",  # temporarily
-            "number_of_shards": "1"
+            "number_of_shards": "3"
         }
     },
-    
+
     "mappings": {  # having a raw field means it can be a facet or sorted by
         "searchable_item": {
             "properties": {

@@ -1,0 +1,11 @@
+server.name: kibana
+server.host: 0.0.0.0
+elasticsearch.hosts: ["http://es-coordination:9200"]
+xpack.monitoring.ui.container.elasticsearch.enabled: true
+xpack.apm.enabled: true
+elasticsearch.username: kibana
+elasticsearch.password: changeme
+xpack.security.enabled: false
+xpack.monitoring.enabled: true
+xpack.monitoring.kibana.collection.enabled: true
+xpack.monitoring.ui.enabled: true

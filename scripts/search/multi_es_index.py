@@ -383,7 +383,7 @@ def index_genes():
             "summary":
                 summary,
             "locus_summary":
-                summary,
+                "summary",
             "phenotypes": [p[0] for p in phenotypes],
             "aliases":
                 aliases,
@@ -425,10 +425,11 @@ def index_genes():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
+
                 "_id": str(uuid.uuid4())
             }
         })
+
         bulk_data.append(obj)
 
         if len(bulk_data) == 1000:
@@ -448,7 +449,7 @@ def index_phenotypes():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -480,7 +481,7 @@ def index_observables():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -616,7 +617,7 @@ def index_go_terms():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -676,7 +677,7 @@ def index_disease_terms():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -751,7 +752,7 @@ def index_references():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -762,7 +763,6 @@ def index_references():
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-
 
 
 def index_complex_names():
@@ -850,7 +850,7 @@ def index_chemicals():
             bulk_data.append({
                 "index": {
                     "_index": INDEX_NAME,
-                    
+
                     "_id": "chemical_" + str(item_key)
                 }
             })
@@ -861,6 +861,7 @@ def index_chemicals():
                 bulk_data = []
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
 
 def index_part_1():
     index_phenotypes()
@@ -939,7 +940,6 @@ def index_toolbar_links():
     for l in links:
         obj = {
             "name": l[0],
-            "resource_name": l[0],
             "href": l[1],
             "description": None,
             "category": "resource",
@@ -955,13 +955,9 @@ if __name__ == "__main__":
             index_references()
     '''
     # index_strains()
-    # index_genes()
-
     cleanup()
     setup()
-    
     t1 = Thread(target=index_part_1)
     t2 = Thread(target=index_part_2)
     t1.start()
     t2.start()
-    

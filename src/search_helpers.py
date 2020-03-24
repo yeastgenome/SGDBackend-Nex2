@@ -1,4 +1,8 @@
+from scripts.search.es7_mapping import mapping
+import re
+
 MAX_AGG_SIZE = 999
+FIELD_MAP = mapping['mappings']['properties']
 
 
 def build_autocomplete_search_body_request(query,
@@ -10,26 +14,39 @@ def build_autocomplete_search_body_request(query,
     es_query = {
         "query": {
             "bool": {
-                "must": [{
-                    "match": {
-                        "name.autocomplete": {
-                            "query": query
+                "must": [
+                    {
+                        "multi_match": {
+                            "query": query,
+                            "fields": [
+                                "locus_name.engram^10",
+                                "colleague_name.engram^7",
+                                "name.autocomplete^8",
+                                "name_description",
+                                "author.white_space",
+                                "aliases.egram^6",
+                                "keys",
+                                "cellular_component.engram",
+                                "biological_process.engram",
+                                "molecular_function.engram",
+                                "locus_summary"
+                            ]
                         }
                     }
-                }],
-                "should": [{
-                    "match": {
-                        "category": {
-                            "query": "locus",
-                            "boost": 2
-                        }
+                ],
+                "should": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": [
+                            "author.white_space"
+                        ]
                     }
-                }]
+                }
             }
         },
-        '_source': _source_fields
+        "_source": _source_fields
     }
-
+# _source: _source_fields: depprecated
     if category != '':
         es_query["query"]["bool"]["must"].append(
             {"match": {"category": category}})
@@ -49,7 +66,6 @@ def build_autocomplete_search_body_request(query,
         }
 
         es_query['_source'] = [field, 'href', 'category']
-
     return es_query
 
 
@@ -152,9 +168,9 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
         'highlight': {
             'fields': {}
         },
-        'query': {}
+        'query': {},
+        'track_total_hits': True
     }
-
     if query == '' and category == '':
         es_search_body["query"] = {
             "function_score": {
@@ -163,7 +179,6 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
             }
         }
     else:
-
         es_search_body["query"] = es_query
 
     for field in search_fields:
@@ -181,31 +196,28 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
     return es_search_body
 
 
-def build_search_query(query, search_fields, category, category_filters, args):
-    es_query = build_search_params(query, search_fields)
-
+def build_search_query(query, search_fields, category, category_filters, args, alias_flag=False, terms=[], ids=[], wildcard=None):
+    es_query = build_search_params(query, search_fields, alias_flag, terms, ids, wildcard, category)
     if category == '':
         return es_query
-
+    
     if es_query != {"match_all": {}}:
         query = es_query
-        query['bool']['filter']['bool']['must'] = [{
+        query['bool']['must'].append({
             'term': {
-                'category': category,
+                'category': category
             }
-        }]
+        })
+        
     else:
         query = {
             'bool': {
-                'filter': {
-                    'bool': {
-                        'must': [{
-                            'term': {
-                                'category': category,
-                            }
-                        }]
+                'must': [{
+                    'term': {
+                        'category': category
                     }
-                }
+                }]
+                
             }
         }
 
@@ -213,55 +225,311 @@ def build_search_query(query, search_fields, category, category_filters, args):
         for item in category_filters[category]:
             if args.get(item[1]):
                 for param in args.get(item[1]):
-                    query['bool']['filter']['bool']['must'].append({
+                    query['bool']['must'].append({
                         'term': {
                             (item[1]): param
                         }
                     })
+
     return query
 
 
-def build_search_params(query, search_fields):
+def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[], wildcard=None, category=None):
+    es_query = None
+    skip_fields = ["name", "locus_name", "aliases",
+                   "chemical_name", "locus_summary", "keys"]
     if query == "":
         es_query = {"match_all": {}}
     else:
         es_query = {
-            'bool': {'filter': {'bool': {'should': {'dis_max': {'queries': []}}}}}}
+            "bool": {
+                "must":
+                [
+                    {
+                        "bool": {
+                            "should": []
+                        }
+                    }
+                ],
+                "should": [
+                    {
+                        "bool": {
+                            "should": []
+                        }
+                    }
+                ]
+            }
+        }
 
         if (query[0] in ('"', "'") and query[-1] in ('"', "'")):
             query = query[1:-1]
+        bool_must = es_query["bool"]["must"][0]["bool"]["should"]
+        if alias_flag:
+            if terms:
+                for item in terms:
+                    bool_must.append({
+                        "multi_match": {
+                            "query": item,
+                            "fields": [
+                                "name",
+                                "aliases.egram^5",
+                                "aliases"
+                            ]
+                        }
+                    })
+            else:
+                multi_field_match = {
+                    "multi_match": {
+                        "query": query,
+                        "type": "phrase_prefix",
+                        "fields": [
+                            "name^9",
+                            "locus_name^11",
+                            "locus_name.engram^10",
+                            "name.symbol^8",
+                            "aliases.egram^7",
+                            "aliases^6",
+                            "phenotype_loci",
+                            "gene_ontology_loci",
+                            "keys"
+                        ]
+                    }
+                }
+                bool_must.append(multi_field_match)
 
-        es_query['bool']['filter']['bool']['should']['dis_max']['queries'] = []
+        elif ids:
+            for item in ids:
+                bool_must.append({
+                        "multi_match": {
+                            "query": item,
+                            "type": "phrase_prefix",
+                                "fields": [
+                                    "keys^10",
+                                    "go_id",
+                                    "do_id",
+                                    "chebiid",
+                                    "bioentity_id"
+                                ]
+                            }
+                        })
+            skip_fields.\
+                extend(["keys", "go_id", "do_id", "chebiid", "bioentity_id"])
 
-        custom_boosts = {
-            "name": 400,
-            "name.symbol": 500,
-            "gene_history": 100,
-            "keys": 1000
-        }
+        elif terms:
+            if category == 'locus':
+                for item in terms:
+                    bool_must.append({
+                        "multi_match": {
+                            "query": item,
+                            "type": "phrase_prefix",
+                            "fields": [
+                                "locus_name.engram^10",
+                                "name^8",
+                                "aliases.egram^9",
+                                "chemical_name",
+                                "phenotypes.engram",
+                                "cellular_component.engram",
+                                "biological_process.engram",
+                                "molecular_function.engram",
+                                "description",
+                                "name_description",
+                                "phenotype_loci",
+                                "gene_ontology_loci",
+                                "keys",
+                                "locus_summary"
+                            ]
 
-        fields = search_fields + [
-            "name.symbol",
-            "keys"
-        ]
+                        }
+                    })
+                skip_fields.\
+                    extend(["locus_summary", "keys", "gene_ontology_loci",
+                            "description", "molecular_function",
+                            "biological_process", "cellular_component"])
+            else:
+                for item in terms:
+                    bool_must.append({
+                        "multi_match": {
+                            "query": item,
+                            "type": "phrase_prefix",
+                            "fields": [
+                                "locus_name.engram^10",
+                                "name^9",
+                                "aliases.egram^8",
+                                "chemical_name",
+                                "phenotypes.engram",
+                                "cellular_component.engram",
+                                "biological_process.engram",
+                                "molecular_function.engram",
+                                "description",
+                                "name_description",
+                                "phenotype_loci",
+                                "gene_ontology_loci",
+                                "keys",
+                                "locus_summary"
+                            ]
 
-        for field in fields:
-            match = {}
-            match[field] = {
-                'query': query,
-                'boost': custom_boosts.get(field, 50)
+                        }
+                    })
+        else:
+            multi_name_field = {
+                "multi_match": {
+                    "query": query,
+                    "type": "phrase_prefix",
+                    "fields": [
+                        "name^16",
+                        "colleague_name.engram^6",
+                        "author.white_space^4",
+                        "name.symbol",
+                        "raw_display_name",
+                        "ref_citation",
+                        "keys",
+                        "description"
+                    ]
+                }
             }
-
-            partial_match = {}
-            partial_match[field.split(".")[0]] = {
-                'query': query
+            multi_locus_name_field = {
+                "multi_match": {
+                    "query": query,
+                    "type": "phrase_prefix",
+                    "fields": [
+                        "locus_name",
+                        "locus_name.engram^5",
+                        "aliases.egram^7",
+                        "aliases",
+                        "chemical_name^15",
+                        "locus_summary"
+                    ]
+                }
             }
+            bool_must.append(multi_name_field)
+            bool_must.append(multi_locus_name_field)
+        if len(terms) == 0:
+            if ids:
+                for id in ids:
+                    map_other_search_field(
+                        id, es_query, search_fields, skip_fields)
+            else:
+                es_query = map_other_search_field(query, es_query, search_fields, skip_fields)
 
-            es_query['bool']['filter']['bool']['should']['dis_max']['queries'].append({
-                                                                                      'match': match})
-            es_query['bool']['filter']['bool']['should']['dis_max']['queries'].append(
-                {'match_phrase_prefix': partial_match})
     return es_query
+
+
+def map_other_search_field(query, es_query, search_fields, skip_fields):
+    if es_query:
+        other_fields = es_query['bool']['must'][0]["bool"]["should"]
+        keyword_fields = es_query["bool"]["must"][0]["bool"]["should"]
+
+        for field in search_fields:
+            if field not in skip_fields:
+                if FIELD_MAP[field]['type'] is 'text':
+                    temp_fields = FIELD_MAP[field].get('fields', None)
+                    keyword_analyzer = FIELD_MAP[field].get('analyzer', None)
+
+                    if temp_fields is not None:
+                        most_fields = get_search_query_context(
+                            field, 'text', temp_fields)
+                        other_fields.append({
+                            "multi_match": {
+                                "query": query,
+                                "type": "phrase_prefix",
+                                "fields": most_fields
+                            }
+                        })
+                    else:
+                        if (keyword_analyzer == 'keyword'):
+                            keyword_fields.append({
+                                "match_bool_prefix": {
+                                    field: {
+                                        "query": query
+                                    }
+                                }
+                            })
+                        elif (field == "description"):
+                            keyword_fields.append({
+                                "match": {
+                                    field: {
+                                        "query": query,
+                                        "operator": "and"
+                                    }
+                                }
+                            })
+                        elif(field == "references"):
+                            keyword_fields.append({
+                                "match": {
+                                    field: {
+                                        "query": query,
+                                        "operator": "or"
+                                    }
+                                }
+                            })
+                        else:
+                            other_fields.append({
+                                "match_phrase_prefix": {
+                                    field: {
+                                        "query": query
+                                    }
+                                }
+                            })
+
+                if FIELD_MAP[field]['type'] is 'keyword':
+                    if field in ['last_name', 'first_name']:
+                        if(isinstance(query, int)):
+                            keyword_fields.append({
+                                "term": {
+                                    field: {
+                                        "value": query,
+                                        "boost": 0.9
+                                    }
+                                }
+                            })
+                        else:
+                            keyword_fields.append({
+                                "term": {
+                                    field: {
+                                        "value": query.capitalize(),
+                                        "boost": 100
+                                    }
+                                }
+                            })
+                    elif field in ['feature_type']:
+                        keyword_fields.append({
+                            "match_bool_prefix": {
+                                field: {
+                                    "query": query,
+                                    "boost": 10
+                                }
+                            }
+                        })
+                    elif field in ['resource_name']:
+                        keyword_fields.append({
+                            "match_bool_prefix": {
+                                field: {
+                                    "query": query,
+                                    "boost": 400
+                                }
+                            }
+                        })
+                    elif field in ['molecular_function', 'biological_process', 'cellular_component']:
+                        keyword_fields.append({
+                            "match_phrase_prefix": {
+                                field + ".engram": {
+                                    "query": query,
+                                    "boost": "5.0"
+                                }
+                            }
+                        })
+                    else:
+                        keyword_fields.append({
+                            "term": {
+                                field: {
+                                    "value": query,
+                                    "boost": 3.8
+                                }
+                            }
+                        })
+        return es_query
+    else:
+        return {"match_all": {}}
 
 
 def filter_highlighting(highlight):
@@ -341,3 +609,100 @@ def build_sequence_objects_search_query(query):
                               'format_name', 'dna_scores', 'protein_scores', 'snp_seqs']
 
     return search_body
+
+
+def get_search_query_context(name, type, fields=None):
+    """ Create search multi-field query object
+    Params
+    ------
+    name: str
+    type: str
+    fields: list
+
+    Returns
+    -------
+    list
+
+    Notes
+    -----
+    Some fields contain same text but are analyzed differently.
+    Making other fields available for search will help boost search 
+    relevance
+
+    """
+
+    if fields and name:
+        temp = [name]
+        for key, val in fields.items():
+            if key not in ['autocomplete', 'raw']:
+                temp.append(name + "." + key)
+        return temp
+    
+    return []
+
+
+def is_digit(term, int_flag=False):
+    temp = ['go', 'pmid', 'sgd', 'chebi', 'doid']
+    is_sgd_list = re.findall(r"([Ss]\d{2,10})", term)
+
+    if term:
+        num_list = []
+        if int_flag:
+            num_list = [int(num) for num in re.findall(r"\b\d+\b", term)]
+        else:
+            # re.compile("^[a-zA-Z]+$")
+            if term.isdigit():
+                num_list = re.findall(r"\b\d+\b", term)
+            elif any(q_term in term.lower() for q_term in temp) or is_sgd_list:
+                # TODO: extract number or 
+                # num_list = re.findall(r"\b\d+\b", term)
+                num_list = re.findall(r"([a-zA-Z]{2,7})[:|\s](\d{1,6})", term)
+                num_list = [':'.join(mod_term) for mod_term in num_list]
+                num_list = num_list + is_sgd_list
+
+        if len(num_list) > 0:
+            return num_list
+
+    return []
+
+
+# TODO: handle custom character group
+def has_special_characters(term, char_group=None):
+    flag = False
+    if term:
+        reg_expression = re.compile(r"(\s|\|)")
+        digit_flag = re.compile(r"[a-zA-Z]{3,5}\d{1,3}")
+        if reg_expression.search(term) and digit_flag.search(term):
+            temp = re.split(" ", term)
+            for elem in temp:
+                if (digit_flag.search(elem)) is None:
+                    flag = False
+                    break
+                else:
+                    flag = True
+            return flag
+    else:
+        return flag
+
+
+def get_multiple_terms(term, char_group=None):
+    if term:
+        terms_container = re.split("(\s|\|)", term)
+        if len(terms_container) > 0:
+            terms_container = list(filter(str.strip, terms_container))
+            return terms_container
+    return []
+
+
+def has_long_query(term):
+    ''' split long query into terms '''
+    terms = []
+    if term:
+        temp = term.split(" ")
+        for elem in temp:
+            if(elem.isdigit()):
+                terms.append(elem)
+            else:
+                terms = []
+                break
+    return terms

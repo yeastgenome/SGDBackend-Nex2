@@ -93,3 +93,10 @@ tests-dev:
 	source dev_variables.sh && python test/test_dev.py
 
 
+# docker commands
+# run local elasticsarch service
+es-up:
+	docker-compose up -d
+
+es-down:
+	docker-compose down
