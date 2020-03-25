@@ -32,7 +32,7 @@ namespace_mapping = { 'biological process' : 'go_process',
                       'cellular component' : 'go_component',
                       'molecular function' : 'go_function' }
 
-MITO_ID = "KP263414"
+MITO_ID = "KP263414.1"
 
 def dump_data():
  
@@ -60,10 +60,11 @@ def dump_data():
 
     locus_id_to_uniform_names = {}
     locus_id_to_ncbi_protein_name = {}
-    locus_id_to_protein_id = {}
+    chr1to16_locus_id_to_protein_id = {}
+    mito_locus_id_to_protein_id = {}
     locus_id_to_ecnumbers = {}
-
-    for x in  nex_session.query(LocusAlias).filter(LocusAlias.alias_type.in_(['Uniform', 'TPA protein version ID', 'NCBI protein name', 'EC number'])).all():
+    
+    for x in  nex_session.query(LocusAlias).filter(LocusAlias.alias_type.in_(['Uniform', 'TPA protein version ID', 'Protein version ID', 'NCBI protein name', 'EC number'])).all():
 
         if x.alias_type == 'EC number':
             ecnumbers = []
@@ -82,8 +83,9 @@ def dump_data():
         elif x.alias_type == 'NCBI protein name':
             locus_id_to_ncbi_protein_name[x.locus_id] = TABS + "product\t" + x.display_name
         elif x.alias_type == 'TPA protein version ID':
-            locus_id_to_protein_id[x.locus_id] = TABS + "protein_id\t" + x.display_name
-    
+            chr1to16_locus_id_to_protein_id[x.locus_id] = TABS + "protein_id\t" + x.display_name
+        elif x.alias_type == 'Protein version ID' and x.display_name.startswith('AIZ988'):
+            mito_locus_id_to_protein_id[x.locus_id] = TABS + "transl_table" + "\t" + "3\n" + TABS + "protein_id\tgb|" + x.display_name + "|"
             
     log.info(str(datetime.now()))
     log.info("Getting GO data from the database...")
@@ -107,7 +109,7 @@ def dump_data():
             chrnum = chr2num[chr]
             contig_id_to_chrnum[x.contig_id] = chrnum
             if chrnum == 17:
-                files[chrnum].write(">Feature ref|" + MITO_ID + "|\n")
+                files[chrnum].write(">Feature gb|" + MITO_ID + "|\n")
             else:
                 files[chrnum].write(">Feature tpg|" + x.genbank_accession + "|\n")
 
@@ -120,7 +122,7 @@ def dump_data():
     ## get all features with 'GENOMIC' sequence in S288C
     main_data = [] 
     annotation_id_to_strand = {}
-    for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
+    for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
         if x.contig_id not in contig_id_to_chrnum:
             continue
         locus = dbentity_id_to_locus[x.dbentity_id]
@@ -163,6 +165,9 @@ def dump_data():
 
         if feature_type in ['ORF', 'transposable element gene']:
 
+            locus_id_to_protein_id = chr1to16_locus_id_to_protein_id
+            if chrnum == 17:
+                locus_id_to_protein_id = mito_locus_id_to_protein_id
             add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, 
                              gene_name, start, stop, desc, annotation_id_to_cds_data,
                              annotation_id_to_frameshift, locus_id_to_uniform_names, 
@@ -320,8 +325,7 @@ def add_ARS_etc(files, sgdid, chrnum, systematic_name, gene_name, start, stop, d
     name = systematic_name
     if gene_name and gene_name != systematic_name:
         name = gene_name
-    files[chrnum].write(TABS + "note\t" + name + "\n")
-    files[chrnum].write(TABS + "note\t" + desc + "\n")
+    files[chrnum].write(TABS + "note\t" + name + "; " + desc + "\n")
     files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
 
@@ -373,15 +377,16 @@ def add_pseudogenes(files, annotation_id, locus_id, sgdid, chrnum, systematic_na
 
     files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
-    if feature_type == 'pseudogene':
+    if chrnum != 17 and feature_type == 'pseudogene':
         files[chrnum].write(mRNA_lines)
 
 def add_NTS_features(files, chrnum, systematic_name, sgdid, start, stop, desc):
     
     files[chrnum].write(str(start)+"\t"+str(stop)+"\tmisc_feature\n")
-    files[chrnum].write(TABS + "note\t" + systematic_name + "\n") 
     if desc:
-        files[chrnum].write(TABS + "note\t"+ desc + "\n")
+        files[chrnum].write(TABS + "note\t" + systematic_name + "; " + desc + "\n")
+    else:
+        files[chrnum].write(TABS + "note\t" + systematic_name + "\n") 
     files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
 def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, annotation_id_to_cds_data, go_section, go_to_pmid_list, type, feature_type, locus_id_to_ncbi_protein_name):
@@ -410,7 +415,7 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
     if type == 'ncRNA':
         type = feature_type.replace("_gene", "").replace(" gene", "")
         # class = ncRNA_class_mapping.get(gene_name, 'other')
-        files[chrnum].write(TABS + "ncRNA_class\t" + type + "\n")
+        files[chrnum].write(TABS + "ncRNA_class\tother\n")
         product = gene_name if gene_name else systematic_name
 
     if locus_id in locus_id_to_ncbi_protein_name:
@@ -467,6 +472,11 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
         files[chrnum].write(TABS + "product\t" + gene_name.title() + "p\n")
         mRNA_lines += TABS + "product\t" + gene_name.title() + "p\n"
 
+    if locus_id in locus_id_to_ecnumbers:
+        for ec in locus_id_to_ecnumbers[locus_id]:
+            ec = ec.replace("EC:", "")
+            files[chrnum].write(TABS + "EC_number\t" + ec + "\n")
+            
     protein_id = duplicate_gene_to_protein_id.get(sgdid)
     if protein_id is None:
         protein_id = locus_id_to_protein_id.get(locus_id)
@@ -474,11 +484,6 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
         protein_id = TABS + "protein_id\t" + protein_id
     if protein_id:
         files[chrnum].write(protein_id+"\n")
-
-    if locus_id in locus_id_to_ecnumbers:
-        for ec in locus_id_to_ecnumbers[locus_id]:
-            ec = ec.replace("EC:", "")
-            files[chrnum].write(TABS + "EC_number\t" + ec + "\n")
 
     if desc:
         files[chrnum].write(TABS + "note\t" + desc + "\n")
@@ -489,7 +494,8 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
 
     files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
-    files[chrnum].write(mRNA_lines)
+    if chrnum != 17:
+        files[chrnum].write(mRNA_lines)
 
 
 def format_pmid_list(pmids):

@@ -58,13 +58,13 @@ sub vcl_recv {
     }
 
     if (req.http.host == "yeastgenome.org" ||
-	    req.http.host == "www-2a.yeastgenome.org" ||
+    	req.http.host == "www-2a.yeastgenome.org" ||
 	    req.http.host == "www-2b.yeastgenome.org" ||
 	    req.http.host == "localhost" || req.http.host == "127.0.0.1") {
         set req.http.host = "www.yeastgenome.org";
     }
 
-    # don't cache healthcheck
+# don't cache healthcheck
     if (req.url ~ "^/locus/S000005085$") {
         return (pass);
     }
@@ -78,7 +78,6 @@ sub vcl_recv {
     if (req.url ~ "^/webservice/get_search_results") {
         return (pass);
     }
-
 
 }
 

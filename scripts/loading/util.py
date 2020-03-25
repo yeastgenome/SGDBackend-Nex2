@@ -245,6 +245,41 @@ def make_fasta_file_starter(filename):
         f.close()
     return fasta_file_starter
 
+def strain_order():
+
+    return {
+        'S288C':      1,
+        'X2180-1A':   2,
+        'SEY6210':    3,
+        'W303':       4,
+        'JK9-3d':     5,
+        'FL100':      6,
+        'CEN.PK':     7,
+        'D273-10B':   8,
+        'Sigma1278b': 9,
+        'RM11-1a':    10,
+        'SK1':        11,
+        'Y55':        12
+    }
+
+def codon_table():
+
+    return {   'TTT': 'F', 'TTC': 'F', 'TTA': 'L', 'TTG': 'L',
+               'CTT': 'L', 'CTC': 'L', 'CTA': 'L', 'CTG': 'L',
+               'ATT': 'I', 'ATC': 'I', 'ATA': 'I', 'ATG': 'M',
+               'GTT': 'V', 'GTC': 'V', 'GTA': 'V', 'GTG': 'V',
+               'TCT': 'S', 'TCC': 'S', 'TCA': 'S', 'TCG': 'S',
+               'CCT': 'P', 'CCC': 'P', 'CCA': 'P', 'CCG': 'P',
+               'ACT': 'T', 'ACC': 'T', 'ACA': 'T', 'ACG': 'T',
+               'GCT': 'A', 'GCC': 'A', 'GCA': 'A', 'GCG': 'A',
+               'TAT': 'Y', 'TAC': 'Y', 'TAA': '*', 'TAG': '*',
+               'CAT': 'H', 'CAC': 'H', 'CAA': 'Q', 'CAG': 'Q',
+               'AAT': 'N', 'AAC': 'N', 'AAA': 'K', 'AAG': 'K',
+               'GAT': 'D', 'GAC': 'D', 'GAA': 'E', 'GAG': 'E',
+               'TGT': 'C', 'TGC': 'C', 'TGA': '*', 'TGG': 'W',
+               'CGT': 'R', 'CGC': 'R', 'CGA': 'R', 'CGG': 'R',
+               'AGT': 'S', 'AGC': 'S', 'AGA': 'R', 'AGG': 'R',
+               'GGT': 'G', 'GGC': 'G', 'GGA': 'G', 'GGG': 'G'  }
 
 def get_strain_taxid_mapping():
 
