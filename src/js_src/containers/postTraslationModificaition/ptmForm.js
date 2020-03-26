@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Loader from '../../components/loader';
 import { setError, setMessage } from '../../actions/metaActions';
 import { setPTM } from '../../actions/ptmActions';
-import DataList from '../../components/dataList';
+import {DataList} from 'react-datalist-field';
 import PropTypes from 'prop-types';
 const PTMS = '/ptm';
 const GET_STRAINS = '/get_strains';
@@ -369,7 +369,9 @@ class PtmForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                <DataList options={this.state.psimods} id='psimod_id' value1='display_name' value2='format_name'  selectedIdName='psimod_id' onOptionChange={this.handleChange} selectedId={this.props.ptm.psimod_id} />
+                <div className='columns medium-12'>
+                  <DataList options={this.state.psimods} id='psimod_id' left='display_name' right='format_name'  selectedIdName='psimod_id' onOptionChange={this.handleChange} selectedId={this.props.ptm.psimod_id} />
+                </div>
               </div>
             </div>
           </div>
