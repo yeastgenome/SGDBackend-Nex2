@@ -134,21 +134,23 @@ def update_reference_data(log_file):
                 log.info("Error retrieving the pubmed records for ", ','.join(pmids))
                 pmids = []
                 continue
-            abstracts = get_abstracts(','.join(pmids))
-            update_database_batch(nex_session, fw, records, 
-                                  pmid_to_reference, 
-                                  journal_id_to_abbrev, 
-                                  reference_id_to_authors,
-                                  abstracts,
-                                  reference_id_to_abstract,
-                                  reference_id_to_urls, 
-                                  reference_id_to_pubtypes,
-                                  key_to_type,
-                                  source_to_id,
-                                  update_log,
-                                  updated_pmids,
-                                  dbentity_ids_with_author_changed)
-
+            try:
+                abstracts = get_abstracts(','.join(pmids))
+                update_database_batch(nex_session, fw, records, 
+                                      pmid_to_reference, 
+                                      journal_id_to_abbrev, 
+                                      reference_id_to_authors,
+                                      abstracts,
+                                      reference_id_to_abstract,
+                                      reference_id_to_urls, 
+                                      reference_id_to_pubtypes,
+                                      key_to_type,
+                                      source_to_id,
+                                      update_log,
+                                      updated_pmids,
+                                      dbentity_ids_with_author_changed)
+            except:
+                log.info("Error in updating data for ",	','.join(pmids))
             pmids = []
             time.sleep(SLEEP_TIME)
         pmids.append(str(pmid))
@@ -161,21 +163,24 @@ def update_reference_data(log_file):
             log.info("Error retrieving the pubmed records for ", ','.join(pmids))
             pmids = []
         if len(pmids) > 0:
-            abstracts = get_abstracts(','.join(pmids))
-            update_database_batch(nex_session, fw, records, 
-                                  pmid_to_reference, 
-                                  journal_id_to_abbrev,
-                                  reference_id_to_authors,
-                                  abstracts,
-                                  reference_id_to_abstract,
-                                  reference_id_to_urls, 
-                                  reference_id_to_pubtypes,
-                                  key_to_type,
-                                  source_to_id,
-                                  update_log,
-                                  updated_pmids,
-                                  dbentity_ids_with_author_changed)
-        
+            try:
+                abstracts = get_abstracts(','.join(pmids))
+                update_database_batch(nex_session, fw, records, 
+                                      pmid_to_reference, 
+                                      journal_id_to_abbrev,
+                                      reference_id_to_authors,
+                                      abstracts,
+                                      reference_id_to_abstract,
+                                      reference_id_to_urls, 
+                                      reference_id_to_pubtypes,
+                                      key_to_type,
+                                      source_to_id,
+                                      update_log,
+                                      updated_pmids,
+                                      dbentity_ids_with_author_changed)
+            except:
+                log.info("Error in updating data for ", ','.join(pmids))
+                
     nex_session.commit()
 
     log.info("Reference updated: " + str(i))
