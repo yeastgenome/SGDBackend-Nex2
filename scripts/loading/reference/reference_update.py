@@ -131,7 +131,7 @@ def update_reference_data(log_file):
             try:
                 records = get_pubmed_record_from_xml(','.join(pmids))
             except:
-                print ("Error retrieving the pubmed records for ", ','.join(pmids))
+                log.info("Error retrieving the pubmed records for ", ','.join(pmids))
                 pmids = []
                 continue
             abstracts = get_abstracts(','.join(pmids))
@@ -154,21 +154,27 @@ def update_reference_data(log_file):
         pmids.append(str(pmid))
 
     if len(pmids) > 0:
-        records = get_pubmed_record_from_xml(','.join(pmids))
-        abstracts = get_abstracts(','.join(pmids))
-        update_database_batch(nex_session, fw, records, 
-                              pmid_to_reference, 
-                              journal_id_to_abbrev,
-                              reference_id_to_authors,
-                              abstracts,
-                              reference_id_to_abstract,
-                              reference_id_to_urls, 
-                              reference_id_to_pubtypes,
-                              key_to_type,
-                              source_to_id,
-                              update_log,
-                              updated_pmids,
-                              dbentity_ids_with_author_changed)
+        records = None
+        try:
+            records = get_pubmed_record_from_xml(','.join(pmids))
+        except:
+            log.info("Error retrieving the pubmed records for ", ','.join(pmids))
+            pmids = []
+        if len(pmids) > 0:
+            abstracts = get_abstracts(','.join(pmids))
+            update_database_batch(nex_session, fw, records, 
+                                  pmid_to_reference, 
+                                  journal_id_to_abbrev,
+                                  reference_id_to_authors,
+                                  abstracts,
+                                  reference_id_to_abstract,
+                                  reference_id_to_urls, 
+                                  reference_id_to_pubtypes,
+                                  key_to_type,
+                                  source_to_id,
+                                  update_log,
+                                  updated_pmids,
+                                  dbentity_ids_with_author_changed)
         
     nex_session.commit()
 
