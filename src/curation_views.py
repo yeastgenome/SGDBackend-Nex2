@@ -2062,7 +2062,7 @@ def regulation_insert_update(request):
             try:
                 pmid_in_db = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == int(reference_id)).one_or_none()
             except ValueError as e:
-                pass
+                log.exception(str(e))
 
         if dbentity_in_db is not None:
             reference_id = dbentity_in_db.dbentity_id
@@ -2096,6 +2096,7 @@ def regulation_insert_update(request):
                 returnValue = 'Record updated successfully.'
 
                 regulation = curator_session.query(Regulationannotation).filter(Regulationannotation.annotation_id == annotation_id).one_or_none()
+                log.info('Regulation updated '+str(regulation.annotation_id))
                 reference_in_db = {
                     'id': regulation.annotation_id,
                     'target_id': {
@@ -2125,18 +2126,21 @@ def regulation_insert_update(request):
                     reference_in_db['taxonomy_id'] = regulation.taxonomy.taxonomy_id
 
             except IntegrityError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Integrity Error: ' + str(e.orig.pgerror)
             except DataError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Data Error: ' + str(e.orig.pgerror)
             except InternalError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2145,6 +2149,7 @@ def regulation_insert_update(request):
                 error = error[0:error.index('.')]
                 returnValue = 'Updated failed, ' + error
             except Exception as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2174,19 +2179,23 @@ def regulation_insert_update(request):
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Record added successfully.'
+                log.info('Regulation added.')
             except IntegrityError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Integrity Error: ' + str(e.orig.pgerror)
             except DataError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Data Error: ' + str(e.orig.pgerror)
             except Exception as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2304,9 +2313,11 @@ def regulation_delete(request):
             try:
                 curator_session.delete(regulation_in_db)
                 transaction.commit()
+                log.info('Regulation deleted '+str(id))
                 isSuccess = True
                 returnValue = 'Regulation successfully deleted.'
             except Exception as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2324,6 +2335,7 @@ def regulation_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': 'regulation not found in database.'}), content_type='text/json')
 
     except Exception as e:
+        log.exception(str(e))
         return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
 
 @view_config(route_name='regulation_file',renderer='json',request_method='POST')
