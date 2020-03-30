@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import './style.css';
 import fetchData from '../../lib/fetchData';
 import { setError, setMessage } from '../../actions/metaActions';
 import {setRegulation} from '../../actions/regulationActions';
-import DataList from '../../components/dataList';
+import {DataList} from 'react-datalist-field';
 import Loader from '../../components/loader';
 import PropTypes from 'prop-types';
 const GET_ECO = '/eco/regulations';
@@ -271,7 +272,7 @@ class RegulationForm extends Component {
 
         <form ref='form' onSubmit={this.handleSubmit}>
 
-          <input name='annotation_id' className="hide" value={this.props.regulation.annotation_id} />
+          <input name='annotation_id' className="hide" value={this.props.regulation.annotation_id} readOnly/>
 
           {this.state.isUpdate &&
             <ul>
@@ -365,7 +366,9 @@ class RegulationForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                <DataList options={this.state.list_of_eco} id='eco_id' value1='display_name' value2='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.regulation.eco_id} />
+                <div className='columns medium-12'>
+                  <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.regulation.eco_id} />
+                </div>
               </div>
             </div>
           </div>
@@ -433,9 +436,11 @@ class RegulationForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                {(this.state.list_of_go.length > 0) &&
-                  <DataList options={this.state.list_of_go} id='go_id' value1='display_name' value2='format_name' selectedIdName='happens_during' onOptionChange={this.handleChange} selectedId={this.props.regulation.happens_during} />
-                }
+                <div className='columns medium-12'>
+                  {(this.state.list_of_go.length > 0) &&
+                    <DataList options={this.state.list_of_go} id='go_id' left='display_name' right='format_name' selectedIdName='happens_during' onOptionChange={this.handleChange} selectedId={this.props.regulation.happens_during} />
+                  }
+                </div>
               </div>
             </div>
           </div>

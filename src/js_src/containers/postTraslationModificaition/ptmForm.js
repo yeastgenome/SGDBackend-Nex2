@@ -266,7 +266,7 @@ class PtmForm extends Component {
         }
 
         <form onSubmit={this.handleSubmit} ref='form'>
-          <input name='id' value={this.props.ptm.id} className="hide" />
+          <input name='id' value={this.props.ptm.id} className="hide" readOnly/>
           {/* Gene */}
           <div className='row'>
             <div className='columns medium-12'>
