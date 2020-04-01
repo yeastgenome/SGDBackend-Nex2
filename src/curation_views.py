@@ -2179,7 +2179,7 @@ def regulation_insert_update(request):
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Record added successfully.'
-                log.info('Regulation added.')
+                log.info('Regulation added ' + str(y.annotation_id))
             except IntegrityError as e:
                 log.exception(str(e))
                 transaction.abort()
