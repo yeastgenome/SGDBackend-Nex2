@@ -200,7 +200,7 @@ def dump_data():
 
         go_qualifier = ""
         if x.go_qualifier in ['NOT', 'contributes to', 'colocalizes with']:
-            go_qualifier = x.go_qualifier
+            go_qualifier = x.go_qualifier.replace(' ', '_')
 
         row[QUALIFIER] = go_qualifier
         row[ASPECT] = namespace_to_code[go_aspect]
