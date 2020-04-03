@@ -38,7 +38,7 @@ CREATE TABLE nex.curation_reference (
     curation_id bigint NOT NULL DEFAULT nextval('curation_seq'),
     reference_id bigint NOT NULL,
     source_id bigint NOT NULL,
-    locus_id bigint,
+    dbentity_id bigint,
     curation_tag varchar(40) NOT NULL,
     date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
     created_by varchar(12) NOT NULL,
@@ -49,16 +49,16 @@ CREATE TABLE nex.curation_reference (
 COMMENT ON TABLE nex.curation_reference IS 'Tags and notes associated with reference curation.';
 COMMENT ON COLUMN nex.curation_reference.curator_comment IS 'Comment or note.';
 COMMENT ON COLUMN nex.curation_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
-COMMENT ON COLUMN nex.curation_reference.locus_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.curation_reference.dbentity_id IS 'FK to DBENTITY.DBENTITY_ID.';
 COMMENT ON COLUMN nex.curation_reference.curation_id IS 'Unique identifier (serial number).';
 COMMENT ON COLUMN nex.curation_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.curation_reference.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.curation_reference.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.curation_reference.curation_tag IS 'Type of curation tag (Classical phenotype information,Delay,Fast Track,GO information,Gene model,Headline needs review,Headline information,High Priority,Homology/Disease,HTP phenotype,Non-phenotype HTP,Not yet curated,Paragraph needs review,Pathways,Phenotype needs review,Post-translational modifications,Regulation information).';
 COMMENT ON COLUMN nex.curation_reference.json IS 'JSON object of reference curation data.';
-CREATE UNIQUE INDEX curationreference_uk_index on nex.curation_reference (reference_id,curation_tag,coalesce(locus_id,0));
+CREATE UNIQUE INDEX curationreference_uk_index on nex.curation_reference (reference_id,curation_tag,coalesce(dbentity_id,0));
 ALTER TABLE nex.curation_reference ADD CONSTRAINT curationreference_tag_ck CHECK (CURATION_TAG IN ('Classical phenotype information','Delay','Fast Track','GO information','Gene model','Headline needs review','Headline information','High Priority','Homology/Disease','HTP phenotype','Non-phenotype HTP','Not yet curated','Paragraph needs review','Pathways','Phenotype needs review','Post-translational modifications','Regulation information'));
-CREATE INDEX curationreference_locus_fk_index ON nex.curation_reference (locus_id);
+CREATE INDEX curationreference_dbentity_fk_index ON nex.curation_reference (dbentity_id);
 CREATE INDEX curationreference_source_fk_index ON nex.curation_reference (source_id);
 
 DROP TABLE IF EXISTS nex.authorresponse CASCADE;
