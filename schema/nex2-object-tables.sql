@@ -850,7 +850,7 @@ CREATE TABLE nex.tools(
 	format_name varchar(200) NOT NULL,
 	display_name varchar(200) NOT NULL,
 	link_url varchar(200) NOT NULL,
-      status varchar(200) NOT NULL,
+    status varchar(200) NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
 	CONSTRAINT tools_pk PRIMARY KEY (tool_id)
