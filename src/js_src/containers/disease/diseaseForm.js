@@ -132,12 +132,17 @@ class DiseaseForm extends Component {
   }
 
   handleToggleInsertUpdate() {
-    this.setState({ isUpdate: !this.state.isUpdate, list_of_diseases: [], currentIndex: -1, pageIndex:0});
+    this.setState((prevState) => {
+      return { isUpdate: !prevState.isUpdate, list_of_diseases: [], currentIndex: -1, pageIndex: 0 };
+    });
     this.handleResetForm();
   }
 
+  
   handleNextPrevious(value) {
-    this.setState({ pageIndex: this.state.pageIndex + value });
+    this.setState((prevState) => {
+      return { pageIndex: prevState.pageIndex + value };
+    });
   }
 
   handleChange(){
