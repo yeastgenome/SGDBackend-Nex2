@@ -48,6 +48,7 @@ from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annot
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
+from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger('curation')
@@ -1917,6 +1918,20 @@ def get_papers_by_tag(request):
 
     return get_list_of_papers(request)
 
+@view_config(route_name='get_all_eco', renderer='json', request_method='GET')
+@authenticate
+def get_all_eco(request):
+    eco_in_db = models_helper.get_all_eco()
+    obj = [{'eco_id':e.eco_id, 'format_name': e.format_name,'display_name':e.display_name} for e in eco_in_db]
+    return HTTPOk(body=json.dumps({'success':obj}),content_type='text/json')
+
+@view_config(route_name='get_all_do', renderer='json', request_method='GET')
+@authenticate
+def get_all_do(request):
+    do_in_db = models_helper.get_all_do()
+    obj = [{'disease_id':d.disease_id, 'format_name': d.format_name,'display_name':d.display_name} for d in do_in_db]
+    return HTTPOk(body=json.dumps({'success': obj}), content_type='text/json')
+    
 @view_config(route_name='phenotype_add', renderer='json', request_method='POST')
 @authenticate
 def phenotype_add(request):
@@ -1985,6 +2000,29 @@ def one_author_response(request):
 def edit_author_response(request):
 
     return update_author_response(request)
+@view_config(route_name='disease_insert_update', renderer='json', request_method='POST')
+@authenticate
+def disease_insert_update(request):
+
+    return insert_update_disease_annotations(request)
+
+@view_config(route_name='diseases_by_filters',renderer='json',request_method='POST')
+@authenticate
+def diseases_by_filters(request):
+
+    return get_diseases_by_filters(request)
+
+@view_config(route_name='disease_delete',renderer='json',request_method='DELETE')
+@authenticate
+def disease_delete(request):
+
+    return delete_disease_annotation(request)
+
+@view_config(route_name='disease_file',renderer='json',request_method='POST')
+@authenticate
+def disease_file(request):
+
+    return upload_disease_file(request)
 
 @view_config(route_name='regulation_insert_update', renderer='json', request_method='POST')
 @authenticate
