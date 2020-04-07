@@ -107,6 +107,7 @@ class DiseaseForm extends Component {
       eco_id: disease.eco_id,
       with_ortholog: disease.with_ortholog,
       annotation_type: disease.annotation_type,
+      association_type: disease.association_type,
       date_assigned: disease.date_assigned
     };
 
@@ -124,6 +125,7 @@ class DiseaseForm extends Component {
       disease_id: '',
       with_ortholog: '',
       annotation_type: '',
+      association_type: '',
       date_assigned: ''
     };
     this.props.dispatch(setDisease(currentDisease));
@@ -290,7 +292,7 @@ class DiseaseForm extends Component {
           </div>
 
 
-          <div className='row'>
+        <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -318,7 +320,7 @@ class DiseaseForm extends Component {
           }
           
 
-          <div className='row'>
+        <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -347,7 +349,7 @@ class DiseaseForm extends Component {
                 <DataList options={this.state.list_of_do} id='disease_id' left='display_name' right='format_name' selectedIdName='disease_id' onOptionChange={this.handleChange} selectedId={this.props.disease.disease_id} />
               </div>
             </div>
-          </div>
+           </div>
 
         <div className='row'>
             <div className='columns medium-12'>
@@ -388,11 +390,11 @@ class DiseaseForm extends Component {
                   <label> Evidence Eco </label>
                 </div>
               </div>
-              <div className='row'>
-                <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
+                 <div className='row'>
+                   <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
+                 </div>
               </div>
             </div>
-          </div>
 
           {this.renderActions()}
 

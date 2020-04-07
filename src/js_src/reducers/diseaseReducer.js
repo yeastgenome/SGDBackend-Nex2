@@ -8,6 +8,7 @@ const DEFAULT_STATE = {
     disease_id: '',
     with_ortholog: '',
     annotation_type: '',
+    association_type: '',
     date_assigned: ''
   }
 };
