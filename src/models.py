@@ -5894,6 +5894,7 @@ class Diseaseannotation(Base):
     disease_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False, index=True)
     eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
     annotation_type = Column(String(40), nullable=False)
+    association_type = Column(String(20), nullable=False)
     disease_qualifier = Column(String(40), nullable=False)
     date_assigned = Column(DateTime, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))

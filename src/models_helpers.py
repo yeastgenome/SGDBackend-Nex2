@@ -1,4 +1,4 @@
-from .models import DBSession, Base, Colleague, ColleagueLocus, ColleagueRelation, FilePath, Filedbentity, FileKeyword, Path, ColleagueReference, ColleagueUrl, Colleaguetriage, Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Psimod, Posttranslationannotation, Eco
+from .models import DBSession, Base, Colleague, ColleagueLocus, ColleagueRelation, Disease, FilePath, Filedbentity, FileKeyword, Path, ColleagueReference, ColleagueUrl, Colleaguetriage, Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Psimod, Posttranslationannotation, Eco
 import os
 import requests
 
@@ -506,3 +506,21 @@ class ModelsHelper(object):
             go_displayname_to_Id[go.display_name] = go.go_id
         
         return go_displayname_to_Id
+    
+    def get_all_do(self):
+        '''
+        Get all DO data
+        '''
+        do_in_db = DBSession.query(Disease).all()
+        return do_in_db
+    
+    def get_all_do_mapping(self):
+        '''
+        Get all DO data as dictionary with key as display_name
+        ''' 
+        do_formatname_to_id = {}
+        do_in_db = self.get_all_do()
+        for do in do_in_db:
+            do_formatname_to_id[do.format_name] = do.disease_id
+        
+        return do_formatname_to_id
