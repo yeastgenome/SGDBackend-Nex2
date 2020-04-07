@@ -389,7 +389,7 @@ class DiseaseForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.regulation.eco_id} />
+                <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
               </div>
             </div>
           </div>
