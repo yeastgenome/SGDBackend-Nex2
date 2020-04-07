@@ -3,13 +3,11 @@ import { connect } from 'react-redux';
 import fetchData from '../../lib/fetchData';
 import { setError, setMessage } from '../../actions/metaActions';
 import {setDisease} from '../../actions/diseaseActions';
-// import DataList from '../../components/dataList';
 import { DataList } from 'react-datalist-field';
 import Loader from '../../components/loader';
 import PropTypes from 'prop-types';
 const GET_ECO = '/eco';
 const GET_DO = '/do';
-//const GET_RO = '/ro';
 const DISEASES = '/disease';
 const GET_STRAINS = '/get_strains';
 const GET_DISEASES = 'get_diseases';
@@ -346,7 +344,7 @@ class DiseaseForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                <DataList options={this.state.list_of_do} id='disease_id' value1='display_name' value2='format_name' selectedIdName='disease_id' onOptionChange={this.handleChange} selectedId={this.props.disease.disease_id} />
+                <DataList options={this.state.list_of_do} id='disease_id' left='display_name' right='format_name' selectedIdName='disease_id' onOptionChange={this.handleChange} selectedId={this.props.disease.disease_id} />
               </div>
             </div>
           </div>
@@ -391,7 +389,7 @@ class DiseaseForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                <DataList options={this.state.list_of_eco} id='eco_id' value1='display_name' value2='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
+                <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.regulation.eco_id} />
               </div>
             </div>
           </div>

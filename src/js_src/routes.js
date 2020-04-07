@@ -75,8 +75,8 @@ export default (
           <Route component={requireAuthentication(CurateLit)} path='/curate/reference/:id' />
           <Route component={requireAuthentication(Regulation)} path='/regulation' />
           <Route component={requireAuthentication(Disease)} path='/disease' />
-	  <Route component={requireAuthentication(NewPhenotype)} path='/new_phenotype' />
-	  <Route component={requireAuthentication(SearchPhenotype)} path='/search_phenotype' />  
+	        <Route component={requireAuthentication(NewPhenotype)} path='/new_phenotype' />
+	        <Route component={requireAuthentication(SearchPhenotype)} path='/search_phenotype' />  
           <Route component={requireAuthentication(EditPhenotype)} path='/edit_phenotype/:id' /> 
           <Route component={requireAuthentication(LitGuide)} path='/litguide_todo' />
           <Route component={requireAuthentication(AddLitGuide)} path='/add_litguide' />
