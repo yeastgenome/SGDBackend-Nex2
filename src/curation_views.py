@@ -1261,7 +1261,7 @@ def ptm_file_insert(request):
             'psimod': 'Psimod',
             'modifier': 'Modifier(sgdid,systematic name)'
         }
-
+        log.info('PTM file upload for file '+filename+' in progress.')
         SOURCE_ID = 834
         SEPARATOR = '|'
 
@@ -1274,10 +1274,12 @@ def ptm_file_insert(request):
             if COLUMNS['modifier'] != col:    
                 rows = df[df[col].isnull()].index.tolist()
                 rows = ','.join([ str(r+2) for r in rows])
+                log.error('No values in column ' + col + ' rows '+ rows)
                 list_of_posttranslationannotation_errors.append('No values in column ' + col + ' rows '+ rows)
 
         if list_of_posttranslationannotation_errors:
             err = [e + '\n' for e in list_of_posttranslationannotation_errors]
+            log.info('PTM file upload complete for file '+filename + ' with errors.')
             return HTTPBadRequest(body=json.dumps({"error": list_of_posttranslationannotation_errors}), content_type='text/json')
 
         sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE'])
@@ -1303,7 +1305,7 @@ def ptm_file_insert(request):
                 posttranslationannotation_update = {}
 
                 column = COLUMNS['gene']
-                gene = unicode_to_string(row[column])
+                gene = row[column]
 
                 gene_current = str(row[COLUMNS['gene']].split(SEPARATOR)[0]).strip()
                 key = (gene_current, 'LOCUS')
@@ -1312,6 +1314,7 @@ def ptm_file_insert(request):
                 elif(key in systematic_name_to_dbentity_id):
                     posttranslationannotation_existing['dbentity_id'] = systematic_name_to_dbentity_id[key]
                 else:
+                    log.error('Error in gene on row ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in gene on row ' + str(index) + ', column ' + column)
                     continue
 
@@ -1323,9 +1326,9 @@ def ptm_file_insert(request):
                     elif(key in systematic_name_to_dbentity_id):
                         posttranslationannotation_update['dbentity_id'] = systematic_name_to_dbentity_id[key]
                     else:
+                        log.error('Error in gene on row ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in gene on row ' + str(index) + ', column ' + column)
                         continue
-
 
                 column = COLUMNS['taxonomy']
                 taxonomy = row[column]
@@ -1333,6 +1336,7 @@ def ptm_file_insert(request):
                 if taxonomy_current in strain_to_taxonomy_id:
                     posttranslationannotation_existing['taxonomy_id'] = strain_to_taxonomy_id[taxonomy_current]
                 else:
+                    log.error('Error in taxonomy on row ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in taxonomy on row ' + str(index) + ', column ' + column)
                     continue
 
@@ -1341,6 +1345,7 @@ def ptm_file_insert(request):
                     if taxonomy_new in strain_to_taxonomy_id:
                         posttranslationannotation_update['taxonomy_id'] = strain_to_taxonomy_id[taxonomy_new]
                     else:
+                        log.error('Error in updating taxonomy on row ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in updating taxonomy on row ' + str(index) + ', column ' + column)
                         continue
 
@@ -1356,6 +1361,7 @@ def ptm_file_insert(request):
                 elif(reference_current in reference_to_dbentity_id):
                     posttranslationannotation_existing['reference_id'] = int(reference_current)
                 else:
+                    log.error('Error in reference on row ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in reference on row ' + str(index) + ', column ' + column)
                     continue
 
@@ -1370,6 +1376,7 @@ def ptm_file_insert(request):
                     elif(reference_new in reference_to_dbentity_id):
                         posttranslationannotation_update['reference_id'] = int(reference_new)
                     else:
+                        log.error('Error in reference on row ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in reference on row ' + str(index) + ', column ' + column)
                         continue
 
@@ -1381,6 +1388,7 @@ def ptm_file_insert(request):
                 if (psimod_current in psimod_to_id):
                     posttranslationannotation_existing['psimod_id'] = psimod_to_id[psimod_current]
                 else:
+                    log.error('Error in psimod ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in psimod ' + str(index) + ', column ' + column)
                     continue
 
@@ -1389,6 +1397,7 @@ def ptm_file_insert(request):
                     if (psimod_new in psimod_to_id):
                         posttranslationannotation_update['psimod_id'] = psimod_to_id[psimod_new]
                     else:
+                        log.error('Error in psimod ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in psimod ' + str(index) + ', column ' + column)
                         continue
                 
@@ -1426,8 +1435,10 @@ def ptm_file_insert(request):
                 list_of_posttranslationannotation.append((posttranslationannotation_existing,posttranslationannotation_update))
             
             except ValueError as e:
+                log.error('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
                 list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
             except Exception as e:
+                log.exception('Error in on row ' + str(index) + ', column ' + column)
                 list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + str(e))
 
         if list_of_posttranslationannotation_errors:
@@ -1478,35 +1489,41 @@ def ptm_file_insert(request):
                 err = '\n'.join(list_of_posttranslationannotation_errors)
                 isSuccess = True
                 returnValue = 'Inserted: ' + str(INSERT) + ' Updated: ' + str(UPDATE) + ' Errors: ' + err
+                log.info(returnValue)
             except IntegrityError as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Record already exisits for site index: ' + str(e.params['site_index']) + ' site residue: ' + e.params['site_residue'] + ' dbentity_id: ' + str(e.params['dbentity_id'])
+                log.exception(returnValue)
             except DataError as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Error, issue in data row with site index: ' + str(e.params['site_index']) + ' site residue: ' + e.params['site_residue'] + ' dbentity_id: ' + str(e.params['dbentity_id'])
+                log.exception(returnValue)
             except Exception as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
+                log.exception('Exception occured in PTM file upload.')
                 returnValue = str(e)
             finally:
                 if curator_session:
                     curator_session.close()
         
         if isSuccess:
+            log.info("PTM file upload for "+ filename + " successfully.")
             return HTTPOk(body=json.dumps({"success": returnValue}), content_type='text/json')
         
         return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
 
 
     except Exception as e:
+        log.exception('PTM fileupload completed with error.')
         return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
 
 
