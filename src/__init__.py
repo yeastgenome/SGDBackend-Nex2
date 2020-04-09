@@ -219,7 +219,7 @@ def main(global_config, **settings):
     
     config.add_route('disease_insert_update','/disease', request_method='POST')
     config.add_route('diseases_by_filters','/get_diseases',request_method='POST')
-    config.add_route('disease_delete','/disease/{id}', request_method='DELETE')
+    config.add_route('disease_delete','/disease/{id}/{dbentity_id}', request_method='DELETE')
     config.add_route('disease_file', '/disease_file', request_method='POST')
     config.add_route('get_all_do','/do', request_method='GET')
     config.add_route('get_all_eco', '/eco', request_method='GET')
