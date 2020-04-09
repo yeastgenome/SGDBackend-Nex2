@@ -307,11 +307,11 @@ def delete_disease_annotation(request):
         isSuccess = False
         returnValue = ''
         disease_in_db = curator_session.query(Diseaseannotation).filter(Diseaseannotation.annotation_id == id).one_or_none()
-        total_diseases_in_db = curator_session.query(Diseaseannotation).filter(Diseaseannotation.dbentity_id == gene_dbentity_id.dbentity_id).all()
+        total_diseases_in_db = curator_session.query(Diseaseannotation).filter(Diseaseannotation.dbentity_id == gene_dbentity_id.dbentity_id).count()
         if(disease_in_db):
             try:
                 curator_session.delete(disease_in_db)
-                if (len(total_diseases_in_db) == 1): #last annotation being deleted
+                if (total_diseases_in_db == 1): #last annotation being deleted
                     update_ldb = {'has_disease': 'false'}
                     curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == gene_dbentity_id.dbentity_id).update(update_ldb)
                 transaction.commit()
@@ -380,7 +380,6 @@ def upload_disease_file(request):
         sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE'])
         strain_to_taxonomy_id = models_helper.get_common_strains()
         eco_displayname_to_id = models_helper.get_all_eco_mapping()
-        # ro_displayname_to_id = models_helper.get_all_ro_mapping()
         doid_to_disease_id = models_helper.get_all_do_mapping()
         pubmed_id_to_reference, reference_to_dbentity_id = models_helper.get_references_all()
 
