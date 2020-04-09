@@ -177,7 +177,7 @@ class DiseaseForm extends Component {
     this.setState({isLoading:true});
     if (this.props.disease.annotation_id > 0) {
       
-      fetchData(`${DISEASES}/${this.props.disease.annotation_id}`, {
+      fetchData(`${DISEASES}/${this.props.disease.annotation_id}/${this.props.disease.dbentity_id }`, {
         type: 'DELETE'
       })
         .then((data) => {
@@ -343,7 +343,7 @@ class DiseaseForm extends Component {
           </div>
           
 
-          <div className='row'>
+        <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -351,10 +351,12 @@ class DiseaseForm extends Component {
                 </div>
               </div>
               <div className='row'>
-                <DataList options={this.state.list_of_do} id='disease_id' left='display_name' right='format_name' selectedIdName='disease_id' onOptionChange={this.handleChange} selectedId={this.props.disease.disease_id} />
+                <div className='columns medium-12'>
+                  <DataList options={this.state.list_of_do} id='disease_id' left='display_name' right='format_name' selectedIdName='disease_id' onOptionChange={this.handleChange} selectedId={this.props.disease.disease_id} />
+                </div>
               </div>
             </div>
-           </div>
+         </div>
 
         <div className='row'>
             <div className='columns medium-12'>
@@ -388,18 +390,20 @@ class DiseaseForm extends Component {
             </div>
           </div>
         
-          <div className='row'>
+        <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
                   <label> Evidence Eco </label>
                 </div>
               </div>
-                 <div className='row'>
+              <div className='row'>
+                <div className='columns medium-12'>
                    <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
                  </div>
               </div>
             </div>
+          </div>
 
           {this.renderActions()}
 

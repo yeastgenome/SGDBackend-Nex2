@@ -166,7 +166,6 @@ def insert_update_disease_annotations(request):
                 if curator_session:
                     curator_session.close()
 
-        print(annotation_id)
         if(int(annotation_id) == 0):
             try:
                 y = None
@@ -191,6 +190,8 @@ def insert_update_disease_annotations(request):
                                 evidence_type = 'with',
                                 created_by=CREATED_BY)
                 curator_session.add(dse)
+                update_ldb = {'has_disease': 'true'}
+                curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == dbentity_id).update(update_ldb)
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Record added successfully.'
@@ -295,13 +296,24 @@ def get_diseases_by_filters(request):
 def delete_disease_annotation(request):
     try:
         id = request.matchdict['id']
+        dbentity_id = request.matchdict['dbentity_id']
+
+        if dbentity_id:
+            gene_dbentity_id = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid==dbentity_id, Dbentity.format_name==dbentity_id)).one_or_none()
+            if not gene_dbentity_id:
+                raise Exception('gene not found, please provide sgdid or systematic name')
+    
         curator_session = get_curator_session(request.session['username'])
         isSuccess = False
         returnValue = ''
         disease_in_db = curator_session.query(Diseaseannotation).filter(Diseaseannotation.annotation_id == id).one_or_none()
+        total_diseases_in_db = curator_session.query(Diseaseannotation).filter(Diseaseannotation.dbentity_id == gene_dbentity_id.dbentity_id).all()
         if(disease_in_db):
             try:
                 curator_session.delete(disease_in_db)
+                if (len(total_diseases_in_db) == 1): #last annotation being deleted
+                    update_ldb = {'has_disease': 'false'}
+                    curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == gene_dbentity_id.dbentity_id).update(update_ldb)
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Diseaseannotation successfully deleted.'
@@ -323,7 +335,7 @@ def delete_disease_annotation(request):
         return HTTPBadRequest(body=json.dumps({'error': 'diseaseannot not found in database.'}), content_type='text/json')
 
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 
 def upload_disease_file(request):
@@ -530,6 +542,8 @@ def upload_disease_file(request):
                                 created_by=CREATED_BY
                             )
                         curator_session.add(daf_evidence_row)
+                        update_ldb = {'has_disease': 'true'}
+                        curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == disease['dbentity_id']).update(update_ldb)
                         transaction.commit()
                         curator_session.flush()
                         INSERT = INSERT + 1            
