@@ -825,6 +825,143 @@ def get_strains_by_taxon_id(taxonomy_id):
     
     return DBSession.query(Straindbentity).filter_by(taxonomy_id=taxonomy_id).all()
 
+def get_condition_sets(all_conds):
+
+    max_existing_group_id = 0
+    group_id2conds = {}
+    for x in all_conds:
+        if max_existing_group_id < x.group_id:
+            max_existing_group_id = x.group_id
+        value = x.condition_value if x.condition_value else ''
+        unit = x.condition_unit if x.condition_unit else ''
+        conds = []
+        if x.group_id in group_id2conds:
+            conds = group_id2conds[x.group_id]
+        conds.append(x.condition_class + '|' + x.condition_name + '|' + value + '|' + unit)
+        group_id2conds[x.group_id] = conds
+
+    existingCondSet2groupId = {}
+    for g_id in group_id2conds:
+        conds = group_id2conds[g_id]
+        conds.sort()
+        existingCondSet2groupId[":".join(conds)] = g_id
+
+    return [max_existing_group_id, existingCondSet2groupId]
+                                                                             
+def update_annotation_to_existing_one(curator_session, request, CREATED_BY, annotation_id, gene_name, group_id, existing_annotation_id, all_conds, unique_group_id_list, update_all, observable_id, qualifier_id, reporter_id):
+
+    newConditions = []
+    [status, data] = parse_conditions(request, observable_id, qualifier_id, reporter_id)
+    if status == 0:
+        return [status, data]
+    else:
+        newConditions = data
+
+    newConditions.sort()
+    newConditionSet = ":".join(newConditions)
+    
+    all_existing_conds = curator_session.query(PhenotypeannotationCond).filter_by(annotation_id=existing_annotation_id).all()
+    
+    [max_existing_group_id, existingCondSet2groupId] = get_condition_sets(all_existing_conds)
+    [old_max_group_id, oldCondSet2groupId] = get_condition_sets(all_conds)
+    
+    curr_group_id = max_existing_group_id + 1
+    
+    if update_all is not None:
+        ## move all other condition groups for the annotation_id to existing_annotation_id if not in existing
+        ## condtion sets 
+        for condSet in oldCondSet2groupId:
+            if condSet in existingCondSet2groupId:
+                continue
+            old_group_id = oldCondSet2groupId[condSet]
+            if group_id > 0 and group_id == old_group_id:
+                continue
+            conds = condSet.split(':')
+            for cond in conds:
+                [cond_class, cond_name, cond_value, cond_unit] = cond.split('|')
+                [returnVal, count] = insert_phenotypeannotation_cond(curator_session, CREATED_BY,
+                                                                     existing_annotation_id,
+                                                                     curr_group_id, cond_class,
+                                                                     cond_name, cond_value, cond_unit)
+                if str(returnVal).isdigit is False:
+                    return [0, HTTPBadRequest(body=json.dumps({'error': returnVal}), content_type='text/json')]
+            curr_group_id = curr_group_id + 1
+            
+        ## associate the updated condition group with existing_annotation_id
+        if newConditionSet not in existingCondSet2groupId:
+            for cond in newConditions:
+                [cond_class, cond_name, cond_value, cond_unit] = cond.split('|')
+                [returnVal, count] = insert_phenotypeannotation_cond(curator_session, CREATED_BY,
+                                                                     existing_annotation_id,
+                                                                     curr_group_id, cond_class,
+                                                                     cond_name, cond_value, cond_unit)
+                if str(returnVal).isdigit is False:
+                    return [0, HTTPBadRequest(body=json.dumps({'error': returnVal}), content_type='text/json')]
+            curr_group_id = curr_group_id + 1
+                
+        ## delete the annotation row and its associated conditions for annotation_id   
+        paRow = curator_session.query(Phenotypeannotation).filter_by(annotation_id=annotation_id).one_or_none()
+        curator_session.delete(paRow)
+        
+    else:
+        if len(all_conds) == 0:
+            if group_id != 0:
+                return [0, HTTPBadRequest(body=json.dumps({'error': 'There is no condition associated with annotation_id='+str(annotation_id) + ' for gene ' + gene_name + ', but a condition group_id=' + str(group_id) + ' is passed in.'}), content_type='text/json')]
+            elif newConditionSet not in existingCondSet2groupId:
+                ## insert new conditions for existing_annotation_id
+                for cond in newConditions:
+                    [cond_class, cond_name, cond_value, cond_unit] = cond.split('|')
+                    [returnVal, count] = insert_phenotypeannotation_cond(curator_session, CREATED_BY,
+                                                                         existing_annotation_id,
+                                                                         curr_group_id, cond_class,
+                                                                         cond_name, cond_value, cond_unit)
+                    if str(returnVal).isdigit is False:
+                        return [0, HTTPBadRequest(body=json.dumps({'error': returnVal}), content_type='text/json')]
+                curr_group_id = curr_group_id + 1
+                    
+            ## delete the annotation row for annotation_id
+            paRow = curator_session.query(Phenotypeannotation).filter_by(annotation_id=annotation_id).one_or_none()
+            curator_session.delete(paRow)
+                
+        elif len(unique_group_id_list) == 1:
+            if group_id == unique_group_id_list[0]:
+                if newConditionSet not in existingCondSet2groupId:
+                    ## add this group of conditions to existing_annotation_id
+                    for cond in newConditions:
+                        [cond_class, cond_name, cond_value, cond_unit] = cond.split('|')
+                        [returnVal, count] = insert_phenotypeannotation_cond(curator_session, CREATED_BY,
+                                                                             existing_annotation_id,
+                                                                             curr_group_id, cond_class,
+                                                                             cond_name, cond_value, cond_unit)
+                        if str(returnVal).isdigit is False:
+                            return [0, HTTPBadRequest(body=json.dumps({'error': returnVal}), content_type='text/json')]
+                    curr_group_id = curr_group_id + 1
+                ## delete the annotation row and its associated condition for annotation_id
+                paRow = curator_session.query(Phenotypeannotation).filter_by(annotation_id=annotation_id).one_or_none()
+                curator_session.delete(paRow)
+            else:
+                return [0, HTTPBadRequest(body=json.dumps({'error': 'The group_id=' + str(group_id) + ' is not in the database for annotation_id='+str(annotation_id) + ' for gene' + gene_name + '.'}), content_type='text/json')]
+        else:
+            if newConditionSet not in existingCondSet2groupId:
+                ## add this group of conditions to existing_annotation_id
+                for cond in newConditions:
+                    [cond_class, cond_name, cond_value, cond_unit] = cond.split('|')
+                    [returnVal, count] = insert_phenotypeannotation_cond(curator_session, CREATED_BY,
+		                                                         existing_annotation_id,
+                                                                         curr_group_id, cond_class,
+                                                                         cond_name, cond_value, cond_unit)
+                    if str(returnVal).isdigit is False:
+                        return [0, HTTPBadRequest(body=json.dumps({'error': returnVal}), content_type='text/json')]
+                curr_group_id = curr_group_id + 1 
+            ## delete the given group (group_id) of conditions for annotation_id
+            if group_id > 0:
+                paCondRows = curator_session.query(PhenotypeannotationCond).filter_by(annotation_id=annotation_id, group_id=group_id).all()
+                for x in paCondRows:
+                    curator_session.delete(x)
+                    
+    return [1, "The phenotypeannotation row has been updated for gene " + gene_name + "."]
+
+
 def update_phenotype_annotations(request):
 
     try:
@@ -846,7 +983,11 @@ def update_phenotype_annotations(request):
         for gene_id in gene_ids:
             [gene, id] = gene_id.split('|')
             if gene_name is None:
-                gene_name = gene.split('/')[1]
+                names = gene.split('/')
+                if len(names) >= 2:
+                    gene_name = names[1]
+                else:
+                    gene_name = names[0]
             annotation_id = int(id)
             annotation_ids.append(annotation_id)
             annotation_id_to_gene[annotation_id] = gene
@@ -1048,7 +1189,24 @@ def update_phenotype_annotations(request):
             for x in allConds:
                 if x.group_id not in unique_group_id_list:
                     unique_group_id_list.append(x.group_id)
+                    
+            ### check to see if the updated row is already in the database                                                           
+            paRow2 = curator_session.query(Phenotypeannotation).filter_by(dbentity_id=paRow.dbentity_id, reference_id=reference_id, experiment_id=experiment_id, mutant_id=mutant_id, phenotype_id=phenotype_id, taxonomy_id=taxonomy_id, strain_name=strain_name, experiment_comment=experiment_comment, details=details, allele_id=allele_id, allele_comment=allele_comment, reporter_id=reporter_id, reporter_comment=reporter_comment).one_or_none()
 
+            if paRow2 is not None and paRow2.annotation_id != annotation_id:
+                existing_annotation_id = paRow2.annotation_id
+                [status, update_message] = update_annotation_to_existing_one(curator_session, request,
+                                                                             CREATED_BY, annotation_id,
+                                                                             gene_name, group_id,
+                                                                             existing_annotation_id,
+                                                                             allConds, unique_group_id_list,
+                                                                             update_all, observable_id,
+                                                                             qualifier_id, reporter_id)
+                if status == 0:
+                    return update_message
+                success_message = success_message + "<br>" + update_message
+                continue
+                
             new_annotation_id = None
             new_group_id = None
 
