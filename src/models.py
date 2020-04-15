@@ -9792,7 +9792,8 @@ class ReferenceFile(Base):
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-
+    file_type = Column(String(100), nullable=False)
+    
     file = relationship('Filedbentity')
     reference = relationship('Referencedbentity')
     source = relationship('Source')
