@@ -48,7 +48,10 @@ class AutocompleteSection extends Component {
             </div>
           </div>
           <div className='row'>
-            <DataList options={this.state.options} id={this.props.id} left={this.props.value1} right={this.props.value2} selectedIdName={this.props.selectedIdName} onOptionChange={this.props.onOptionChange} selectedId={this.props.selectedId} placeholder={this.props.placeholder} setNewValue={this.props.setNewValue} />
+	    {
+              this.state.options.length > 0?
+              <DataList options={this.state.options} id={this.props.id} left={this.props.value1} right={this.props.value2} selectedIdName={this.props.selectedIdName} onOptionChange={this.props.onOptionChange} selectedId={this.props.selectedId} placeholder={this.props.placeholder} setNewValue={this.props.setNewValue} />
+            }
           </div>
         </div>
       </div>
