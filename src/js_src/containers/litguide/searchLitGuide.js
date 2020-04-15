@@ -180,7 +180,7 @@ class SearchLitGuide extends Component {
                     <PulldownMenu name='year' value={this.props.litguide.year} onOptionChange={this.handleChange} />
                   </div>
                   <div className='columns small-4'>
-                    <div> Enter a gene (optional): </div>
+            <div> Enter a gene (optional, case sensitive): </div>
                     <input type='text' name='gene' value={this.props.litguide.gene} onChange={this.handleChange} />
                   </div>
                 </div>
