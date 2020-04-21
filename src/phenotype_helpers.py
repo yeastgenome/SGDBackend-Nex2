@@ -298,23 +298,29 @@ def add_phenotype_conditions(curator_session, CREATED_BY, annotation_id, group_i
 
 def check_gene_names(genes, dbentity_id_list, dbentity_id_to_gene_name):
 
+    gene_for_allele = None
     for gene in genes:
         if gene.startswith('SGD:S') or gene.startswith('S0'):
             sgdid = gene.replace('SGD:', '')
             dbentity = DBSession.query(Locusdbentity).filter_by(sgdid=sgdid).one_or_none()
             if dbentity is not None:
                 dbentity_id_list.append(dbentity.dbentity_id)
-                dbentity_id_to_gene_name[dbentity.dbentity_id] = dbentity.gene_name
+                if dbentity.gene_name:
+                    dbentity_id_to_gene_name[dbentity.dbentity_id] = dbentity.gene_name
+                else:
+                    dbentity_id_to_gene_name[dbentity.dbentity_id] = dbentity.systematic_name
             else:
                 return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + sgdid + " is not in the database or it is not for a gene."}), content_type='text/json')
         else:
             dbentity = DBSession.query(Locusdbentity).filter_by(systematic_name=gene).one_or_none()
             if dbentity is not None:
                 dbentity_id_list.append(dbentity.dbentity_id)
-                dbentity_id_to_gene_name[dbentity.dbentity_id] = dbentity.gene_name
+                if dbentity.gene_name:
+                    dbentity_id_to_gene_name[dbentity.dbentity_id] = dbentity.gene_name
+                else:
+                    dbentity_id_to_gene_name[dbentity.dbentity_id] = dbentity.systematic_name
             else:
                 return HTTPBadRequest(body=json.dumps({'error': "The systematic_name " + gene + " is not in the database."}), content_type='text/json')
-        
 
 def check_reference(ref_id):
 
