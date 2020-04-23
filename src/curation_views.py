@@ -524,15 +524,15 @@ def new_gene_name_reservation(request):
             except ValueError as e:
                 msg = 'Please enter a valid year.'
                 return HTTPBadRequest(body=json.dumps({ 'message': msg }), content_type='text/json')
-    # make sure author names have only letters
+    # make sure author names have only letters or spaces or dot 
     if 'authors' in list(data.keys()):
         authors = data['authors']
         for a in authors:
             if a['first_name'] and a['last_name']:
-                first_name = a['first_name']
-                last_name = a['last_name']
+                first_name = a['first_name'].replace(' ', '').replace('.', '')
+                last_name = a['last_name'].replace(' ', '').replace('.', '')
                 if not (first_name.isalpha() and last_name.isalpha()):
-                    return HTTPBadRequest(body=json.dumps({ 'message': 'Author names must contain only letters.' }), content_type='text/json')
+                    return HTTPBadRequest(body=json.dumps({ 'message': 'Author names must contain only letters or space or dot.' }), content_type='text/json')
     res_required_fields = ['new_gene_name']
     # validate reservations themselves
     for res in data['reservations']:
