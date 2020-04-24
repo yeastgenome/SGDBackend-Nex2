@@ -2,8 +2,8 @@ from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 from sqlalchemy.exc import IntegrityError, DataError
 import transaction
 import json
-from src.models import DBSession, CurationReference, Literatureannotation, Locusdbentity,\
-                       Referencedbentity, Source, Taxonomy
+from src.models import DBSession, Dbentity, CurationReference, Literatureannotation, \
+                       Locusdbentity, Referencedbentity, Pathwaydbentity, Source, Taxonomy
 from src.curation_helpers import get_curator_session
 
 TAXON = 'TAX:4932'
@@ -17,19 +17,20 @@ def group_papers(curationObjs):
     for x in curationObjs:
         topic = None
         annotation_id = None
-        if x.locus_id and (x.reference_id, x.locus_id) in ids_to_annotation: 
-            (annotation_id, topic) = ids_to_annotation[(x.reference_id, x.locus_id)]
+        if x.dbentity_id and (x.reference_id, x.dbentity_id) in ids_to_annotation: 
+            (annotation_id, topic) = ids_to_annotation[(x.reference_id, x.dbentity_id)]
         key = (x.reference_id, x.curation_tag, topic) 
         refObj = x.reference
-        locusObj = x.locus
+        dbentity = x.dbentity
         key2paper[key] = (refObj.citation, refObj.pmid, refObj.year, x.date_created, x.curator_comment)
         
-        if locusObj is not None:
-            name = locusObj.gene_name
-            if name and name != locusObj.systematic_name:
-                name = name + '/' + locusObj.systematic_name
-            else:
-                name = locusObj.systematic_name
+        if dbentity is not None:
+            name = dbentity.display_name
+            if dbentity.subclass == 'COMPLEX':
+                name = dbentity.format_name
+            elif dbentity.subclass == 'PATHWAY':
+                pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=dbentity.dbentity_id).one_or_none()
+                name = pathway.biocyc_id
             name = name + '|' + str(x.curation_id) + '|' + str(annotation_id)
 
             genelist = []
@@ -37,7 +38,7 @@ def group_papers(curationObjs):
                 genelist = key2genelist[key]
             genelist.append(name)
             key2genelist[key] = genelist
-
+            
     data = []
     for key in key2paper:
         (reference_id, tag, topic) = key
@@ -72,7 +73,7 @@ def get_list_of_papers(request):
     if gene in ['none', 'None']:
         gene = None
 
-    locus_id = None
+    dbentity_id = None
     if gene is not None:
         dbentity = None
         if gene.startswith('SGD:S') or gene.startswith('S'):
@@ -82,23 +83,27 @@ def get_list_of_papers(request):
             dbentity = DBSession.query(Locusdbentity).filter_by(systematic_name=gene).one_or_none()
             if dbentity is None:
                 dbentity = DBSession.query(Locusdbentity).filter_by(gene_name=gene).one_or_none()
+        if dbentity is None:
+            dbentity = DBSession.query(Dbentity).filter_by(format_name=gene, subclass='COMPLEX').one_or_none()
+        if dbentity is None:
+            dbentity = DBSession.query(Pathwaydbentity).filter_by(biocyc_id=gene).one_or_none()
         if dbentity is not None:
-            locus_id = dbentity.dbentity_id
+            dbentity_id = dbentity.dbentity_id
         else:
-            HTTPBadRequest(body=json.dumps({'error': 'Gene name ' + gene + ' is not in the database.'}), content_type='text/json')
-    
+            HTTPBadRequest(body=json.dumps({'error': 'Gene name/Complex ID/Pathway ID ' + gene + ' is not in the database.'}), content_type='text/json')
+
     ref_ids = []
     if year.isdigit():
         ref_objs = DBSession.query(Referencedbentity.dbentity_id).filter_by(year=int(year)).all()
         ref_ids = [ x[0] for x in ref_objs]
 
     curationObjs = None
-    if len(ref_ids) > 0 and locus_id:
-        curationObjs = DBSession.query(CurationReference).filter_by(curation_tag=tag, locus_id=locus_id).filter(CurationReference.reference_id.in_(ref_ids)).all()
+    if len(ref_ids) > 0 and dbentity_id:
+        curationObjs = DBSession.query(CurationReference).filter_by(curation_tag=tag, dbentity_id=dbentity_id).filter(CurationReference.reference_id.in_(ref_ids)).all()
     elif len(ref_ids) > 0:
         curationObjs = DBSession.query(CurationReference).filter_by(curation_tag=tag).filter(CurationReference.reference_id.in_(ref_ids)).all()
-    elif locus_id:
-        curationObjs = DBSession.query(CurationReference).filter_by(curation_tag=tag, locus_id=locus_id).all()
+    elif dbentity_id:
+        curationObjs = DBSession.query(CurationReference).filter_by(curation_tag=tag, dbentity_id=dbentity_id).all()
     else:
         curationObjs = DBSession.query(CurationReference).filter_by(curation_tag=tag).all()
 
@@ -160,7 +165,7 @@ def update_litguide(request):
                 x = curator_session.query(CurationReference).filter_by(curation_id=curation_id).one_or_none()
                 gene = curation_id_to_gene.get(curation_id)
                 if x.curation_tag != tag:
-                    y = curator_session.query(CurationReference).filter_by(curation_tag=tag, reference_id=x.reference_id, locus_id = x.locus_id).one_or_none()
+                    y = curator_session.query(CurationReference).filter_by(curation_tag=tag, reference_id=x.reference_id, dbentity_id = x.dbentity_id).one_or_none()
                     if y is not None:
                         if gene:
                             success_message = success_message + "The tag <strong>" + tag + "</strong> is already linked with gene <strong>" + gene + "</strong> and this paper. "
@@ -259,6 +264,10 @@ def add_litguide(request):
                     if dbentity is None:
                         dbentity = curator_session.query(Locusdbentity).filter_by(systematic_name=gene).one_or_none()
                 if dbentity is None:
+                    dbentity = curator_session.query(Dbentity).filter_by(format_name=gene, subclass='COOMPLEX').one_or_none()
+                if dbentity is None:
+                    dbentity = curator_session.query(Pathwaydbentity).filter_by(biocyc_id=gene).one_or_none()
+                if dbentity is None:
                     return HTTPBadRequest(body=json.dumps({'error': "The gene " + gene + " you entered is not in the database."}), content_type='text/json')
                 dbentity_id_to_gene[dbentity.dbentity_id] = gene
                 dbentity_id_list.append(dbentity.dbentity_id)
@@ -272,7 +281,7 @@ def add_litguide(request):
                 if tag != '':
                     x = CurationReference(reference_id = reference_id,
                                           source_id = source_id,
-                                          locus_id = dbentity_id,
+                                          dbentity_id = dbentity_id,
                                           curation_tag = tag,
                                           created_by = CREATED_BY)
                     curator_session.add(x)

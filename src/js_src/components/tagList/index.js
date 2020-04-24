@@ -67,7 +67,7 @@ class TagList extends Component {
       let _handleChange = e => { this.handleGeneChange(name, e.target.value); };
       return (
         <div>
-          <label>Genes (space-separated)</label>
+              <label>Dbentities (space-separated Genes, Complexes, and/or Pathways. Eg, ACT1, YAL001C, CPX-1369, ARG-PRO-PWY)</label>
           <textarea className='sgd-geneList' data-type={name} onChange={_handleChange} style={{ minHeight: '1rem' }} type='text' defaultValue={value} />
         </div>
       );
