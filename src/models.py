@@ -13,7 +13,6 @@ import re
 import traceback
 import transaction
 import logging
-
 from datetime import datetime, timedelta
 from itertools import groupby
 import boto
@@ -1635,21 +1634,21 @@ class CurationLocus(Base):
 class CurationReference(Base):
     __tablename__ = 'curation_reference'
     __table_args__ = (
-        UniqueConstraint('reference_id', 'curation_tag', 'locus_id'),
+        UniqueConstraint('reference_id', 'curation_tag', 'dbentity_id'),
         {'schema': 'nex'}
     )
 
     curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
     reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), index=True)
     curation_tag = Column(String(40), nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     curator_comment = Column(String(2000))
     json = Column(Text)
 
-    locus = relationship('Locusdbentity', foreign_keys=[locus_id])
+    dbentity = relationship('Dbentity')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
 
@@ -1683,7 +1682,7 @@ class CurationReference(Base):
         return CurationReference(
             reference_id=reference_id,
             source_id=source_id,
-            locus_id=dbentity_id,
+            dbentity_id=dbentity_id,
             curation_tag=CurationReference.acceptable_tags[tag],
             created_by=created_by,
             curator_comment=comment,
@@ -2225,17 +2224,25 @@ class Referencedbentity(Dbentity):
         return obj
 
     def annotations_to_dict(self):
-        obj = []
-
+        
         annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
 
+        loci = []
+        complexes = []
+        pathways = []
         for annotation in annotations:
             annotation_dict = annotation.to_dict()
             if annotation_dict["locus"] is not None:
-                obj.append(annotation.to_dict())
+                locus = annotation_dict["locus"]
+                if 'complex' in locus["link"]:
+                    complexes.append(annotation.to_dict())
+                elif 'pathway' in locus["link"]:
+                    pathways.append(annotation.to_dict())
+                else:
+                    loci.append(annotation.to_dict())
 
-        return obj
-
+        return loci + complexes + pathways
+    
     def annotations_summary_to_dict(self):
         preview_url = '/reference/' + self.sgdid
         return {
@@ -2318,7 +2325,10 @@ class Referencedbentity(Dbentity):
         return [url1]
 
     def get_tags(self):
+
         tags = []
+
+        ## for gene names vs CurationReference
         curation_refs = DBSession.query(CurationReference, Locusdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
         for x in curation_refs:
             locus_name = None
@@ -2327,18 +2337,70 @@ class Referencedbentity(Dbentity):
                 locus_name = locus.get_name()
             obj = {
                 'name': x.CurationReference.get_name(),
-                'locus_name': locus_name,
+                'dbentity_name': locus_name,
                 'comment': x.CurationReference.curator_comment
             }
             tags.append(obj)
+
+        ## for complex vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Complexdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Complexdbentity).all()
+        for x in curation_refs:
+            complex_name = None
+            complex = x.Complexdbentity
+            if complex:
+                complex_name = complex.format_name
+            obj = {
+                'name': x.CurationReference.get_name(),
+                'dbentity_name': complex_name,
+                'comment': x.CurationReference.curator_comment
+            }
+            tags.append(obj)
+
+        ## for pathway vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Pathwaydbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Pathwaydbentity).all()
+        for x in curation_refs:
+            pathway_name = None
+            pathway = x.Pathwaydbentity
+            if pathway:
+                pathway_name = pathway.biocyc_id
+            obj = {
+                'name': x.CurationReference.get_name(),
+                'dbentity_name': pathway_name,
+                'comment': x.CurationReference.curator_comment
+            }
+            tags.append(obj)
+        
+        ## Literatureannotation
+        items = []
         lit_annotations = DBSession.query(Literatureannotation, Locusdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
         for x in lit_annotations:
             locus_name = None
             locus = x.Locusdbentity
             if locus:
                 locus_name = locus.get_name()
-
             name = x.Literatureannotation.get_name()
+            items.append((name, locus_name))
+
+        lit_annotations = DBSession.query(Literatureannotation, Complexdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Complexdbentity).all()
+        for x in lit_annotations:
+            complex_name = None
+            complex = x.Complexdbentity
+            if complex:
+                complex_name = complex.format_name
+            name = x.Literatureannotation.get_name()
+            items.append((name, complex_name))
+
+        lit_annotations = DBSession.query(Literatureannotation, Pathwaydbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Pathwaydbentity).all()
+        for x in lit_annotations:
+            pathway_name = None
+            pathway= x.Pathwaydbentity
+            if pathway:
+                pathway_name = pathway.biocyc_id
+            name = x.Literatureannotation.get_name()
+            items.append((name, pathway_name))
+
+
+        for (name, dbentity_name) in items:
             # ignore omics tags bc already have internal   
             if name in ['non_phenotype_htp', 'htp_phenotype']:
                 continue
@@ -2346,40 +2408,55 @@ class Referencedbentity(Dbentity):
             if name in ['other_primary', 'go', 'classical_phenotype', 'headline_information']:
                 found = 0
                 for tag in tags:
-                    if tag['name'] in ['go', 'classical_phenotype', 'headline_information'] and tag['locus_name'] == locus_name:
+                    if tag['name'] in ['go', 'classical_phenotype', 'headline_information'] and tag['dbentity_name'] == dbentity_name:
                         found = 1
                         break
                 if found == 0:
                     # it is a other_primary tag since it is not one of ['go', 'classical_phenotype', 'headline_information']
                     tags.append(
                         { 'name':  'other_primary',
-                          'locus_name': locus_name,
+                          'dbentity_name': dbentity_name,
                           'comment': None
                     })
             else:
                 tags.append(
                     { 'name':  name,
-                      'locus_name': locus_name,
+                      'dbentity_name': dbentity_name,
                       'comment': None
                     })
+                
+        ###################################################
+        tag2dbentityNames = {}
+        tag2comments = {}
+        for x in tags:
+            tag = x['name']
+            dbentity_name = x['dbentity_name']
+            comment = x['comment']
+            dbentity_names = []
+            if tag in tag2dbentityNames:
+                dbentity_names = tag2dbentityNames[tag]
+            if dbentity_name and dbentity_name not in dbentity_names:
+                dbentity_names.append(dbentity_name)
+            tag2dbentityNames[tag] = dbentity_names
+            comments = []
+            if tag in tag2comments:
+                comments = tag2comments[tag]
+            if comment and comment not in comments:
+                comments.append(comment)
+            tag2comments[tag] = comments
 
-
-        tag_list = []
-        for k, g in groupby(tags, lambda x: x['name']):
-            g_tags = list(g)
-            name = g_tags[0]['name']
-            comment = g_tags[0]['comment']
-            gene_names = []
-            for x in g_tags:
-                if x['locus_name']:
-                    gene_names.append(x['locus_name'])
-            gene_names = list(set(gene_names))
-            gene_str = SEPARATOR.join(gene_names)
-            tag_list.append({
-                'name': name,
-                'genes': gene_str,
-                'comment': comment
-            })
+        tag_list = []    
+        for tag in tag2dbentityNames:
+            dbentity_names = tag2dbentityNames[tag]
+            comments = tag2comments[tag]
+            dbentity_str = SEPARATOR.join(dbentity_names)
+            comment_str = "; ".join(comments)
+            if dbentity_str != '':
+                tag_list.append({
+                    'name': tag,
+                    'genes': dbentity_str,
+                    'comment': comment_str
+                })
         return tag_list
 
     def update_tags(self, tags, username):
@@ -2414,14 +2491,27 @@ class Referencedbentity(Dbentity):
                         if g_id == '':
                             continue
                         upper_g_id = g_id.upper()
-                        gene_dbentity_id = curator_session.query(Locusdbentity.dbentity_id).filter(or_(Locusdbentity.display_name == upper_g_id, Locusdbentity.format_name == g_id)).one_or_none()[0]
+
+                        ## check for gene name/systematc name
+                        gene_dbentity_id = curator_session.query(Locusdbentity.dbentity_id).filter(or_(Locusdbentity.display_name == upper_g_id, Locusdbentity.format_name == g_id)).one_or_none()
+
+                        ## check for complex ID
+                        if gene_dbentity_id is None:
+                            gene_dbentity_id = curator_session.query(Dbentity.dbentity_id).filter_by(format_name=upper_g_id, subclass='COMPLEX').one_or_none()
+
+                        ## check for pathway ID
+                        if gene_dbentity_id is None:
+                            gene_dbentity_id = curator_session.query(Pathwaydbentity.dbentity_id).filter_by(biocyc_id=upper_g_id).one_or_none()
+                            
                         # ignore duplicates
                         if gene_dbentity_id in tag_dbentity_ids:
                             continue
                         tag_dbentity_ids.append(gene_dbentity_id)
+                        
                         curation_ref = CurationReference.factory(self.dbentity_id, name, comment, gene_dbentity_id, username)
                         if curation_ref:
                             curator_session.add(curation_ref)
+                            
                         # add primary lit annotation
                         lit_annotation = Literatureannotation.factory(self.dbentity_id, name, gene_dbentity_id, username)
                         if lit_annotation:
@@ -2942,7 +3032,8 @@ class Locusdbentity(Dbentity):
 
 
     def protein_domain_details(self):
-        annotations = DBSession.query(Proteindomainannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        taxonomy_id = self.get_main_strain('taxonomy_id')
+        annotations = DBSession.query(Proteindomainannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).all()
 
         return [a.to_dict(locus=self) for a in annotations]
 
@@ -4036,6 +4127,27 @@ class Locusdbentity(Dbentity):
             "edges": edges
         }
 
+    def get_main_strain(self, type=None):
+        main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1", "SEY6210", "X2180-1A", "CEN.PK", "D273-10B", "JK9-3d", "FL100", "Y55", "RM11-1a"]
+        main_strain = None
+        for strain in main_strain_list:
+            x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
+            y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').one_or_none()
+            if y is None:
+                continue
+            if  main_strain is None:
+                main_strain = strain
+                TAXON_ID = x.taxonomy_id
+            z = DBSession.query(Proteindomainannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id).all()
+            if len(z) > 0:
+                main_strain = strain
+                TAXON_ID = x.taxonomy_id
+                break
+        if type == 'taxonomy_id':
+            return TAXON_ID
+        else:
+            return [main_strain, TAXON_ID]
+    
     def phenotype_graph(self):
         main_gene_phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
         main_gene_phenotype_ids = [a.phenotype_id for a in main_gene_phenotype_annotations]
@@ -4183,8 +4295,10 @@ class Locusdbentity(Dbentity):
             "link": self.obj_url
         }
 
+        
+        taxonomy_id = self.get_main_strain('taxonomy_id')
 
-        query = "SELECT display_name FROM nex.so where so_id IN (SELECT so_id FROM nex.dnasequenceannotation WHERE dbentity_id = " + str(self.dbentity_id) + " GROUP BY so_id)"
+        query = "SELECT display_name FROM nex.so where so_id IN (SELECT so_id FROM nex.dnasequenceannotation WHERE dbentity_id = " + str(self.dbentity_id) + " and taxonomy_id =" + str(taxonomy_id) + " GROUP BY so_id)"
 
         locus_type = []
         so_display_names = DBSession.execute(query)
@@ -4227,6 +4341,9 @@ class Locusdbentity(Dbentity):
             "ecnumbers": []
         }
 
+        [main_strain, taxonomy_id] = self.get_main_strain()
+        obj['main_strain'] = main_strain
+        
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
 
@@ -4309,7 +4426,7 @@ class Locusdbentity(Dbentity):
 
         # URLs (resources)
         sos = DBSession.query(Dnasequenceannotation.so_id).filter(
-            Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == TAXON_ID).group_by(
+            Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).group_by(
                     Dnasequenceannotation.so_id).all()
         locus_type = DBSession.query(So.display_name).filter(So.so_id.in_([so[0] for so in sos])).all()
         obj["locus_type"] = ",".join([l[0] for l in locus_type])
@@ -4480,7 +4597,8 @@ class Locusdbentity(Dbentity):
             "median_abs_dev_value": None
         }
 
-        protein = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=274901).one_or_none()
+        taxonomy_id = self.get_main_strain('taxonomy_id')
+        protein = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).one_or_none()
         if protein:
             protein_sequence = DBSession.query(ProteinsequenceDetail).filter_by(annotation_id=protein.annotation_id).one_or_none()
             if protein_sequence:
@@ -5894,6 +6012,7 @@ class Diseaseannotation(Base):
     disease_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False, index=True)
     eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
     annotation_type = Column(String(40), nullable=False)
+    association_type = Column(String(20), nullable=False)
     disease_qualifier = Column(String(40), nullable=False)
     date_assigned = Column(DateTime, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
@@ -7550,9 +7669,16 @@ class Literatureannotation(Base):
         entity = self.dbentity
 
         if entity:
+            link = entity.obj_url
+            if entity.subclass == 'COMPLEX':
+                link = '/complex/' + entity.format_name
+            elif entity.subclass == 'PATHWAY':
+                pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
+                link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + pathway.biocyc_id + '&detail-level=2'
+            
             obj["locus"] = {
                 "display_name": entity.display_name,
-                "link": entity.obj_url
+                "link": link
             }
 
         return obj
@@ -9791,6 +9917,7 @@ class ReferenceFile(Base):
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
+    # file_type = Column(String(100), nullable=False)
 
     file = relationship('Filedbentity')
     reference = relationship('Referencedbentity')
@@ -10942,13 +11069,30 @@ def validate_tags(tags):
     # validate that all genes are proper identifiers
     valid_genes = DBSession.query(Locusdbentity.gene_name, Locusdbentity.systematic_name).filter(or_(Locusdbentity.display_name.in_(all_keys), (Locusdbentity.format_name.in_(all_keys)))).all()
     num_valid_genes = len(valid_genes)
+    
+    valid_identifiers = []
+    for x in valid_genes:
+        valid_identifiers.append(x[0])
+        valid_identifiers.append(x[1])
+
+    added = 0
+    for x in all_keys:
+        if x not in valid_identifiers:
+            complex = DBSession.query(Dbentity).filter_by(subclass='COMPLEX', format_name=x).one_or_none()
+            if complex is None:
+                pathway = DBSession.query(Pathwaydbentity).filter_by(biocyc_id=x).one_or_none()
+                if pathway is not None:
+                    valid_identifiers.append(x)
+                    added = added + 1
+            else:
+                valid_identifiers.append(x)
+                added = added + 1
+                
+    num_valid_genes = num_valid_genes + added
+    
     if num_valid_genes != len(all_keys):
         # get invalid gene identifiers
         try:
-            valid_identifiers = []
-            for x in valid_genes:
-                valid_identifiers.append(x[0])
-                valid_identifiers.append(x[1])
             invalid_identifiers = [x for x in all_keys if x not in valid_identifiers]
             invalid_identifiers = ', '.join(invalid_identifiers)
         except:

@@ -842,3 +842,26 @@ CREATE INDEX reservedname_locus_fk_index ON nex.reservedname (locus_id);
 CREATE INDEX reservedname_ref_fk_index ON nex.reservedname (reference_id);
 CREATE INDEX reservedname_coll_fk_index ON nex.reservedname (colleague_id);
 CREATE INDEX reservedname_source_fk_index ON nex.reservedname (source_id);
+
+
+DROP TABLE IF EXISTS nex.tools CASCADE;
+CREATE TABLE nex.tools(
+	tool_id bigint NOT NULL DEFAULT nextval('object_seq'),
+	format_name varchar(200) NOT NULL,
+	display_name varchar(200) NOT NULL,
+	link_url varchar(200) NOT NULL,
+    status varchar(200) NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT tools_pk PRIMARY KEY (tool_id)
+) ;
+COMMENT ON TABLE nex.tools IS 'Information needed for display of variant viewer.';
+COMMENT ON COLUMN nex.tools.format_name IS 'Text displayed for URL link';
+COMMENT ON COLUMN nex.tools.display_name IS 'Text displayed for URL link';
+COMMENT ON COLUMN nex.tools.link_url IS 'URL of the tool linked to';
+COMMENT ON COLUMN nex.tools.status IS 'allowed type: current or former';
+COMMENT ON COLUMN nex.tools.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.tools.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.tools.tool_id IS 'Unique identifier (serial number).';
+ALTER TABLE nex.tools ADD CONSTRAINT tools_uk UNIQUE (format_name);
+ALTER TABLE nex.tools ADD CONSTRAINT tools_status_ck CHECK (STATUS IN ('Current', 'Former'));

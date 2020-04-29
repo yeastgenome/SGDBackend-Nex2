@@ -978,6 +978,7 @@ CREATE TABLE nex.reference_file (
 	reference_file_id bigint NOT NULL DEFAULT nextval('link_seq'),
 	reference_id bigint NOT NULL,
 	file_id bigint NOT NULL,
+	file_type varchar(15) NOT NULL,
 	source_id bigint NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
@@ -987,9 +988,11 @@ COMMENT ON TABLE nex.reference_file IS 'Files associated with a reference.';
 COMMENT ON COLUMN nex.reference_file.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.reference_file.reference_file_id IS 'Unique identifier (serial number).';
 COMMENT ON COLUMN nex.reference_file.file_id IS 'FK to FILEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.reference_file.file_type IS 'Distinguish between Dataset and Supplemental types.';
 COMMENT ON COLUMN nex.reference_file.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.reference_file.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.reference_file.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
 ALTER TABLE nex.reference_file ADD CONSTRAINT reference_file_uk UNIQUE (reference_id,file_id);
+ALTER TABLE nex.reference_file ADD CONSTRAINT reference_file_type_ck CHECK (FILE_TYPE IN ('Dataset','Supplemental'));
 CREATE INDEX referencefile_file_fk_index ON nex.reference_file (file_id);
 CREATE INDEX referencefile_source_fk_index ON nex.reference_file (source_id);

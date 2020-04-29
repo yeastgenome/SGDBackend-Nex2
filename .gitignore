@@ -113,3 +113,4 @@ dev_variables*
 pytest_cache/
 test/default_T_dev.py
 users.txt
+sgd.sql

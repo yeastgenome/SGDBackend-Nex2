@@ -157,6 +157,7 @@ ALTER TABLE nex.so_relation ADD CONSTRAINT sorelation_source_fk FOREIGN KEY (sou
 ALTER TABLE nex.so_url ADD CONSTRAINT sourl_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.so_url ADD CONSTRAINT sourl_so_fk FOREIGN KEY (so_id) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.sequencevariant ADD CONSTRAINT sequencevariant_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.taxonomy ADD CONSTRAINT taxonomy_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -437,6 +438,8 @@ ALTER TABLE nex.dnasequenceannotation ADD CONSTRAINT dnasequenceanno_contig_fk F
 ALTER TABLE nex.dnasequenceannotation ADD CONSTRAINT dnasequenceanno_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.dnasequenceannotation ADD CONSTRAINT dnasequenceanno_so_fk FOREIGN KEY (so_id) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.dnasequencealignment ADD CONSTRAINT dnasequencealignment_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.dnasequencealignment ADD CONSTRAINT dnasequencealignment_contig_fk FOREIGN KEY (contig_id) REFERENCES contig(contig_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.dnasubsequence ADD CONSTRAINT dnasubsequence_so_fk FOREIGN KEY (so_id) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.dnasubsequence ADD CONSTRAINT dnasubsequence_genomerelease_fk FOREIGN KEY (genomerelease_id) REFERENCES genomerelease(genomerelease_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
@@ -563,6 +566,8 @@ ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_sou
 ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_contig_fk FOREIGN KEY (contig_id) REFERENCES contig(contig_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.proteinsequenceannotation ADD CONSTRAINT proteinsequenceanno_genomerelease_fk FOREIGN KEY (genomerelease_id) REFERENCES genomerelease(genomerelease_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.proteinsequencealignment ADD CONSTRAINT proteinsequencealignment_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
 ALTER TABLE nex.proteinsequence_detail ADD CONSTRAINT proteinsequencedetail_anno_fk FOREIGN KEY (annotation_id) REFERENCES proteinsequenceannotation(annotation_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.regulationannotation ADD CONSTRAINT regulationanno_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
@@ -577,7 +582,7 @@ ALTER TABLE nex.regulationannotation ADD CONSTRAINT regulationanno_regulator_fk 
 ALTER TABLE nex.curation_locus ADD CONSTRAINT curationlocus_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.curation_locus ADD CONSTRAINT curationlocus_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE nex.curation_reference ADD CONSTRAINT curationref_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.curation_reference ADD CONSTRAINT curationref_dbentity_fk FOREIGN KEY (dbentity_id) REFERENCES dbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.curation_reference ADD CONSTRAINT curationref_reference_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.curation_reference ADD CONSTRAINT curationref_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 

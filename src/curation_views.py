@@ -48,6 +48,7 @@ from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annot
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
+from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger('curation')
@@ -523,15 +524,15 @@ def new_gene_name_reservation(request):
             except ValueError as e:
                 msg = 'Please enter a valid year.'
                 return HTTPBadRequest(body=json.dumps({ 'message': msg }), content_type='text/json')
-    # make sure author names have only letters
+    # make sure author names have only letters or spaces or dot 
     if 'authors' in list(data.keys()):
         authors = data['authors']
         for a in authors:
             if a['first_name'] and a['last_name']:
-                first_name = a['first_name']
-                last_name = a['last_name']
+                first_name = a['first_name'].replace(' ', '').replace('.', '')
+                last_name = a['last_name'].replace(' ', '').replace('.', '')
                 if not (first_name.isalpha() and last_name.isalpha()):
-                    return HTTPBadRequest(body=json.dumps({ 'message': 'Author names must contain only letters.' }), content_type='text/json')
+                    return HTTPBadRequest(body=json.dumps({ 'message': 'Author names must contain only letters or space or dot.' }), content_type='text/json')
     res_required_fields = ['new_gene_name']
     # validate reservations themselves
     for res in data['reservations']:
@@ -1260,7 +1261,7 @@ def ptm_file_insert(request):
             'psimod': 'Psimod',
             'modifier': 'Modifier(sgdid,systematic name)'
         }
-
+        log.info('PTM file upload for file '+filename+' in progress.')
         SOURCE_ID = 834
         SEPARATOR = '|'
 
@@ -1273,10 +1274,12 @@ def ptm_file_insert(request):
             if COLUMNS['modifier'] != col:    
                 rows = df[df[col].isnull()].index.tolist()
                 rows = ','.join([ str(r+2) for r in rows])
+                log.error('No values in column ' + col + ' rows '+ rows)
                 list_of_posttranslationannotation_errors.append('No values in column ' + col + ' rows '+ rows)
 
         if list_of_posttranslationannotation_errors:
             err = [e + '\n' for e in list_of_posttranslationannotation_errors]
+            log.info('PTM file upload complete for file '+filename + ' with errors.')
             return HTTPBadRequest(body=json.dumps({"error": list_of_posttranslationannotation_errors}), content_type='text/json')
 
         sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE'])
@@ -1302,7 +1305,7 @@ def ptm_file_insert(request):
                 posttranslationannotation_update = {}
 
                 column = COLUMNS['gene']
-                gene = unicode_to_string(row[column])
+                gene = row[column]
 
                 gene_current = str(row[COLUMNS['gene']].split(SEPARATOR)[0]).strip()
                 key = (gene_current, 'LOCUS')
@@ -1311,6 +1314,7 @@ def ptm_file_insert(request):
                 elif(key in systematic_name_to_dbentity_id):
                     posttranslationannotation_existing['dbentity_id'] = systematic_name_to_dbentity_id[key]
                 else:
+                    log.error('Error in gene on row ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in gene on row ' + str(index) + ', column ' + column)
                     continue
 
@@ -1322,9 +1326,9 @@ def ptm_file_insert(request):
                     elif(key in systematic_name_to_dbentity_id):
                         posttranslationannotation_update['dbentity_id'] = systematic_name_to_dbentity_id[key]
                     else:
+                        log.error('Error in gene on row ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in gene on row ' + str(index) + ', column ' + column)
                         continue
-
 
                 column = COLUMNS['taxonomy']
                 taxonomy = row[column]
@@ -1332,6 +1336,7 @@ def ptm_file_insert(request):
                 if taxonomy_current in strain_to_taxonomy_id:
                     posttranslationannotation_existing['taxonomy_id'] = strain_to_taxonomy_id[taxonomy_current]
                 else:
+                    log.error('Error in taxonomy on row ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in taxonomy on row ' + str(index) + ', column ' + column)
                     continue
 
@@ -1340,6 +1345,7 @@ def ptm_file_insert(request):
                     if taxonomy_new in strain_to_taxonomy_id:
                         posttranslationannotation_update['taxonomy_id'] = strain_to_taxonomy_id[taxonomy_new]
                     else:
+                        log.error('Error in updating taxonomy on row ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in updating taxonomy on row ' + str(index) + ', column ' + column)
                         continue
 
@@ -1355,6 +1361,7 @@ def ptm_file_insert(request):
                 elif(reference_current in reference_to_dbentity_id):
                     posttranslationannotation_existing['reference_id'] = int(reference_current)
                 else:
+                    log.error('Error in reference on row ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in reference on row ' + str(index) + ', column ' + column)
                     continue
 
@@ -1369,6 +1376,7 @@ def ptm_file_insert(request):
                     elif(reference_new in reference_to_dbentity_id):
                         posttranslationannotation_update['reference_id'] = int(reference_new)
                     else:
+                        log.error('Error in reference on row ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in reference on row ' + str(index) + ', column ' + column)
                         continue
 
@@ -1380,6 +1388,7 @@ def ptm_file_insert(request):
                 if (psimod_current in psimod_to_id):
                     posttranslationannotation_existing['psimod_id'] = psimod_to_id[psimod_current]
                 else:
+                    log.error('Error in psimod ' + str(index) + ', column ' + column)
                     list_of_posttranslationannotation_errors.append('Error in psimod ' + str(index) + ', column ' + column)
                     continue
 
@@ -1388,6 +1397,7 @@ def ptm_file_insert(request):
                     if (psimod_new in psimod_to_id):
                         posttranslationannotation_update['psimod_id'] = psimod_to_id[psimod_new]
                     else:
+                        log.error('Error in psimod ' + str(index) + ', column ' + column)
                         list_of_posttranslationannotation_errors.append('Error in psimod ' + str(index) + ', column ' + column)
                         continue
                 
@@ -1425,9 +1435,11 @@ def ptm_file_insert(request):
                 list_of_posttranslationannotation.append((posttranslationannotation_existing,posttranslationannotation_update))
             
             except ValueError as e:
+                log.error('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
                 list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
             except Exception as e:
-                list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + e.message)
+                log.exception('Error in on row ' + str(index) + ', column ' + column)
+                list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + str(e))
 
         if list_of_posttranslationannotation_errors:
             err = [ e + '\n'  for e in list_of_posttranslationannotation_errors]
@@ -1477,36 +1489,42 @@ def ptm_file_insert(request):
                 err = '\n'.join(list_of_posttranslationannotation_errors)
                 isSuccess = True
                 returnValue = 'Inserted: ' + str(INSERT) + ' Updated: ' + str(UPDATE) + ' Errors: ' + err
+                log.info(returnValue)
             except IntegrityError as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Record already exisits for site index: ' + str(e.params['site_index']) + ' site residue: ' + e.params['site_residue'] + ' dbentity_id: ' + str(e.params['dbentity_id'])
+                log.exception(returnValue)
             except DataError as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Error, issue in data row with site index: ' + str(e.params['site_index']) + ' site residue: ' + e.params['site_residue'] + ' dbentity_id: ' + str(e.params['dbentity_id'])
+                log.exception(returnValue)
             except Exception as e:
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
-                returnValue = e.message
+                log.exception('Exception occured in PTM file upload.')
+                returnValue = str(e)
             finally:
                 if curator_session:
                     curator_session.close()
         
         if isSuccess:
+            log.info("PTM file upload for "+ filename + " successfully.")
             return HTTPOk(body=json.dumps({"success": returnValue}), content_type='text/json')
         
         return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
 
 
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({ 'error': e.message }), content_type='text/json')
+        log.exception('PTM fileupload completed with error.')
+        return HTTPBadRequest(body=json.dumps({ 'error': str(e) }), content_type='text/json')
 
 
 @view_config(route_name='ptm_by_gene',renderer='json',request_method='GET')
@@ -1882,7 +1900,7 @@ def ptm_delete(request):
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
-                returnValue = 'Error occurred deleting ptm: ' + str(e.message)
+                returnValue = 'Error occurred deleting ptm: ' + str(e)
             finally:
                 if curator_session:
                     curator_session.close()
@@ -1895,7 +1913,7 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': 'ptm not found in database.'}), content_type='text/json')
 
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 @view_config(route_name='get_all_go_for_regulations',renderer='json',request_method='GET')
 @authenticate
@@ -1917,6 +1935,20 @@ def get_papers_by_tag(request):
 
     return get_list_of_papers(request)
 
+@view_config(route_name='get_all_eco', renderer='json', request_method='GET')
+@authenticate
+def get_all_eco(request):
+    eco_in_db = models_helper.get_all_eco()
+    obj = [{'eco_id':e.eco_id, 'format_name': e.format_name,'display_name':e.display_name} for e in eco_in_db]
+    return HTTPOk(body=json.dumps({'success':obj}),content_type='text/json')
+
+@view_config(route_name='get_all_do', renderer='json', request_method='GET')
+@authenticate
+def get_all_do(request):
+    do_in_db = models_helper.get_all_do()
+    obj = [{'disease_id':d.disease_id, 'format_name': d.format_name,'display_name':d.display_name} for d in do_in_db]
+    return HTTPOk(body=json.dumps({'success': obj}), content_type='text/json')
+    
 @view_config(route_name='phenotype_add', renderer='json', request_method='POST')
 @authenticate
 def phenotype_add(request):
@@ -1985,6 +2017,29 @@ def one_author_response(request):
 def edit_author_response(request):
 
     return update_author_response(request)
+@view_config(route_name='disease_insert_update', renderer='json', request_method='POST')
+@authenticate
+def disease_insert_update(request):
+
+    return insert_update_disease_annotations(request)
+
+@view_config(route_name='diseases_by_filters',renderer='json',request_method='POST')
+@authenticate
+def diseases_by_filters(request):
+
+    return get_diseases_by_filters(request)
+
+@view_config(route_name='disease_delete',renderer='json',request_method='DELETE')
+@authenticate
+def disease_delete(request):
+
+    return delete_disease_annotation(request)
+
+@view_config(route_name='disease_file',renderer='json',request_method='POST')
+@authenticate
+def disease_file(request):
+
+    return upload_disease_file(request)
 
 @view_config(route_name='regulation_insert_update', renderer='json', request_method='POST')
 @authenticate
@@ -2062,7 +2117,7 @@ def regulation_insert_update(request):
             try:
                 pmid_in_db = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == int(reference_id)).one_or_none()
             except ValueError as e:
-                pass
+                log.exception(str(e))
 
         if dbentity_in_db is not None:
             reference_id = dbentity_in_db.dbentity_id
@@ -2096,6 +2151,7 @@ def regulation_insert_update(request):
                 returnValue = 'Record updated successfully.'
 
                 regulation = curator_session.query(Regulationannotation).filter(Regulationannotation.annotation_id == annotation_id).one_or_none()
+                log.info('Regulation updated '+str(regulation.annotation_id))
                 reference_in_db = {
                     'id': regulation.annotation_id,
                     'target_id': {
@@ -2125,18 +2181,21 @@ def regulation_insert_update(request):
                     reference_in_db['taxonomy_id'] = regulation.taxonomy.taxonomy_id
 
             except IntegrityError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Integrity Error: ' + str(e.orig.pgerror)
             except DataError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Data Error: ' + str(e.orig.pgerror)
             except InternalError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2145,6 +2204,7 @@ def regulation_insert_update(request):
                 error = error[0:error.index('.')]
                 returnValue = 'Updated failed, ' + error
             except Exception as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2174,19 +2234,23 @@ def regulation_insert_update(request):
                 transaction.commit()
                 isSuccess = True
                 returnValue = 'Record added successfully.'
+                log.info('Regulation added ' + str(y.annotation_id))
             except IntegrityError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Integrity Error: ' + str(e.orig.pgerror)
             except DataError as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
                 returnValue = 'Data Error: ' + str(e.orig.pgerror)
             except Exception as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
@@ -2288,7 +2352,7 @@ def regulations_by_filters(request):
         
         return HTTPOk(body=json.dumps({'success': list_of_regulations}), content_type='text/json')
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({'error': e.message}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 
 @view_config(route_name='regulation_delete',renderer='json',request_method='DELETE')
@@ -2304,14 +2368,16 @@ def regulation_delete(request):
             try:
                 curator_session.delete(regulation_in_db)
                 transaction.commit()
+                log.info('Regulation deleted '+str(id))
                 isSuccess = True
                 returnValue = 'Regulation successfully deleted.'
             except Exception as e:
+                log.exception(str(e))
                 transaction.abort()
                 if curator_session:
                     curator_session.rollback()
                 isSuccess = False
-                returnValue = 'Error occurred deleting regulation: ' + str(e.message)
+                returnValue = 'Error occurred deleting regulation: ' + str(e)
             finally:
                 if curator_session:
                     curator_session.close()
@@ -2324,7 +2390,8 @@ def regulation_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': 'regulation not found in database.'}), content_type='text/json')
 
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({'error': str(e.message)}), content_type='text/json')
+        log.exception(str(e))
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 @view_config(route_name='regulation_file',renderer='json',request_method='POST')
 @authenticate
@@ -2579,7 +2646,7 @@ def regulation_file(request):
                 list_of_regulations.append([regulation_existing,regulation_update])
             
             except Exception as e:
-                list_of_regulations_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + e.message)
+                list_of_regulations_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + str(e))
         
 
         if list_of_regulations_errors:

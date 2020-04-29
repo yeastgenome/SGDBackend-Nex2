@@ -65,6 +65,8 @@ def update_data(infile):
         id_to_source[x.source_id] = x.display_name
         source_to_id[x.display_name] = x.source_id
 
+    sgdid2tpa = sgdid_to_tpa_mapping()
+    
     locus_id_to_sgdid = {}
     sgdid_to_locus_id = {}
     
@@ -74,7 +76,7 @@ def update_data(infile):
     
     log.info("Reading data from uniprot data file...")
 
-    [sgdid_to_uniprot_id, uniprot_id_to_sgdid, key_to_ids] = read_uniprot_file(infile, source_to_id)
+    [sgdid_to_uniprot_id, uniprot_id_to_sgdid_list, key_to_ids] = read_uniprot_file(infile, source_to_id)
 
     all_aliases = nex_session.query(LocusAlias).all()
 
@@ -86,6 +88,11 @@ def update_data(infile):
     log.info("Updating the data in the database...")
 
     for x in all_aliases:
+
+        ## ignore all NISS genes for now
+        systematic_name = locus_id_to_name[x.locus_id]
+        if systematic_name in ['YAR070W-A', 'YAR069W-A', 'ENA6', 'IMI1', 'KHR1', 'MPR1', 'RTM1']:
+            continue
 
         this_key = (x.alias_type, id_to_source[x.source_id])
         if this_key not in alias_type_src_list:
@@ -104,31 +111,37 @@ def update_data(infile):
                                   x.alias_type, uniprot_id)
             continue
 
-        key = (uniprot_id, x.alias_type, x.source_id)
+        key = (sgdid, x.alias_type, x.source_id)
         id_list = []
         if key in key_to_ids_DB:
             id_list = key_to_ids_DB[key]
         id_list.append(x.display_name)
         key_to_ids_DB[key] = id_list
 
-    for key in key_to_ids:
-        if key in key_to_ids_DB:
-            update_aliases(nex_session, fw, key, key_to_ids[key], 
-                           key_to_ids_DB[key], uniprot_id_to_sgdid, 
-                           sgdid_to_locus_id, id_to_source)
-            del key_to_ids_DB[key]
-        else:
-            insert_aliases(nex_session, fw, key, key_to_ids[key],
-                           uniprot_id_to_sgdid, sgdid_to_locus_id, id_to_source)
+    for this_key in key_to_ids:
+        (uniprot_id, alias_type, source_id) = this_key
+        sgdid_list = uniprot_id_to_sgdid_list.get(uniprot_id)
+        if sgdid_list is None:
+            continue
+        for sgdid in sgdid_list:
+            key = (sgdid, alias_type, source_id)
+            if key in key_to_ids_DB:
+                update_aliases(nex_session, fw, key, key_to_ids[this_key], 
+                               key_to_ids_DB[key], sgdid_to_locus_id, id_to_source,
+			       sgdid2tpa)
+                del key_to_ids_DB[key]
+            else:
+                insert_aliases(nex_session, fw, key, key_to_ids[this_key],
+                               sgdid_to_locus_id, id_to_source, sgdid2tpa)
 
     ## delete the ones that are not in the current uniprot file
     for key in key_to_ids_DB:
-        delete_aliases(nex_session, fw, key, uniprot_id_to_sgdid, sgdid_to_locus_id)
+        delete_aliases(nex_session, fw, key, sgdid_to_locus_id)
     
     # nex_session.rollback()
     nex_session.commit()
 
-    update_database_load_file_to_s3(nex_session, infile, source_to_id, edam_to_id)
+    # update_database_load_file_to_s3(nex_session, infile, source_to_id, edam_to_id)
 
     log.info("Loading summary:")
     log.info("\tAdded: " + str(ADDED))
@@ -137,60 +150,49 @@ def update_data(infile):
     log.info(str(datetime.now()))
     log.info("Done!")
 
-def get_locus_id(uniprot_id, uniprot_id_to_sgdid, sgdid_to_locus_id):
+def delete_aliases(nex_session, fw, key, sgdid_to_locus_id):
 
-    sgdid = uniprot_id_to_sgdid.get(uniprot_id)
-
-    if sgdid is None:
-        # print "The uniprot ID: ", uniprot_id, " is not mapped to a sgdid."
-        return None
+    (sgdid, alias_type, source_id) = key
 
     locus_id = sgdid_to_locus_id.get(sgdid)
     if locus_id is None:
-        log.info("The SGDID: " + sgdid + " is not in the database.")
-        return None
-
-    return locus_id
-
-def delete_aliases(nex_session, fw, key, uniprot_id_to_sgdid, sgdid_to_locus_id):
-
-    # print "Delete aliases for key: ", key
-
-    (uniprot_id, alias_type, source_id) = key
-
-    locus_id = get_locus_id(uniprot_id, uniprot_id_to_sgdid, sgdid_to_locus_id)
-    if locus_id is None:
         return
-
     nex_session.query(LocusAlias).filter_by(locus_id=locus_id, alias_type=alias_type, source_id=source_id).delete()
     global DELETED
     DELETED = DELETED + 1
 
-def insert_aliases(nex_session, fw, key, ids, uniprot_id_to_sgdid, sgdid_to_locus_id, id_to_source):
+def insert_aliases(nex_session, fw, key, ids, sgdid_to_locus_id, id_to_source, sgdid2tpa):
     
-    (uniprot_id, alias_type, source_id) = key
-
-    locus_id = get_locus_id(uniprot_id, uniprot_id_to_sgdid, sgdid_to_locus_id)
+    (sgdid, alias_type, source_id) = key
+    
+    locus_id = sgdid_to_locus_id.get(sgdid)
     if locus_id is None:
         return
-
     for ID in ids:
+        if alias_type == 'TPA protein version ID' and sgdid in sgdid2tpa and sgdid2tpa[sgdid] != ID:
+            continue
+            # ID = sgdid2tpa[sgdid]
         insert_alias(nex_session, fw, locus_id, alias_type, id_to_source[source_id], source_id, ID)
         global ADDED
         ADDED = ADDED + 1
 
+def update_aliases(nex_session, fw, key, ids_new, ids_DB, sgdid_to_locus_id, id_to_source, sgdid2tpa):
 
-def update_aliases(nex_session, fw, key, ids, ids_DB, uniprot_id_to_sgdid, sgdid_to_locus_id, id_to_source):
-
+    (sgdid, alias_type, source_id) = key
+    ids = []
+    for id in ids_new:
+        if alias_type == 'TPA protein version ID' and sgdid in sgdid2tpa and id != sgdid2tpa[sgdid]:
+            continue
+        ids.append(id)
     if set(ids_DB) == set(ids):
         return
-
-    (uniprot_id, alias_type, source_id) = key
-
-    locus_id = get_locus_id(uniprot_id, uniprot_id_to_sgdid, sgdid_to_locus_id)
+    
+    locus_id = sgdid_to_locus_id.get(sgdid)
     if locus_id is None:
         return
     for ID in ids:
+        # if alias_type == 'TPA protein version ID' and sgdid in sgdid2tpa and sgdid2tpa[sgdid] != ID:
+        #    continue
         if ID in ids_DB:
             ids_DB.remove(ID)
             continue
@@ -206,16 +208,12 @@ def update_aliases(nex_session, fw, key, ids, ids_DB, uniprot_id_to_sgdid, sgdid
 
 def delete_alias(nex_session, fw, locus_id, alias_type, ID):
     
-    # print "DELETE ",   locus_id, alias_type, ID
-
     nex_session.query(LocusAlias).filter_by(locus_id=locus_id, alias_type=alias_type, display_name=ID).delete()
     
     fw.write("Delete "+alias_type+" "+ID+"\n")
     
 def insert_alias(nex_session, fw, locus_id, alias_type, source, source_id, ID):
     
-    # print "INSERT ", locus_id, alias_type, source, ID
-
     obj_url = get_url(alias_type, ID, source)
 
     x = LocusAlias(display_name = ID,
@@ -231,8 +229,6 @@ def insert_alias(nex_session, fw, locus_id, alias_type, source, source_id, ID):
     
 def update_uniprot_id(nex_session, fw, locus_id, alias_type, ID):
 
-    # print locus_id, alias_type, ID
-        
     nex_session.query(LocusAlias).filter_by(locus_id=locus_id, alias_type=alias_type).update({"display_name": ID, "obj_url": "http://www.uniprot.org/uniprot/"+ID})
         
     fw.write("Update "+alias_type+" to "+ID+" for locus_id="+str(locus_id)+"\n")
@@ -309,10 +305,10 @@ def update_database_load_file_to_s3(nex_session, data_file, source_to_id, edam_t
 
     
 def read_uniprot_file(infile, source_to_id):
-
+    
     f = gzip.open(infile, mode='rt')    
     sgdid_to_uniprot_id = {}
-    uniprot_id_to_sgdid = {}
+    uniprot_id_to_sgdid_list = {}
     key_to_ids = {}
     for line in f:
         pieces = line.strip().split("\t")
@@ -327,7 +323,11 @@ def read_uniprot_file(infile, source_to_id):
             uniprot_id = uniprot_id[0:6]
         if type == "SGD":
             sgdid_to_uniprot_id[ID] = uniprot_id
-            uniprot_id_to_sgdid[uniprot_id] = ID
+            sgdid_list = []
+            if uniprot_id in uniprot_id_to_sgdid_list:
+                sgdid_list = uniprot_id_to_sgdid_list[uniprot_id]
+            sgdid_list.append(ID)
+            uniprot_id_to_sgdid_list[uniprot_id] = sgdid_list
             # print uniprot_id, ID
         if type == 'DIP':
             ## example ID = "DIP-310N"
@@ -345,8 +345,25 @@ def read_uniprot_file(infile, source_to_id):
             key_to_ids[key] = id_list        
     f.close()
 
-    return [sgdid_to_uniprot_id, uniprot_id_to_sgdid, key_to_ids] 
+    return [sgdid_to_uniprot_id, uniprot_id_to_sgdid_list, key_to_ids] 
 
+
+def sgdid_to_tpa_mapping():
+
+    return { 'S000000214' : 'DAA07131.1', # HHT1          
+             'S000004976' : 'DAA10514.1', # HHT2          
+             'S000000213' : 'DAA07130.1', # HHF1          
+             'S000004975' : 'DAA10515.1', # HHF2          
+             'S000000322' : 'DAA07236.1', # TEF2          
+             'S000006284' : 'DAA11498.1', # TEF1          
+             'S000003674' : 'DAA08662.1', # TIF2          
+             'S000001767' : 'DAA09210.1', # TIF1          
+             'S000002793' : 'DAA12229.1', # EFT2          
+             'S000005659' : 'DAA10907.1', # EFT1
+             'S000001535' : 'DAA09105.1', # ASK1 ; it has a TPA_exp
+             'S000004205' : 'DAA06809.1', # CDC123 ; it has a TPA_exp
+             'S000001157' : 'DAA06809.1', # DMA1 ; it has a TPA_exp
+             'S000005060' : 'DAA10432.1' }
 
 if __name__ == '__main__':
 

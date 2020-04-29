@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-// import DataList from '../../components/dataList';
-import DataList from './dataList'; 
+import { DataList } from 'react-datalist-field';
 import fetchData from '../../lib/fetchData';
 import { setError } from '../../actions/metaActions';
 const GET_ASSAYS = '/get_eco';
@@ -60,7 +59,7 @@ class ConditionSection extends Component {
     if (this.props.isAssay) {
       return (
         <div className='columns medium-5 small-5'>
-          <DataList options={this.state.assays} id='assay_name' value1='display_name' value2='' selectedIdName='assay_name' placeholder='Enter assay name' onOptionChange={this.props.onOptionChange} selectedId={this.props.name} />
+          <DataList options={this.state.assays} id='assay_name' left='display_name' right='' selectedIdName='assay_name' placeholder='Enter assay name' onOptionChange={this.props.onOptionChange} selectedId={this.props.name} />
         </div>
       );
     }
