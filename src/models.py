@@ -4131,12 +4131,14 @@ class Locusdbentity(Dbentity):
         main_strain = None
         for strain in main_strain_list:
             x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
-            y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').one_or_none()
-            if y is None:
+            y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all() 
+            if len(y) == 0:
                 continue
             if  main_strain is None:
                 main_strain = strain
                 TAXON_ID = x.taxonomy_id
+                if main_strain == 'S288C':
+                    break
             z = DBSession.query(Proteindomainannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id).all()
             if len(z) > 0:
                 main_strain = strain
