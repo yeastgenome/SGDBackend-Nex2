@@ -519,6 +519,15 @@ def chemical_go_details(request):
     else:
         return HTTPNotFound()
 
+@view_config(route_name='chemical_proteinabundance_details', renderer='json', request_method='GET')
+def chemical_proteinabundance_details(request):
+    id = extract_id_request(request, 'chebi')
+    chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+    if chebi:
+        return chebi.proteinabundance_to_dict()
+    else:
+        return HTTPNotFound()
+
 @view_config(route_name='chemical_complex_details', renderer='json', request_method='GET')
 def chemical_complex_details(request):
     id = extract_id_request(request, 'chebi')

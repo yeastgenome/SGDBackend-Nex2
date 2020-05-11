@@ -37,6 +37,8 @@ def load_ontology(ontology_file):
     
     chebi_id_to_alias = {}
     for x in nex_session.query(ChebiAlia).all():
+        if x.alias_type in ['PharmGKB ID', 'YeastPathway ID']:
+            continue
         aliases = []
         if x.chebi_id in chebi_id_to_alias:
             aliases = chebi_id_to_alias[x.chebi_id]
@@ -96,12 +98,6 @@ def load_new_data(nex_session, data, source_to_id, chebiid_to_chebi, chebi_id_to
             ## in database
             y = chebiid_to_chebi[x['id']]
             chebi_id = y.chebi_id
-            
-
-            print(x['id'])
-
-
-
             if y.is_obsolete is True:
                 y.is_obsolete = '0'
                 nex_session.add(y)
