@@ -2818,3 +2818,22 @@ def triage_count(request):
         log.exception('DB error corrected. Rollingback previous error in db connection')
         DBSession.rollback()
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
+
+
+@view_config(route_name='delete_reference', request_method='POST', renderer='json')
+@authenticate
+def delete_reference(request):
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    try:
+        reason_deleted = request.json_body.get('reason_deleted')
+        sgd_id = request.matchdict['id']
+        username = request.session['username']
+        reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+        # print str(reference.statement.compile(dialect=postgresql.dialect()))
+        log.debug("Ref ID = " + reference.sgdid)
+        log.debug("Reason deleted = " + reason_deleted)
+        return reference.delete_reference(username, reason_deleted)
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')

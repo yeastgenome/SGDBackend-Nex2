@@ -230,6 +230,7 @@ def main(global_config, **settings):
     config.add_route('all_author_responses','/author_responses', request_method='GET')
     config.add_route('one_author_response', '/author_responses/{id}', request_method='GET')
 
+    config.add_route('delete_reference','/delete_reference/{id}', request_method='POST')
     config.add_route('healthcheck', '/healthcheck')
 
     #swagger

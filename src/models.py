@@ -2662,6 +2662,53 @@ class Referencedbentity(Dbentity):
             if curator_session:
                 curator_session.close()
 
+    def delete_reference(self, username, reason_deleted):
+        curator_session = None
+        annotation_list = dict()
+        try:
+            curator_session = get_curator_session(username)
+            author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
+            binding_motif = curator_session.query(Bindingmotifannotation).filter_by(reference_id=self.dbentity_id)
+            colleague_ref = curator_session.query(ColleageReference).filter_by(reference_id=self.dbentity_id)
+            contignote_ref = curator_session.query(ContignoteReference).filter_by(reference_id=self.dbentity_id)
+            curation_ref = curator_session.query(CurationReference).filter_by(reference_id=self.dbentity_id)
+            dataset_ref = curator_session.query(DatasetReference).filter_by(reference_id=self.dbentity_id)
+            disease_annot = curator_session.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id)
+            disease_subset_annot = curator_session.query(Diseasesubsetannotation).filter_by(reference_id=self.dbentity_id)
+            dnaseq_annot = curator_session.query(Dnasequenceannotation).filter_by(reference_id=self.dbentity_id)
+            enzyme_annot = curator_session.query(Enzymeannotation).filter_by(reference_id=self.dbentity_id)
+            expression_annot = curator_session.query(Expressionannotation).filter_by(reference_id=self.dbentity_id)
+            geninteraction_annot = curator_session.query(Geninteractionannotation).filter_by(reference_id=self.dbentity_id)
+            go_annot = curator_session.query(Goannotation).filter_by(reference_id=self.dbentity_id)
+            goslim_annot = curator_session.query(Goslimannotation).filter_by(reference_id=self.dbentity_id)
+            literature_annot = curator_session.query(Literatureannotation).filter_by(reference_id=self.dbentity_id)
+            locus_ref = curator_session.query(LocusReferences).filter_by(reference_id=self.dbentity_id)
+            locusalias_ref = curator_session.query(LocusAliasReferences).filter_by(reference_id=self.dbentity_id)
+            locusnote_ref = curator_session.query(LocusnoteReference).filter_by(reference_id=self.dbentity_id)
+            locusrelation_ref = curator_session.query(LocusrelationReference).filter_by(reference_id=self.dbentity_id)
+            locussummary_ref = curator_session.query(LocussummaryReference).filter_by(reference_id=self.dbentity_id)
+            pathway_annot = curator_session.query(Pathwayannotation).filter_by(reference_id=self.dbentity_id)
+            pathwaysummary_ref = curator_session.query(PathwaysummaryReference).filter_by(reference_id=self.dbentity_id)
+            phenotype_annot = curator_session.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id)
+            physinteraction_annot = curator_session.query(Physinteractionannotation).filter_by(reference_id=self.dbentity_id)
+            posttranslation_annot = curator_session.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id)
+            proteindomain_annot = curator_session.query(Proteindomainannotation).filter_by(reference_id=self.dbentity_id)
+            proteinexpt_annot = curator_session.query(Proteinexptannotation).filter_by(reference_id=self.dbentity_id)
+            proteinseq_annot = curator_session.query(Proteinsequenceannotation).filter_by(reference_id=self.dbentity_id)
+            regulation_annot = curator_session.query(Regulationannotation).filter_by(reference_id=self.dbentity_id)
+            reserved_name = curator_session.query(Reservedname).filter_by(reference_id=self.dbentity_id)
+            strainsummary_ref = curator_session.query(StrainsummaryReference).filter_by(reference_id=self.dbentity_id)
+            reference_file = curator_session.query(ReferenceFile).filter_by(reference_id=self.dbentity_id)
+            return self.to_dict()
+        except Exception as e:
+            traceback.print_exc()
+            transaction.abort()
+            curator_session.rollback()
+            raise(e)
+        finally:
+            if curator_session:
+                curator_session.close()
+
 class FilePath(Base):
     __tablename__ = 'file_path'
     __table_args__ = {'schema': 'nex'}
