@@ -760,6 +760,7 @@ class Chebi(Base):
         if self.chebiid.startswith("NTR:"):
             is_ntr = 1
 
+            
         obj = {
             "id": self.chebi_id,
             "display_name": self.display_name,
@@ -774,6 +775,10 @@ class Chebi(Base):
         obj["complexes"] = self.complex_to_dict() 
         obj["phenotype"] = self.phenotype_to_dict()
         obj["go"] = self.go_to_dict()
+        obj["protein_abundance"] = self.proteinabundance_to_dict()
+        obj["pathways"] = self.pathway_to_dict()
+        obj["structure_image_url"] = self.get_structure_url()
+        obj["pharmGKB_link_url"] = self.get_pharmGKB_url()
         obj["network_graph"] = self.chemical_network()
 
         return obj
@@ -808,6 +813,21 @@ class Chebi(Base):
 
         return obj
 
+    def proteinabundance_to_dict(self):
+
+        annotations = DBSession.query(Proteinabundanceannotation).filter_by(chemical_id=self.chebi_id).all()
+        new_reference_ids = [a.reference_id for a in annotations]
+        orig_reference_ids = [a.original_reference_id for a in annotations]
+        reference_ids = list(set(new_reference_ids + orig_reference_ids))
+        references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).all()
+
+        ids_to_references = {}
+        for r in references:
+            ids_to_references[r.dbentity_id] = r
+
+        data = [a.to_dict(chebi=self, references=ids_to_references) for a in annotations]
+        return sorted(data, key=lambda d: d['order_by'])
+
     def complex_to_dict(self):
 
         interactors = DBSession.query(Interactor.interactor_id).filter_by(format_name=self.chebiid).all()
@@ -831,6 +851,37 @@ class Chebi(Base):
 
         return complexes
 
+    def pathway_to_dict(self):
+
+        biocycIDs = DBSession.query(ChebiAlia.display_name).filter_by(chebi_id=self.chebi_id, alias_type='YeastPathway ID').all()
+        
+        pathwayRows = DBSession.query(Pathwaydbentity).filter(Pathwaydbentity.biocyc_id.in_(biocycIDs)).all()
+        
+        pathways = []
+        for row in pathwayRows:
+            pathways.append({ "display_name": row.display_name,
+                              "biocyc_id": row.biocyc_id,
+                              "link_url": "https://pathway.yeastgenome.org/YEAST/NEW-IMAGE?type=NIL&object=" + row.biocyc_id + "&redirect=T"})
+            
+        pathwaysSorted = sorted(pathways, key=lambda p: p['display_name'])
+        
+        return pathwaysSorted
+    
+    def get_structure_url(self):
+        url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "")
+        response = urlopen(url)
+        res = response.read()
+        if len(res) > 0:
+            return url
+        return ""
+
+    def get_pharmGKB_url(self):
+
+        rows = DBSession.query(ChebiAlia.display_name).filter_by(chebi_id=self.chebi_id, alias_type='PharmGKB ID').all()
+        if len(rows) > 0:
+            return "https://www.pharmgkb.org/chemical/" + rows[0].display_name
+        return ""
+        
     def chemical_network(self):
         
         network_nodes =[]
@@ -9346,7 +9397,7 @@ class Proteinabundanceannotation(Base):
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
 
-    def to_dict(self, locus=None, references=None):
+    def to_dict(self, locus=None, chebi=None, references=None):
 
         if references:
             reference = references[self.reference_id]
@@ -9357,7 +9408,10 @@ class Proteinabundanceannotation(Base):
 
         if locus is None:
             locus = self.dbentity
-        
+            
+        if chebi is None:
+            chebi = self.chebi
+            
         process = ""
         chemical_name = ""
         p = '0'
@@ -9366,7 +9420,7 @@ class Proteinabundanceannotation(Base):
             process = self.go.display_name
             p = '1'
         if self.chemical_id:
-            chemical_name = self.chebi.display_name
+            chemical_name = chebi.display_name
             c = '1'
         order_by = original_reference.display_name + "_" + p + c + "_" + process + "_" + chemical_name 
 
@@ -9921,7 +9975,7 @@ class ReferenceFile(Base):
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-    # file_type = Column(String(100), nullable=False)
+    file_type = Column(String(100), nullable=False)
 
     file = relationship('Filedbentity')
     reference = relationship('Referencedbentity')

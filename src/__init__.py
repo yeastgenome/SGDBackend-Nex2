@@ -47,6 +47,7 @@ def main(global_config, **settings):
     config.add_route('chemical', '/chemical/{format_name}', request_method='GET')
     config.add_route('chemical_phenotype_details', '/chemical/{id}/phenotype_details', request_method='GET')
     config.add_route('chemical_go_details', '/chemical/{id}/go_details', request_method='GET')
+    config.add_route('chemical_proteinabundance_details', '/chemical/{id}/proteinabundance_details', request_method='GET')
     config.add_route('chemical_complex_details', '/chemical/{id}/complex_details', request_method='GET')
     config.add_route('chemical_network_graph', '/chemical/{id}/network_graph', request_method='GET')
 
