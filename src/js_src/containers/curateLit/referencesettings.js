@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import t from 'tcomb-form';
+import PropTypes from 'prop-types';
 
 import FlexiForm from '../../components/forms/flexiForm';
 
@@ -20,10 +21,9 @@ class ReferenceSettings extends Component {
     let refSettingsSchema = t.struct({
       reason_deleted: t.enums.of(reasonDelete)
     });
-
-    let ref_id = this.props.params.id;
+    let ref_id = this.props.match.params.id;
     return (
-      <div style={{ maxWidth: '25rem' }}>
+      <div style={{ maxWidth: '25rem' }}>        
         <FlexiForm
           requestMethod='POST' tFormSchema={refSettingsSchema} submitText='Delete'
           updateUrl={`reference/${ref_id}/delete_reference`} confirmRequired
@@ -42,7 +42,7 @@ class ReferenceSettings extends Component {
 }
 
 ReferenceSettings.propTypes = {
-  params: React.PropTypes.object
+  match: PropTypes.object
 };
 
 export default ReferenceSettings;
