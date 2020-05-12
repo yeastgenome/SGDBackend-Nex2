@@ -871,6 +871,9 @@ class Chebi(Base):
         url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "")
         response = urlopen(url)
         res = response.read()
+
+        return len(res)
+        
         if len(res) > 0:
             d = 200
             if len(res) > 70000:
