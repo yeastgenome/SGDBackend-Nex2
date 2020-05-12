@@ -872,9 +872,9 @@ class Chebi(Base):
         response = urlopen(url)
         res = response.read()
         if len(res) > 0:
-            d = int(len(res)*200/2000);
-            if d < 200:
-                d = 200
+            d = 200
+            if len(res) > 70000;
+                d = 400
             return url + "&dimensions=" + str(d)
         return ""
 
