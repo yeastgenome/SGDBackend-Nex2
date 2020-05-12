@@ -873,7 +873,7 @@ class Chebi(Base):
         res = response.read()
         if len(res) > 0:
             d = 200
-            if len(res) > 70000;
+            if len(res) > 70000:
                 d = 400
             return url + "&dimensions=" + str(d)
         return ""
