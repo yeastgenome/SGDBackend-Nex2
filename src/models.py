@@ -868,17 +868,11 @@ class Chebi(Base):
         return pathwaysSorted
     
     def get_structure_url(self):
-        url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "")
+        url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "") + "&dimensions=200"
         response = urlopen(url)
         res = response.read()
-
-        return len(res)
-        
         if len(res) > 0:
-            d = 200
-            if len(res) > 70000:
-                d = 400
-            return url + "&dimensions=" + str(d)
+            return url
         return ""
 
     def get_pharmGKB_url(self):
