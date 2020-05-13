@@ -956,7 +956,7 @@ class Chebi(Base):
         for p in phenotype_annotations:
             if p.phenotype.display_name.startswith('resistance to chemicals:'):
                 continue
-            pheno_id = "phenotype_" + str(p.annotation_id)
+            pheno_id = "phenotype_" + str(p.phenotype_id)
             conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id = p.annotation_id, condition_class = 'chemical').all() 
             for cond in conditions:
                 chebiObjs = DBSession.query(Chebi).filter_by(display_name=cond.condition_name).all()
