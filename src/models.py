@@ -4180,16 +4180,6 @@ class Locusdbentity(Dbentity):
         }
 
     def get_main_strain(self, type=None):
-
-        
-        if self.gene_name == 'MAL2':
-            if type is None:
-                return ['S288C', TAXON_ID]
-            else:
-                return TAXON_ID
-
-
-            
         main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1", "SEY6210", "X2180-1A", "CEN.PK", "D273-10B", "JK9-3d", "FL100", "Y55", "RM11-1a"]
         main_strain = None
         for strain in main_strain_list:

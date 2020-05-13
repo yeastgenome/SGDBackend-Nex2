@@ -696,6 +696,7 @@ def locus(request):
         else:
             return HTTPNotFound()
     except Exception as e:
+        logging.exception(str(e))
         return HTTPNotFound()
 
 
