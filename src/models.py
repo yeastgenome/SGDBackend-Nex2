@@ -975,7 +975,7 @@ class Chebi(Base):
                         })
                         network_nodes_ids[c.format_name] = True
 
-                    name = p.locus.display_name + ": " + p.phenotype.display_name
+                    name = p.dbentity.display_name + ": " + p.phenotype.display_name
                     if name in phenotype_to_id:
                         pheno_id = phenotype_to_id[name]
                     else:
