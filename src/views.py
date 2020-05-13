@@ -694,7 +694,8 @@ def locus(request):
         if locus:
             return locus.to_dict()
         else:
-            return HTTPNotFound()
+            # return HTTPNotFound()
+            return HTTPBadRequest(body=json.dumps({'error': "locus.to_dict error"}), content_type="text/json")
     except Exception as e:
         logging.exception(str(e))
         return HTTPNotFound()
