@@ -4183,8 +4183,7 @@ class Locusdbentity(Dbentity):
         main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1", "SEY6210", "X2180-1A", "CEN.PK", "D273-10B", "JK9-3d", "FL100", "Y55", "RM11-1a"]
         main_strain = None
         for strain in main_strain_list:
-            # x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
-            x = DBSession.query(Dbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none() 
+            x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
             y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all()
             if len(y) == 0:
                 continue
