@@ -219,16 +219,16 @@ def dump_data():
                 if display_name == 'CDS':
                     phase = start2phase[contig_start_index]
 
-                if type == 'gene' or 'noncoding_exon' in name:
-                    parent = systematic_name
-                    if type == 'gene':
-                        parent = systematic_name + "_mRNA"
-                    fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + x.strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
-                    if qualifier:
-                        fw.write(";orf_classification=" + qualifier)
-                    fw.write("\n")
-                else:
-                    fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + strand + "\t" + str(phase) + "\tID=" + name + ";Name=" + name + ";dbxref=" + sgdid + ";curie=" + sgdid + "\n");
+                parent = systematic_name
+                if type == 'gene':
+                    parent = systematic_name + "_mRNA"
+
+                fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + x.strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
+                if type == 'gene' and qualifier:
+                    fw.write(";orf_classification=" + qualifier)
+                fw.write("\n")
+
+                # fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + strand + "\t" + str(phase) + "\tID=" + name + ";Name=" + name + ";dbxref=" + sgdid + ";curie=" + sgdid + "\n");
     
             if type == 'gene':
                 fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand + "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
