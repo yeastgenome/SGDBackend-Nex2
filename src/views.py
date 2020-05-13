@@ -698,8 +698,8 @@ def locus(request):
             return HTTPBadRequest(body=json.dumps({'error': "locus.to_dict error"}), content_type="text/json")
     except Exception as e:
         logging.exception(str(e))
-        return HTTPNotFound()
-
+        # return HTTPNotFound()
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type="text/json")
 
 @view_config(route_name='locus_tabs', renderer='json', request_method='GET')
 def locus_tabs(request):
