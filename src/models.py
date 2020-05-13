@@ -4197,6 +4197,8 @@ class Locusdbentity(Dbentity):
                 main_strain = strain
                 TAXON_ID = x.taxonomy_id
                 break
+        if main_strain is None:
+            main_strain = 'S288C'
         if type == 'taxonomy_id':
             return TAXON_ID
         else:
