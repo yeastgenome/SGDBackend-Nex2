@@ -4183,10 +4183,10 @@ class Locusdbentity(Dbentity):
 
         ### testing here
         if self.gene_name == 'MAL2':
-            if type == 'taxonomy_id':
-                return TAXON_ID
-            else:
+            if type is None:
                 return ['S288C', TAXON_ID]
+            else:
+                return TAXON_ID
         ### end of testing
         
             
