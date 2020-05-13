@@ -4180,20 +4180,10 @@ class Locusdbentity(Dbentity):
         }
 
     def get_main_strain(self, type=None):
-
-        ### testing here
-        if self.gene_name == 'MAL2':
-            if type is None:
-                return ['S288C', TAXON_ID]
-            else:
-                return TAXON_ID
-        ### end of testing
-        
-            
         main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1", "SEY6210", "X2180-1A", "CEN.PK", "D273-10B", "JK9-3d", "FL100", "Y55", "RM11-1a"]
         main_strain = None
         for strain in main_strain_list:
-            x = DBSession.query(Dbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
+            x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
             y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all()
             if len(y) == 0:
                 continue
@@ -4207,8 +4197,6 @@ class Locusdbentity(Dbentity):
                 main_strain = strain
                 TAXON_ID = x.taxonomy_id
                 break
-        if main_strain is None:
-            main_strain = 'S288C'
         if type == 'taxonomy_id':
             return TAXON_ID
         else:
