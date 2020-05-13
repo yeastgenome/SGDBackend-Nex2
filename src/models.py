@@ -956,7 +956,7 @@ class Chebi(Base):
         for p in phenotype_annotations:
             if p.phenotype.display_name.startswith('resistance to chemicals:'):
                 continue
-            pheno_id = "phenotype_" + str(p.dbentity_id) + "_" + str(p.phenotype_id) 
+            pheno_id = "phenotype_" + str(p.annotation_id)
             conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id = p.annotation_id, condition_class = 'chemical').all() 
             for cond in conditions:
                 chebiObjs = DBSession.query(Chebi).filter_by(display_name=cond.condition_name).all()
@@ -974,16 +974,15 @@ class Chebi(Base):
                                 "category": "CHEMICAL",
                         })
                         network_nodes_ids[c.format_name] = True
-
-                    name = p.dbentity.display_name + ": " + p.phenotype.display_name
-                    if name in phenotype_to_id:
-                        pheno_id = phenotype_to_id[name]
+                    
+                    if p.phenotype.display_name in phenotype_to_id:
+                        pheno_id = phenotype_to_id[p.phenotype.display_name]
                     else:
-                        phenotype_to_id[name] = pheno_id 
+                        phenotype_to_id[p.phenotype.display_name] = pheno_id 
 
                     if pheno_id not in network_nodes_ids:
                         network_nodes.append({
-                            "name": name,
+                            "name": p.phenotype.display_name,
                             "id": pheno_id,
                             "href": p.phenotype.obj_url,
                             "category": "PHENOTYPE",
