@@ -898,19 +898,10 @@ class Chebi(Base):
         })
         network_nodes_ids[self.format_name] = True
 
-        ## go
-        
+        ## go 
         extensions = DBSession.query(Goextension.annotation_id).filter_by(dbxref_id=self.chebiid).all()
+
         go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(extensions)).all()
-
-        ## get all go terms that are using this chemical
-        go_ids = []
-        for g in go_annotations:
-            if g.go_id not in go_ids:
-                go_ids.append(g.go_id)
-
-        ## get all go annotations with go terms in the above list (go_ids)        
-        go_annotations = DBSession.query(Goannotation).filter(Goannotation.go_id.in_(go_ids)).all()
         
         for g in go_annotations:
             extensions = DBSession.query(Goextension).filter_by(annotation_id=g.annotation_id).all()
@@ -957,26 +948,15 @@ class Chebi(Base):
             
         ## phenotype
 
-        ## get all annotation_ids that are associated with the given chemical
         conditions = DBSession.query(PhenotypeannotationCond.annotation_id).filter_by(condition_class = 'chemical', condition_name=self.display_name).all()
 
-        ## get all annotations that are using this chemical as condition
         phenotype_annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.annotation_id.in_(conditions)).all()            
 
-        ## get all phenotypes (obervable+qualifer pair) that are associated with the given chemical
-        phenotype_ids = []
+        phenotype_to_id = {}
         for p in phenotype_annotations:
             if p.phenotype.display_name.startswith('resistance to chemicals:'):
                 continue
-            if p.phenotype_id not in phenotype_ids:
-                phenotype_ids.append(p.phenotype_id)
-
-        ## get all annotations that are using phenotype_id in the above phenotype_ids list
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.phenotype_id.in_(phenotype_ids)).all()
-    
-        phenotype_to_id = {}
-        for p in phenotype_annotations:
-            pheno_id = "phenotype_" + str(p.phenotype_id)
+            pheno_id = "phenotype_" + str(p.dbentity_id) + "_" + str(p.phenotype_id) 
             conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id = p.annotation_id, condition_class = 'chemical').all() 
             for cond in conditions:
                 chebiObjs = DBSession.query(Chebi).filter_by(display_name=cond.condition_name).all()
@@ -994,15 +974,16 @@ class Chebi(Base):
                                 "category": "CHEMICAL",
                         })
                         network_nodes_ids[c.format_name] = True
-                    
-                    if p.phenotype.display_name in phenotype_to_id:
-                        pheno_id = phenotype_to_id[p.phenotype.display_name]
+
+                    name = p.locus.display_name + ": " + p.phenotype.display_name
+                    if name in phenotype_to_id:
+                        pheno_id = phenotype_to_id[name]
                     else:
-                        phenotype_to_id[p.phenotype.display_name] = pheno_id 
+                        phenotype_to_id[name] = pheno_id 
 
                     if pheno_id not in network_nodes_ids:
                         network_nodes.append({
-                            "name": p.phenotype.display_name,
+                            "name": name,
                             "id": pheno_id,
                             "href": p.phenotype.obj_url,
                             "category": "PHENOTYPE",
