@@ -219,8 +219,10 @@ def dump_data():
                 if display_name == 'CDS':
                     phase = start2phase[contig_start_index]
 
-                if type == 'gene':
-                    parent = systematic_name + "_mRNA" 
+                if type == 'gene' or 'noncoding_exon' in name:
+                    parent = systematic_name
+                    if type == 'gene':
+                        parent = systematic_name + "_mRNA"
                     fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + x.strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
                     if qualifier:
                         fw.write(";orf_classification=" + qualifier)
