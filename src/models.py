@@ -901,18 +901,15 @@ class Chebi(Base):
         ## go
         
         extensions = DBSession.query(Goextension.annotation_id).filter_by(dbxref_id=self.chebiid).all()
-
         go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(extensions)).all()
 
         ## get all go terms that are using this chemical
-        
         go_ids = []
         for g in go_annotations:
-            if g.go_id is not in go_ids:
+            if g.go_id not in go_ids:
                 go_ids.append(g.go_id)
 
-        ## get all go annotations with go terms in the above list (go_ids)
-        
+        ## get all go annotations with go terms in the above list (go_ids)        
         go_annotations = DBSession.query(Goannotation).filter(Goannotation.go_id.in_(go_ids)).all()
         
         for g in go_annotations:
