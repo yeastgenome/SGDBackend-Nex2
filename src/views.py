@@ -696,8 +696,9 @@ def locus(request):
         else:
             return HTTPNotFound()
     except Exception as e:
+        logging.exception(str(e))
         return HTTPNotFound()
-
+        
 
 @view_config(route_name='locus_tabs', renderer='json', request_method='GET')
 def locus_tabs(request):
