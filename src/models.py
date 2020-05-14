@@ -868,7 +868,7 @@ class Chebi(Base):
         return pathwaysSorted
     
     def get_structure_url(self):
-        url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "")
+        url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "") + "&dimensions=200"
         response = urlopen(url)
         res = response.read()
         if len(res) > 0:
@@ -954,7 +954,9 @@ class Chebi(Base):
 
         phenotype_to_id = {}
         for p in phenotype_annotations:
-            pheno_id = "phenotype_" + str(p.annotation_id)
+            if p.phenotype.display_name.startswith('resistance to chemicals:'):
+                continue
+            pheno_id = "phenotype_" + str(p.phenotype_id)
             conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id = p.annotation_id, condition_class = 'chemical').all() 
             for cond in conditions:
                 chebiObjs = DBSession.query(Chebi).filter_by(display_name=cond.condition_name).all()
