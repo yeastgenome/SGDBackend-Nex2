@@ -36,10 +36,6 @@
       }
    ],
 
-   "schemes":[
-      "http",  
-      "https"
-   ],
    "paths":{  
       "/locus/{locusId}":{  
          "get":{  
