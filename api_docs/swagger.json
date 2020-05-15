@@ -34,7 +34,7 @@
                "description": "This represents endpoints for all the GO ontology related pages"
            }
     ],
-    "schemes": ["http", "https"],
+
     "paths": {
         "/locus/{locusId}": {
             "get": {
