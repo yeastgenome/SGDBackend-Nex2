@@ -4131,7 +4131,7 @@ class Locusdbentity(Dbentity):
         main_strain = None
         for strain in main_strain_list:
             x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
-            y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all() 
+            y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all()
             if len(y) == 0:
                 continue
             if  main_strain is None:
@@ -4144,11 +4144,14 @@ class Locusdbentity(Dbentity):
                 main_strain = strain
                 TAXON_ID = x.taxonomy_id
                 break
+        if main_strain is None:
+            main_strain = 'Unknown'
+            TAXON_ID = 99999
         if type == 'taxonomy_id':
             return TAXON_ID
         else:
             return [main_strain, TAXON_ID]
-    
+            
     def phenotype_graph(self):
         main_gene_phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
         main_gene_phenotype_ids = [a.phenotype_id for a in main_gene_phenotype_annotations]
