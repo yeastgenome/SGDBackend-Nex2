@@ -370,7 +370,7 @@ def link_gene_names(raw, locus_names_ids):
         if wupper in list(locus_names_object.keys()) and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
             url = '/locus/' + sgdid
-            new_str = '<a href="' + url + '">' + wupper.lower() + '</a>'
+            new_str = '<a href="' + url + '">' + p_original_word + '</a>'
             processed.append(new_str)
         else:
             processed.append(p_original_word)
