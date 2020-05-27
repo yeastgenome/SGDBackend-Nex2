@@ -2820,7 +2820,7 @@ def triage_count(request):
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
 
 
-@view_config(route_name='delete_reference', request_method='POST', renderer='json')
+@view_config(route_name='delete_reference', request_method='DELETE', renderer='json')
 @authenticate
 def delete_reference(request):
     if not check_csrf_token(request, raises=False):
