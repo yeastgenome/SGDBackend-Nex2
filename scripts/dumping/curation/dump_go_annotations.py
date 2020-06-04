@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import os
 import sys
+import gzip
 import importlib
 importlib.reload(sys)  # Reload does the trick!
 import boto
@@ -11,7 +12,7 @@ from urllib.request import urlopen
 from urllib.request import urlretrieve
 
 from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
-                       Go, Ro, EcoAlias, Source, Goannotation, Goextension, \
+                       Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
                        Gosupportingevidence, LocusAlias, Edam, Path, FilePath, \
                        Filedbentity, ReferenceAlias, Dnasequenceannotation, So
 from scripts.loading.database_session import get_session
@@ -74,7 +75,7 @@ FUNDING = 'NHGRI at US NIH, grant number U41 HG001315'
 DB = 'SGD'
 TAXON_ID = '559292'
 
-def dump_data():
+def dump_data(noctua_gpad_file):
  
     nex_session = get_session()
 
@@ -94,6 +95,7 @@ def dump_data():
     id_to_go = dict([(x.go_id, (x.goid, x.display_name, x.go_namespace)) for x in nex_session.query(Go).all()])
     id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
     id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter(Dbentity.subclass.in_(['REFERENCE', 'LOCUS'])).all()])
+    id_to_ecoid = dict([(x.eco_id, x.format_name) for x in nex_session.query(Eco).all()])
     id_to_taxon = dict([(x.taxonomy_id, x.taxid) for x in nex_session.query(Taxonomy).all()])
     id_to_ro = dict([(x.ro_id, x.display_name) for x in nex_session.query(Ro).all()])
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
@@ -101,7 +103,7 @@ def dump_data():
     so_id_to_term = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
     S288C_row = nex_session.query(Taxonomy).filter_by(format_name = 'Saccharomyces_cerevisiae_S288c').one_or_none()
     S288C_taxonomy_id = S288C_row.taxonomy_id
-
+    
     id_to_eco = {}
     for x in nex_session.query(EcoAlias).all():
         if len(x.display_name) > 5:
@@ -157,6 +159,8 @@ def dump_data():
 
     loaded = {}
 
+    noctuaData = read_noctua_data(noctua_gpad_file)
+    
     for x in nex_session.query(Goannotation).all():
 
         row = [None] * (LAST_FIELD+1)
@@ -201,7 +205,7 @@ def dump_data():
         go_qualifier = ""
         if x.go_qualifier in ['NOT', 'contributes to', 'colocalizes with']:
             go_qualifier = x.go_qualifier.replace(' ', '_')
-
+            
         row[QUALIFIER] = go_qualifier
         row[ASPECT] = namespace_to_code[go_aspect]
 
@@ -210,6 +214,17 @@ def dump_data():
             eco_code = "IKR"
         row[EVIDENCE] = eco_code
 
+        ### check if the annotation is in nochua list. If yes, exclude it.
+        key = (row[DBID], row[GOID], row[REFERENCE], id_to_ecoid[x.eco_id], x.annotation_type)
+        if key in noctuaData:
+            evidences = annotation_id_to_evidences.get(x.annotation_id, {}).get(1, [])
+            extensions = annotation_id_to_extensions.get(x.annotation_id, {}).get(1, [])
+            evidences.sort()
+            extensions.sort()
+            (noctua_qualifier, noctua_evidences, noctua_extensions) = noctuaData[key]
+            if noctua_qualifier == row[QUALIFIER] and noctua_evidences == ','.join(evidences) and noctua_extensions == ','.join(extensions):
+                continue
+                                   
         source = id_to_source[x.source_id]
         row[SOURCE] = source
 
@@ -414,9 +429,51 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
 
     log.info("Done uploading " + gaf_file)
 
-if __name__ == '__main__':
+def read_noctua_data(noctua_gpad_file):
+
+    f = None
+    if noctua_gpad_file.endswith('.gz'):
+        f = gzip.open(noctua_gpad_file, 'rt')
+    else:
+        f = open(noctua_gpad_file)
+
+    read_line = {}
+    data = {}
+    for line in f:
+        if line.startswith('!'):
+            continue
+        field = line.strip().split('\t')
+        
+        ## get rid of duplicate lines...                                                                    
+        if line in read_line:
+            continue
+        read_line[line] = 1
+        sgdid = field[1]
+        go_qualifier = field[2]
+        if 'NOT' in go_qualifier:
+            go_qualifier = 'NOT'
+        if go_qualifier not in ['NOT', 'contributes_to', 'colocalizes_with']:
+            go_qualifier = ''
+        goid = field[3]
+        eco = field[5]
+        pmid = field[4].replace(' ', '')
+        annotation_type = 'manually curated'
+        key = (sgdid, goid, pmid, eco, annotation_type)
+        evidences = field[6].split(',')
+        evidences.sort()
+        extensions = field[10].split(',')
+        extensions.sort()
+        data[key] = (go_qualifier, ','.join(evidences), ','.join(extensions))
     
-    dump_data()
+    return data
+        
+if __name__ == '__main__':
+
+    noctua_path = 'http://current.geneontology.org/products/annotations/'
+    noctua_gpad_file = 'noctua_sgd.gpad.gz'
+    urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
+    
+    dump_data(noctua_gpad_file)
 
     
 
