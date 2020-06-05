@@ -24,7 +24,7 @@ def create_seqs(strain):
         return
     taxonomy_id = taxonomy.taxonomy_id
 
-    dbentity_id_to_name = dict([(x.dbentity_id, x.systematic_name) for x in nex_session.query(Locusdbentity).all()])
+    dbentity_id_to_name = dict([(x.dbentity_id, (x.systematic_name, x.dbentity_status)) for x in nex_session.query(Locusdbentity).all()])
     
     outfile = dataDir + "not_feature_" + strain + ".fsa"
 
@@ -47,7 +47,9 @@ def create_seqs(strain):
     contig_id_to_display_name = {}
     defline_to_seq = {}
     for x in nex_session.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC', taxonomy_id=taxonomy_id).order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
-        name = dbentity_id_to_name[x.dbentity_id]        
+        (name, status) = dbentity_id_to_name[x.dbentity_id]
+        if status in ['Deleted', 'Merged']:
+            continue
         if prevContigId is None or prevContigId != x.contig_id:
             prevRow = (name, x.start_index, x.end_index)
             prevContigId = x.contig_id
