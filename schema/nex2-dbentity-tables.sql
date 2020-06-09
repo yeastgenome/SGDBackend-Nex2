@@ -996,3 +996,44 @@ ALTER TABLE nex.reference_file ADD CONSTRAINT reference_file_uk UNIQUE (referenc
 ALTER TABLE nex.reference_file ADD CONSTRAINT reference_file_type_ck CHECK (FILE_TYPE IN ('Dataset','Supplemental'));
 CREATE INDEX referencefile_file_fk_index ON nex.reference_file (file_id);
 CREATE INDEX referencefile_source_fk_index ON nex.reference_file (source_id);
+
+
+DROP TABLE IF EXISTS nex.transcriptdbentity CASCADE; 
+CREATE TABLE nex.transcriptdbentity (
+	transcript_id bigint NOT NULL DEFAULT nextval('object_seq'),
+	dbentity_id varchar(40) NOT NULL,
+	condition_name varchar(50) NOT NULL,
+	condition_value varchar(50) NOT NULL,
+	in_ncbi boolean NOT NULL,
+	CONSTRAINT transcriptdbentity_pk PRIMARY KEY (transcript_id)
+) ;
+COMMENT ON TABLE nex.transcriptdbentity IS 'A transcript entity. Inherits from DBENTITY';
+COMMENT ON COLUMN nex.transcriptdbentity.dbentity_id IS 'FK to DBENTITY.';
+COMMENT ON COLUMN nex.transcriptdbentity.condition_name IS 'Condition name like YPD, GAL.';
+COMMENT ON COLUMN nex.transcriptdbentity.condition_value IS 'Condition value like YES or NO.';
+COMMENT ON COLUMN nex.transcriptdbentity.in_ncbi IS 'Dump for submitting to NCBI or not.';
+alter table nex.transcriptdbentity add constraint transcriptdbentity_uk UNIQUE (condition_name, condition_value);
+
+
+DROP TABLE IF EXISTS nex.transcriptdbentity_reference CASCADE; 
+CREATE TABLE nex.transcriptdbentity_reference (
+	summary_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+	summary_id bigint NOT NULL,
+	reference_id bigint NOT NULL,
+	reference_order bigint NOT NULL,
+	source_id bigint NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT pathwaysummary_reference_pk PRIMARY KEY (summary_reference_id)
+) ;
+COMMENT ON TABLE nex.transcriptdbentity_reference IS 'References associatd with a paragraph summary.';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.reference_order IS 'Order of the references in the summary.';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.summary_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.summary_id IS 'FK to PATHWAYSUMMARY.SUMMARY_ID.';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.transcriptdbentity_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+ALTER TABLE nex.transcriptdbentity_reference ADD CONSTRAINT transcriptdbentity_reference_uk UNIQUE (summary_id,reference_id);
+CREATE INDEX transcriptdbentityreference_ref_fk_index ON nex.transcriptdbentityreference (reference_id);
+CREATE INDEX transcriptdbentityeference_source_fk_index ON nex.transcriptdbentity_reference (source_id);

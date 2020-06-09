@@ -607,3 +607,9 @@ ALTER TABLE nex.arch_proteinsequenceannotation ADD CONSTRAINT archproteinsequenc
 
 
 
+ALTER TABLE nex.transcriptdbentity ADD CONSTRAINT transcriptdbentity_path_fk FOREIGN KEY (transcript_id) REFERENCES transcriptdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.transcriptdbentity ADD CONSTRAINT transcriptdbentity_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE nex.transcriptdbentity_reference ADD CONSTRAINT transcriptdbentity_reference_sum_fk FOREIGN KEY (transcript_id) REFERENCES transcriptdbentity(transcript_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.transcriptdbentity_reference ADD CONSTRAINT transcriptdbentity_reference_ref_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.transcriptdbentity_reference ADD CONSTRAINT transcriptdbentity_reference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;

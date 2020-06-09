@@ -850,6 +850,7 @@ CREATE TABLE nex.tools(
 	format_name varchar(200) NOT NULL,
 	display_name varchar(200) NOT NULL,
 	link_url varchar(200) NOT NULL,
+	index_key varchar(200),
     status varchar(200) NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
@@ -859,6 +860,7 @@ COMMENT ON TABLE nex.tools IS 'Information needed for display of variant viewer.
 COMMENT ON COLUMN nex.tools.format_name IS 'Text displayed for URL link';
 COMMENT ON COLUMN nex.tools.display_name IS 'Text displayed for URL link';
 COMMENT ON COLUMN nex.tools.link_url IS 'URL of the tool linked to';
+COMMENT ON COLUMN nex.tools.index_key IS 'key to elasticsearch index';
 COMMENT ON COLUMN nex.tools.status IS 'allowed type: current or former';
 COMMENT ON COLUMN nex.tools.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.tools.created_by IS 'Username of the person who entered the record into the database.';
