@@ -1286,3 +1286,20 @@ grant select on all sequences in schema nex to curator;
 
 -- Set privilege on FUNCTIONS
 grant execute on all functions in schema nex to curator;
+
+
+-- Set privilege on TABLE TRANSCRIPTDBENTITY
+ALTER TABLE nex.transcriptdbentity OWNER TO nex;
+GRANT ALL ON nex.transcriptdbentity TO nex;
+REVOKE ALL ON nex.transcriptdbentity FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.transcriptdbentity TO curator;
+GRANT SELECT ON nex.transcriptdbentity TO PUBLIC;
+GRANT SELECT ON nex.transcriptdbentity TO DBSELECT;
+
+-- Set privilege on TABLE TRANSCRIPTDBENTITY_REFERENCE
+ALTER TABLE nex.transcriptdbentity_reference OWNER TO nex;
+GRANT ALL ON nex.transcriptdbentity_reference TO nex;
+REVOKE ALL ON nex.transcriptdbentity_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.transcriptdbentity_reference TO curator;
+GRANT SELECT ON nex.transcriptdbentity_reference TO PUBLIC;
+GRANT SELECT ON nex.transcriptdbentity_reference TO DBSELECT;
