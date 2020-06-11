@@ -177,6 +177,7 @@ ALTER TABLE nex.taxonomy_url ADD CONSTRAINT taxonomyurl_source_fk FOREIGN KEY (s
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE NO ACTION NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.alleledbentity ADD CONSTRAINT alleledbentity_fk FOREIGN KEY (dbentity_id) REFERENCES dbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.alleledbentity ADD CONSTRAINT alleledbentity_so_fk FOREIGN KEY (structural_variant) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.locusdbentity ADD CONSTRAINT locusdbentity_fk FOREIGN KEY (dbentity_id) REFERENCES dbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -613,13 +614,14 @@ ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_ref_fk FOREIGN K
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_locus_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_locus_fk FOREIGN KEY (allele_alias_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_locus_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_locusallele_fk FOREIGN KEY (locus_allele_id) REFERENCES locus_allele(locus_allele_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_ref_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 
 ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_locus_fk FOREIGN KEY (locus_id) REFERENCES locusbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;

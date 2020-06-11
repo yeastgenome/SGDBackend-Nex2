@@ -1081,7 +1081,7 @@ CREATE TABLE nex.allele_alias (
 	alias_type varchar(40) NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
-	CONSTRAINT allele_alias_pk PRIMARY KEY (alias_id)
+	CONSTRAINT allele_alias_pk PRIMARY KEY (allele_alias_id)
 ) ;
 COMMENT ON TABLE nex.allele_alias IS 'Other names, synonyms, or dbxrefs for a feature or gene.';
 COMMENT ON COLUMN nex.allele_alias.display_name IS 'Public display name.';
