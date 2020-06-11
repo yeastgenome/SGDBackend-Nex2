@@ -8,32 +8,6 @@ SET client_encoding TO 'UTF8';
 
 -- Data objects
 
-DROP TABLE IF EXISTS nex.allele CASCADE;
-CREATE TABLE nex.allele (
-	allele_id bigint NOT NULL DEFAULT nextval('object_seq'),
-	format_name varchar(100) NOT NULL,
-	display_name varchar(500) NOT NULL,
-	obj_url varchar(500) NOT NULL,
-	source_id bigint NOT NULL,
-	bud_id integer,
-	description varchar(500),
-	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-	created_by varchar(12) NOT NULL,
-	CONSTRAINT allele_pk PRIMARY KEY (allele_id)
-) ;
-COMMENT ON TABLE nex.allele IS 'Gene variants or alleles that show observable phenotypic traits.';
-COMMENT ON COLUMN nex.allele.created_by IS 'Username of the person who entered the record into the database.';
-COMMENT ON COLUMN nex.allele.description IS 'Description or comment.';
-COMMENT ON COLUMN nex.allele.source_id IS 'FK to SOURCE.SOURCE_ID.';
-COMMENT ON COLUMN nex.allele.date_created IS 'Date the record was entered into the database.';
-COMMENT ON COLUMN nex.allele.allele_id IS 'Unique identifier (serial number).';
-COMMENT ON COLUMN nex.allele.bud_id IS 'PK from BUD.EXPT_PROPERTY.EXPT_PROPERTY_NO';
-COMMENT ON COLUMN nex.allele.display_name IS 'Public display name.';
-COMMENT ON COLUMN nex.allele.format_name IS 'Unique name to create download files.';
-COMMENT ON COLUMN nex.allele.obj_url IS 'URL of the object (relative for local links or complete for external links).';
-ALTER TABLE nex.allele ADD CONSTRAINT allele_uk UNIQUE (format_name);
-CREATE INDEX allele_source_fk_index ON nex.allele (source_id);
-
 DROP TABLE IF EXISTS nex.colleague CASCADE;
 CREATE TABLE nex.colleague (
 	colleague_id bigint NOT NULL DEFAULT nextval('object_seq'),
