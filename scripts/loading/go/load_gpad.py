@@ -610,7 +610,7 @@ def update_database_load_file_to_s3(nex_session, go_file, source_to_id, edam_to_
     if "gp_association" in go_file:
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_association.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     elif "gp_information" in go_file:
-        nex_session.query(Dbentity).filter(Dbentity.display_name.like('information.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_information.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     elif "noctua_sgd.gpad" in go_file:
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('noctua_sgd.gpad%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     nex_session.commit()
