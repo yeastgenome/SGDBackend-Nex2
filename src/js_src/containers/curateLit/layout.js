@@ -23,7 +23,7 @@ import Referencesetting from './referencesettings';
 const BASE_CURATE_URL = '/curate/reference';
 const SECTIONS = [
   'tags',
-  'setting'
+  'Settings'
 ];
 
 class CurateLitLayout extends Component {
@@ -92,7 +92,7 @@ class CurateLitLayout extends Component {
   }
 
   render() {
-    if (!this.props.isReady) return <LoadingPage />;
+    if (!this.sprops.isReady) return <LoadingPage />;
     return (
       <div>
         {this.renderHeader()}
@@ -105,7 +105,7 @@ class CurateLitLayout extends Component {
           <div className={LARGE_COL_CLASS}>
             <div>
               <Switch>
-                <Route component={Referencesetting} path='/curate/reference/:id/setting'/>
+                <Route component={Referencesetting} path='/curate/reference/:id/settings'/>
                 <Route component={CurateLitBasic} exact/>
                 {/* TODO: Navigate to phenotypes */}
                 {/* <Route component={CurateLitPhenotype} path='/curate/reference/:id/phenotypes' exact/> */}
