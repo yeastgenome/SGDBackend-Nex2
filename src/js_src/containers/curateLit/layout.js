@@ -92,7 +92,7 @@ class CurateLitLayout extends Component {
   }
 
   render() {
-    if (!this.sprops.isReady) return <LoadingPage />;
+    if (!this.props.isReady) return <LoadingPage />;
     return (
       <div>
         {this.renderHeader()}

@@ -2820,6 +2820,22 @@ def triage_count(request):
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
 
 
+@view_config(route_name='get_reference_annotations',request_method='GET',renderer='json')
+@authenticate
+def get_reference_annotations(request):
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    try:
+        sgd_id = request.matchdict['id']
+        username = request.session['username']
+        reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+        log.debug("Ref ID = " + reference.sgdid)
+        return reference.get_all_annotations(username)
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+    
+
 @view_config(route_name='delete_reference', request_method='DELETE', renderer='json')
 @authenticate
 def delete_reference(request):

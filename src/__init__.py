@@ -231,6 +231,7 @@ def main(global_config, **settings):
     config.add_route('one_author_response', '/author_responses/{id}', request_method='GET')
 
     config.add_route('delete_reference','/reference/{id}/delete_reference', request_method='DELETE')
+    config.add_route('get_reference_annotations','/reference_annotations/{id}',request_method='GET')
     config.add_route('healthcheck', '/healthcheck')
 
     #swagger
