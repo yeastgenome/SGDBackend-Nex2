@@ -9,6 +9,55 @@ from scripts.loading.util import strain_order
 
 TAXON = 'TAX:559292'
 
+def get_dna_alignment_data(locus_id, dna_type, strain_to_id):
+
+    dna_seqs = []
+    snp_seqs = []
+    strain_to_snp = {}
+    strain_to_dna = {}
+    block_sizes = []
+    block_starts = []
+    name = None
+    start = None
+    end = None
+    for x in DBSession.query(Dnasequencealignment).filter_by(dna_type=dna_type, locus_id=locus_id).all():
+        if x.display_name.endswith('S288C'):
+            start = x.contig_start_index
+            end = x.contig_end_index
+        strain = None
+        if dna_type == 'genomic':
+            [name, strain] = x.display_name.split('_')
+        else:
+            [name1, name2, strain] = x.display_name.split('_')
+            name = name1 + "_" + name2
+        if strain == 'S288C':
+            block_sizes = x.block_sizes.split(',')
+            if dna_type == 'genomic':
+                block_starts = x.block_starts.split(',')
+        strain_to_dna[strain] = { "strain_display_name": strain,
+                                  "strain_link": "/strain/" + strain.replace(".", "") + "/overview",
+                                  "strain_id": strain_to_id[strain],
+                                  "sequence": x.aligned_sequence
+        }
+        i = strain_to_id[strain] - 1
+        strain_to_snp[strain] = { "snp_sequence": x.snp_sequence,
+                                  "name": strain,
+                                  "id":  strain_to_id[strain] }
+    for i in range(0, len(block_sizes)):
+        block_sizes[i] = int(block_sizes[i])
+    for i in range(0, len(block_starts)):
+        block_starts[i] = int(block_starts[i])
+    if dna_type != 'genomic':
+        block_starts = [0]
+    
+    for strain in sorted(strain_to_id, key=strain_to_id.get):
+        if strain in strain_to_snp:
+            snp_seqs.append(strain_to_snp[strain])
+        if strain in strain_to_dna:
+            dna_seqs.append(strain_to_dna[strain])
+
+    return (name, start, end, dna_seqs, snp_seqs, block_starts, block_sizes)
+        
 def get_variant_data(request):
 
     sgdid = request.matchdict['id'].upper()
@@ -66,47 +115,37 @@ def get_variant_data(request):
                 "href": x.proteindomain.obj_url + '/overview'
         }
         data['protein_domains'].append(row)
-    
-    # absolute_genetic_start = 3522089??   
-    # 'dna_scores': locus['dna_scores'],
-    # 'protein_scores': locus['protein_scores'],
-    
-    strain_to_id = strain_order()
-    dna_seqs = []
-    snp_seqs = []
-    strain_to_snp = {}
-    strain_to_dna = {}
-    block_sizes = []
-    block_starts = []
-    for x in DBSession.query(Dnasequencealignment).filter_by(dna_type='genomic', locus_id=locus_id).all():
-        [name, strain] = x.display_name.split('_')
-        if strain == 'S288C':
-            block_sizes = x.block_sizes.split(',')
-            block_starts = x.block_starts.split(',')
-        strain_to_dna[strain] = { "strain_display_name": strain,
-                                  "strain_link": "/strain/" + strain.replace(".", "") + "/overview",
-                                  "strain_id": strain_to_id[strain],
-                                  "sequence": x.aligned_sequence
-        }
-        i = strain_to_id[strain] - 1
-        strain_to_snp[strain] = { "snp_sequence": x.snp_sequence,
-                                  "name": strain,
-                                  "id":  strain_to_id[strain] }
         
-    for i in range(0, len(block_sizes)): 
-        block_sizes[i] = int(block_sizes[i])
-    for i in range(0, len(block_starts)):
-        block_starts[i] = int(block_starts[i])
+    strain_to_id = strain_order()
+
+    (name, start, end, dna_seqs, snp_seqs, block_starts, block_sizes) = get_dna_alignment_data(locus_id, 'genomic', strain_to_id)
     data['block_sizes'] = block_sizes
     data['block_starts'] = block_starts
-    for strain in sorted(strain_to_id, key=strain_to_id.get):
-        if strain in strain_to_snp:
-            snp_seqs.append(strain_to_snp[strain])
-        if strain in strain_to_dna:
-            dna_seqs.append(strain_to_dna[strain])
-            
     data['aligned_dna_sequences'] = dna_seqs
     data['snp_seqs'] = snp_seqs
+
+    (name, start, end, dna_seqs, snp_seqs, block_starts, block_sizes) = get_dna_alignment_data(locus_id, 'downstream IGR', strain_to_id)
+    if end and start:
+        data['downstream_format_name'] = name
+        data['downstream_chrom_start'] = start
+        data['downstream_chrom_end'] = end
+        data['downstream_dna_length'] = end - start + 1
+        data['downstream_block_sizes'] = block_sizes
+        data['downstream_block_starts'] = block_starts
+        data['downstream_aligned_dna_sequences'] = dna_seqs
+        data['downstream_snp_seqs'] = snp_seqs
+    
+    (name, start, end, dna_seqs, snp_seqs, block_starts, block_sizes) = get_dna_alignment_data(locus_id, 'upstream IGR', strain_to_id)
+    if end and start:
+        data['upstream_format_name'] = name
+        data['upstream_chrom_start'] = start
+        data['upstream_chrom_end'] = end
+        data['upstream_dna_length'] = end - start + 1
+        data['upstream_block_sizes'] = block_sizes
+        data['upstream_block_starts'] = block_starts
+        data['upstream_aligned_dna_sequences'] = dna_seqs
+        data['upstream_snp_seqs'] = snp_seqs
+    ################################# 
     
     protein_seqs = []
     strain_to_protein = {}
@@ -124,6 +163,8 @@ def get_variant_data(request):
 
     variant_dna = []
     variant_protein = []
+    downstream_variant_dna = []
+    upstream_variant_dna = []
     dna_snp_positions = []
     dna_deletion_positions = []
     dna_insertion_positions = []
@@ -131,6 +172,25 @@ def get_variant_data(request):
     deletion_index = 0
     snp_index = 0
     for x in DBSession.query(Sequencevariant).filter_by(locus_id=locus_id).order_by(Sequencevariant.seq_type, Sequencevariant.variant_type, Sequencevariant.snp_type, Sequencevariant.start_index, Sequencevariant.end_index).all():
+
+        if x.seq_type == 'downstream IGR':
+            dna_row = { "start": x.start_index,
+                        "end": x.end_index,
+                        "score": x.score,
+                        "variant_type": x.variant_type }
+            if x.snp_type:
+                dna_row['snp_type'] = x.snp_type.capitalize()
+            downstream_variant_dna.append(dna_row)
+
+        if x.seq_type == 'upstream IGR':
+            dna_row = { "start": x.start_index,
+                        "end": x.end_index,
+                        "score": x.score,
+                        "variant_type": x.variant_type }
+            if x.snp_type:
+                dna_row['snp_type'] = x.snp_type.capitalize()
+            upstream_variant_dna.append(dna_row)
+
         if x.seq_type == 'DNA':
             dna_row = { "start": x.start_index,
                         "end": x.end_index,
@@ -196,6 +256,10 @@ def get_variant_data(request):
             
     data['variant_data_dna'] = variant_dna
     data['variant_data_protein'] = variant_protein
+    if data.get('downstream_format_name'):
+        data['downstream_variant_data_dna'] = downstream_variant_dna
+    if data.get('upstream_format_name'):
+        data['upstream_variant_data_dna'] = upstream_variant_dna
     
     return data
  
