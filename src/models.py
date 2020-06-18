@@ -754,8 +754,7 @@ class Chebi(Base):
     def to_dict(self):
 
         urls = DBSession.query(ChebiUrl).filter_by(chebi_id=self.chebi_id).all()
-        synonyms = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).all()
-
+        synonyms = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).filter(ChebiAlia.alias_type.in_(['EXACT', 'RELATED', 'IUPAC name'])).all()
         is_ntr = 0
         if self.chebiid.startswith("NTR:"):
             is_ntr = 1
@@ -782,7 +781,7 @@ class Chebi(Base):
         obj["network_graph"] = self.chemical_network()
 
         return obj
-
+    
     def phenotype_to_dict(self):
         conditions = DBSession.query(PhenotypeannotationCond.annotation_id).filter_by(condition_name=self.display_name).all()
 
