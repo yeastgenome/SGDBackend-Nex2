@@ -411,17 +411,12 @@ def search_sequence_objects(request):
 
     return Response(body=json.dumps(formatted_response), content_type='application/json')
 
+
 @view_config(route_name='get_sequence_object', renderer='json', request_method='GET')
 def get_sequence_object(request):
+
     # id = request.matchdict['id'].upper()
     # return ESearch.get(index=request.registry.settings['elasticsearch.variant_viewer_index'], id=id)['_source']
-
-    try:
-        data = get_variant_data(request)
-        return HTTPOk(body=json.dumps(data), content_type="text/json")
-    except Exception as e:
-        logging.exception(str(e))
-        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type="text/json")
 
     try:
         data = get_variant_data(request)
