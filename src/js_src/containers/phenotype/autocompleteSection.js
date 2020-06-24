@@ -29,7 +29,7 @@ class AutocompleteSection extends Component {
       this.props.dispatch(setError('Unknown ID: ' + this.props.id));
     }
   }
-    
+
   getData(url) {
     fetchData(url, {
       type: 'GET'

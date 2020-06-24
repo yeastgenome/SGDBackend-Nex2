@@ -1,7 +1,7 @@
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusnote, Filedbentity, FileKeyword, LocusnoteReference, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi , Goextension, Interactor
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
-from mapping import mapping
+from es7_mapping import mapping
 import os
 import requests
 import json
@@ -326,6 +326,7 @@ class IndexESHelper:
                 position = "Head of Lab"
             obj_temp = {
                 "name": item.last_name + ", " + item.first_name,
+                "colleague_name": item.last_name + " " + item.first_name,
                 "category": "colleague",
                 "href": "/colleague/" + item.format_name,
                 "description": description,
@@ -405,6 +406,7 @@ class IndexESHelper:
                 "references": _references,
                 "phenotype_loci": _phenotype_loci,
                 "name": item.display_name,
+                "phenotype_name": item.display_name,
                 "href": item.obj_url,
                 "chemical": _chemical,
                 "description": item.description,

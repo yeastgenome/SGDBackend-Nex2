@@ -21,7 +21,7 @@ from sqlalchemy import and_, inspect
 
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
-    ReferenceFile, Disease, CuratorActivity, Source
+    ReferenceFile, Disease, CuratorActivity, Source, LocusAlias
 from src.curation_helpers import ban_from_cache, get_curator_session
 from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
 
@@ -1106,3 +1106,9 @@ def add_keywords(name, keywords, src_id, uname, curator_session=None):
         logging.error("Exception occurred", exc_info=True)
 
 
+def count_alias(terms):
+    count = 0
+    if terms:
+        count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(
+            ['Uniform', 'Non-uniform']), LocusAlias.display_name.in_(terms))).count()
+    return count

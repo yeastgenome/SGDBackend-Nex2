@@ -1,7 +1,8 @@
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
-from mapping import mapping
+# from mapping import mapping
+from es7_mapping import mapping
 import os
 import requests
 from threading import Thread
@@ -34,71 +35,130 @@ def delete_mapping():
 
 def put_mapping():
     print("Putting mapping... ")
-    response = requests.put(ES_URI + INDEX_NAME + "/", json=mapping)
-    if response.status_code != 200:
-        print(("ERROR: " + str(response.json())))
-    else:
-        print("SUCCESS")
+    try:
+        response = requests.put(ES_URI + INDEX_NAME + "/", json=mapping)
+        if response.status_code != 200:
+            print(("ERROR: " + str(response.json())))
+        else:
+            print("SUCCESS")
+    except Exception as e:
+        print(e)
 
 
-def index_toolbar_links():
-    links = [
-        ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do",[]),
-        ("Yeastmine", "https://yeastmine.yeastgenome.org","yeastmine"),
-        ("Submit Data", "/submitData", []),
-        ("SPELL", "https://spell.yeastgenome.org","spell"),
-        ("BLAST", "/blast-sgd", "blast"),
-        ("Fungal BLAST", "/blast-fungal","blast"),
-        ("Pattern Matching", "/nph-patmatch",[]),
-        ("Design Primers", "/primer3", []),
-        ("Restriction Mapper", "/restrictionMapper",[]),
-        ("Genome Browser", "https://browse.yeastgenome.org",[]),
-        ("Gene/Sequence Resources","/seqTools", []),
-        ("Download Genome","https://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/","download"),
-        ("Genome Snapshot", "/genomesnapshot",[]),
-        ("Chromosome History","https://wiki.yeastgenome.org/index.php/Summary_of_Chromosome_Sequence_and_Annotation_Updates", []),
-        ("Systematic Sequencing Table", "/cache/chromosomes.shtml",[]),
-        ("Original Sequence Papers","http://wiki.yeastgenome.org/index.php/Original_Sequence_Papers",[]),
-        ("Variant Viewer", "/variant-viewer",[]),
-        ("GO Term Finder", "/goTermFinder","go"),
-        ("GO Slim Mapper","/goSlimMapper", "go"),
-        ("GO Slim Mapping File","https://downloads.yeastgenome.org/curation/literature/go_slim_mapping.tab","go"),
-        ("Expression", "https://spell.yeastgenome.org/#",[]),
-        ("Biochemical Pathways","http://pathway.yeastgenome.org/",[]),
-        ("Browse All Phenotypes", "/ontology/phenotype/ypo",[]),
-        ("Interactions", "/interaction-search", []),
-        ("YeastGFP", "https://yeastgfp.yeastgenome.org/","yeastgfp"),
-        ("Full-text Search", "http://textpresso.yeastgenome.org/","texxtpresso"),
-        ("New Yeast Papers", "/reference/recent",[]),
-        ("Genome-wide Analysis Papers", "https://yeastmine.yeastgenome.org/yeastmine/loadTemplate.do?name=GenomeWide_Papers&scope=all&method=results&format=tab",[]),
-        ("Find a Colleague", "/search?q=&category=colleague",[]),
-        ("Add or Update Info", "/colleague_update",[]),
-        ("Career Resources","http://wiki.yeastgenome.org/index.php/Career_Resources", []),
-        ("Future","http://wiki.yeastgenome.org/index.php/Meetings#Upcoming_Conferences_.26_Courses",[]),
-        ("Yeast Genetics","http://wiki.yeastgenome.org/index.php/Meetings#Past_Yeast_Meetings",[]),
-        ("Submit a Gene Registration", "/reserved_name/new",[]),
-        ("Nomenclature Conventions","https://sites.google.com/view/yeastgenome-help/community-help/nomenclature-conventions", []),
-        ("Strains and Constructs","http://wiki.yeastgenome.org/index.php/Strains",[]),
-        ("Reagents","http://wiki.yeastgenome.org/index.php/Reagents",[]),
-        ("Protocols and Methods","http://wiki.yeastgenome.org/index.php/Methods", []),
-        ("Physical & Genetic Maps","http://wiki.yeastgenome.org/index.php/Combined_Physical_and_Genetic_Maps_of_S._cerevisiae",[]),
-        ("Genetic Maps","http://wiki.yeastgenome.org/index.php/Yeast_Mortimer_Maps_-_Edition_12",[]),
-        ("Sequence","http://wiki.yeastgenome.org/index.php/Historical_Systematic_Sequence_Information",[]),
-        ("Wiki", "http://wiki.yeastgenome.org/index.php/Main_Page","wiki"),
-        ("Resources","http://wiki.yeastgenome.org/index.php/External_Links",[])
-    ]
+def cleanup():
+    delete_mapping()
+    put_mapping()
 
-    print(("Indexing " + str(len(links)) + " toolbar links"))
 
-    for l in links:
-        obj = {
-            "name": l[0],
-            "href": l[1],
-            "description": None,
-            "category": "resource",
-            "keys": l[2]
-        }
-        es.index(index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=l[1])
+def setup():
+    # see if index exists, if not create it
+    indices = list(es.indices.get_alias().keys())
+    index_exists = INDEX_NAME in indices
+    if not index_exists:
+        put_mapping()
+
+
+def index_not_mapped_genes():
+    url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+    bulk_data = []
+    with open("./scripts/search/not_mapped.json",
+              "r") as json_data:
+        _data = json.load(json_data)
+        print(("indexing " + str(len(_data)) + " not physically mapped genes"))
+        for item in _data:
+            temp_aliases = []
+            if len(item["FEATURE_NAME"]) > 0:
+                obj = {
+                    "name": item["FEATURE_NAME"],
+                    "locus_name": item["FEATURE_NAME"],
+                    "unmapped_name": item["FEATURE_NAME"],
+                    "href": url,
+                    "category": "locus",
+                    "feature_type": ["Unmapped Genetic Loci"],
+                    "aliases": item["ALIASES"].split("|"),
+                    "description": item["DESCRIPTION"],
+                    "is_quick_flag": "False"
+                }
+                bulk_data.append({
+                    "index": {
+                        "_index": INDEX_NAME,
+                        "_id": str(uuid.uuid4())
+                    }
+                })
+                bulk_data.append(obj)
+                if len(bulk_data) == 300:
+                    es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+                    bulk_data = []
+
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+
+def index_downloads():
+    bulk_data = []
+    dbentity_file_obj = IndexESHelper.get_file_dbentity_keyword()
+    files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
+                                                 Filedbentity.s3_url != None).all()
+    print(("indexing " + str(len(files)) + " download files"))
+    for x in files:
+        try:
+            keyword = []
+            status = ""
+            temp = dbentity_file_obj.get(x.dbentity_id)
+            if temp:
+                keyword = temp
+            if (x.dbentity_status == "Active" or x.dbentity_status == "Archived"):
+                if x.dbentity_status == "Active":
+                    status = "Active"
+                else:
+                    status = "Archived"
+
+            obj = {
+                "name":
+                    x.display_name,
+                "raw_display_name":
+                    x.display_name,
+                "filename": " ".join(x.display_name.split("_")),
+                "file_name_format": " ".join(x.display_name.split("_")),
+                "href": x.s3_url if x else None,
+                "category":
+                    "download",
+                "description":
+                    x.description,
+                "keyword":
+                    keyword,
+                "format":
+                    str(x.format.display_name),
+                "status":
+                    str(status),
+                "file_size":
+                    str(IndexESHelper.convertBytes(x.file_size))
+                    if x.file_size is not None else x.file_size,
+                "year":
+                    str(x.year),
+                "readme_url": x.readme_file.s3_url if x.readme_file else None,
+                "topic": x.topic.display_name,
+                "data": x.data.display_name,
+                "path_id": x.get_path_id()
+            }
+
+            bulk_data.append({
+                "index": {
+                    "_index": INDEX_NAME,
+                    "_id": str(uuid.uuid4())
+                }
+            })
+
+            bulk_data.append(obj)
+            if len(bulk_data) == 50:
+                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+                bulk_data = []
+
+        except Exception as e:
+            logging.error(e.message)
+
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
 def index_colleagues():
@@ -113,7 +173,6 @@ def index_colleagues():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
                 "_id": str(uuid.uuid4())
             }
         })
@@ -212,6 +271,7 @@ def index_genes():
                 _name += " / " + gene.systematic_name
         else:
             _name = gene.systematic_name
+            _systematic_name = gene.systematic_name
 
         #summary = DBSession.query(Locussummary.text).filter_by(locus_id=gene.dbentity_id).all()
         summary = []
@@ -290,12 +350,13 @@ def index_genes():
         # make everything in keys lowercase to ignore case
         keys = []
         _keys = [gene.gene_name, gene.systematic_name, gene.sgdid
-                ] + alias_quick_direct_keys
+                 ] + alias_quick_direct_keys
         # Add SGD:<gene SGDID> to list of keywords for quick search
         _keys.append("SGD:{}".format(gene.sgdid))
         # If this gene has a reservedname associated with it, add that reservedname to
         # the list of keywords used for the quick search of this gene
-        reservedname = DBSession.query(Reservedname).filter_by(locus_id=gene.dbentity_id).one_or_none()
+        reservedname = DBSession.query(Reservedname).filter_by(
+            locus_id=gene.dbentity_id).one_or_none()
         if reservedname:
             _keys.append(reservedname.display_name)
         for k in _keys:
@@ -305,6 +366,10 @@ def index_genes():
         obj = {
             "name":
                 _name,
+            "locus_name":
+                _name,
+            "sys_name":
+                _systematic_name,
             "href":
                 gene.obj_url,
             "description":
@@ -317,6 +382,8 @@ def index_genes():
                 gene.name_description,
             "summary":
                 summary,
+            "locus_summary":
+                "summary",
             "phenotypes": [p[0] for p in phenotypes],
             "aliases":
                 aliases,
@@ -358,7 +425,7 @@ def index_genes():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -382,7 +449,7 @@ def index_phenotypes():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -404,6 +471,7 @@ def index_observables():
     for observable in observables:
         obj = {
             "name": observable.display_name,
+            "observable_name": observable.display_name,
             "href": observable.obj_url,
             "description": observable.description,
             "category": "observable",
@@ -413,7 +481,7 @@ def index_observables():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -450,6 +518,7 @@ def index_strains():
 
         obj = {
             "name": strain.display_name,
+            "strain_name": strain.display_name,
             "href": strain.obj_url,
             "description": strain.headline,
             "category": "strain",
@@ -457,7 +526,7 @@ def index_strains():
         }
 
         es.index(
-            index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
+            index=INDEX_NAME,  body=obj, id=str(uuid.uuid4()))
 
 
 def index_reserved_names():
@@ -472,46 +541,20 @@ def index_reserved_names():
         # change name if has an orf
         if reserved_name.locus_id:
             locus = DBSession.query(Locusdbentity).filter(
-                Locusdbentity.dbentity_id ==
-                reserved_name.locus_id).one_or_none()
+                Locusdbentity.dbentity_id == reserved_name.locus_id).one_or_none()
             name = name + " / " + locus.systematic_name
             href = locus.obj_url
             keys = []
         obj = {
             "name": name,
+            "reserved_name": name,
             "href": href,
             "description": reserved_name.name_description,
             "category": "reserved_name",
             "keys": keys
         }
         es.index(
-            index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
-
-
-def index_reserved_names():
-    # only index reservednames that do not have a locus associated with them
-    reserved_names = DBSession.query(Reservedname).all()
-
-    print(("Indexing " + str(len(reserved_names)) + " reserved names"))
-    for reserved_name in reserved_names:
-        name = reserved_name.display_name
-        href = reserved_name.obj_url
-        keys = [reserved_name.display_name.lower()]
-        # change name if has an orf
-        if reserved_name.locus_id:
-            locus = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id == reserved_name.locus_id).one_or_none()
-            name = name + " / " + locus.systematic_name
-            href = locus.obj_url
-            keys = []
-        obj = {
-            "name": name,
-            "href": href,
-            "description": reserved_name.name_description,
-            "category": "reserved_name",
-            "keys": keys
-        }
-        es.index(
-            index=INDEX_NAME, doc_type=DOC_TYPE, body=obj, id=str(uuid.uuid4()))
+            index=INDEX_NAME, body=obj, id=str(uuid.uuid4()))
 
 
 def load_go_id_blacklist(list_filename):
@@ -522,7 +565,8 @@ def load_go_id_blacklist(list_filename):
 
 
 def index_go_terms():
-    go_id_blacklist = load_go_id_blacklist("scripts/search/go_id_blacklist.lst")
+    go_id_blacklist = load_go_id_blacklist(
+        "scripts/search/go_id_blacklist.lst")
 
     gos = DBSession.query(Go).all()
 
@@ -558,6 +602,7 @@ def index_go_terms():
 
         obj = {
             "name": go.display_name,
+            "go_name": go.display_name,
             "href": go.obj_url,
             "description": go.description,
             "synonyms": [s[0] for s in synonyms],
@@ -572,7 +617,7 @@ def index_go_terms():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -581,10 +626,11 @@ def index_go_terms():
 
         if len(bulk_data) == 800:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-            bulk_data=[]
+            bulk_data = []
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
 
 def index_disease_terms():
     dos = DBSession.query(Disease).all()
@@ -593,10 +639,12 @@ def index_disease_terms():
 
     bulk_data = []
     for do in dos:
-        synonyms = DBSession.query(DiseaseAlias.display_name).filter_by(disease_id=do.disease_id).all()
+        synonyms = DBSession.query(DiseaseAlias.display_name).filter_by(
+            disease_id=do.disease_id).all()
         references = set([])
         disease_loci = set([])
-        annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=do.disease_id).all()
+        annotations = DBSession.query(Diseaseannotation).filter_by(
+            disease_id=do.disease_id).all()
         for annotation in annotations:
             if annotation.disease_qualifier != "NOT":
                 disease_loci.add(annotation.dbentity.display_name)
@@ -614,6 +662,7 @@ def index_disease_terms():
                 keys.add(k.lower())
         obj = {
             "name": do.display_name,
+            "disease_name": do.display_name,
             "category": "disease",
             "href": do.obj_url,
             "description": do.description,
@@ -628,7 +677,7 @@ def index_disease_terms():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -637,7 +686,7 @@ def index_disease_terms():
 
         if len(bulk_data) == 800:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-            bulk_data=[]
+            bulk_data = []
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
@@ -658,7 +707,8 @@ def index_references():
         if len(_ref_loci) > 0:
             temp_loci = _ref_loci.get(reference.dbentity_id)
             if temp_loci is not None:
-                reference_loci = list(set([x.display_name for x in IndexESHelper.flattern_list(temp_loci)]))
+                reference_loci = list(
+                    set([x.display_name for x in IndexESHelper.flattern_list(temp_loci)]))
 
         abstract = _abstracts.get(reference.dbentity_id)
         if abstract is not None:
@@ -687,6 +737,7 @@ def index_references():
                 keys.add(str(k).lower())
         obj = {
             "name": reference.citation,
+            "reference_name": reference.citation,
             "href": reference.obj_url,
             "description": abstract,
             "author": authors,
@@ -701,7 +752,7 @@ def index_references():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
+
                 "_id": str(uuid.uuid4())
             }
         })
@@ -714,168 +765,26 @@ def index_references():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_chemicals():
-    all_chebi_data = DBSession.query(Chebi).all()
-    _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
-    bulk_data = []
-    print(("Indexing " + str(len(all_chebi_data)) + " chemicals"))
-    for item_key, item_v in list(_result.items()):
-        if item_v is not None:
-            obj = {
-                "name": item_v.display_name,
-                "href": item_v.obj_url,
-                "description": item_v.description,
-                "category": "chemical",
-                "keys": [],
-                "chebiid": item_v.chebiid
-            }
-            bulk_data.append({
-                "index": {
-                    "_index": INDEX_NAME,
-                    "_type": DOC_TYPE,
-                    "_id": "chemical_" + str(item_key)
-                }
-            })
-
-            bulk_data.append(obj)
-            if len(bulk_data) == 300:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-    if len(bulk_data) > 0:
-        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-
-
-def cleanup():
-    delete_mapping()
-    put_mapping()
-
-
-def setup():
-    # see if index exists, if not create it
-    indices = list(es.indices.get_aliases().keys())
-    index_exists = INDEX_NAME in indices
-    if not index_exists:
-        put_mapping()
-
-
-
-def index_not_mapped_genes():
-    url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
-    bulk_data = []
-    with open("./scripts/search/not_mapped.json",
-              "r") as json_data:
-        _data = json.load(json_data)
-        print(("indexing " + str(len(_data)) + " not physically mapped genes"))
-        for item in _data:
-            temp_aliases = []
-            if len(item["FEATURE_NAME"]) > 0:
-                obj = {
-                    "name": item["FEATURE_NAME"],
-                    "href": url,
-                    "category": "locus",
-                    "feature_type": ["Unmapped Genetic Loci"],
-                    "aliases": item["ALIASES"].split("|"),
-                    "description": item["DESCRIPTION"],
-                    "is_quick_flag": "False"
-                }
-                bulk_data.append({
-                    "index": {
-                        "_index": INDEX_NAME,
-                        "_type": DOC_TYPE,
-                        "_id": str(uuid.uuid4())
-                    }
-                })
-                bulk_data.append(obj)
-                if len(bulk_data) == 300:
-                    es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                    bulk_data = []
-
-    if len(bulk_data) > 0:
-        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-
-
-def index_downloads():
-    bulk_data = []
-    dbentity_file_obj = IndexESHelper.get_file_dbentity_keyword()
-    files = DBSession.query(Filedbentity).filter(Filedbentity.is_public == True,
-                                                 Filedbentity.s3_url != None).all()
-    print(("indexing " + str(len(files)) + " download files"))
-    for x in files:
-        try:
-            keyword = []
-            status = ""
-            temp = dbentity_file_obj.get(x.dbentity_id)
-            if temp:
-                keyword = temp
-            if (x.dbentity_status == "Active" or x.dbentity_status == "Archived"):
-                if x.dbentity_status == "Active":
-                    status = "Active"
-                else:
-                    status = "Archived"
-
-            obj = {
-                ""
-                "name":
-                    x.display_name,
-                "href": x.s3_url if x else None,
-                "category":
-                    "download",
-                "description":
-                    x.description,
-                "keyword":
-                    keyword,
-                "format":
-                    str(x.format.display_name),
-                "status":
-                    str(status),
-                "file_size":
-                    str(IndexESHelper.convertBytes(x.file_size))
-                    if x.file_size is not None else x.file_size,
-                "year":
-                    str(x.year),
-                "readme_url": x.readme_file.s3_url if x.readme_file else None,
-                "topic": x.topic.display_name,
-                "data": x.data.display_name,
-                "path_id": x.get_path_id()
-            }
-
-            bulk_data.append({
-                "index": {
-                    "_index": INDEX_NAME,
-                    "_type": DOC_TYPE,
-                    "_id": str(uuid.uuid4())
-                }
-            })
-
-            bulk_data.append(obj)
-            if len(bulk_data) == 50:
-                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-                bulk_data = []
-        
-        except Exception as e:
-            logging.error(e.message)
-
-    if len(bulk_data) > 0:
-        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-       
-
 def index_complex_names():
     complexes = DBSession.query(Complexdbentity).all()
     print(("Indexing " + str(len(complexes)) + " complex names"))
-    
+
     bulk_data = []
 
     for c in complexes:
-         
-        synonyms = DBSession.query(ComplexAlias.display_name).filter_by(complex_id=c.dbentity_id).all()
+
+        synonyms = DBSession.query(ComplexAlias.display_name).filter_by(
+            complex_id=c.dbentity_id).all()
 
         references = set([])
-        refs = DBSession.query(ComplexReference).filter_by(complex_id=c.dbentity_id).all()
+        refs = DBSession.query(ComplexReference).filter_by(
+            complex_id=c.dbentity_id).all()
         for ref in refs:
             references.add(ref.reference.display_name)
-          
-        complex_loci = set([]) 
-        annotations = DBSession.query(Complexbindingannotation).filter_by(complex_id=c.dbentity_id).all()
+
+        complex_loci = set([])
+        annotations = DBSession.query(Complexbindingannotation).filter_by(
+            complex_id=c.dbentity_id).all()
         for a in annotations:
             interactor = a.interactor
             if interactor.locus_id is not None:
@@ -892,6 +801,7 @@ def index_complex_names():
 
         obj = {
             "name": c.display_name,
+            "complex_name": c.display_name,
             "href": "/complex/" + c.complex_accession,
             "description": c.description + "; " + c.properties,
             "category": "complex",
@@ -907,7 +817,6 @@ def index_complex_names():
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                "_type": DOC_TYPE,
                 "_id": str(uuid.uuid4())
             }
         })
@@ -916,10 +825,43 @@ def index_complex_names():
 
         if len(bulk_data) == 800:
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
-            bulk_data=[]
+            bulk_data = []
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+
+def index_chemicals():
+    all_chebi_data = DBSession.query(Chebi).all()
+    _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
+    bulk_data = []
+    print(("Indexing " + str(len(all_chebi_data)) + " chemicals"))
+    for item_key, item_v in list(_result.items()):
+        if item_v is not None:
+            obj = {
+                "name": item_v.display_name,
+                "chemical_name": item_v.display_name,
+                "href": item_v.obj_url,
+                "description": item_v.description,
+                "category": "chemical",
+                "keys": [],
+                "chebiid": item_v.chebiid
+            }
+            bulk_data.append({
+                "index": {
+                    "_index": INDEX_NAME,
+
+                    "_id": "chemical_" + str(item_key)
+                }
+            })
+
+            bulk_data.append(obj)
+            if len(bulk_data) == 300:
+                es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+                bulk_data = []
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
 
 def index_part_1():
     index_phenotypes()
@@ -941,13 +883,78 @@ def index_part_2():
     index_references()
 
 
+def index_toolbar_links():
+    links = [
+        ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do", []),
+        ("Yeastmine", "https://yeastmine.yeastgenome.org", "yeastmine"),
+        ("Submit Data", "/submitData", []),
+        ("SPELL", "https://spell.yeastgenome.org", "spell"),
+        ("BLAST", "/blast-sgd", "blast"),
+        ("Fungal BLAST", "/blast-fungal", "blast"),
+        ("Pattern Matching", "/nph-patmatch", []),
+        ("Design Primers", "/primer3", []),
+        ("Restriction Mapper", "/restrictionMapper", []),
+        ("Genome Browser", "https://browse.yeastgenome.org", []),
+        ("Gene/Sequence Resources", "/seqTools", []),
+        ("Download Genome", "https://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/", "download"),
+        ("Genome Snapshot", "/genomesnapshot", []),
+        ("Chromosome History", "https://wiki.yeastgenome.org/index.php/Summary_of_Chromosome_Sequence_and_Annotation_Updates", []),
+        ("Systematic Sequencing Table", "/cache/chromosomes.shtml", []),
+        ("Original Sequence Papers",
+         "http://wiki.yeastgenome.org/index.php/Original_Sequence_Papers", []),
+        ("Variant Viewer", "/variant-viewer", []),
+        ("GO Term Finder", "/goTermFinder", "go"),
+        ("GO Slim Mapper", "/goSlimMapper", "go"),
+        ("GO Slim Mapping File",
+         "https://downloads.yeastgenome.org/curation/literature/go_slim_mapping.tab", "go"),
+        ("Expression", "https://spell.yeastgenome.org/#", []),
+        ("Biochemical Pathways", "http://pathway.yeastgenome.org/", []),
+        ("Browse All Phenotypes", "/ontology/phenotype/ypo", []),
+        ("Interactions", "/interaction-search", []),
+        ("YeastGFP", "https://yeastgfp.yeastgenome.org/", "yeastgfp"),
+        ("Full-text Search", "http://textpresso.yeastgenome.org/", "texxtpresso"),
+        ("New Yeast Papers", "/reference/recent", []),
+        ("Genome-wide Analysis Papers",
+         "https://yeastmine.yeastgenome.org/yeastmine/loadTemplate.do?name=GenomeWide_Papers&scope=all&method=results&format=tab", []),
+        ("Find a Colleague", "/search?q=&category=colleague", []),
+        ("Add or Update Info", "/colleague_update", []),
+        ("Career Resources", "http://wiki.yeastgenome.org/index.php/Career_Resources", []),
+        ("Future", "http://wiki.yeastgenome.org/index.php/Meetings#Upcoming_Conferences_.26_Courses", []),
+        ("Yeast Genetics", "http://wiki.yeastgenome.org/index.php/Meetings#Past_Yeast_Meetings", []),
+        ("Submit a Gene Registration", "/reserved_name/new", []),
+        ("Nomenclature Conventions",
+         "https://sites.google.com/view/yeastgenome-help/community-help/nomenclature-conventions", []),
+        ("Strains and Constructs", "http://wiki.yeastgenome.org/index.php/Strains", []),
+        ("Reagents", "http://wiki.yeastgenome.org/index.php/Reagents", []),
+        ("Protocols and Methods", "http://wiki.yeastgenome.org/index.php/Methods", []),
+        ("Physical & Genetic Maps",
+         "http://wiki.yeastgenome.org/index.php/Combined_Physical_and_Genetic_Maps_of_S._cerevisiae", []),
+        ("Genetic Maps", "http://wiki.yeastgenome.org/index.php/Yeast_Mortimer_Maps_-_Edition_12", []),
+        ("Sequence", "http://wiki.yeastgenome.org/index.php/Historical_Systematic_Sequence_Information", []),
+        ("Wiki", "http://wiki.yeastgenome.org/index.php/Main_Page", "wiki"),
+        ("Resources", "http://wiki.yeastgenome.org/index.php/External_Links", [])
+    ]
+
+    print(("Indexing " + str(len(links)) + " toolbar links"))
+
+    for l in links:
+        obj = {
+            "name": l[0],
+            "href": l[1],
+            "description": None,
+            "category": "resource",
+            "keys": l[2]
+        }
+        es.index(index=INDEX_NAME, body=obj, id=l[1])
+
+
 if __name__ == "__main__":
     '''
         To run multi-processing add this: 
         with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
             index_references()
     '''
-
+    # index_strains()
     cleanup()
     setup()
     t1 = Thread(target=index_part_1)

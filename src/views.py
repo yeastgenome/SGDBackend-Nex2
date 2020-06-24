@@ -20,8 +20,8 @@ import json
 from pathlib import Path
 
 from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation
-from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser
-from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query
+from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
+from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query
 from .models_helpers import ModelsHelper
 from .models import SGD_SOURCE_ID, TAXON_ID
 from .variant_helpers import get_variant_data
@@ -61,46 +61,48 @@ def search_autocomplete(request):
 
 @view_config(route_name='search', renderer='json', request_method='GET')
 def search(request):
-    query = request.params.get('q', '')
-    is_quick_flag = request.params.get('is_quick', False)
-    query_temp_arr = query.strip().split(' ')
+    # initialize parameters
+    search_terms = []
     flag = False
     name_flag = False
     sys_flag = False
+    alias_flag = False
+    terms = []
+    ids = []
+    wildcard = None
+    terms_digits_flag = False
 
-    if len(query_temp_arr) > 3:
-        return {
-            'total': [],
-            'results': [],
-            'aggregations': []
-        }
+    # get query string
+    query = request.params.get('q', '').strip()
+    temp_container = query.split(' ')
+    int_flag = False
+    if(temp_container):
+        for elem in temp_container:
+            if elem.isdigit():
+                int_flag = True
+            else:
+                int_flag = False
+                break
 
-    # see if we can search for a simple gene name in db without using ES
-    aliases_count = 0 
-    if is_quick_flag == 'true':
-        t_query = query.strip().upper()
-        sys_pattern = re.compile(r'(?i)^y.{2,}')
-        is_sys_name_match = sys_pattern.match(t_query)
-        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
-            maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
-            aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
-            if aliases_count == 0 and  maybe_gene_url:
-                fake_search_obj = {
-                    'href': maybe_gene_url,
-                    'is_quick': True
-                }
-                return {
-                    'total': 1,
-                    'results': [fake_search_obj],
-                    'aggregations': []
-                }
+    digit_container = is_digit(query, int_flag)
+    if digit_container:
+        ids = digit_container
 
-    limit = int(request.params.get('limit', 10))
-    offset = int(request.params.get('offset', 0))
-    category = request.params.get('category', '')
-    sort_by = request.params.get('sort_by', '')
-
-    # subcategory filters. Map: (request GET param name from frontend, ElasticSearch field name)
+    is_quick_flag = request.params.get('is_quick', False)
+    has_spec_chars = has_special_characters(query)
+    term_container = []
+    if has_spec_chars:
+        terms = get_multiple_terms(query)
+    else:
+        if(len(query) > 50):
+            term_container = has_long_query(query)
+            if(term_container):
+                terms = term_container
+    if terms or ids:
+        terms_digits_flag = True
+    if len(terms) > 100:
+        terms = terms[:50]
+        # subcategory filters. Map: (request GET param name from frontend, ElasticSearch field name)
     category_filters = {
         "locus": [('feature type', 'feature_type'), ('molecular function',
                                                      'molecular_function'),
@@ -171,6 +173,12 @@ def search(request):
         "year",
         "readme_url",
         "chebiid",
+        "colleague_name",
+        "raw_display_name",
+        "ref_citation",
+        "chemical_name",
+        "resource_name",
+        "locus_summary"
     ]  # year not inserted, have to change to str in mapping
 
     json_response_fields = [
@@ -178,57 +186,102 @@ def search(request):
         'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'aliases', 'year',
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
+    # see if we can search for a simple gene name in db without using ES
+    aliases_count = 0
+    if is_quick_flag == 'true' and terms_digits_flag == False:
+        t_query = query.strip().upper()
+        sys_pattern = re.compile(r'(?i)^y.{2,}')
+        is_sys_name_match = sys_pattern.match(t_query)
+        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
+            maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
+            aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
+            if aliases_count == 0 and  maybe_gene_url:
+                fake_search_obj = {
+                    'href': maybe_gene_url,
+                    'is_quick': True
+                }
+                return {
+                    'total': 1,
+                    'results': [fake_search_obj],
+                    'aggregations': []
+                }
+            
+            elif aliases_count > 0:
+                alias_flag = True
+    elif (Locusdbentity.is_valid_gene_name(query.strip().upper()) and terms_digits_flag == False):
+        aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(
+            ['Uniform', 'Non-uniform']), LocusAlias.display_name == query.strip().upper())).count()
+        if aliases_count > 0:
+            alias_flag = True
+    elif (terms_digits_flag):
+        # check for alias
+        terms = [elem.upper() for elem in terms]
+        count = count_alias(terms)
+        if (count > 0):
+            alias_flag = True
+        
+    limit = int(request.params.get('limit', 10))
+    offset = int(request.params.get('offset', 0))
+    category = request.params.get('category', '')
+    sort_by = request.params.get('sort_by', '')
 
     args = {}
 
     for key in list(request.params.keys()):
         args[key] = request.params.getall(key)
-    
-    es_query = build_search_query(query, search_fields, category,
-                                  category_filters, args)
 
+    es_query = build_search_query(query, search_fields, category,
+                                  category_filters, args, alias_flag,
+                                  terms, ids, wildcard)
     search_body = build_es_search_body_request(query,
                                                category,
                                                es_query,
                                                json_response_fields,
                                                search_fields,
                                                sort_by)
-    search_results = ESearch.search(
+    valid_query = ESearch.indices.validate_query(
         index=ES_INDEX_NAME,
         body=search_body,
-        size=limit,
-        from_=offset,
-        preference='p_'+query
     )
+    if valid_query == False:
+        return []
+    else:
+        search_results = ESearch.search(
+            index=ES_INDEX_NAME,
+            body=search_body,
+            size=limit,
+            from_=offset,
+            preference='p_'+query
+        )
 
-    if search_results['hits']['total'] == 0:
-        return {
-            'total': 0,
-            'results': [],
-            'aggregations': []
-        }
+        if search_results['hits']['total'] == 0:
+            return {
+                'total': 0,
+                'results': [],
+                'aggregations': []
+            }
 
-    aggregation_body = build_es_aggregation_body_request(
-        es_query,
-        category,
-        category_filters
-    )
-
-    aggregation_results = ESearch.search(
-        index=ES_INDEX_NAME,
-        body=aggregation_body,
-        preference='p_'+query
-    )
-
-    return {
-        'total': search_results['hits']['total'],
-        'results': format_search_results(search_results, json_response_fields, query),
-        'aggregations': format_aggregation_results(
-            aggregation_results,
+        aggregation_body = build_es_aggregation_body_request(
+            es_query,
             category,
             category_filters
         )
-    }
+        
+        aggregation_results = ESearch.search(
+            index=ES_INDEX_NAME,
+            body=aggregation_body,
+            preference='p_'+query
+        )
+
+        return {
+            'total': search_results['hits']['total'],
+            'results': format_search_results(search_results, json_response_fields, query),
+            'aggregations': format_aggregation_results(
+                aggregation_results,
+                category,
+                category_filters
+            )
+        }
 
 @view_config(route_name='genomesnapshot', renderer='json', request_method='GET')
 def genomesnapshot(request):
@@ -311,7 +364,6 @@ def reference_this_week(request):
     end_date = datetime.datetime.today()
 
     recent_literature = DBSession.query(Referencedbentity).filter(Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created.desc()).all()
-    
     refs = [x.to_dict_citation() for x in recent_literature]
     return {
         'start': start_date.strftime("%Y-%m-%d"),
@@ -359,9 +411,10 @@ def search_sequence_objects(request):
 
     return Response(body=json.dumps(formatted_response), content_type='application/json')
 
+
 @view_config(route_name='get_sequence_object', renderer='json', request_method='GET')
 def get_sequence_object(request):
-    
+
     # id = request.matchdict['id'].upper()
     # return ESearch.get(index=request.registry.settings['elasticsearch.variant_viewer_index'], id=id)['_source']
 
@@ -1493,4 +1546,3 @@ def api_portal(request):
         data = json.load(f)
 
     return data
-

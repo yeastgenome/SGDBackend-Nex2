@@ -27,6 +27,7 @@ from scripts.loading.util import link_gene_complex_names
 
 from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
