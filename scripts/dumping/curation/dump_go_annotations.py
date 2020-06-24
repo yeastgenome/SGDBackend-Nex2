@@ -1,3 +1,14 @@
+from src.helpers import upload_file
+from scripts.loading.database_session import get_session
+from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
+    Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
+    Gosupportingevidence, LocusAlias, Edam, Path, FilePath, \
+    Filedbentity, ReferenceAlias, Dnasequenceannotation, So
+from urllib.request import urlretrieve
+from urllib.request import urlopen
+import transaction
+from boto.s3.key import Key
+import boto
 from datetime import datetime
 import logging
 import os
@@ -5,18 +16,7 @@ import sys
 import gzip
 import importlib
 importlib.reload(sys)  # Reload does the trick!
-import boto
-from boto.s3.key import Key
-import transaction
-from urllib.request import urlopen
-from urllib.request import urlretrieve
 
-from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
-                       Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
-                       Gosupportingevidence, LocusAlias, Edam, Path, FilePath, \
-                       Filedbentity, ReferenceAlias, Dnasequenceannotation, So
-from scripts.loading.database_session import get_session
-from src.helpers import upload_file
 
 __author__ = 'sweng66'
 
@@ -35,22 +35,22 @@ gaf_file4yeastmine = "scripts/dumping/curation/data/gene_association.sgd-yeastmi
 go_central_url = "http://release.geneontology.org/"
 gaf_from_go = "sgd.gaf.gz"
 
-namespace_to_code = { "biological process": 'P',
-                      "molecular function": 'F',
-                      "cellular component": 'C' }
+namespace_to_code = {"biological process": 'P',
+                     "molecular function": 'F',
+                     "cellular component": 'C'}
 
-so_to_col12 = { "ORF": "protein",
-                "transposable element gene": "protein",
-                "blocked reading frame": "protein",
-                "disabled reading frame": "protein",
-                "pseudogene": "protein",
-                "ncRNA gene": "ncRNA",
-                "snoRNA gene": "snoRNA",
-                "snRNA gene": "snRNA",
-                "tRNA gene": "tRNA",
-                "rRNA gene": "rRNA",
-                "telomerase RNA gene": "telomerase_RNA" }
-                
+so_to_col12 = {"ORF": "protein",
+               "transposable element gene": "protein",
+               "blocked reading frame": "protein",
+               "disabled reading frame": "protein",
+               "pseudogene": "protein",
+               "ncRNA gene": "ncRNA",
+               "snoRNA gene": "snoRNA",
+               "snRNA gene": "snRNA",
+               "tRNA gene": "tRNA",
+               "rRNA gene": "rRNA",
+               "telomerase RNA gene": "telomerase_RNA"}
+
 DBID = 0
 NAME = 1
 QUALIFIER = 2
@@ -65,7 +65,7 @@ TAG = 10
 TAXON = 11
 DATE = 12
 SOURCE = 13
-ANNOT_TYPE = 14 ## for yeastmine
+ANNOT_TYPE = 14  # for yeastmine
 LAST_FIELD = 13
 
 DATABASE = 'Saccharomyces Genome Database (SGD)'
@@ -75,8 +75,9 @@ FUNDING = 'NHGRI at US NIH, grant number U41 HG001315'
 DB = 'SGD'
 TAXON_ID = '559292'
 
+
 def dump_data(noctua_gpad_file):
- 
+
     nex_session = get_session()
 
     fw = open(gaf_file, "w")
@@ -89,21 +90,34 @@ def dump_data(noctua_gpad_file):
     log.info(str(datetime.now()))
     log.info("Getting data from the database...")
 
-    id_to_source = dict([(x.source_id, x.display_name) for x in nex_session.query(Source).all()])
-    source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
-    id_to_gene = dict([(x.dbentity_id, (x.systematic_name, x.gene_name, x.headline, x.qualifier)) for x in nex_session.query(Locusdbentity).all()])
-    id_to_go = dict([(x.go_id, (x.goid, x.display_name, x.go_namespace)) for x in nex_session.query(Go).all()])
-    id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
-    id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter(Dbentity.subclass.in_(['REFERENCE', 'LOCUS'])).all()])
-    id_to_ecoid = dict([(x.eco_id, x.format_name) for x in nex_session.query(Eco).all()])
-    id_to_taxon = dict([(x.taxonomy_id, x.taxid) for x in nex_session.query(Taxonomy).all()])
-    id_to_ro = dict([(x.ro_id, x.display_name) for x in nex_session.query(Ro).all()])
-    edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
-    id_to_go_ref = dict([(x.reference_id, x.display_name) for x in nex_session.query(ReferenceAlias).filter(ReferenceAlias.display_name.like('GO_REF:%')).all()])
-    so_id_to_term = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
-    S288C_row = nex_session.query(Taxonomy).filter_by(format_name = 'Saccharomyces_cerevisiae_S288c').one_or_none()
+    id_to_source = dict([(x.source_id, x.display_name)
+                         for x in nex_session.query(Source).all()])
+    source_to_id = dict([(x.display_name, x.source_id)
+                         for x in nex_session.query(Source).all()])
+    id_to_gene = dict([(x.dbentity_id, (x.systematic_name, x.gene_name, x.headline, x.qualifier))
+                       for x in nex_session.query(Locusdbentity).all()])
+    id_to_go = dict([(x.go_id, (x.goid, x.display_name, x.go_namespace))
+                     for x in nex_session.query(Go).all()])
+    id_to_pmid = dict([(x.dbentity_id, x.pmid)
+                       for x in nex_session.query(Referencedbentity).all()])
+    id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
+        Dbentity).filter(Dbentity.subclass.in_(['REFERENCE', 'LOCUS'])).all()])
+    id_to_ecoid = dict([(x.eco_id, x.format_name)
+                        for x in nex_session.query(Eco).all()])
+    id_to_taxon = dict([(x.taxonomy_id, x.taxid)
+                        for x in nex_session.query(Taxonomy).all()])
+    id_to_ro = dict([(x.ro_id, x.display_name)
+                     for x in nex_session.query(Ro).all()])
+    edam_to_id = dict([(x.format_name, x.edam_id)
+                       for x in nex_session.query(Edam).all()])
+    id_to_go_ref = dict([(x.reference_id, x.display_name) for x in nex_session.query(
+        ReferenceAlias).filter(ReferenceAlias.display_name.like('GO_REF:%')).all()])
+    so_id_to_term = dict([(x.so_id, x.display_name)
+                          for x in nex_session.query(So).all()])
+    S288C_row = nex_session.query(Taxonomy).filter_by(
+        format_name='Saccharomyces_cerevisiae_S288c').one_or_none()
     S288C_taxonomy_id = S288C_row.taxonomy_id
-    
+
     id_to_eco = {}
     for x in nex_session.query(EcoAlias).all():
         if len(x.display_name) > 5:
@@ -133,13 +147,14 @@ def dump_data(noctua_gpad_file):
     group_id_to_extensions = {}
     pre_annot_id = 0
     for x in nex_session.query(Goextension).order_by(Goextension.annotation_id, Goextension.group_id.asc()).all():
-        if pre_annot_id != x.annotation_id and pre_annot_id !=0:
+        if pre_annot_id != x.annotation_id and pre_annot_id != 0:
             annotation_id_to_extensions[pre_annot_id] = group_id_to_extensions
             group_id_to_extensions = {}
         extensions = []
         if x.group_id in group_id_to_extensions:
             extensions = group_id_to_extensions[x.group_id]
-        extensions.append(id_to_ro[x.ro_id].replace(" ", "_")+'(' + x.dbxref_id + ')')
+        extensions.append(id_to_ro[x.ro_id].replace(
+            " ", "_")+'(' + x.dbxref_id + ')')
         group_id_to_extensions[x.group_id] = extensions
         pre_annot_id = x.annotation_id
 
@@ -147,7 +162,7 @@ def dump_data(noctua_gpad_file):
     group_id_to_evidences = {}
     pre_annot_id = 0
     for x in nex_session.query(Gosupportingevidence).order_by(Gosupportingevidence.annotation_id, Gosupportingevidence.group_id.asc()).all():
-        if pre_annot_id != x.annotation_id and pre_annot_id !=0:
+        if pre_annot_id != x.annotation_id and pre_annot_id != 0:
             annotation_id_to_evidences[pre_annot_id] = group_id_to_evidences
             group_id_to_evidences = {}
         evidences = []
@@ -160,12 +175,13 @@ def dump_data(noctua_gpad_file):
     loaded = {}
 
     noctuaData = read_noctua_data(noctua_gpad_file)
-    
+
     for x in nex_session.query(Goannotation).all():
 
         row = [None] * (LAST_FIELD+1)
 
-        (feature_name, gene_name, headline, qualifier) = id_to_gene[x.dbentity_id]
+        (feature_name, gene_name, headline,
+         qualifier) = id_to_gene[x.dbentity_id]
         name_type = locus_id_to_col12.get(x.dbentity_id)
         if name_type is None:
             print ("ERROR: No name_type found for dbentity_id=", x.dbentity_id)
@@ -181,7 +197,7 @@ def dump_data(noctua_gpad_file):
         row[NAME] = gene_name
         row[HEADLINE] = headline
         row[DBID] = id_to_sgdid[x.dbentity_id]
-        
+
         alias_list = id_to_alias_list.get(x.dbentity_id)
         if alias_list is None:
             alias_list = feature_name
@@ -196,7 +212,7 @@ def dump_data(noctua_gpad_file):
         # if id_to_pmid.get(x.reference_id) is not None:
         #    reference = reference + "|" + "PMID:" + str(id_to_pmid.get(x.reference_id))
         reference = ""
-        if id_to_pmid.get(x.reference_id) is not None: 
+        if id_to_pmid.get(x.reference_id) is not None:
             reference = "PMID:" + str(id_to_pmid.get(x.reference_id))
         else:
             reference = id_to_go_ref[x.reference_id]
@@ -205,6 +221,7 @@ def dump_data(noctua_gpad_file):
         go_qualifier = ""
         if x.go_qualifier in ['NOT', 'contributes to', 'colocalizes with']:
             go_qualifier = x.go_qualifier.replace(' ', '_')
+
         row[QUALIFIER] = go_qualifier
         row[ASPECT] = namespace_to_code[go_aspect]
 
@@ -214,16 +231,20 @@ def dump_data(noctua_gpad_file):
         row[EVIDENCE] = eco_code
 
         ### check if the annotation is in nochua list. If yes, exclude it.
-        key = (row[DBID], row[GOID], row[REFERENCE], id_to_ecoid[x.eco_id], x.annotation_type)
+        key = (row[DBID], row[GOID], row[REFERENCE],
+               id_to_ecoid[x.eco_id], x.annotation_type)
         if key in noctuaData:
-            evidences = annotation_id_to_evidences.get(x.annotation_id, {}).get(1, [])
-            extensions = annotation_id_to_extensions.get(x.annotation_id, {}).get(1, [])
+            evidences = annotation_id_to_evidences.get(
+                x.annotation_id, {}).get(1, [])
+            extensions = annotation_id_to_extensions.get(
+                x.annotation_id, {}).get(1, [])
             evidences.sort()
             extensions.sort()
-            (noctua_qualifier, noctua_evidences, noctua_extensions) = noctuaData[key]
+            (noctua_qualifier, noctua_evidences,
+             noctua_extensions) = noctuaData[key]
             if noctua_qualifier == row[QUALIFIER] and noctua_evidences == ','.join(evidences) and noctua_extensions == ','.join(extensions):
                 continue
-                                   
+
         source = id_to_source[x.source_id]
         row[SOURCE] = source
 
@@ -237,13 +258,13 @@ def dump_data(noctua_gpad_file):
         all_support_evidences = {"1": []}
         if x.annotation_id in annotation_id_to_evidences:
             all_support_evidences = annotation_id_to_evidences[x.annotation_id]
-        
+
         all_extensions = {"1": []}
         if x.annotation_id in annotation_id_to_extensions:
             all_extensions = annotation_id_to_extensions[x.annotation_id]
 
         found = {}
-    
+
         for evid_group_id in sorted(all_support_evidences.keys()):
             support_evidences = ",".join(all_support_evidences[evid_group_id])
             for ext_group_id in sorted(all_extensions.keys()):
@@ -251,7 +272,7 @@ def dump_data(noctua_gpad_file):
                 if (support_evidences, extensions) in found:
                     continue
                 found[(support_evidences, extensions)] = 1
-                if qualifier != 'Dubious': 
+                if qualifier != 'Dubious':
                     fw.write(DB + "\t")
                 fw2.write(DB + "\t")
                 for i in range(0, LAST_FIELD+1):
@@ -274,11 +295,13 @@ def dump_data(noctua_gpad_file):
 
     log.info("Uploading GAF file to S3...")
 
-    update_database_load_file_to_s3(nex_session, gaf_file, '1', source_to_id, edam_to_id, datestamp)
+    update_database_load_file_to_s3(
+        nex_session, gaf_file, '1', source_to_id, edam_to_id, datestamp)
 
     log.info("Uploading GAF file for yeastmine to S3...")
 
-    update_database_load_file_to_s3(nex_session, gaf_file4yeastmine, '0', source_to_id, edam_to_id, datestamp)
+    update_database_load_file_to_s3(
+        nex_session, gaf_file4yeastmine, '0', source_to_id, edam_to_id, datestamp)
 
     nex_session.close()
 
@@ -291,6 +314,7 @@ def dump_data(noctua_gpad_file):
     log.info(str(datetime.now()))
     log.info("Done!")
 
+
 def write_header(fw, datestamp):
 
     fw.write("!gaf-version: 2.0\n")
@@ -301,11 +325,12 @@ def write_header(fw, datestamp):
     fw.write("!Funding: NHGRI at US NIH, grant number U41-HG001315\n")
     fw.write("!\n")
 
+
 def read_from_go_central(url, matchSubDir=None):
-    
+
     response = urlopen(url)
     html = response.read().decode('utf-8')
-    lines = html.split("\n");
+    lines = html.split("\n")
     current_sub = ""
     current_url = ""
     for line in lines:
@@ -320,6 +345,7 @@ def read_from_go_central(url, matchSubDir=None):
             current_url = items[0]
     return current_url
 
+
 def download_sgd_gaf_from_go_central():
 
     dated_url = read_from_go_central(go_central_url)
@@ -327,6 +353,7 @@ def download_sgd_gaf_from_go_central():
     sgd_gaf_url = read_from_go_central(annots_url, gaf_from_go)
 
     urlretrieve(sgd_gaf_url, gaf_from_go)
+
 
 def upload_gaf_to_s3(file, filename):
 
@@ -339,11 +366,12 @@ def upload_gaf_to_s3(file, filename):
     k.make_public()
     transaction.commit()
 
+
 def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_id, edam_to_id, datestamp):
 
     # gene_association.sgd.20171204.gaf.gz
     # gene_association.sgd-yeastmine.20171204.gaf.gz
- 
+
     # datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
     gzip_file = gaf_file + "." + datestamp + ".gaf.gz"
     import gzip
@@ -359,8 +387,9 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
     ##########################################################################
 
     import hashlib
-    gaf_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()  
-    row = nex_session.query(Filedbentity).filter_by(md5sum = gaf_md5sum).one_or_none()
+    gaf_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()
+    row = nex_session.query(Filedbentity).filter_by(
+        md5sum=gaf_md5sum).one_or_none()
 
     if row is not None:
         return
@@ -368,25 +397,27 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
     gzip_file = gzip_file.replace("scripts/dumping/curation/data/", "")
 
     if is_public == '1':
-        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gene_association.sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gene_association.sgd%')).filter(
+            Dbentity.dbentity_status == 'Active').update({"dbentity_status": 'Archived'}, synchronize_session='fetch')
         nex_session.commit()
 
-    data_id = edam_to_id.get('EDAM:2048')   ## data:2048 Report
-    topic_id = edam_to_id.get('EDAM:0085')  ## topic:0085 Functional genomics
-    format_id = edam_to_id.get('EDAM:3475') ## format:3475 TSV
+    data_id = edam_to_id.get('EDAM:2048')  # data:2048 Report
+    topic_id = edam_to_id.get('EDAM:0085')  # topic:0085 Functional genomics
+    format_id = edam_to_id.get('EDAM:3475')  # format:3475 TSV
 
     if "yeastmine" not in gaf_file:
         from sqlalchemy import create_engine
         from src.models import DBSession
         engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
         DBSession.configure(bind=engine)
-    
-    readme = nex_session.query(Dbentity).filter_by(display_name="gene_association.README", dbentity_status='Active').one_or_none()
+
+    readme = nex_session.query(Dbentity).filter_by(
+        display_name="gene_association.README", dbentity_status='Active').one_or_none()
     if readme is None:
         log.info("gene_association.README is not in the database.")
         return
     readme_file_id = readme.dbentity_id
- 
+
     # path.path = /reports/function
 
     upload_file(CREATED_BY, local_file,
@@ -406,27 +437,30 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
                 source_id=source_to_id['SGD'],
                 md5sum=gaf_md5sum)
 
-    gaf = nex_session.query(Dbentity).filter_by(display_name=gzip_file, dbentity_status='Active').one_or_none()
+    gaf = nex_session.query(Dbentity).filter_by(
+        display_name=gzip_file, dbentity_status='Active').one_or_none()
     if gaf is None:
         log.info("The " + gzip_file + " is not in the database.")
         return
     file_id = gaf.dbentity_id
 
-    path = nex_session.query(Path).filter_by(path="/reports/function").one_or_none()
+    path = nex_session.query(Path).filter_by(
+        path="/reports/function").one_or_none()
     if path is None:
         log.info("The path /reports/function is not in the database.")
         return
     path_id = path.path_id
 
-    x = FilePath(file_id = file_id,
-                 path_id = path_id,
-                 source_id = source_to_id['SGD'],
-                 created_by = CREATED_BY)
+    x = FilePath(file_id=file_id,
+                 path_id=path_id,
+                 source_id=source_to_id['SGD'],
+                 created_by=CREATED_BY)
 
     nex_session.add(x)
     nex_session.commit()
 
     log.info("Done uploading " + gaf_file)
+
 
 def read_noctua_data(noctua_gpad_file):
 
@@ -442,8 +476,8 @@ def read_noctua_data(noctua_gpad_file):
         if line.startswith('!'):
             continue
         field = line.strip().split('\t')
-        
-        ## get rid of duplicate lines...                                                                    
+
+        ## get rid of duplicate lines...
         if line in read_line:
             continue
         read_line[line] = 1
@@ -463,17 +497,14 @@ def read_noctua_data(noctua_gpad_file):
         extensions = field[10].split(',')
         extensions.sort()
         data[key] = (go_qualifier, ','.join(evidences), ','.join(extensions))
-    
+
     return data
-        
+
+
 if __name__ == '__main__':
 
     noctua_path = 'http://current.geneontology.org/products/annotations/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
-    
+
     dump_data(noctua_gpad_file)
-
-    
-
-

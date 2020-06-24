@@ -11,8 +11,8 @@ import transaction
 import gzip
 import shutil
 from src.models import Taxonomy, Source, Edam, Path, Filedbentity, FilePath, So, Dbentity,\
-                       Dnasequenceannotation, Locusdbentity, LocusAlias, Referencedbentity,\
-                       Literatureannotation, Contig                          
+    Dnasequenceannotation, Locusdbentity, LocusAlias, Referencedbentity,\
+    Literatureannotation, Contig
 from scripts.loading.database_session import get_session
 from src.helpers import upload_file
 
@@ -37,10 +37,12 @@ taxonId = "NCBITaxon:559292"
 TAXON = "TAX:559292"
 assembly = "R64-2-1"
 
-obsolete_pmids = ['PMID:25423496', 'PMID:27651461', 'PMID:28068213', 'PMID:31088842']
+obsolete_pmids = ['PMID:25423496', 'PMID:27651461',
+                  'PMID:28068213', 'PMID:31088842']
+
 
 def dump_data():
- 
+
     nex_session = get_session()
 
     datestamp = str(datetime.now()).split(" ")[0]
@@ -48,24 +50,32 @@ def dump_data():
     log.info(str(datetime.now()))
     log.info("Getting basic data from the database...")
 
-    source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
-    edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
+    source_to_id = dict([(x.display_name, x.source_id)
+                         for x in nex_session.query(Source).all()])
+    edam_to_id = dict([(x.format_name, x.edam_id)
+                       for x in nex_session.query(Edam).all()])
 
-    taxon = nex_session.query(Taxonomy).filter_by(taxid = TAXON).one_or_none()
+    taxon = nex_session.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
     taxonomy_id = taxon.taxonomy_id
-    so_id_to_so = dict([(x.so_id, (x.soid, x.display_name)) for x in nex_session.query(So).all()])
-    dbentity_id_to_locus = dict([(x.dbentity_id, x) for x in nex_session.query(Locusdbentity).all()])
-    reference_id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
-    dbentity_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
-    dbentity_id_to_status = dict([(x.dbentity_id, x.dbentity_status) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
-    contig_id_to_name = dict([(x.contig_id, x.display_name) for x in nex_session.query(Contig).filter_by(taxonomy_id=taxonomy_id).all()])
+    so_id_to_so = dict([(x.so_id, (x.soid, x.display_name))
+                        for x in nex_session.query(So).all()])
+    dbentity_id_to_locus = dict([(x.dbentity_id, x)
+                                 for x in nex_session.query(Locusdbentity).all()])
+    reference_id_to_pmid = dict([(x.dbentity_id, x.pmid)
+                                 for x in nex_session.query(Referencedbentity).all()])
+    dbentity_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
+        Dbentity).filter_by(subclass='LOCUS').all()])
+    dbentity_id_to_status = dict([(x.dbentity_id, x.dbentity_status)
+                                  for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
+    contig_id_to_name = dict([(x.contig_id, x.display_name) for x in nex_session.query(
+        Contig).filter_by(taxonomy_id=taxonomy_id).all()])
 
     log.info(str(datetime.now()))
     log.info("Getting aliases from the database...")
 
     locus_id_to_alias_names = {}
     locus_id_to_ncbi_protein_name = {}
- 
+
     for x in nex_session.query(LocusAlias).filter(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'NCBI protein name'])).all():
 
         if x.alias_type in ['Uniform', 'Non-uniform']:
@@ -88,22 +98,22 @@ def dump_data():
             if pmidStr not in pmid_list and pmidStr not in obsolete_pmids:
                 pmid_list.append(pmidStr)
         dbentity_id_to_pmid_list[x.dbentity_id] = pmid_list
-             
+
     log.info("Getting all features from the database...")
 
-    metaData = { "dateProduced": datestamp,
-                 "dataProvider": 'SGD',
-                 "release": datestamp,
-                 "schemaVersion": "0.4.0",
-                 "publications": [
-                        "PMID:22110037"
-                 ] }
+    metaData = {"dateProduced": datestamp,
+                "dataProvider": 'SGD',
+                "release": datestamp,
+                "schemaVersion": "0.4.0",
+                "publications": [
+                    "PMID:22110037"
+                ]}
 
     data = []
     ## get all features with 'GENOMIC' sequence in S288C
-    for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
+    for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id=taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
         locus = dbentity_id_to_locus[x.dbentity_id]
-        
+
         (soid, soTerm) = so_id_to_so[x.so_id]
         if 'RNA' not in soTerm:
             continue
@@ -122,31 +132,31 @@ def dump_data():
         chr = None
         if chromosome:
             chr = chromosome.split(' ')[1]
-            
+
         sgdid = dbentity_id_to_sgdid[x.dbentity_id]
 
-        row = { "primaryId": "SGD:" + sgdid,
-                "taxonId": taxonId,
-                "symbol": name }
-        
+        row = {"primaryId": "SGD:" + sgdid,
+               "taxonId": taxonId,
+               "symbol": name}
+
         if x.dbentity_id in locus_id_to_alias_names:
             row["symbolSynonyms"] = locus_id_to_alias_names[x.dbentity_id]
 
         row["soTermId"] = soid
         row["sequence"] = x.residues
-        row["genomeLocations"] = [{ "assembly": assembly,
-                                    "exons": [{ "chromosome": chr,
-                                                "strand": x.strand,
-                                                "startPosition": x.start_index,
-                                                "endPosition": x.end_index }]
-        }]
+        row["genomeLocations"] = [{"assembly": assembly,
+                                   "exons": [{"chromosome": chr,
+                                              "strand": x.strand,
+                                              "startPosition": x.start_index,
+                                              "endPosition": x.end_index}]
+                                   }]
         if x.dbentity_id in locus_id_to_ncbi_protein_name:
             row["name"] = locus_id_to_ncbi_protein_name[x.dbentity_id]
         elif locus.name_description:
             row["name"] = locus.name_description
         elif locus.headline:
             row["name"] = locus.headline
-        else: 
+        else:
             row["name"] = None
 
         row["url"] = "https://www.yeastgenome.org/locus/" + sgdid
@@ -154,8 +164,8 @@ def dump_data():
             row["publications"] = dbentity_id_to_pmid_list[x.dbentity_id]
         data.append(row)
 
-    jsonData = { "data": data,
-                 "metaData": metaData }
+    jsonData = {"data": data,
+                "metaData": metaData}
 
     f = open(data_file, "w")
     f.write(json.dumps(jsonData, indent=4, sort_keys=True))
@@ -166,11 +176,13 @@ def dump_data():
     gzip_file = data_file.replace('.json', '') + '.' + datestamp + ".json.gz"
 
     with open(data_file, 'rb') as f_in, gzip.open(gzip_file, 'wb') as f_out:
-         shutil.copyfileobj(f_in, f_out)
+        shutil.copyfileobj(f_in, f_out)
 
     upload_file_to_latest_archive(data_file, gzip_file)
 
-    update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id)
+    update_database_load_file_to_s3(
+        nex_session, data_file, gzip_file, source_to_id, edam_to_id)
+
 
 def upload_file_to_latest_archive(data_file, gzip_file):
 
@@ -179,13 +191,17 @@ def upload_file_to_latest_archive(data_file, gzip_file):
         aws_secret_access_key=S3_SECRET_KEY
     )
     s3 = session.resource('s3')
-    
+
     ## to latest:
-    s3.meta.client.upload_file(data_file, S3_BUCKET, "/latest/" + data_file, ExtraArgs={'ACL': 'public-read'})
+    s3.meta.client.upload_file(
+        data_file, S3_BUCKET, "/latest/" + data_file, ExtraArgs={'ACL': 'public-read'})
     ## to current directoty under sgd-archive.yeastgenome.org bucket
-    s3.meta.client.upload_file(data_file, S3_BUCKET2, s3_archive_dir + data_file, ExtraArgs={'ACL': 'public-read'})
-    ## to archive directory under sgd-archive.yeastgenome.org bucket 
-    s3.meta.client.upload_file(gzip_file, S3_BUCKET2, s3_archive_dir + "archive/" + gzip_file, ExtraArgs={'ACL': 'public-read'})
+    s3.meta.client.upload_file(
+        data_file, S3_BUCKET2, s3_archive_dir + data_file, ExtraArgs={'ACL': 'public-read'})
+    ## to archive directory under sgd-archive.yeastgenome.org bucket
+    s3.meta.client.upload_file(gzip_file, S3_BUCKET2, s3_archive_dir +
+                               "archive/" + gzip_file, ExtraArgs={'ACL': 'public-read'})
+
 
 def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id):
 
@@ -193,25 +209,27 @@ def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to
 
     import hashlib
     gff_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()
-    row = nex_session.query(Filedbentity).filter_by(md5sum = gff_md5sum).one_or_none()
+    row = nex_session.query(Filedbentity).filter_by(
+        md5sum=gff_md5sum).one_or_none()
 
     if row is not None:
         return
 
     gzip_file = gzip_file.replace("scripts/dumping/ncbi/data/", "")
 
-    nex_session.query(Dbentity).filter(Dbentity.display_name.like('RNAcentral.%.json.gz')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+    nex_session.query(Dbentity).filter(Dbentity.display_name.like('RNAcentral.%.json.gz')).filter(
+        Dbentity.dbentity_status == 'Active').update({"dbentity_status": 'Archived'}, synchronize_session='fetch')
     nex_session.commit()
 
-    data_id = edam_to_id.get('EDAM:3495')   ## data:3495    RNA sequence                     
-    topic_id = edam_to_id.get('EDAM:0099')  ## topic:0099   RNA
-    format_id = edam_to_id.get('EDAM:3464') ## format:3464  JSON format 
-                                     
+    data_id = edam_to_id.get('EDAM:3495')  # data:3495    RNA sequence
+    topic_id = edam_to_id.get('EDAM:0099')  # topic:0099   RNA
+    format_id = edam_to_id.get('EDAM:3464')  # format:3464  JSON format
+
     from sqlalchemy import create_engine
     from src.models import DBSession
     engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
     DBSession.configure(bind=engine)
-        
+
     upload_file(CREATED_BY, local_file,
                 filename=gzip_file,
                 file_extension='gz',
@@ -229,7 +247,8 @@ def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to
                 source_id=source_to_id['SGD'],
                 md5sum=gff_md5sum)
 
-    rnaFile = nex_session.query(Dbentity).filter_by(display_name=gzip_file, dbentity_status='Active').one_or_none()
+    rnaFile = nex_session.query(Dbentity).filter_by(
+        display_name=gzip_file, dbentity_status='Active').one_or_none()
 
     if rnaFile is None:
         log.info("The " + gzip_file + " is not in the database.")
@@ -237,26 +256,24 @@ def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to
 
     file_id = rnaFile.dbentity_id
 
-    path = nex_session.query(Path).filter_by(path="/reports/chromosomal-features").one_or_none()
+    path = nex_session.query(Path).filter_by(
+        path="/reports/chromosomal-features").one_or_none()
     if path is None:
         log.info("The path: /reports/chromosomal-features is not in the database.")
         return
     path_id = path.path_id
 
-    x = FilePath(file_id = file_id,
-                 path_id = path_id,
-                 source_id = source_to_id['SGD'],
-                 created_by = CREATED_BY)
+    x = FilePath(file_id=file_id,
+                 path_id=path_id,
+                 source_id=source_to_id['SGD'],
+                 created_by=CREATED_BY)
 
     nex_session.add(x)
     nex_session.commit()
 
     log.info("Done uploading " + data_file)
 
+
 if __name__ == '__main__':
-    
+
     dump_data()
-
-    
-
-
