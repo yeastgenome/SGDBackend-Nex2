@@ -691,7 +691,8 @@ if __name__ == "__main__":
     urllib.request.urlcleanup()
     urllib.request.urlretrieve(url_path + gpi_file, dated_gpi_file)
 
-    noctua_path = 'http://current.geneontology.org/products/annotations/'
+    # noctua_path = 'http://current.geneontology.org/products/annotations/'
+    noctua_path = 'http://snapshot.geneontology.org/products/annotations/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
     urllib.request.urlcleanup()
