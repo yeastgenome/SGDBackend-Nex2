@@ -1010,7 +1010,6 @@ COMMENT ON TABLE nex.transcriptdbentity IS 'A transcript entity. Inherits from D
 COMMENT ON COLUMN nex.transcriptdbentity.condition_name IS 'Condition name like YPD, GAL.';
 COMMENT ON COLUMN nex.transcriptdbentity.condition_value IS 'Condition value like YES or NO.';
 COMMENT ON COLUMN nex.transcriptdbentity.in_ncbi IS 'Dump for submitting to NCBI or not.';
-alter table nex.transcriptdbentity add constraint transcriptdbentity_uk UNIQUE (condition_name, condition_value);
 
 
 DROP TABLE IF EXISTS nex.transcript_reference CASCADE; 

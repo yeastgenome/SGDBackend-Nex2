@@ -3350,24 +3350,36 @@ CREATE OR REPLACE FUNCTION trigger_fct_transcriptdbentity_biur() RETURNS trigger
 BEGIN
   IF (TG_OP = 'INSERT') THEN
 
-       NEW.created_by := upper(NEW.created_by);
-       PERFORM nex.checkuser(NEW.created_by);
+    IF (NEW.condition_name IS NOT NULL) THEN
+        NEW.condition_name := upper(NEW.condition_name);
+    END IF;
+    IF (NEW.condition_value IS NOT NULL) THEN
+        NEW.condition_value := upper(NEW.condition_value);
+    END IF;
 
-       RETURN NEW;
-       
+    IF (NEW.in_ncbi IS NOT NULL) THEN
+        NEW.in_ncbi:= NEW.in_ncbi;
+    END IF;
+
+    RETURN NEW;
+
   ELSIF (TG_OP = 'UPDATE') THEN
 
-    IF (NEW.transcript_id != OLD.transcript_id) THEN
+    IF (NEW.dbentity_id != OLD.dbentity_id) THEN
         RAISE EXCEPTION 'Primary key cannot be updated';
     END IF;
 
-    IF (NEW.date_created != OLD.date_created) THEN
-        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    IF (NEW.condition_name IS NOT NULL) THEN
+        NEW.condition_name := upper(NEW.condition_name);
+    END IF;
+    IF (NEW.condition_value IS NOT NULL) THEN
+        NEW.condition_value := upper(NEW.condition_value);
     END IF;
 
-    IF (NEW.created_by != OLD.created_by) THEN
-        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    IF (NEW.in_ncbi IS NOT NULL) THEN
+        NEW.in_ncbi:= NEW.in_ncbi;
     END IF;
+
 
     RETURN NEW;
   END IF;
