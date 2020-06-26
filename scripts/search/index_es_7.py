@@ -265,6 +265,8 @@ def index_genes():
     is_quick_flag = True
 
     for gene in all_genes:
+        _systematic_name = ''
+        _name = ''
         if gene.gene_name:
             _name = gene.gene_name
             if gene.systematic_name and gene.gene_name != gene.systematic_name:
