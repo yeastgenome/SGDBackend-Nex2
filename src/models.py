@@ -2684,12 +2684,12 @@ class Referencedbentity(Dbentity):
                         values[-1].pop('date_assigned')
                     if 'source_id' in values[-1]:
                         values[-1].pop('source_id')
-                obj[key] = values
-                self.returnValue.append(obj)
+                if len(values) > 0:
+                    obj[key] = values
+                    self.returnValue.append(obj)
+                
             except Exception as ex:
-                print(val)
                 log.exception(ex)
-            # self.returnValue[key] = len(items)
 
         try:
             curator_session = get_curator_session(username)
@@ -2752,41 +2752,41 @@ class Referencedbentity(Dbentity):
             # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
             # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
 
-            colleague_ref = curator_session.query(ColleagueReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("ColleagueReference",colleague_ref)
+            # colleague_ref = curator_session.query(ColleagueReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("ColleagueReference",colleague_ref)
 
-            curation_ref = curator_session.query(CurationReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Curationreference",curation_ref)
+            # curation_ref = curator_session.query(CurationReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Curationreference",curation_ref)
             
-            dataset_ref = curator_session.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Datasetreference",dataset_ref)
+            # dataset_ref = curator_session.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Datasetreference",dataset_ref)
             
-            locus_ref = curator_session.query(LocusReferences).filter_by(reference_id=self.dbentity_id).all()
-            helper("Locusreferences",locus_ref)
+            # locus_ref = curator_session.query(LocusReferences).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Locusreferences",locus_ref)
             
-            locusalias_ref = curator_session.query(LocusAliasReferences).filter_by(reference_id=self.dbentity_id).all()
-            helper("LocusAliasreferences",locusalias_ref)
+            # locusalias_ref = curator_session.query(LocusAliasReferences).filter_by(reference_id=self.dbentity_id).all()
+            # helper("LocusAliasreferences",locusalias_ref)
             
-            locusnote_ref = curator_session.query(LocusnoteReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Locusnotereference",locusnote_ref)
+            # locusnote_ref = curator_session.query(LocusnoteReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Locusnotereference",locusnote_ref)
             
-            locusrelation_ref = curator_session.query(LocusRelationReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("LocusRelationreference",locusrelation_ref)
+            # locusrelation_ref = curator_session.query(LocusRelationReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("LocusRelationreference",locusrelation_ref)
             
-            locussummary_ref = curator_session.query(LocussummaryReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Locussummaryreference",locussummary_ref)
+            # locussummary_ref = curator_session.query(LocussummaryReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Locussummaryreference",locussummary_ref)
             
-            pathwaysummary_ref = curator_session.query(PathwaysummaryReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Pathwaysummaryreference",pathwaysummary_ref)
+            # pathwaysummary_ref = curator_session.query(PathwaysummaryReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Pathwaysummaryreference",pathwaysummary_ref)
             
-            reserved_name = curator_session.query(Reservedname).filter_by(reference_id=self.dbentity_id).all()
-            helper("Reservedname",reserved_name)
+            # reserved_name = curator_session.query(Reservedname).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Reservedname",reserved_name)
             
-            strainsummary_ref = curator_session.query(StrainsummaryReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Strainsummaryreference",strainsummary_ref)
+            # strainsummary_ref = curator_session.query(StrainsummaryReference).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Strainsummaryreference",strainsummary_ref)
             
-            reference_file = curator_session.query(ReferenceFile).filter_by(reference_id=self.dbentity_id).all()
-            helper("Referencefile",reference_file)
+            # reference_file = curator_session.query(ReferenceFile).filter_by(reference_id=self.dbentity_id).all()
+            # helper("Referencefile",reference_file)
             
             return self.returnValue
 

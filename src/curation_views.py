@@ -2949,6 +2949,11 @@ def delete_reference(request):
                         transfer_delete_method(Regulationannotation,log)
                     
                 transaction.commit()
+                
+                sgd_id = request.matchdict['id']
+                reference = curator_session.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+                log.debug("Ref ID = " + reference.sgdid)
+                all_annotations =  reference.get_all_annotations(request.session['username'])
         
         except Exception as ex:
             log.exception(ex)
@@ -2959,7 +2964,7 @@ def delete_reference(request):
             if curator_session:
                 curator_session.close()
 
-        return HTTPOk(body=json.dumps({'success': 'Successfully completed transfer and delete operations'}), content_type='text/json')
+        return HTTPOk(body=json.dumps({'success': 'Successfully completed transfer and delete operations','annotations':all_annotations}), content_type='text/json')
 
     except Exception as e:
         log.error(e)

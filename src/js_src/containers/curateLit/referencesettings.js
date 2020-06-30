@@ -10,7 +10,7 @@ class ReferenceSettings extends Component {
     super(props);
     this.state = {
       loading:false,
-      data: {},
+      data: [],
       changeData: {},
       table_primary_key: {
         'Bindingmotifannotation': 'annotation_id',
@@ -67,7 +67,10 @@ class ReferenceSettings extends Component {
         }
         return response.json();
       })
-      .then((response) => this.props.dispatch(setMessage(response.success)))
+      .then((response) => {
+        this.setState({data:response.annotations});
+        this.props.dispatch(setMessage(response.success));
+      })
       .catch(err => this.props.dispatch(setError(err.error)));
 
     } catch (error) {
@@ -243,18 +246,19 @@ class ReferenceSettings extends Component {
   render() {
 
     if(this.state.loading){
-      return <div>....Loading data</div>;
+      return <h3>....Loading data</h3>;
     }
 
-    var renderData = this.state.data.length > 0 ? true : false;
-
+    if(this.state.data.length == 0){    
+      return <h3>Not related to any annotations</h3>;
+    }
+    
+  
     return (
       <React.Fragment>
-        <h5>Delete Reference</h5>
-        {/* {this.renderReferenceSettings()} */}
-
-        {renderData &&
-
+        <h3>Transfer and Delete Reference</h3>
+  
+        {
           this.state.data.map((item, index) => {
 
             var table_name = Object.keys(item)[0];
@@ -290,9 +294,6 @@ class ReferenceSettings extends Component {
               </div>
             );
           })
-        }
-        {
-          !renderData && <div>Not related to any annotations</div>
         }
       </React.Fragment>
 
