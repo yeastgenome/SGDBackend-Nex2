@@ -2843,13 +2843,15 @@ def delete_reference(request):
     def transfer_delete_method(table_name,log):
         
         if 'delete' in row and row['delete'] is True:
-            log.info(f'{table}: Delete the record {row["id"]}')
+            # log.info(f'{table}: Delete the record {row["id"]}')
+            log.info('{}: Delete the record {}'.format(table,row["id"]))
             annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
             if annotation:
                 curator_session.delete(annotation)
 
         elif 'pmid' in row  and int(row['pmid']) in pmid_to_referencedbentity:
-            log.info(f'{table}: Transfer the record {row["id"]} to new reference {row["pmid"]}' )
+            # log.info(f'{table}: Transfer the record {row["id"]} to new reference {row["pmid"]}' )
+            log.info('{}: Transfer the record {} to new reference {}'.format(table,row["id"],row["pmid"]))
             annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
             annotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
     # d = {'id':10}
@@ -2904,7 +2906,7 @@ def delete_reference(request):
         
         try:
             for table in body:
-                log.info('Process table ' + table)
+                log.info('Process table {}'.format(table))
                 
                 for record_id in body[table]:
                     row = body[table][record_id]
