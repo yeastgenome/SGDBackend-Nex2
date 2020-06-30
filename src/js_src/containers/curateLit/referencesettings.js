@@ -15,27 +15,6 @@ class ReferenceSettings extends Component {
         'Literatureannotation': 'annotation_id',
       }
     };
-    this.handleOnSuccess = this.handleOnSuccess.bind(this);
-  }
-  handleOnSuccess(data) {
-    this.setState({ data });
-  }
-
-  handleIndividualFormSubmit(table_name){
-    console.log(this.state.changeData[table_name]);
-  }
-
-  getConfirmationMessage(table_name=undefined){
-    // var message = '';
-    if (table_name == undefined){
-      //All the table and data
-    }
-    else{
-      var data = this.state.changeData[table_name];
-      for(var index =0;index<data.length;index++){
-        console.log(data[index]);
-      } 
-    }
   }
 
   componentDidMount() {
@@ -53,22 +32,77 @@ class ReferenceSettings extends Component {
       });
   }
 
+  handleIndividualFormSubmit(table_name) {
+    var message = this.getConfirmationMessage(table_name);
+    if (confirm(message)) {
+      this.handleProcessing({[table_name]:this.state.changeData[table_name]});
+    }    
+  }
+
+  handleProcessing(data){
+    let id = this.props.match.params.id;
+    try {
+      fetch(`/reference/${id}/delete_reference_annotations`,{
+        headers:{
+          'X-CSRF-Token': window.CSRF_TOKEN
+        },
+        method: 'DELETE',
+        body:JSON.stringify(data)
+      });
+    } catch (error) {
+      console.error(error);
+    }
+
+  }
+
+  getConfirmationMessage(table_name = undefined) {
+    var data = '';
+    if (table_name == undefined) {
+      data = this.state.changeData;
+    }
+    else {
+      data = {
+        [table_name]: this.state.changeData[table_name]
+      };
+    }
+
+    var tables = Object.keys(data);
+    var message = '';
+    tables.forEach(tableName => {
+
+      message += `
+        ${tableName}
+      `;
+
+      Object.keys(data[tableName]).forEach((d) => {
+        var obj = data[tableName][d];
+        if (obj['delete'] == true) {
+          message += `
+            ${obj['id']} will be delete.
+          `;
+        }
+        else if ('pmid' in obj) {
+          message += `
+            ${obj['id']}'s reference will be updated to ${obj['pmid']}.
+          `;
+        }
+      });
+    });
+
+
+    return message;
+  }
+
+
+
   handleTransferChange(table_name, e) {
-    var primary_key = this.state.table_primary_key[table_name];
     var primary_key_value = e.target.dataset.primaryIndex;
     var new_pmid_value = e.target.value;
 
-    // var textbox = e.target.closest('input');
-    // console.log(textbox);
-    // textbox.value = '';
-
     if (table_name in this.state.changeData) {
-      // key already in that table
-      //have to take care of others
-
       var currentStateValue = Object.assign({}, this.state.changeData[table_name]);
       currentStateValue[primary_key_value] = {
-        [primary_key]: primary_key_value,
+        'id': primary_key_value,
         'pmid': new_pmid_value,
       };
 
@@ -78,74 +112,36 @@ class ReferenceSettings extends Component {
             [table_name]: currentStateValue
           }
         };
-      },() => console.log(this.state.changeData));
+      });
 
-      // if (primary_key_value in this.state.changeData[table_name]){
-      //   this.setState(() => {
-      //     return {
-      //       changeData: {
-      //         [table_name]: {
-      //           primary_key_value :
-      //           {
-      //             [primary_key]: primary_key_value,
-      //             'delete': e.target.checked,
-      //           },
-      //         }
-      //       }
-      //     };
-      //   });
-      // }
-      // //key not in that table
-      // else{
-      //   this.setState(() => {
-      //     return {
-      //       changeData: {
-      //         [table_name]: {
-      //           primary_key_value :
-      //           {
-      //             [primary_key]: primary_key_value,
-      //             'delete': e.target.checked,
-      //           },
-      //         }
-      //       }
-      //     };
-      //   });
-      // }
     }
     else {
       this.setState(() => {
         return {
           changeData: {
             [table_name]: {
-              [primary_key_value] :
+              [primary_key_value]:
               {
-                [primary_key]: primary_key_value,
+                'id': primary_key_value,
                 'pmid': new_pmid_value,
               },
             }
           }
         };
-      },() => console.log(this.state.changeData));
+      });
     }
   }
 
 
 
   handleDeleteChange(table_name, e) {
-    var primary_key = this.state.table_primary_key[table_name];
     var primary_key_value = e.target.dataset.primaryIndex;
 
-    // var textbox = e.target.closest('input');
-    // console.log(textbox);
-    // textbox.value = '';
-
     if (table_name in this.state.changeData) {
-      // key already in that table
-      //have to take care of others
 
       var currentStateValue = Object.assign({}, this.state.changeData[table_name]);
       currentStateValue[primary_key_value] = {
-        [primary_key]: primary_key_value,
+        'id': primary_key_value,
         'delete': e.target.checked,
       };
 
@@ -155,39 +151,8 @@ class ReferenceSettings extends Component {
             [table_name]: currentStateValue
           }
         };
-      },() => console.log(this.state.changeData));
+      });
 
-      // if (primary_key_value in this.state.changeData[table_name]){
-      //   this.setState(() => {
-      //     return {
-      //       changeData: {
-      //         [table_name]: {
-      //           primary_key_value :
-      //           {
-      //             [primary_key]: primary_key_value,
-      //             'delete': e.target.checked,
-      //           },
-      //         }
-      //       }
-      //     };
-      //   });
-      // }
-      // //key not in that table
-      // else{
-      //   this.setState(() => {
-      //     return {
-      //       changeData: {
-      //         [table_name]: {
-      //           primary_key_value :
-      //           {
-      //             [primary_key]: primary_key_value,
-      //             'delete': e.target.checked,
-      //           },
-      //         }
-      //       }
-      //     };
-      //   });
-      // }
     }
     else {
       var checked = e.target.checked;
@@ -195,15 +160,15 @@ class ReferenceSettings extends Component {
         return {
           changeData: {
             [table_name]: {
-              [primary_key_value] :
+              [primary_key_value]:
               {
-                [primary_key]: primary_key_value,
+                'id': primary_key_value,
                 'delete': checked,
               },
             }
           }
         };
-      },() => console.log(this.state.changeData));
+      });
     }
   }
 
@@ -282,7 +247,6 @@ class ReferenceSettings extends Component {
             var table_values = item[table_name];
             if (table_values.length == 0) {
               return undefined;
-              //<div key={`${table_name}_${index + 1}`}>{table_name}</div>;
             }
             const fields = this.get_columns(table_name, table_values);
 
@@ -316,8 +280,6 @@ class ReferenceSettings extends Component {
         {
           !renderData && <div>Not related to annotations</div>
         }
-
-        {/* <pre style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(this.state.data,null,2)}</pre> */}
       </React.Fragment>
 
     );
