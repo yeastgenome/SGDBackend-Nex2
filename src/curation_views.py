@@ -2842,14 +2842,88 @@ def delete_reference(request):
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     try:
-        reason_deleted = request.json_body.get('reason_deleted')
-        sgd_id = request.matchdict['id']
-        username = request.session['username']
-        reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
-        # print str(reference.statement.compile(dialect=postgresql.dialect()))
-        log.debug("Ref ID = " + reference.sgdid)
-        log.debug("Reason deleted = " + reason_deleted)
-        return reference.delete_reference(username, reason_deleted)
+        body = request.json_body;
+        table_primary_key = {
+            'ColleagueReference':'colleague_reference_id',
+            'CurationReference':'curation_id',
+            'DatasetReference':'dataset_reference_id',
+            'Diseaseannotation':'annotation_id',
+            'Diseasesubsetannotation':'annotation_id',
+            'Dnasequenceannotation':'annotation_id',
+            'Enzymeannotation':'annotation_id',
+            'Expressionannotation':'annotation_id',
+            'Geninteractionannotation':'annotation_id',
+            'Goannotation':'annotation_id',
+            'Goslimannotation':'annotation_id',
+            'Literatureannotation':'annotation_id',
+            'Locusreferences':'locus_reference_id',
+            'LocusAliasreferences':'locusalias_reference_id',
+            'Locusnotereference':'note_reference_id',
+            'LocusRelationreference':'locusrelation_reference_id',
+            'Locussummaryreference':'summary_reference_id',
+            'Pathwayannotation':'annotation_id',
+            'Pathwaysummaryreference':'summary_reference_id',
+            'Phenotypeannotation':'annotation_id',
+            'Physinteractionannotation':'annotation_id',
+            'Posttranslationannotation':'annotation_id',
+            'Proteindomainannotation':'annotation_id',
+            'Proteinexptannotation':'annotation_id',
+            'Proteinsequenceannotation':'annotation_id',
+            'Regulationannotation':'annotation_id',
+            'Reservedname':'reservedname_id',
+            'Strainsummaryreference':'summary_reference_id',
+            'Referencefile':'reference_file_id',
+        }
+        curator_session = get_curator_session(request.session['username'])
+
+        references = curator_session.query(Referencedbentity).all()
+        pmid_to_referencedbentity = {}
+        
+        for reference in references:
+            pmid_to_referencedbentity[reference.pmid] = reference.dbentity_id
+        
+        try:
+            for table in body:
+                log.info('Process table ' + table)
+                log.debug('Process table ' + table)
+                
+                # import pdb;pdb.set_trace()
+                for record_id in body[table]:
+                    row = body[table][record_id]
+                    
+                    if(table == 'Literatureannotation'):
+                        if 'delete' in row and row['delete'] is True:
+                            log.info(f'{table}: Delete the record {row["id"]}')
+                            literatureannotation = curator_session.query(Literatureannotation).filter_by(annotation_id=int(row['id'])).one_or_none()
+                            if literatureannotation:
+                                curator_session.delete(literatureannotation)
+
+                        elif 'pmid' in row  and int(row['pmid']) in pmid_to_referencedbentity:
+                            log.info(f'{table}: Transfer the record {row["id"]} to new reference {row["pmid"]}' )
+                            literatureannotation = curator_session.query(Literatureannotation).filter_by(annotation_id=int(row['id'])).one_or_none()
+                            literatureannotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
+                
+                transaction.commit()
+        
+        except Exception as ex:
+            log.exception(ex)
+            transaction.abort()
+            return HTTPBadRequest(body=json.dumps({'error': str(ex)}), content_type='text/json')
+        
+        finally:
+            if curator_session:
+                curator_session.close()
+
+        return HTTPOk()
+
+        # reason_deleted = request.json_body.get('reason_deleted')
+        # sgd_id = request.matchdict['id']
+        # username = request.session['username']
+        # reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+        # # print str(reference.statement.compile(dialect=postgresql.dialect()))
+        # log.debug("Ref ID = " + reference.sgdid)
+        # log.debug("Reason deleted = " + reason_deleted)
+        # return reference.delete_reference(username, reason_deleted)
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
