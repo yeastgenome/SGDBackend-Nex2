@@ -610,7 +610,7 @@ def update_database_load_file_to_s3(nex_session, go_file, source_to_id, edam_to_
     if "gp_association" in go_file:
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_association.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     elif "gp_information" in go_file:
-        nex_session.query(Dbentity).filter(Dbentity.display_name.like('information.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_information.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     elif "noctua_sgd.gpad" in go_file:
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('noctua_sgd.gpad%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     nex_session.commit()
@@ -691,7 +691,8 @@ if __name__ == "__main__":
     urllib.request.urlcleanup()
     urllib.request.urlretrieve(url_path + gpi_file, dated_gpi_file)
 
-    noctua_path = 'http://current.geneontology.org/products/annotations/'
+    # noctua_path = 'http://current.geneontology.org/products/annotations/'
+    noctua_path = 'http://snapshot.geneontology.org/products/annotations/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
     urllib.request.urlcleanup()

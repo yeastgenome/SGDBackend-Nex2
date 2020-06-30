@@ -201,6 +201,7 @@ def dump_data():
 
             telomeric_repeat_index = {}
 
+            has_subfeature = 0
             for (display_name, contig_start_index, contig_end_index) in subfeatures:
 
                 if display_name == 'non_transcribed_region':
@@ -219,18 +220,28 @@ def dump_data():
                 if display_name == 'CDS':
                     phase = start2phase[contig_start_index]
 
+                parent = systematic_name
                 if type == 'gene':
-                    parent = systematic_name + "_mRNA" 
-                    fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + x.strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
-                    if qualifier:
-                        fw.write(";orf_classification=" + qualifier)
-                    fw.write("\n")
-                else:
-                    fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + strand + "\t" + str(phase) + "\tID=" + name + ";Name=" + name + ";dbxref=" + sgdid + ";curie=" + sgdid + "\n");
+                    parent = systematic_name + "_mRNA"
+                elif type.endswith('_gene'):
+                    rnaType = type.replace("_gene", "")
+                    parent = systematic_name + "_" + rnaType
+                
+                has_subfeature = 1
+                
+                fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + x.strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
+                if type == 'gene' and qualifier:
+                    fw.write(";orf_classification=" + qualifier)
+                fw.write("\n")
+
+                # fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + strand + "\t" + str(phase) + "\tID=" + name + ";Name=" + name + ";dbxref=" + sgdid + ";curie=" + sgdid + "\n");
     
             if type == 'gene':
                 fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand + "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
-
+            elif has_subfeature == 1:
+                rnaType = type.replace("_gene", "")
+                fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand + "\t.\tID=" + systematic_name + "_" + rnaType + ";Name=" + systematic_name + "_" + rnaType + ";Parent=" + systematic_name + "\n")
+            
     # output 17 chr sequences at the end 
 
     fw.write("###\n")

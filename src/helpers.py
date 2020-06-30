@@ -21,7 +21,7 @@ from sqlalchemy import and_, inspect
 
 from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
-    ReferenceFile, Disease, CuratorActivity, Source
+    ReferenceFile, Disease, CuratorActivity, Source, LocusAlias
 from src.curation_helpers import ban_from_cache, get_curator_session
 from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
 
@@ -370,7 +370,9 @@ def link_gene_names(raw, locus_names_ids):
         if wupper in list(locus_names_object.keys()) and len(wupper) > 3:
             sgdid = locus_names_object[wupper]
             url = '/locus/' + sgdid
-            new_str = '<a href="' + url + '">' + p_original_word + '</a>'
+            left = p_original_word.find(original_word[0])
+            right = p_original_word.rfind(original_word[-1])
+            new_str = p_original_word[0:left] +  '<a href="' + url + '">' + original_word + '</a>' + p_original_word[right+1:]
             processed.append(new_str)
         else:
             processed.append(p_original_word)
@@ -1104,3 +1106,9 @@ def add_keywords(name, keywords, src_id, uname, curator_session=None):
         logging.error("Exception occurred", exc_info=True)
 
 
+def count_alias(terms):
+    count = 0
+    if terms:
+        count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(
+            ['Uniform', 'Non-uniform']), LocusAlias.display_name.in_(terms))).count()
+    return count

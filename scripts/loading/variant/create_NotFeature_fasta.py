@@ -1,5 +1,5 @@
 import sys
-from src.models import Locusdbentity, Dnasequenceannotation, Taxonomy, Contig
+from src.models import Locusdbentity, Dnasequenceannotation, Taxonomy, Contig, So
 from scripts.loading.database_session import get_session
 from scripts.loading.util import get_strain_taxid_mapping
 
@@ -24,7 +24,8 @@ def create_seqs(strain):
         return
     taxonomy_id = taxonomy.taxonomy_id
 
-    dbentity_id_to_name = dict([(x.dbentity_id, x.systematic_name) for x in nex_session.query(Locusdbentity).all()])
+    dbentity_id_to_name = dict([(x.dbentity_id, (x.systematic_name, x.dbentity_status)) for x in nex_session.query(Locusdbentity).all()])
+    so_id_to_display_name = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
     
     outfile = dataDir + "not_feature_" + strain + ".fsa"
 
@@ -47,7 +48,12 @@ def create_seqs(strain):
     contig_id_to_display_name = {}
     defline_to_seq = {}
     for x in nex_session.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC', taxonomy_id=taxonomy_id).order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
-        name = dbentity_id_to_name[x.dbentity_id]        
+        (name, status) = dbentity_id_to_name[x.dbentity_id]
+        if status in ['Deleted', 'Merged']:
+            continue
+        type = so_id_to_display_name.get(x.so_id)
+        if type not in ['ORF', 'ncRNA gene', 'snoRNA gene', 'snRNA gene', 'tRNA gene', 'rRNA gene', 'telomerase RNA gene']:
+            continue
         if prevContigId is None or prevContigId != x.contig_id:
             prevRow = (name, x.start_index, x.end_index)
             prevContigId = x.contig_id
@@ -66,12 +72,12 @@ def create_seqs(strain):
             prevContigId = x.contig_id
             continue
 
-        if prevName[0:2] == name[0:2] and prevName[2] != name[2]:
-            print (name, prevName)
-            # eg YAL002W and YAR002W
-            prevRow = (name, x.start_index, x.end_index)
-            prevContigId = x.contig_id
-            continue
+        #if prevName[0:2] == name[0:2] and prevName[2] != name[2]:
+        #    print (name, prevName)
+        #    # eg YAL002W and YAR002W
+        #    prevRow = (name, x.start_index, x.end_index)
+        #    prevContigId = x.contig_id
+        #    continue
     
         if x.contig_id not in contig_id_to_seq:
             contig = nex_session.query(Contig).filter_by(contig_id=x.contig_id).one_or_none()

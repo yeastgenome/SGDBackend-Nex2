@@ -99,8 +99,8 @@ def colleague_by_format_name(request):
         colleague = DBSession.query(Colleague).filter(
             Colleague.format_name == format_name).one_or_none()
         if colleague is not None:
-            if colleague.is_in_triage:
-                return HTTPNotFound(body=json.dumps({'error': 'Colleague not found, pending review due to recent submission update. is in triage: '}))
+            # if colleague.is_in_triage:
+            #    return HTTPNotFound(body=json.dumps({'error': 'Colleague not found, pending review due to recent submission update. is in triage: '}))
             result = colleague.to_simple_dict()
             return result
         elif colleague is None:

@@ -1,0 +1,17 @@
+bootstrap.memory_lock: false
+discovery.seed_hosts: es-primary
+node.master: true
+node.data: false
+node.ingest: true
+node.name: es-primary
+cluster.name: "sgd-local-cluster"
+search.max_buckets: 300000
+network.host: 0.0.0.0
+xpack.monitoring.elasticsearch.collection.enabled: true
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+http.cors.enabled: "true"
+http.cors.allow-origin: "*"
+xpack.security.enabled: false
+xpack.security.transport.ssl.enabled: false
+cluster.initial_master_nodes: es-primary

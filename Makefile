@@ -62,6 +62,9 @@ refresh-cache:
 index-es:
 	source dev_variables.sh && python scripts/search/index_elastic_search.py
 
+index-es7:
+	source dev_variables.sh && python scripts/search/index_es_7.py
+
 index-es-prod:
 	source prod_variables.sh && python scripts/search/index_elastic_search.py
 
@@ -90,3 +93,10 @@ tests-dev:
 	source dev_variables.sh && python test/test_dev.py
 
 
+# docker commands
+# run local elasticsarch service
+es-up:
+	docker-compose up -d
+
+es-down:
+	docker-compose down

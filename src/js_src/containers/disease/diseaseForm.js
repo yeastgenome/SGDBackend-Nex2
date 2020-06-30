@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import fetchData from '../../lib/fetchData';
 import { setError, setMessage } from '../../actions/metaActions';
-import {setDisease} from '../../actions/diseaseActions';
+import { setDisease } from '../../actions/diseaseActions';
 import { DataList } from 'react-datalist-field';
 import Loader from '../../components/loader';
 import PropTypes from 'prop-types';
@@ -11,7 +11,7 @@ const GET_DO = '/do';
 const DISEASES = '/disease';
 const GET_STRAINS = '/get_strains';
 const GET_DISEASES = 'get_diseases';
-const ANNOTATION_TYPES = [null,'computational', 'high-throughput', 'manually curated'];
+const ANNOTATION_TYPES = [null, 'computational', 'high-throughput', 'manually curated'];
 const SKIP = 5;
 const TIMEOUT = 120000;
 
@@ -19,7 +19,7 @@ const TIMEOUT = 120000;
 class DiseaseForm extends Component {
   constructor(props) {
     super(props);
-    
+
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleToggleInsertUpdate = this.handleToggleInsertUpdate.bind(this);
@@ -31,14 +31,14 @@ class DiseaseForm extends Component {
     this.handleDelete = this.handleDelete.bind(this);
 
     this.state = {
-      list_of_eco:[],
+      list_of_eco: [],
       list_of_do: [],
-      list_of_taxonomy:[],
-      isUpdate:false,
-      pageIndex:0,
-      currentIndex:-1,
-      list_of_diseases:[],
-      isLoading:false
+      list_of_taxonomy: [],
+      isUpdate: false,
+      pageIndex: 0,
+      currentIndex: -1,
+      list_of_diseases: [],
+      isLoading: false
     };
 
     this.getEco();
@@ -46,12 +46,12 @@ class DiseaseForm extends Component {
     this.getTaxonomy();
   }
 
-  getEco(){
-    fetchData(GET_ECO,{type:'GET'})
-    .then((data) => {
-      this.setState({list_of_eco:data.success});
-    })
-    .catch((err) => this.props.dispatch(setError(err.message)));
+  getEco() {
+    fetchData(GET_ECO, { type: 'GET' })
+      .then((data) => {
+        this.setState({ list_of_eco: data.success });
+      })
+      .catch((err) => this.props.dispatch(setError(err.message)));
   }
 
   getDo() {
@@ -73,30 +73,30 @@ class DiseaseForm extends Component {
     }).catch(err => this.props.dispatch(setError(err.error)));
   }
 
-  handleGetDiseases(){
-    this.setState({ list_of_diseases: [], isLoading: true, currentIndex: -1, pageIndex: 0});
-    fetchData(GET_DISEASES,{
-      type:'POST',
+  handleGetDiseases() {
+    this.setState({ list_of_diseases: [], isLoading: true, currentIndex: -1, pageIndex: 0 });
+    fetchData(GET_DISEASES, {
+      type: 'POST',
       data: {
         dbentity_id: this.props.disease.dbentity_id,
         reference_id: this.props.disease.reference_id
       },
       timeout: TIMEOUT
     })
-    .then(data => {
-      if(data['success'].length == 0 ){
-        this.props.dispatch(setMessage('No diseases found for given input.'));
-      }
-      else{
-        this.setState({ list_of_diseases: data['success'] });
-        this.handleResetForm();
-      }
-    })
-    .catch(err => this.props.dispatch(setError(err.error)))
-    .finally(() => this.setState({ isLoading: false }));
+      .then(data => {
+        if (data['success'].length == 0) {
+          this.props.dispatch(setMessage('No diseases found for given input.'));
+        }
+        else {
+          this.setState({ list_of_diseases: data['success'] });
+          this.handleResetForm();
+        }
+      })
+      .catch(err => this.props.dispatch(setError(err.error)))
+      .finally(() => this.setState({ isLoading: false }));
   }
 
-  handleSelectDisease(index){
+  handleSelectDisease(index) {
     var disease = this.state.list_of_diseases[index];
     var currentDisease = {
       annotation_id: disease['annotation_id'],
@@ -112,11 +112,11 @@ class DiseaseForm extends Component {
     };
 
     this.props.dispatch(setDisease(currentDisease));
-    this.setState({currentIndex:index});
+    this.setState({ currentIndex: index });
   }
 
-  handleResetForm(){
-    var currentDisease =  {
+  handleResetForm() {
+    var currentDisease = {
       annotation_id: 0,
       dbentity_id: '',
       taxonomy_id: '',
@@ -138,15 +138,15 @@ class DiseaseForm extends Component {
     this.handleResetForm();
   }
 
-  
+
   handleNextPrevious(value) {
     this.setState((prevState) => {
       return { pageIndex: prevState.pageIndex + value };
     });
   }
 
-  handleChange(){
-  
+  handleChange() {
+
     var data = new FormData(this.refs.form);
     var currentDisease = {};
     for (var key of data.entries()) {
@@ -155,42 +155,42 @@ class DiseaseForm extends Component {
     this.props.dispatch(setDisease(currentDisease));
   }
 
-  handleSubmit(e){
+  handleSubmit(e) {
     e.preventDefault();
-    this.setState({ isLoading:true});
-    fetchData(DISEASES,{
-      type:'POST',
-      data:this.props.disease
+    this.setState({ isLoading: true });
+    fetchData(DISEASES, {
+      type: 'POST',
+      data: this.props.disease
     })
-    .then(data => {
-      this.props.dispatch(setMessage(data.success));
-      var list_of_diseases = this.state.list_of_diseases;
-      list_of_diseases[this.state.currentIndex] = data.disease;
-      this.setState({list_of_diseases:list_of_diseases});
-    })
-    .catch(err => this.props.dispatch(setError(err.error)))
-    .finally(() => this.setState({ isLoading: false }));
+      .then(data => {
+        this.props.dispatch(setMessage(data.success));
+        var list_of_diseases = this.state.list_of_diseases;
+        list_of_diseases[this.state.currentIndex] = data.disease;
+        this.setState({ list_of_diseases: list_of_diseases });
+      })
+      .catch(err => this.props.dispatch(setError(err.error)))
+      .finally(() => this.setState({ isLoading: false }));
   }
 
-  handleDelete(e){
+  handleDelete(e) {
     e.preventDefault();
-    this.setState({isLoading:true});
+    this.setState({ isLoading: true });
     if (this.props.disease.annotation_id > 0) {
-      
-      fetchData(`${DISEASES}/${this.props.disease.annotation_id}/${this.props.disease.dbentity_id }`, {
+
+      fetchData(`${DISEASES}/${this.props.disease.annotation_id}/${this.props.disease.dbentity_id}`, {
         type: 'DELETE'
       })
         .then((data) => {
           this.props.dispatch(setMessage(data.success));
           var new_list_of_diseases = this.state.list_of_diseases;
           new_list_of_diseases.splice(this.state.currentIndex, 1);
-          this.setState({ list_of_diseases: new_list_of_diseases,currentIndex:-1,pageIndex:0});
+          this.setState({ list_of_diseases: new_list_of_diseases, currentIndex: -1, pageIndex: 0 });
           this.handleResetForm();
         })
         .catch((err) => {
           this.props.dispatch(setError(err.error));
         })
-        .finally(() => this.setState({isLoading:false}));
+        .finally(() => this.setState({ isLoading: false }));
     }
     else {
       this.setState({ isLoading: false });
@@ -198,25 +198,25 @@ class DiseaseForm extends Component {
     }
   }
 
-  renderActions(){
+  renderActions() {
     var pageIndex = this.state.pageIndex;
     var count_of_diseases = this.state.list_of_diseases.length;
-    var totalPages = Math.ceil(count_of_diseases/SKIP) - 1;
+    var totalPages = Math.ceil(count_of_diseases / SKIP) - 1;
 
     if (this.state.isLoading) {
       return (
         <Loader />
       );
     }
-  
-    if(this.state.isUpdate){
-      var buttons = this.state.list_of_diseases.filter((i,index) => {
+
+    if (this.state.isUpdate) {
+      var buttons = this.state.list_of_diseases.filter((i, index) => {
         return index >= (pageIndex * SKIP) && index < (pageIndex * SKIP) + SKIP;
       })
-      .map((disease, index) =>{
-        var new_index = index + pageIndex*SKIP;
-        return <li key={new_index} onClick={() => this.handleSelectDisease(new_index)} className={`button medium-only-expanded ${this.state.currentIndex == new_index ? 'success' : ''}`}>{disease.dbentity_id.display_name}</li>;
-      }
+        .map((disease, index) => {
+          var new_index = index + pageIndex * SKIP;
+          return <li key={new_index} onClick={() => this.handleSelectDisease(new_index)} className={`button medium-only-expanded ${this.state.currentIndex == new_index ? 'success' : ''}`}>{disease.dbentity_id.display_name}</li>;
+        }
         );
       return (
         <div>
@@ -234,14 +234,14 @@ class DiseaseForm extends Component {
               <button type='submit' className="button expanded" disabled={this.state.currentIndex > -1 ? '' : 'disabled'}>Update</button>
             </div>
             <div className='columns medium-3'>
-              <button type='button' className="button alert expanded" disabled={this.state.currentIndex > -1 ? '':'disabled'} onClick={(e) => { if (confirm('Are you sure, you want to delete selected Disease ?')) this.handleDelete(e); }}>Delete</button>
+              <button type='button' className="button alert expanded" disabled={this.state.currentIndex > -1 ? '' : 'disabled'} onClick={(e) => { if (confirm('Are you sure, you want to delete selected Disease ?')) this.handleDelete(e); }}>Delete</button>
             </div>
           </div>
         </div >
 
       );
     }
-    else{
+    else {
       return (
         <div className='row'>
           <div className='columns medium-6'>
@@ -253,7 +253,7 @@ class DiseaseForm extends Component {
   }
 
   render() {
-    
+
     var annotation_types = ANNOTATION_TYPES.map((item) => <option key={item}>{item}</option>);
 
     return (
@@ -270,7 +270,7 @@ class DiseaseForm extends Component {
 
         <form ref='form' onSubmit={this.handleSubmit}>
 
-          <input name='annotation_id' className="hide" value={this.props.disease.annotation_id} readOnly/>
+          <input name='annotation_id' className="hide" value={this.props.disease.annotation_id} readOnly />
 
           {this.state.isUpdate &&
             <ul>
@@ -297,7 +297,7 @@ class DiseaseForm extends Component {
           </div>
 
 
-        <div className='row'>
+          <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -312,7 +312,7 @@ class DiseaseForm extends Component {
             </div>
           </div>
 
-          {this.state.isUpdate && 
+          {this.state.isUpdate &&
             <div className='row'>
               <div className='columns medium-12'>
                 <div className='row'>
@@ -323,9 +323,9 @@ class DiseaseForm extends Component {
               </div>
             </div>
           }
-          
 
-        <div className='row'>
+
+          <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -341,9 +341,9 @@ class DiseaseForm extends Component {
               </div>
             </div>
           </div>
-          
 
-        <div className='row'>
+
+          <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -356,9 +356,9 @@ class DiseaseForm extends Component {
                 </div>
               </div>
             </div>
-         </div>
+          </div>
 
-        <div className='row'>
+          <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -371,9 +371,9 @@ class DiseaseForm extends Component {
                 </div>
               </div>
             </div>
-        </div>
+          </div>
 
-        <div className='row'>
+          <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -389,8 +389,8 @@ class DiseaseForm extends Component {
               </div>
             </div>
           </div>
-        
-        <div className='row'>
+
+          <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
@@ -399,8 +399,8 @@ class DiseaseForm extends Component {
               </div>
               <div className='row'>
                 <div className='columns medium-12'>
-                   <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
-                 </div>
+                  <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.disease.eco_id} />
+                </div>
               </div>
             </div>
           </div>
@@ -410,14 +410,14 @@ class DiseaseForm extends Component {
         </form>
 
       </div>
-    
+
     );
   }
 }
 
 DiseaseForm.propTypes = {
   dispatch: PropTypes.func,
-  disease:PropTypes.object
+  disease: PropTypes.object
 };
 
 function mapStateToProps(state) {
