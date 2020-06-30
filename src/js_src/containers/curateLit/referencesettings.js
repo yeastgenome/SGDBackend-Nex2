@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import t from 'tcomb-form';
 import PropTypes from 'prop-types';
-
+import { setError, setMessage } from '../../actions/metaActions';
 import FlexiForm from '../../components/forms/flexiForm';
+import { connect } from 'react-redux';
 
 class ReferenceSettings extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      loading:false,
       data: {},
       changeData: {},
       table_primary_key: {
@@ -19,6 +21,8 @@ class ReferenceSettings extends Component {
 
   componentDidMount() {
     let id = this.props.match.params.id;
+    this.setState({loading:true});
+    this._isMounted = true;
     fetch(`/reference_annotations/${id}`, {
       headers: {
         'X-CSRF-Token': window.CSRF_TOKEN
@@ -28,8 +32,16 @@ class ReferenceSettings extends Component {
         return data.json();
       })
       .then(data => {
-        this.setState({ data });
+        if(this._isMounted){
+          this.setState({ data:data,loading:false });
+        }
+      })
+      .catch(() => {
+        this.setState({loading:false});
       });
+  }
+  componentWillUnmount(){
+    this._isMounted = false; 
   }
 
   handleIndividualFormSubmit(table_name) {
@@ -48,9 +60,18 @@ class ReferenceSettings extends Component {
         },
         method: 'DELETE',
         body:JSON.stringify(data)
-      });
+      })
+      .then((response) => {
+        if (response.status != 200){
+          return response.json().then((err) => {throw err;});
+        }
+        return response.json();
+      })
+      .then((response) => this.props.dispatch(setMessage(response.success)))
+      .catch(err => this.props.dispatch(setError(err.error)));
+
     } catch (error) {
-      console.error(error);
+      this.props.dispatch(setError(error));
     }
 
   }
@@ -89,11 +110,8 @@ class ReferenceSettings extends Component {
       });
     });
 
-
     return message;
   }
-
-
 
   handleTransferChange(table_name, e) {
     var primary_key_value = e.target.dataset.primaryIndex;
@@ -131,8 +149,6 @@ class ReferenceSettings extends Component {
       });
     }
   }
-
-
 
   handleDeleteChange(table_name, e) {
     var primary_key_value = e.target.dataset.primaryIndex;
@@ -172,7 +188,6 @@ class ReferenceSettings extends Component {
     }
   }
 
-
   renderReferenceSettings() {
     let reasonDelete = [
       'Content not relevant to S. cerevisiae',
@@ -201,10 +216,10 @@ class ReferenceSettings extends Component {
     );
   }
 
-  get_headers(column_names) {
-    var headers = column_names.map((item) => <td key={item}>{item}</td>);
-    headers.push(<td>Transfer</td>);
-    headers.push(<td>Delete</td>);
+  get_headers(table_name,column_names) {
+    var headers = column_names.map((item,index) => <td key={`${table_name}_col_${index}`}>{item}</td>);
+    headers.push(<td key={`${table_name}_col_${column_names.length+1}`}>Transfer</td>);
+    headers.push(<td key={`${table_name}_col_${column_names.length+2}`}>Delete</td>);
     return headers;
   }
 
@@ -212,26 +227,25 @@ class ReferenceSettings extends Component {
     var results = [];
     for (var key in table_values) {
       var value = table_values[key];
-      var primary_key = this.state.table_primary_key[table_name];
+      var primary_key = 'annotation_id'; //this.state.table_primary_key[table_name];
       var column_names = Object.keys(value);
       var result = [];
-      column_names.forEach(item => {
-        result.push(<td>{value[item]}</td>);
+      column_names.forEach((item,index) => {
+        result.push(<td key={`${table_name}_col_${index}`}>{value[item]}</td>);
       });
-      result.push(<td><input placeholder='Enter PMID' type='number' data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
-      result.push(<td><input type='Checkbox' name='Delete' data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
-      results.push(<tr>{result}</tr>);
+      result.push(<td key={`${table_name}_col_${column_names.length+1}`}><input placeholder='Enter PMID' type='number' data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
+      result.push(<td key={`${table_name}_col_${column_names.length+2}`}><input type='Checkbox' name='Delete' data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
+      results.push(<tr key={`${table_name}_row`}>{result}</tr>);
     }
     return results;
   }
 
-  handleSubmit(event) {
-    event.preventDefault();
-    console.log('handle  submit');
-    console.log(event);
-  }
-
   render() {
+
+    if(this.state.loading){
+      return <div>....Loading data</div>;
+    }
+
     var renderData = this.state.data.length > 0 ? true : false;
 
     return (
@@ -252,19 +266,20 @@ class ReferenceSettings extends Component {
 
             var value = table_values[0];
             var column_names = Object.keys(value);
-            var column_headers = this.get_headers(column_names);
+            var column_headers = this.get_headers(table_name,column_names);
 
             return (
               <div key={table_name}>
                 <h4>{table_name}</h4>
                 <form id={`form_${table_name.replace(' ', '_').toLowerCase()}`}>
+                
                   <table key={`${table_name}_${index + 1}`}>
                     <thead>
                       <tr key={`${table_name}_${index + 2}`}>
                         {column_headers}
                       </tr>
                     </thead>
-
+                    
                     <tbody key={`${table_name}_${index + 3}`}>
                       {fields}
                     </tbody>
@@ -276,9 +291,8 @@ class ReferenceSettings extends Component {
             );
           })
         }
-
         {
-          !renderData && <div>Not related to annotations</div>
+          !renderData && <div>Not related to any annotations</div>
         }
       </React.Fragment>
 
@@ -287,7 +301,12 @@ class ReferenceSettings extends Component {
 }
 
 ReferenceSettings.propTypes = {
-  match: PropTypes.object
+  match: PropTypes.object,
+  dispatch:PropTypes.func
 };
 
-export default ReferenceSettings;
+function mapStateToProps(state) {
+  return state;
+}
+// export default ReferenceSettings;
+export default connect(mapStateToProps)(ReferenceSettings);

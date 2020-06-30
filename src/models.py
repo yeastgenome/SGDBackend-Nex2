@@ -2682,6 +2682,8 @@ class Referencedbentity(Dbentity):
                         values[-1].pop('date_created')
                     if 'date_assigned' in values[-1]:
                         values[-1].pop('date_assigned')
+                    if 'source_id' in values[-1]:
+                        values[-1].pop('source_id')
                 obj[key] = values
                 self.returnValue.append(obj)
             except Exception as ex:
@@ -2691,66 +2693,98 @@ class Referencedbentity(Dbentity):
 
         try:
             curator_session = get_curator_session(username)
-            # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
+
             binding_motif = curator_session.query(Bindingmotifannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Bindingmotifannotation",binding_motif)
-            colleague_ref = curator_session.query(ColleagueReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("ColleagueReference",colleague_ref)
-            # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
-            curation_ref = curator_session.query(CurationReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Curationreference",curation_ref)
-            dataset_ref = curator_session.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Datasetreference",dataset_ref)
-            disease_annot = curator_session.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Diseaseannotation",disease_annot)
-            disease_subset_annot = curator_session.query(Diseasesubsetannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Diseasesubsetannotation",disease_subset_annot)
-            dnaseq_annot = curator_session.query(Dnasequenceannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Dnasequenceannotation",dnaseq_annot)
-            enzyme_annot = curator_session.query(Enzymeannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Enzymeannotation",enzyme_annot)
-            expression_annot = curator_session.query(Expressionannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Expressionannotation",expression_annot)
-            geninteraction_annot = curator_session.query(Geninteractionannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Geninteractionannotation",geninteraction_annot)
-            go_annot = curator_session.query(Goannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Goannotation",go_annot)
-            goslim_annot = curator_session.query(Goslimannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Goslimannotation",goslim_annot)
+
             literature_annot = curator_session.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Literatureannotation",literature_annot)
-            locus_ref = curator_session.query(LocusReferences).filter_by(reference_id=self.dbentity_id).all()
-            helper("Locusreferences",locus_ref)
-            locusalias_ref = curator_session.query(LocusAliasReferences).filter_by(reference_id=self.dbentity_id).all()
-            helper("LocusAliasreferences",locusalias_ref)
-            locusnote_ref = curator_session.query(LocusnoteReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Locusnotereference",locusnote_ref)
-            locusrelation_ref = curator_session.query(LocusRelationReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("LocusRelationreference",locusrelation_ref)
-            locussummary_ref = curator_session.query(LocussummaryReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Locussummaryreference",locussummary_ref)
+
+            disease_annot = curator_session.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Diseaseannotation",disease_annot)
+
+            disease_subset_annot = curator_session.query(Diseasesubsetannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Diseasesubsetannotation",disease_subset_annot)
+
+            dnaseq_annot = curator_session.query(Dnasequenceannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Dnasequenceannotation",dnaseq_annot)
+
+            enzyme_annot = curator_session.query(Enzymeannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Enzymeannotation",enzyme_annot)
+
+            expression_annot = curator_session.query(Expressionannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Expressionannotation",expression_annot)
+
+            geninteraction_annot = curator_session.query(Geninteractionannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Geninteractionannotation",geninteraction_annot)
+            
+            go_annot = curator_session.query(Goannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Goannotation",go_annot)
+            
+            goslim_annot = curator_session.query(Goslimannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Goslimannotation",goslim_annot)
+
             pathway_annot = curator_session.query(Pathwayannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Pathwayannotation",pathway_annot)
-            pathwaysummary_ref = curator_session.query(PathwaysummaryReference).filter_by(reference_id=self.dbentity_id).all()
-            helper("Pathwaysummaryreference",pathwaysummary_ref)
+
             phenotype_annot = curator_session.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Phenotypeannotation",phenotype_annot)
+
             physinteraction_annot = curator_session.query(Physinteractionannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Physinteractionannotation",physinteraction_annot)
+
             posttranslation_annot = curator_session.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Posttranslationannotation",posttranslation_annot)
+            
             proteindomain_annot = curator_session.query(Proteindomainannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Proteindomainannotation",proteindomain_annot)
+
             proteinexpt_annot = curator_session.query(Proteinexptannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Proteinexptannotation",proteinexpt_annot)
+            
             proteinseq_annot = curator_session.query(Proteinsequenceannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Proteinsequenceannotation",proteinseq_annot)
+            
             regulation_annot = curator_session.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Regulationannotation",regulation_annot)
+
+            # Table that are not annotations.
+            # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
+            # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
+
+            colleague_ref = curator_session.query(ColleagueReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("ColleagueReference",colleague_ref)
+
+            curation_ref = curator_session.query(CurationReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("Curationreference",curation_ref)
+            
+            dataset_ref = curator_session.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("Datasetreference",dataset_ref)
+            
+            locus_ref = curator_session.query(LocusReferences).filter_by(reference_id=self.dbentity_id).all()
+            helper("Locusreferences",locus_ref)
+            
+            locusalias_ref = curator_session.query(LocusAliasReferences).filter_by(reference_id=self.dbentity_id).all()
+            helper("LocusAliasreferences",locusalias_ref)
+            
+            locusnote_ref = curator_session.query(LocusnoteReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("Locusnotereference",locusnote_ref)
+            
+            locusrelation_ref = curator_session.query(LocusRelationReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("LocusRelationreference",locusrelation_ref)
+            
+            locussummary_ref = curator_session.query(LocussummaryReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("Locussummaryreference",locussummary_ref)
+            
+            pathwaysummary_ref = curator_session.query(PathwaysummaryReference).filter_by(reference_id=self.dbentity_id).all()
+            helper("Pathwaysummaryreference",pathwaysummary_ref)
+            
             reserved_name = curator_session.query(Reservedname).filter_by(reference_id=self.dbentity_id).all()
             helper("Reservedname",reserved_name)
+            
             strainsummary_ref = curator_session.query(StrainsummaryReference).filter_by(reference_id=self.dbentity_id).all()
             helper("Strainsummaryreference",strainsummary_ref)
+            
             reference_file = curator_session.query(ReferenceFile).filter_by(reference_id=self.dbentity_id).all()
             helper("Referencefile",reference_file)
             
