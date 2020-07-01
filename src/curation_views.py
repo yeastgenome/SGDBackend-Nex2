@@ -41,7 +41,8 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      CurationReference, Locussummary, validate_tags,\
      convert_space_separated_pmids_to_list, Psimod,\
      Posttranslationannotation, Regulationannotation, \
-     Apo, Allele, Reporter, Chebi, Eco, Source
+     Apo, Allele, Reporter, Chebi, Eco, Source,ReferenceAlias,ReferenceUrl,Referenceauthor, \
+     Referencedocument,Referencetype,Referenceunlink,ReferenceFile
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
@@ -2828,20 +2829,19 @@ def get_reference_annotations(request):
     try:
         sgd_id = request.matchdict['id']
         username = request.session['username']
-        table_type = request.matchdict['table_type']
         reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
         log.debug("Ref ID = " + reference.sgdid)
-        return reference.get_all_annotations(username,table_type)
+        return reference.get_all_annotations(username)
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
     
 
-@view_config(route_name='delete_reference', request_method='DELETE', renderer='json')
+@view_config(route_name='transfer_delete_reference_annotations', request_method='POST', renderer='json')
 @authenticate
-def delete_reference(request):
+def transfer_delete_reference_annotations(request):
 
-    def transfer_delete_method(table_name,log):
+    def transfer_delete_method(table_name):
         
         if 'delete' in row and row['delete'] is True:
             # log.info(f'{table}: Delete the record {row["id"]}')
@@ -2863,7 +2863,7 @@ def delete_reference(request):
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     try:
-        body = request.json_body;
+        body = request.json_body
         table_primary_key = {
             'Bindingmotifannotation':'annotation_id',
             'Literatureannotation':'annotation_id',
@@ -2913,48 +2913,49 @@ def delete_reference(request):
                     row = body[table][record_id]
                     
                     if(table == 'Bindingmotifannotation'):
-                        transfer_delete_method(Bindingmotifannotation,log)
+                        transfer_delete_method(Bindingmotifannotation)
                     elif(table == 'Literatureannotation'):
-                        transfer_delete_method(Literatureannotation,log)
+                        transfer_delete_method(Literatureannotation)
                     elif(table == 'Diseaseannotation'):
-                        transfer_delete_method(Diseaseannotation,log)
+                        transfer_delete_method(Diseaseannotation)
                     elif(table == 'Diseasesubsetannotation'):
-                        transfer_delete_method(Diseasesubsetannotation,log)
+                        transfer_delete_method(Diseasesubsetannotation)
                     elif(table == 'Dnasequenceannotation'):
-                        transfer_delete_method(Dnasequenceannotation,log)
+                        transfer_delete_method(Dnasequenceannotation)
                     elif(table == 'Enzymeannotation'):
-                        transfer_delete_method(Enzymeannotation,log)
+                        transfer_delete_method(Enzymeannotation)
                     elif(table == 'Expressionannotation'):
-                        transfer_delete_method(Expressionannotation,log)
+                        transfer_delete_method(Expressionannotation)
                     elif(table == 'Geninteractionannotation'):
-                        transfer_delete_method(Geninteractionannotation,log)
+                        transfer_delete_method(Geninteractionannotation)
                     elif(table == 'Goannotation'):
-                        transfer_delete_method(Goannotation,log)
+                        transfer_delete_method(Goannotation)
                     elif(table == 'Goslimannotation'):
-                        transfer_delete_method(Goslimannotation,log)
+                        transfer_delete_method(Goslimannotation)
                     elif(table == 'Pathwayannotation'):
-                        transfer_delete_method(Pathwayannotation,log)
+                        transfer_delete_method(Pathwayannotation)
                     elif(table == 'Phenotypeannotation'):
-                        transfer_delete_method(Phenotypeannotation,log)
+                        transfer_delete_method(Phenotypeannotation)
                     elif(table == 'Physinteractionannotation'):
-                        transfer_delete_method(Physinteractionannotation,log)
+                        transfer_delete_method(Physinteractionannotation)
                     elif(table == 'Posttranslationannotation'):
-                        transfer_delete_method(Posttranslationannotation,log)
+                        transfer_delete_method(Posttranslationannotation)
                     elif(table == 'Proteindomainannotation'):
-                        transfer_delete_method(Proteindomainannotation,log)
+                        transfer_delete_method(Proteindomainannotation)
                     elif(table == 'Proteinexptannotation'):
-                        transfer_delete_method(Proteinexptannotation,log)
+                        transfer_delete_method(Proteinexptannotation)
                     elif(table == 'Proteinsequenceannotation'):
-                        transfer_delete_method(Proteinsequenceannotation,log)
+                        transfer_delete_method(Proteinsequenceannotation)
                     elif(table == 'Regulationannotation'):
-                        transfer_delete_method(Regulationannotation,log)
+                        transfer_delete_method(Regulationannotation)
                     
                 transaction.commit()
                 
                 sgd_id = request.matchdict['id']
                 reference = curator_session.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
                 log.debug("Ref ID = " + reference.sgdid)
-                all_annotations =  reference.get_all_annotations(request.session['username'],'annotations')
+                all_annotations =  reference.get_all_annotations(request.session['username'])
+                all_annotations['success'] = 'Successfully completed transfer and delete operations'
         
         except Exception as ex:
             log.exception(ex)
@@ -2964,9 +2965,90 @@ def delete_reference(request):
         finally:
             if curator_session:
                 curator_session.close()
-
-        return HTTPOk(body=json.dumps({'success': 'Successfully completed transfer and delete operations','annotations':all_annotations}), content_type='text/json')
+        
+        return HTTPOk(body=json.dumps(all_annotations), content_type='text/json')
 
     except Exception as e:
-        log.error(e)
+        log.exception(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+
+@view_config(route_name='delete_reference', request_method='DELETE', renderer='json')
+@authenticate
+def delete_reference(request):
+
+    def delete_helper(table,table_name):
+        count = curator_session.query(table).filter_by(reference_id = reference.dbentity_id).count()
+        curator_session.query(table).filter_by(reference_id = reference.dbentity_id).delete()
+        log.info('{} records being deleted from {} for reference_id {}'.format(count,table_name,sgd_id))
+
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    try:
+        body = request.json_body
+        sgd_id = request.matchdict['id']
+        curator_session = get_curator_session(request.session['username'])
+
+        reference = curator_session.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+        if  reference:
+            for table in body:
+                for table_name in table:
+                    if table_name == 'Geninteractionannotation':
+                        delete_helper(Geninteractionannotation,table_name)
+                    elif table_name == 'Goannotation':
+                        delete_helper(Goannotation,table_name)
+                    elif table_name == 'Physinteractionannotation':
+                        delete_helper(Physinteractionannotation,table_name)
+                    elif table_name == 'ColleagueReference':
+                        delete_helper(ColleagueReference,table_name)
+                    elif table_name == 'CurationReference':
+                        delete_helper(CurationReference,table_name)
+                    elif table_name == 'DatasetReference':
+                        delete_helper(DatasetReference,table_name)
+                    elif table_name == 'LocusReferences':
+                        delete_helper(LocusReferences,table_name)
+                    elif table_name == 'LocusAliasReferences':
+                        delete_helper(LocusAliasReferences,table_name)
+                    elif table_name == 'LocusnoteReference':
+                        delete_helper(LocusnoteReference,table_name)
+                    elif table_name == 'LocusRelationReference':
+                        delete_helper(LocusRelationReference,table_name)
+                    elif table_name == 'LocussummaryReference':
+                        delete_helper(LocussummaryReference,table_name)
+                    elif table_name == 'PathwaysummaryReference':
+                        delete_helper(PathwaysummaryReference,table_name)
+                    elif table_name == 'Reservedname':
+                        delete_helper(Reservedname,table_name)
+                    elif table_name == 'StrainsummaryReference':
+                        delete_helper(StrainsummaryReference,table_name)
+                    elif table_name == 'ReferenceAlias':
+                        delete_helper(ReferenceAlias,table_name)
+                    elif table_name == 'ReferenceUrl':
+                        delete_helper(ReferenceUrl,table_name)
+                    elif table_name == 'Referenceauthor':
+                        delete_helper(Referenceauthor,table_name)
+                    elif table_name == 'Referencedocument':
+                        delete_helper(Referencedocument,table_name)
+                    elif table_name == 'Referencetype':
+                        delete_helper(Referencetype,table_name)
+                    elif table_name == 'Referenceunlink':
+                        delete_helper(Referenceunlink,table_name)
+                    elif table_name == 'ReferenceFile':
+                        delete_helper(ReferenceFile,table_name)
+                    
+                
+            curator_session.delete(reference)
+            transaction.commit()
+
+            log.info('{} reference is delete successfully'.format(sgd_id))
+        else:
+            return HTTPBadRequest(body=json.dumps({'error': 'no reference found for sgd id {}'.format(sgd_id)}), content_type='text/json')
+    
+        return HTTPOk(body=json.dumps({'success':'Reference deleted successfully'}), content_type='text/json')
+
+    except Exception as e:
+        log.exception(e)
+        transaction.abort()
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+    finally:
+        if curator_session:
+            curator_session.close()
