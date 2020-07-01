@@ -10,6 +10,7 @@ class ReferenceSettings extends Component {
     super(props);
     this.state = {
       loading:false,
+      message:'',
       data: [],
       changeData: {},
       table_primary_key: {
@@ -21,9 +22,9 @@ class ReferenceSettings extends Component {
 
   componentDidMount() {
     let id = this.props.match.params.id;
-    this.setState({loading:true});
+    this.setState({loading:true,message:'...loading annotations'});
     this._isMounted = true;
-    fetch(`/reference_annotations/${id}`, {
+    fetch(`/reference_annotations/${id}/annotations`, {
       headers: {
         'X-CSRF-Token': window.CSRF_TOKEN
       },
@@ -40,6 +41,7 @@ class ReferenceSettings extends Component {
         this.setState({loading:false});
       });
   }
+
   componentWillUnmount(){
     this._isMounted = false; 
   }
@@ -236,21 +238,50 @@ class ReferenceSettings extends Component {
       column_names.forEach((item,index) => {
         result.push(<td key={`${table_name}_col_${index}`}>{value[item]}</td>);
       });
-      result.push(<td key={`${table_name}_col_${column_names.length+1}`}><input placeholder='Enter PMID' type='number' data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
-      result.push(<td key={`${table_name}_col_${column_names.length+2}`}><input type='Checkbox' name='Delete' data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
-      results.push(<tr key={`${table_name}_row`}>{result}</tr>);
+      result.push(<td key={`${table_name}_col_${column_names.length+1}`}>
+        <input placeholder='Enter PMID' type='number' key={`pmid_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
+      result.push(<td key={`${table_name}_col_${column_names.length+2}`}>
+        <input type='Checkbox' name='Delete' key={`delete_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
+      results.push(<tr key={`${table_name}_row_${key}`}>{result}</tr>);
     }
     return results;
+  }
+
+  handleDeleteReference(){
+    let id = this.props.match.params.id;
+    this.setState({loading:true,message:'...checking data related to this reference in other tables.'});
+
+    fetch(`/reference_annotations/${id}/not-annotations`, {
+      headers: {
+        'X-CSRF-Token': window.CSRF_TOKEN
+      },
+    })
+      .then(data => {
+        return data.json();
+      })
+      .then(data => {
+        console.log(data);
+        // this.setState({ data:data,loading:false });
+      })
+      .catch(() => {
+        this.setState({loading:false});
+      });
+
   }
 
   render() {
 
     if(this.state.loading){
-      return <h3>....Loading data</h3>;
+      return <h3>{this.state.message}</h3>;
     }
 
     if(this.state.data.length == 0){    
-      return <h3>Not related to any annotations</h3>;
+      return (
+        <React.Fragment>
+          <h3>Not related to any annotations</h3>
+          <button type='button' className='button alert' onClick={() => this.handleDeleteReference()}>Delete Reference</button>
+        </React.Fragment>
+      );
     }
     
   

@@ -2828,9 +2828,10 @@ def get_reference_annotations(request):
     try:
         sgd_id = request.matchdict['id']
         username = request.session['username']
+        table_type = request.matchdict['table_type']
         reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
         log.debug("Ref ID = " + reference.sgdid)
-        return reference.get_all_annotations(username)
+        return reference.get_all_annotations(username,table_type)
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
@@ -2953,7 +2954,7 @@ def delete_reference(request):
                 sgd_id = request.matchdict['id']
                 reference = curator_session.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
                 log.debug("Ref ID = " + reference.sgdid)
-                all_annotations =  reference.get_all_annotations(request.session['username'])
+                all_annotations =  reference.get_all_annotations(request.session['username'],'annotations')
         
         except Exception as ex:
             log.exception(ex)
