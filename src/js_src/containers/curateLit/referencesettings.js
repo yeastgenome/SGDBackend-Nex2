@@ -9,9 +9,10 @@ class ReferenceSettings extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading:false,
-      message:'',
-      data: [],
+      loading: false,
+      message: '',
+      annotations_data: [],
+      not_annotations_data: [],
       changeData: {},
       table_primary_key: {
         'Bindingmotifannotation': 'annotation_id',
@@ -22,9 +23,9 @@ class ReferenceSettings extends Component {
 
   componentDidMount() {
     let id = this.props.match.params.id;
-    this.setState({loading:true,message:'...loading annotations'});
+    this.setState({ loading: true, message: '...loading annotations' });
     this._isMounted = true;
-    fetch(`/reference_annotations/${id}/annotations`, {
+    fetch(`/reference_annotations/${id}`, {
       headers: {
         'X-CSRF-Token': window.CSRF_TOKEN
       },
@@ -33,47 +34,48 @@ class ReferenceSettings extends Component {
         return data.json();
       })
       .then(data => {
-        if(this._isMounted){
-          this.setState({ data:data,loading:false });
+        if (this._isMounted) {
+          this.setState({ annotations_data: data.annotations, not_annotations_data: data.not_annotations, loading: false });
         }
       })
       .catch(() => {
-        this.setState({loading:false});
+        this.setState({ loading: false });
       });
   }
 
-  componentWillUnmount(){
-    this._isMounted = false; 
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   handleIndividualFormSubmit(table_name) {
     var message = this.getConfirmationMessage(table_name);
     if (confirm(message)) {
-      this.handleProcessing({[table_name]:this.state.changeData[table_name]});
-    }    
+      this.handleProcessing({ [table_name]: this.state.changeData[table_name] });
+    }
   }
 
-  handleProcessing(data){
+  handleProcessing(data) {
     let id = this.props.match.params.id;
+    this.setState({ loading: true, message: '...Processing' });
     try {
-      fetch(`/reference/${id}/delete_reference_annotations`,{
-        headers:{
+      fetch(`/reference/${id}/transfer_delete_reference_annotations`, {
+        headers: {
           'X-CSRF-Token': window.CSRF_TOKEN
         },
-        method: 'DELETE',
-        body:JSON.stringify(data)
+        method: 'POST',
+        body: JSON.stringify(data)
       })
-      .then((response) => {
-        if (response.status != 200){
-          return response.json().then((err) => {throw err;});
-        }
-        return response.json();
-      })
-      .then((response) => {
-        this.setState({data:response.annotations});
-        this.props.dispatch(setMessage(response.success));
-      })
-      .catch(err => this.props.dispatch(setError(err.error)));
+        .then((response) => {
+          if (response.status != 200) {
+            return response.json().then((err) => { throw err; });
+          }
+          return response.json();
+        })
+        .then((response) => {
+          this.setState({ annotations_data: response.annotations, loading: false, message: '' });
+          this.props.dispatch(setMessage(response.success));
+        })
+        .catch(err => this.props.dispatch(setError(err.error)));
 
     } catch (error) {
       this.props.dispatch(setError(error));
@@ -98,18 +100,16 @@ class ReferenceSettings extends Component {
 
       message += `
         ${tableName}
-      `;
+          `;
 
-      Object.keys(data[tableName]).forEach((d) => {
+      Object.keys(data[tableName]).forEach((d,index) => {
         var obj = data[tableName][d];
         if (obj['delete'] == true) {
-          message += `
-            ${obj['id']} will be delete.
+          message += `${index+1}. annot_id ${obj['id']} will be delete.
           `;
         }
         else if ('pmid' in obj) {
-          message += `
-            ${obj['id']}'s reference will be updated to ${obj['pmid']}.
+          message += `${index+1}. annot_id ${obj['id']}'s will be updated to pmid ${obj['pmid']}.
           `;
         }
       });
@@ -221,10 +221,10 @@ class ReferenceSettings extends Component {
     );
   }
 
-  get_headers(table_name,column_names) {
-    var headers = column_names.map((item,index) => <td key={`${table_name}_col_${index}`}>{item}</td>);
-    headers.push(<td key={`${table_name}_col_${column_names.length+1}`}>Transfer</td>);
-    headers.push(<td key={`${table_name}_col_${column_names.length+2}`}>Delete</td>);
+  get_headers(table_name, column_names) {
+    var headers = column_names.map((item, index) => <td key={`${table_name}_col_${index}`}>{item}</td>);
+    headers.push(<td key={`${table_name}_col_${column_names.length + 1}`}>Transfer</td>);
+    headers.push(<td key={`${table_name}_col_${column_names.length + 2}`}>Delete</td>);
     return headers;
   }
 
@@ -235,106 +235,136 @@ class ReferenceSettings extends Component {
       var primary_key = 'annotation_id'; //this.state.table_primary_key[table_name];
       var column_names = Object.keys(value);
       var result = [];
-      column_names.forEach((item,index) => {
+      column_names.forEach((item, index) => {
         result.push(<td key={`${table_name}_col_${index}`}>{value[item]}</td>);
       });
-      result.push(<td key={`${table_name}_col_${column_names.length+1}`}>
+      result.push(<td key={`${table_name}_col_${column_names.length + 1}`}>
         <input placeholder='Enter PMID' type='number' key={`pmid_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
-      result.push(<td key={`${table_name}_col_${column_names.length+2}`}>
+      result.push(<td key={`${table_name}_col_${column_names.length + 2}`}>
         <input type='Checkbox' name='Delete' key={`delete_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
       results.push(<tr key={`${table_name}_row_${key}`}>{result}</tr>);
     }
     return results;
   }
 
-  handleDeleteReference(){
-    let id = this.props.match.params.id;
-    this.setState({loading:true,message:'...checking data related to this reference in other tables.'});
+  handleDeleteReference() {
+    if (confirm('You sure want to delete')) {
+      let id = this.props.match.params.id;
+      this.setState({ loading: true, message: '...Processing' });
+      try {
+        fetch(`/reference/${id}/delete_reference`, {
+          headers: {
+            'X-CSRF-Token': window.CSRF_TOKEN
+          },
+          method: 'DELETE',
+          body: JSON.stringify(this.state.not_annotations_data)
+        })
+          .then((response) => {
+            if (response.status != 200) {
+              return response.json().then((err) => { throw err; });
+            }
+            return response.json();
+          })
+          .then((response) => {
+            this.props.dispatch(setMessage(response.success));
+            this.props.history.push('/');
+          })
+          .catch(err => this.props.dispatch(setError(err.error)));
 
-    fetch(`/reference_annotations/${id}/not-annotations`, {
-      headers: {
-        'X-CSRF-Token': window.CSRF_TOKEN
-      },
-    })
-      .then(data => {
-        return data.json();
-      })
-      .then(data => {
-        console.log(data);
-        // this.setState({ data:data,loading:false });
-      })
-      .catch(() => {
-        this.setState({loading:false});
-      });
-
+      } catch (error) {
+        this.props.dispatch(setError(error));
+      }
+    }
   }
 
   render() {
 
-    if(this.state.loading){
+    if (this.state.loading) {
       return <h3>{this.state.message}</h3>;
     }
 
-    if(this.state.data.length == 0){    
+    if (this.state.annotations_data.length > 0) {
       return (
         <React.Fragment>
-          <h3>Not related to any annotations</h3>
+          <h3>Transfer and Delete Reference</h3>
+
+          {
+            this.state.annotations_data.map((item, index) => {
+
+              var table_name = Object.keys(item)[0];
+              var table_values = item[table_name];
+              if (table_values.length == 0) {
+                return undefined;
+              }
+              const fields = this.get_columns(table_name, table_values);
+
+              var value = table_values[0];
+              var column_names = Object.keys(value);
+              var column_headers = this.get_headers(table_name, column_names);
+
+              return (
+                <div key={table_name}>
+                  <h4>{table_name}</h4>
+                  <form id={`form_${table_name.replace(' ', '_').toLowerCase()}`}>
+
+                    <table key={`${table_name}_${index + 1}`}>
+                      <thead>
+                        <tr key={`${table_name}_${index + 2}`}>
+                          {column_headers}
+                        </tr>
+                      </thead>
+
+                      <tbody key={`${table_name}_${index + 3}`}>
+                        {fields}
+                      </tbody>
+                    </table>
+                    <button type='button' className='button' onClick={() => this.handleIndividualFormSubmit(table_name)}>Submit</button>
+                    <hr />
+                  </form>
+                </div>
+              );
+            })
+          }
+        </React.Fragment>
+
+      );
+    }
+
+    if (this.state.not_annotations_data.length > 0) {
+      return (
+        <React.Fragment>
+          <h3>The reference is still linked to following table</h3>
+          <p>No annotations are linked to this reference.</p>
+          <table>
+            <tbody>
+              {
+                this.state.not_annotations_data.map((item, index) => {
+                  var table_name = Object.keys(item)[0];
+                  return (<tr key={`${table_name}_${index}`}>
+                    <td>{table_name}</td>
+                    <td>{item[table_name]}</td>
+                  </tr>);
+                })
+              }
+            </tbody>
+          </table>
           <button type='button' className='button alert' onClick={() => this.handleDeleteReference()}>Delete Reference</button>
         </React.Fragment>
       );
     }
-    
-  
+
     return (
       <React.Fragment>
-        <h3>Transfer and Delete Reference</h3>
-  
-        {
-          this.state.data.map((item, index) => {
-
-            var table_name = Object.keys(item)[0];
-            var table_values = item[table_name];
-            if (table_values.length == 0) {
-              return undefined;
-            }
-            const fields = this.get_columns(table_name, table_values);
-
-            var value = table_values[0];
-            var column_names = Object.keys(value);
-            var column_headers = this.get_headers(table_name,column_names);
-
-            return (
-              <div key={table_name}>
-                <h4>{table_name}</h4>
-                <form id={`form_${table_name.replace(' ', '_').toLowerCase()}`}>
-                
-                  <table key={`${table_name}_${index + 1}`}>
-                    <thead>
-                      <tr key={`${table_name}_${index + 2}`}>
-                        {column_headers}
-                      </tr>
-                    </thead>
-                    
-                    <tbody key={`${table_name}_${index + 3}`}>
-                      {fields}
-                    </tbody>
-                  </table>
-                  <button type='button' className='button' onClick={() => this.handleIndividualFormSubmit(table_name)}>Submit</button>
-                  <hr />
-                </form>
-              </div>
-            );
-          })
-        }
+        <h3>This reference is not related to any annotations.</h3>
+        <button type='button' className='button alert' onClick={() => this.handleDeleteReference()}>Delete Reference</button>
       </React.Fragment>
-
     );
   }
 }
 
 ReferenceSettings.propTypes = {
   match: PropTypes.object,
-  dispatch:PropTypes.func
+  dispatch: PropTypes.func
 };
 
 function mapStateToProps(state) {
