@@ -3032,6 +3032,8 @@ def delete_reference(request):
                         delete_helper(Referenceunlink,table_name)
                     elif table_name == 'ReferenceFile':
                         delete_helper(ReferenceFile,table_name)
+                    elif table_name == 'CuratorActivity':
+                        delete_helper(CuratorActivity,table_name)
                     
                 
             curator_session.delete(reference)
