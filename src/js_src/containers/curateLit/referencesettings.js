@@ -48,9 +48,14 @@ class ReferenceSettings extends Component {
   }
 
   handleIndividualFormSubmit(table_name) {
-    var message = this.getConfirmationMessage(table_name);
-    if (confirm(message)) {
-      this.handleProcessing({ [table_name]: this.state.changeData[table_name] });
+    if(!(table_name in this.state.changeData)  || table_name in this.state.changeData && Object.keys(this.state.changeData[table_name]).length == 0){
+      alert('There is nothing to process for this submission.');
+    }
+    else{
+      var message = this.getConfirmationMessage(table_name);
+      if (confirm(message)) {
+        this.handleProcessing({ [table_name]: this.state.changeData[table_name] });
+      }
     }
   }
 
@@ -130,11 +135,15 @@ class ReferenceSettings extends Component {
 
     if (table_name in this.state.changeData) {
       var currentStateValue = Object.assign({}, this.state.changeData[table_name]);
-      currentStateValue[primary_key_value] = {
-        'id': primary_key_value,
-        'pmid': new_pmid_value,
-      };
-
+      if(new_pmid_value ==  ''){
+        delete currentStateValue[primary_key_value];
+      }
+      else{
+        currentStateValue[primary_key_value] = {
+          'id': primary_key_value,
+          'pmid': new_pmid_value,
+        };
+      }
       this.setState(() => {
         return {
           changeData: {
@@ -142,22 +151,24 @@ class ReferenceSettings extends Component {
           }
         };
       });
-
     }
     else {
-      this.setState(() => {
-        return {
-          changeData: {
-            [table_name]: {
-              [primary_key_value]:
-              {
-                'id': primary_key_value,
-                'pmid': new_pmid_value,
-              },
+      if (new_pmid_value != ''){
+        this.setState(() => {
+          return {
+            changeData: {
+              [table_name]: {
+                [primary_key_value]:
+                {
+                  'id': primary_key_value,
+                  'pmid': new_pmid_value,
+                },
+              }
             }
-          }
-        };
-      });
+          };
+        });
+      }
+      
     }
   }
 
