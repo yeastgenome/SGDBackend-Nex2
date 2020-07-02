@@ -42,10 +42,14 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      convert_space_separated_pmids_to_list, Psimod,\
      Posttranslationannotation, Regulationannotation, \
      Apo, Allele, Reporter, Chebi, Eco, Source, \
+     Bindingmotifannotation,Diseaseannotation,Diseasesubsetannotation,\
+     Dnasequenceannotation,Enzymeannotation,Expressionannotation,\
+     Goslimannotation,Pathwayannotation,Phenotypeannotation,\
+     Proteindomainannotation,Proteinexptannotation,Proteinsequenceannotation,\
      Geninteractionannotation,Goannotation,Physinteractionannotation,ColleagueReference, \
-     DatasetReference,LocusReferences,LocusAliasReferences,LocusnoteReference,\
+     DatasetReference,LocusReferences,LocusAliasReferences,\
      LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
-     Referenceauthor,Reservedname,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
+     Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
@@ -2926,18 +2930,12 @@ def transfer_delete_reference_annotations(request):
                         transfer_delete_method(Enzymeannotation)
                     elif(table == 'Expressionannotation'):
                         transfer_delete_method(Expressionannotation)
-                    elif(table == 'Geninteractionannotation'):
-                        transfer_delete_method(Geninteractionannotation)
-                    elif(table == 'Goannotation'):
-                        transfer_delete_method(Goannotation)
                     elif(table == 'Goslimannotation'):
                         transfer_delete_method(Goslimannotation)
                     elif(table == 'Pathwayannotation'):
                         transfer_delete_method(Pathwayannotation)
                     elif(table == 'Phenotypeannotation'):
                         transfer_delete_method(Phenotypeannotation)
-                    elif(table == 'Physinteractionannotation'):
-                        transfer_delete_method(Physinteractionannotation)
                     elif(table == 'Posttranslationannotation'):
                         transfer_delete_method(Posttranslationannotation)
                     elif(table == 'Proteindomainannotation'):
