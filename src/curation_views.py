@@ -2844,22 +2844,18 @@ def transfer_delete_reference_annotations(request):
     def transfer_delete_method(table_name):
         
         if 'delete' in row and row['delete'] is True:
-            # log.info(f'{table}: Delete the record {row["id"]}')
             log.info('{}: Delete the record {}'.format(table,row["id"]))
             annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
             if annotation:
                 curator_session.delete(annotation)
 
-        elif 'pmid' in row  and int(row['pmid']) in pmid_to_referencedbentity:
-            # log.info(f'{table}: Transfer the record {row["id"]} to new reference {row["pmid"]}' )
-            log.info('{}: Transfer the record {} to new reference {}'.format(table,row["id"],row["pmid"]))
-            annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
-            annotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
-    # d = {'id':10}
-    # log.info(f'Sagar is {d["id"]}')
-    # return HTTPOk(body=json.dumps({'success': 'Successfully completed transfer and delete operations'}), content_type='text/json')
-    # # return HTTPBadRequest(body=json.dumps({'error': 'Error '}), content_type='text/json')
-
+        elif 'pmid' in row :
+            if int(row['pmid']) in pmid_to_referencedbentity:
+                log.info('{}: Transfer the record {} to new reference {}'.format(table,row["id"],row["pmid"]))
+                annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
+                annotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
+            else:
+                raise Exception('{} pmid does not exisit in the database.'.format(row['pmid']))
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     try:
@@ -2899,11 +2895,11 @@ def transfer_delete_reference_annotations(request):
         }
         curator_session = get_curator_session(request.session['username'])
 
-        references = curator_session.query(Referencedbentity).all()
+        references = curator_session.query(Referencedbentity).with_entities(Referencedbentity.pmid,Referencedbentity.dbentity_id).all()
         pmid_to_referencedbentity = {}
         
-        for reference in references:
-            pmid_to_referencedbentity[reference.pmid] = reference.dbentity_id
+        for pmid,dbentity_id in references:
+            pmid_to_referencedbentity[pmid] = dbentity_id
         
         try:
             for table in body:

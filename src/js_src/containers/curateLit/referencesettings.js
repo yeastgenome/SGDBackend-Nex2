@@ -75,7 +75,10 @@ class ReferenceSettings extends Component {
           this.setState({ annotations_data: response.annotations, loading: false, message: '' });
           this.props.dispatch(setMessage(response.success));
         })
-        .catch(err => this.props.dispatch(setError(err.error)));
+        .catch(err => {
+          this.setState({ loading: false, message: '' });
+          this.props.dispatch(setError(err.error));
+        });
 
     } catch (error) {
       this.props.dispatch(setError(error));
@@ -105,11 +108,11 @@ class ReferenceSettings extends Component {
       Object.keys(data[tableName]).forEach((d,index) => {
         var obj = data[tableName][d];
         if (obj['delete'] == true) {
-          message += `${index+1}. annot_id ${obj['id']} will be delete.
+          message += `${index+1}. annot_id ${obj['id']} will be deleted.
           `;
         }
         else if ('pmid' in obj) {
-          message += `${index+1}. annot_id ${obj['id']}'s will be updated to pmid ${obj['pmid']}.
+          message += `${index+1}. annot_id ${obj['id']} will be updated to pmid ${obj['pmid']}.
           `;
         }
       });
@@ -121,6 +124,9 @@ class ReferenceSettings extends Component {
   handleTransferChange(table_name, e) {
     var primary_key_value = e.target.dataset.primaryIndex;
     var new_pmid_value = e.target.value;
+
+    var chkbox = table_name+'_chkbox_'+primary_key_value;
+    document.getElementById(chkbox).checked = false;
 
     if (table_name in this.state.changeData) {
       var currentStateValue = Object.assign({}, this.state.changeData[table_name]);
@@ -158,8 +164,10 @@ class ReferenceSettings extends Component {
   handleDeleteChange(table_name, e) {
     var primary_key_value = e.target.dataset.primaryIndex;
 
-    if (table_name in this.state.changeData) {
+    var input = table_name+'_input_'+primary_key_value;
+    document.getElementById(input).value = '';
 
+    if (table_name in this.state.changeData) {
       var currentStateValue = Object.assign({}, this.state.changeData[table_name]);
       currentStateValue[primary_key_value] = {
         'id': primary_key_value,
@@ -239,9 +247,9 @@ class ReferenceSettings extends Component {
         result.push(<td key={`${table_name}_col_${index}`}>{value[item]}</td>);
       });
       result.push(<td key={`${table_name}_col_${column_names.length + 1}`}>
-        <input placeholder='Enter PMID' type='number' key={`pmid_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
+        <input id={`${table_name}_input_${value[primary_key]}`} placeholder='Enter PMID' type='number' key={`pmid_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleTransferChange(table_name, e)} /></td>);
       result.push(<td key={`${table_name}_col_${column_names.length + 2}`}>
-        <input type='Checkbox' name='Delete' key={`delete_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
+        <input id={`${table_name}_chkbox_${value[primary_key]}`} type='Checkbox' name='Delete' key={`delete_${value[primary_key]}`} data-primary-index={value[primary_key]} onChange={(e) => this.handleDeleteChange(table_name, e)} /></td>);
       results.push(<tr key={`${table_name}_row_${key}`}>{result}</tr>);
     }
     return results;
@@ -364,7 +372,8 @@ class ReferenceSettings extends Component {
 
 ReferenceSettings.propTypes = {
   match: PropTypes.object,
-  dispatch: PropTypes.func
+  dispatch: PropTypes.func,
+  history:PropTypes.any
 };
 
 function mapStateToProps(state) {
