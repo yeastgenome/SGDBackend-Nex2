@@ -45,7 +45,7 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      Geninteractionannotation,Goannotation,Physinteractionannotation,ColleagueReference, \
      DatasetReference,LocusReferences,LocusAliasReferences,LocusnoteReference,\
      LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
-     Reservedname,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
+     Referenceauthor,Reservedname,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
