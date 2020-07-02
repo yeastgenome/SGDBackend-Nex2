@@ -41,7 +41,11 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      CurationReference, Locussummary, validate_tags,\
      convert_space_separated_pmids_to_list, Psimod,\
      Posttranslationannotation, Regulationannotation, \
-     Apo, Allele, Reporter, Chebi, Eco, Source,ReferenceAlias,ReferenceUrl,Referenceauthor, \
+     Apo, Allele, Reporter, Chebi, Eco, Source, \
+     Geninteractionannotation,Goannotation,Physinteractionannotation,ColleagueReference, \ 
+     DatasetReference,LocusReferences,LocusAliasReferences,LocusnoteReference,\
+     LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
+     Reservedname,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
