@@ -42,7 +42,7 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      convert_space_separated_pmids_to_list, Psimod,\
      Posttranslationannotation, Regulationannotation, \
      Apo, Allele, Reporter, Chebi, Eco, Source, \
-     Geninteractionannotation,Goannotation,Physinteractionannotation,ColleagueReference, \ 
+     Geninteractionannotation,Goannotation,Physinteractionannotation,ColleagueReference, \
      DatasetReference,LocusReferences,LocusAliasReferences,LocusnoteReference,\
      LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
      Reservedname,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
