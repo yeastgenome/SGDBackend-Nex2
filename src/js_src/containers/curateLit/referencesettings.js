@@ -72,11 +72,11 @@ class ReferenceSettings extends Component {
           return response.json();
         })
         .then((response) => {
-          this.setState({ annotations_data: response.annotations, loading: false, message: '' });
+          this.setState({ annotations_data: response.annotations, loading: false, message: '',changeData:{} });
           this.props.dispatch(setMessage(response.success));
         })
         .catch(err => {
-          this.setState({ loading: false, message: '' });
+          this.setState({ loading: false, message: '',changeData:{} });
           this.props.dispatch(setError(err.error));
         });
 
