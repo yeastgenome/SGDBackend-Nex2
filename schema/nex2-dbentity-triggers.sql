@@ -3311,29 +3311,28 @@ BEGIN
   IF (TG_OP = 'UPDATE') THEN
 
     IF (OLD.dbentity_id != NEW.dbentity_id) THEN
-        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'DBENTITY_ID'::text, OLD.transcript_id, OLD.dbentity_id::text, NEW.dbentity_id::text, USER);
+        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'DBENTITY_ID'::text, OLD.dbentity_id, OLD.dbentity_id::text, NEW.dbentity_id::text, USER);
     END IF;
 
     IF (OLD.condition_name != NEW.condition_name) THEN
-        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'CONDITION_NAME'::text, OLD.transcript_id, OLD.condition_name, NEW.condition_name, USER);
+        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'CONDITION_NAME'::text, OLD.dbentity_id, OLD.condition_name, NEW.condition_name, USER);
     END IF;
 
     IF (OLD.condition_value != NEW.condition_value) THEN
-        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'CONDITION_VALUE'::text, OLD.transcript_id, OLD.condition_value, NEW.condition_value, USER);
+        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'CONDITION_VALUE'::text, OLD.dbentity_id, OLD.condition_value, NEW.condition_value, USER);
     END IF;
 
     IF (OLD.in_ncbi != NEW.in_ncbi) THEN
-        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'IN_NCBI'::text, OLD.transcript_id, OLD.in_ncbi, NEW.in_ncbi, USER);
+        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'IN_NCBI'::text, OLD.dbentity_id, OLD.in_ncbi, NEW.in_ncbi, USER);
     END IF;
 
     RETURN NEW;
 
   ELSIF (TG_OP = 'DELETE') THEN
 
-    v_row := OLD.transcript_id || '[:]' || OLD.source_id || '[:]' ||
-             OLD.dbentity_id || '[:]' || OLD.condition_name || '[:]' ||
-             OLD.condition_value || '[:]' || OLD.date_created || '[:]' || OLD.created_by;
-            PERFORM nex.insertdeletelog('TRANSCRIPTDBENTITY'::text, OLD.transcript_id, v_row, USER);
+    v_row := OLD.dbentity_id || '[:]' || OLD.condition_name || '[:]' ||
+             OLD.condition_value || '[:]' || OLD.in_ncbi;
+            PERFORM nex.insertdeletelog('TRANSCRIPTDBENTITY'::text, OLD.dbentity_id, v_row, USER);
 
      RETURN OLD;
   END IF;
@@ -3685,6 +3684,81 @@ $BODY$ LANGUAGE 'plpgsql';
 CREATE TRIGGER allelealias_biur
 BEFORE INSERT OR UPDATE ON nex.allele_alias FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_allelealias_biur();
+
+
+DROP TRIGGER IF EXISTS allelealiasreference_audr ON nex.allelealias_reference CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_allelealiasreference_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.allele_alias_id != NEW.allele_alias_id) THEN
+	    PERFORM nex.insertupdatelog('ALLELEALIAS_REFERENCE'::text, 'ALLELE_ALIAS_ID'::text, OLD.allelealias_reference_id, OLD.allele_alias_id::text, NEW.allele_alias_id::text, USER);
+    END IF;
+
+     IF (OLD.reference_id != NEW.reference_id) THEN
+        PERFORM nex.insertupdatelog('ALLELEALIAS_REFERENCE'::text, 'REFERENCE_ID'::text, OLD.allelealias_reference_id, OLD.reference_id::text, NEW.reference_id::text, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+	 PERFORM nex.insertupdatelog('ALLELEALIAS_REFERENCE'::text, 'SOURCE_ID'::text, OLD.allelealias_reference_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.allelealias_reference_id || '[:]' || OLD.allele_alias_id || '[:]' ||
+             OLD.reference_id || '[:]' || OLD.source_id || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('LOCUSALIAS_REFERENCE'::text, OLD.locusalias_reference_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER allelealiasreference_audr
+AFTER UPDATE OR DELETE ON nex.allelealias_reference FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_allelealiasreference_audr();
+
+DROP TRIGGER IF EXISTS allelealiasreference_biur ON nex.allelealias_reference CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_allelealiasreference_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := upper(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.allelealias_reference_id != OLD.allelealias_reference_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+	RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER allelealiasreference_biur
+BEFORE INSERT OR UPDATE ON nex.allelealias_reference FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_allelealiasreference_biur();
+
 
 
 DROP TRIGGER IF EXISTS locusallele_audr ON nex.locus_allele CASCADE;

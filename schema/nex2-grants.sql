@@ -1336,3 +1336,12 @@ REVOKE ALL ON nex.locusallele_reference FROM PUBLIC;
 GRANT SELECT,INSERT,UPDATE,DELETE ON nex.locusallele_reference TO curator;
 GRANT SELECT ON nex.locusallele_reference TO PUBLIC;
 GRANT SELECT ON nex.locusallele_reference TO DBSELECT;
+
+
+-- Set privilege on TABLE ALLELEALIAS_REFERENCE
+ ALTER TABLE nex.allelealias_reference OWNER TO nex;
+GRANT ALL ON nex.allelealias_reference TO nex;
+REVOKE ALL ON nex.allelealias_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.allelealias_reference TO curator;
+GRANT SELECT ON nex.allelealias_reference TO PUBLIC;
+GRANT SELECT ON nex.allelealias_reference TO DBSELECT;

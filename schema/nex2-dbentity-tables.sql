@@ -1134,3 +1134,24 @@ COMMENT ON COLUMN nex.locusallele_reference.reference_id IS 'FK to REFERENCEDBEN
 ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallele_reference_uk UNIQUE (locus_allele_id,reference_id);
 CREATE INDEX locusallelereference_source_fk_index ON nex.locusallele_reference (source_id);
 CREATE INDEX locusallelereference_ref_fk_index ON nex.locusallele_reference (reference_id);
+
+DROP TABLE IF EXISTS nex.allelealias_reference CASCADE;
+CREATE TABLE nex.allelealias_reference (
+    allelealias_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    allele_alias_id bigint NOT NULL,
+    reference_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT locusalias_reference_pk PRIMARY KEY (locusalias_reference_id)
+) ;
+COMMENT ON TABLE nex.allelealias_reference IS 'References associated with a locus alias.';
+COMMENT ON COLUMN nex.allelealias_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.allelealias_reference.alias_id IS 'FK to ALLELEALIAS.ALIAS_ID.';
+COMMENT ON COLUMN nex.allelealias_reference.locusalias_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.allelealias_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.allelealias_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.allelealias_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+ALTER TABLE nex.allelealias_reference ADD CONSTRAINT allelealias_reference_uk UNIQUE (allele_alias_id,reference_id);
+CREATE INDEX allelealiasreference_source_fk_index ON nex.allelealias_reference (source_id);
+CREATE INDEX allelealiasreference_ref_fk_index ON nex.allelealias_reference (reference_id);
