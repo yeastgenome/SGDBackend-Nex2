@@ -24,13 +24,15 @@ from .helpers import extract_id_request, link_references_to_file, link_keywords_
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query
 from .models_helpers import ModelsHelper
 from .models import SGD_SOURCE_ID, TAXON_ID
-from .variant_helpers import get_variant_data
+from .variant_helpers import get_variant_data, get_all_variant_data
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 
 ES_INDEX_NAME = os.environ.get('ES_INDEX_NAME', 'searchable_items_aws')
+ES_VARIANT_INDEX_NAME = os.environ.get('ES_VARIANT_INDEX_NAME', 'variant_data_index')
+
 models_helper = ModelsHelper()
 
 @view_config(route_name='home', request_method='GET', renderer='home.jinja2')
@@ -389,34 +391,59 @@ def reference_list(request):
         except ValueError:
             return HTTPBadRequest(body=json.dumps({'error': "IDs must be string format of integers. Example JSON object expected: {\"reference_ids\": [\"1\", \"2\"]}"}))
 
+
+@view_config(route_name='get_all_variant_objects', request_method='GET')
+def get_all_variant_objects(request):
+    query = request.params.get('query', '')
+    offset = request.params.get('offset', 0)
+    limit = request.params.get('limit', 7000)
+    try:
+        data = get_all_variant_data(request, query, offset, limit)
+        return HTTPOk(body=json.dumps(data), content_type="text/json")
+    except Exception as e:
+        logging.exception(str(e))
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type="text/json")
+        
 @view_config(route_name='search_sequence_objects', request_method='GET')
 def search_sequence_objects(request):
-    query = request.params.get('query', '').lower()
+    query = request.params.get('query', '').upper()
     offset = request.params.get('offset', 0)
     limit = request.params.get('limit', 1000)
 
-    search_body = build_sequence_objects_search_query(query)
+    if query != '':
+        try:
+            data = get_all_variant_data(request, query, offset, limit)
+            return HTTPOk(body=json.dumps(data), content_type="text/json")
+        except Exception as e:
+            logging.exception(str(e))
+            return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type="text/json")
 
-    res = ESearch.search(index=request.registry.settings['elasticsearch.variant_viewer_index'], body=search_body, size=limit, from_=offset)
-
-    simple_hits = []
-    for hit in res['hits']['hits']:
-        simple_hits.append(hit['_source'])
-
-    formatted_response = {
-        'loci': simple_hits,
-        'total': res['hits']['total'],
-        'offset': offset
-    }
-
-    return Response(body=json.dumps(formatted_response), content_type='application/json')
-
-
+    try:
+        search_result = ESearch.search(
+            index=ES_INDEX_NAME,
+            body=build_sequence_objects_search_query(''),
+            size=limit,
+            from_=offset
+        )
+        
+        simple_hits = []
+        for hit in search_result['hits']['hits']:
+            simple_hits.append(hit['_source'])
+        
+        formatted_response = {
+            'loci': simple_hits,
+            'total': limit,
+            'offset': offset
+        }
+        
+        return Response(body=json.dumps(formatted_response), content_type='application/json')
+    
+    except Exception as e:
+        logging.exception(str(e))
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type="text/json")
+    
 @view_config(route_name='get_sequence_object', renderer='json', request_method='GET')
 def get_sequence_object(request):
-
-    # id = request.matchdict['id'].upper()
-    # return ESearch.get(index=request.registry.settings['elasticsearch.variant_viewer_index'], id=id)['_source']
 
     try:
         data = get_variant_data(request)
@@ -465,7 +492,7 @@ def reference(request):
 @view_config(route_name='reference_literature_details', renderer='json', request_method='GET')
 def reference_literature_details(request):
     id = extract_id_request(request, 'reference', 'id', True)
-    # allow reference to be accessed by sgdid even if not in disambig table
+     # allow reference to be accessed by sgdid even if not in disambig table
     if id:
         reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
     else:

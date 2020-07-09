@@ -21,7 +21,8 @@ def main(global_config, **settings):
     #variant viewer
     config.add_route('search_sequence_objects', '/search_sequence_objects', request_method='GET')
     config.add_route('get_sequence_object', '/get_sequence_object/{id}', request_method='GET')
-
+    config.add_route('get_all_variant_objects', '/get_all_variant_objects', request_method='GET')
+    
     #genomesnapshot
     config.add_route('genomesnapshot', '/genomesnapshot', request_method='GET')
 
