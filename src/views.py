@@ -31,7 +31,6 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 
 ES_INDEX_NAME = os.environ.get('ES_INDEX_NAME', 'searchable_items_aws')
-ES_VARIANT_INDEX_NAME = os.environ.get('ES_VARIANT_INDEX_NAME', 'variant_data_index')
 
 models_helper = ModelsHelper()
 
