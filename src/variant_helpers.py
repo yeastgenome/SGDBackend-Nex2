@@ -1,9 +1,11 @@
+from collections import OrderedDict
+from sqlalchemy import or_
 from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 import json
-from src.models import DBSession, Locusdbentity, Dnasequencealignment, \
+from src.models import DBSession, Dbentity, Locusdbentity, Dnasequencealignment, \
      Proteinsequencealignment, Sequencevariant, Taxonomy, Goannotation,\
      Proteindomainannotation, Dnasequenceannotation, Proteinsequenceannotation,\
-     Contig
+     Contig, So, Go, Goannotation
 from src.curation_helpers import get_curator_session
 from scripts.loading.util import strain_order
 
@@ -262,5 +264,278 @@ def get_variant_data(request):
         data['upstream_variant_data_dna'] = upstream_variant_dna
     
     return data
- 
+
+def calculate_score(S288C_snp_seq, snp_seq, seq_length):
+    count = 0
+    i = 0
+    for x in snp_seq:
+        if i >= len(S288C_snp_seq):
+            break
+        if x != S288C_snp_seq[i]:
+            count = count + 1
+        i = i + 1
+    return 1 - count/seq_length
+
+def get_locus_id_list(query_text):
+
+    locus_id_list = []
+    query_list = query_text.split(',')
+    for query in query_list:
+        query = query.strip().upper()
+        query = query.replace('SGD:S', 'S')
+        locus = None
+        if query.startswith('S00'):
+            locus = DBSession.query(Dbentity).filter_by(sgdid=query).one_or_none()
+            if locus is not None:
+                locus_id_list.append(locus.dbentity_id)
+        if locus is None:
+            locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name == query, Locusdbentity.systematic_name == query)).one_or_none()
+            if locus is not None:
+                locus_id_list.append(locus.dbentity_id)
+                
+    return locus_id_list
     
+def get_protein_scores(locus_id_list, strain_to_id):
+    all = []
+    if len(locus_id_list) == 0:
+        all = DBSession.query(Proteinsequencealignment).order_by(Proteinsequencealignment.locus_id).all()
+    else:
+        all = DBSession.query(Proteinsequencealignment).filter(Proteinsequencealignment.locus_id.in_(locus_id_list)).order_by(Proteinsequencealignment.locus_id).all()
+
+    S288C_seq = None
+    strain_to_seq = {}
+    locus_id = None
+    locus_id_to_protein_scores = {}
+    
+    for x in all:
+        if x.locus_id != locus_id and locus_id is not None:
+            scores = []
+            for strain in sorted(strain_to_id, key=strain_to_id.get):
+                if strain in strain_to_seq:
+                    scores.append(calculate_score(S288C_seq,
+                                                  strain_to_seq[strain],
+                                                  len(S288C_seq)))
+                else:
+                    scores.append(None)
+            locus_id_to_protein_scores[locus_id] = scores
+            locus_id = None
+            S288C_seq =	None
+            strain_to_seq = {}
+                                  
+        if x.display_name.endswith('S288C'):
+            S288C_seq = x.aligned_sequence
+        locus_id = x.locus_id
+        [name, strain] = x.display_name.split('_')
+        strain_to_seq[strain] = x.aligned_sequence
+    
+    if locus_id is not None:
+        scores = []
+        for strain in sorted(strain_to_id, key=strain_to_id.get):
+            if strain in strain_to_seq:
+                scores.append(calculate_score(S288C_seq,
+                                              strain_to_seq[strain],
+                                              len(S288C_seq)))
+            else:
+                scores.append(None)
+        locus_id_to_protein_scores[locus_id] = scores
+    return locus_id_to_protein_scores
+
+def get_default_scores():
+    return [1, None, None, None, None, None, None, None, None, None, None, None]
+
+def get_contig_lengths():
+
+    CONTIG_LENGTHS = OrderedDict([
+        ('I', 230218),
+        ('II', 813184),
+        ('III', 316620),
+        ('IV',  1531933),
+        ('V', 576874),
+        ('VI', 270161),
+        ('VII', 1090940),
+        ('VIII', 562643),
+        ('IX', 439888),
+        ('X', 745751),
+        ('XI', 666816),
+        ('XII', 1078177),
+        ('XIII', 924431),
+        ('XIV', 784333),
+        ('XV', 1091291),
+        ('XVI', 94806),
+        ('Mito', 85779)
+    ])
+
+    return CONTIG_LENGTHS
+
+def get_absolute_genetic_start(contig_lengths, contig_name, start):
+    chr = contig_name.replace("Chromosome ", "")
+    contig_index = list(contig_lengths.keys()).index(chr)
+    absolute_genetic_start = 0
+    for contig in list(contig_lengths.keys()):
+        if contig == chr:
+            break
+        absolute_genetic_start += contig_lengths[contig]
+    absolute_genetic_start += start
+    return absolute_genetic_start
+
+def get_all_variant_data(request, query, offset, limit):
+
+    locus_id_list = get_locus_id_list(query)
+
+    if query != '' and len(locus_id_list) == 0: 
+        return { "total": 0,
+                 "offset": offset,
+                 "loci": [] }
+    
+    offset = int(offset)
+    limit = int(limit)
+    
+    taxonomy = DBSession.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
+    taxonomy_id = taxonomy.taxonomy_id
+    so = DBSession.query(So).filter_by(display_name='ORF').one_or_none()
+    so_id = so.so_id
+    dbentity_id_to_obj = dict([(x.dbentity_id, (x.sgdid, x.format_name, x.display_name)) for x in DBSession.query(Locusdbentity).all()])
+    contig_id_to_display_name = dict([(x.contig_id, x.display_name) for x in DBSession.query(Contig).filter(Contig.display_name.like('Chromosome %')).all()])
+    strain_to_id = strain_order()
+    
+    locus_id_to_protein_scores = get_protein_scores(locus_id_list, strain_to_id)
+
+    contig_lengths = get_contig_lengths()
+
+    all = []
+    if len(locus_id_list) == 0:
+        all = DBSession.query(Dnasequencealignment).filter_by(dna_type='genomic').order_by(Dnasequencealignment.locus_id).order_by(Dnasequencealignment.locus_id).all()
+    else:
+        all = DBSession.query(Dnasequencealignment).filter(Dnasequencealignment.locus_id.in_(locus_id_list)).filter_by(dna_type='genomic').order_by(Dnasequencealignment.locus_id).all()
+        
+    locus_id = None
+    strain_to_snp = {}
+    start = None
+    seqLen = None
+    S288C_snp_seq = None
+    locus_id_to_data = {}
+    contig_name = None
+    for x in all:            
+        if x.locus_id not in dbentity_id_to_obj:
+            continue
+        if x.locus_id != locus_id and locus_id is not None and seqLen is not None:
+            (sgdid, format_name, display_name) = dbentity_id_to_obj[locus_id]
+            snp_seqs = []
+            dna_scores = []
+            for strain in sorted(strain_to_id, key=strain_to_id.get):
+                if strain in strain_to_snp:
+                    snp = strain_to_snp[strain]
+                    snp_seqs.append(snp)
+                    dna_scores.append(calculate_score(S288C_snp_seq,
+                                                      snp['snp_sequence'],
+                                                      seqLen))
+                else:
+                    dna_scores.append(None)
+            protein_scores = []
+            if locus_id in locus_id_to_protein_scores:
+                protein_scores = locus_id_to_protein_scores[locus_id]
+            else:
+                protein_scores = get_default_scores()
+            data = { "absolute_genetic_start": get_absolute_genetic_start(contig_lengths, contig_name, start),
+                     "href": "/locus/" +  sgdid + "/sequence#variants",
+                     "sgdid": sgdid,
+                     "format_name": format_name,
+                     "name": display_name,
+                     "snp_seqs": snp_seqs,
+                     "dna_scores": dna_scores,
+                     "protein_scores": protein_scores,
+            }
+            locus_id_to_data[locus_id] = data
+            start = None
+            seqLen = None
+            locus_id = None
+            S288C_snp_seq = None
+            contig_name = None
+            strain_to_snp = {}
+        
+        if x.display_name.endswith('S288C'):
+            start = x.contig_start_index
+            seqLen = len(x.aligned_sequence)
+            S288C_snp_seq = x.snp_sequence
+            contig_name = contig_id_to_display_name[x.contig_id]
+        locus_id = x.locus_id
+        [name, strain] = x.display_name.split('_')
+        strain_to_snp[strain] = { "snp_sequence": x.snp_sequence,
+                                  "name": strain,
+                                  "id":  strain_to_id[strain] }
+        
+    if locus_id is not None and locus_id in dbentity_id_to_obj and seqLen is not None:
+        (sgdid, format_name, display_name) = dbentity_id_to_obj[locus_id]
+        snp_seqs = []
+        dna_scores = []
+        for strain in sorted(strain_to_id, key=strain_to_id.get):
+            if strain in strain_to_snp:
+                snp = strain_to_snp[strain]
+                snp_seqs.append(snp)
+                dna_scores.append(calculate_score(S288C_snp_seq,
+                                                      snp['snp_sequence'],
+                                                      seqLen))
+            else:
+                dna_scores.append(None)
+        protein_scores = []
+        if locus_id in locus_id_to_protein_scores:
+            protein_scores = locus_id_to_protein_scores[locus_id]
+        else:
+            protein_scores = get_default_scores()
+                
+        data = { "absolute_genetic_start": get_absolute_genetic_start(contig_lengths, contig_name, start),
+                 "href": "/locus/" +  sgdid + "/sequence#variants",
+                 "sgdid": sgdid,
+                 "format_name": format_name,
+                 "name": display_name,
+                 "snp_seqs": snp_seqs,
+                 "dna_scores": dna_scores,
+                 "protein_scores": protein_scores
+        }
+        locus_id_to_data[locus_id] = data
+
+    loci = []
+    count = 0
+    index = 0
+    
+    all = None
+    if len(locus_id_list) == 0:
+        all = DBSession.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC', taxonomy_id=taxonomy_id, so_id=so_id).order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all()
+    else:
+        all = DBSession.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC', taxonomy_id=taxonomy_id, so_id=so_id).filter(Dnasequenceannotation.dbentity_id.in_(locus_id_list)).order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all()
+
+    for x in all:   
+        data = None
+        if x.dbentity_id in locus_id_to_data:
+            data = locus_id_to_data[x.dbentity_id]
+        elif x.dbentity_id in dbentity_id_to_obj:
+            (sgdid, format_name, display_name) = dbentity_id_to_obj[x.dbentity_id]
+            contig_name = contig_id_to_display_name.get(x.contig_id)
+            if contig_name is None:
+                continue
+            data = { "absolute_genetic_start": get_absolute_genetic_start(contig_lengths, contig_name, x.start_index),
+                     "href": "/locus/" +  sgdid + "/sequence#variants",
+                     "sgdid": sgdid,
+                     "format_name": format_name,
+                     "name": display_name,
+                     "snp_seqs": [{"snp_sequence": '',
+                                   "name": 'S288C',
+                                   "id":  strain_to_id['S288C']}],
+                     "dna_scores": get_default_scores(),
+                     "protein_scores": get_default_scores()
+            }
+            
+        if data is not None:
+            # count = count + 1
+            # if offset != 0 and count <= offset:
+            #    continue
+            # index = index + 1
+            # if limit > 0 and index >= limit:
+            #    break
+            loci.append(data)
+
+    variants = { "total": len(loci),
+                 "offset": offset,
+                 "loci": loci }
+    
+    return variants
