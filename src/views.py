@@ -31,6 +31,8 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger()
 
 ES_INDEX_NAME = os.environ.get('ES_INDEX_NAME', 'searchable_items_aws')
+ES_VARIANT_INDEX_NAME = os.environ.get('ES_VARIANT_INDEX_NAME', 'variant_data_index')
+
 
 models_helper = ModelsHelper()
 
@@ -419,7 +421,7 @@ def search_sequence_objects(request):
 
     try:
         search_result = ESearch.search(
-            index=ES_INDEX_NAME,
+            index=ES_VARIANT_INDEX_NAME,
             body=build_sequence_objects_search_query(''),
             size=limit,
             from_=offset
