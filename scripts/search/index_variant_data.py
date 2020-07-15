@@ -5,7 +5,6 @@ import requests
 from threading import Thread
 import json
 from index_es_helpers import IndexESHelper
-import concurrent.futures
 import logging
 
 INDEX_NAME = os.environ.get("ES_VARIANT_INDEX_NAME", "variant_data_index")
@@ -54,29 +53,34 @@ def index_variant_data():
     loci = variant_response['loci']
     bulk_data = []
     print(("Indexing " + str(len(loci)) + " variants"))
-    for x in loci:
-        obj = { "category": "variant",
+    try:
+        for x in loci:
+            obj = {
+                "category": "variant",
                 "sgdid": x['sgdid'],
                 "name": x['name'],
                 "href": x['href'],
-                "absolute_genetic_start": x['absolute_genetic_start'],
-                "format_name": x['format_name'],
+                "absolute_genetic_start": str(x['absolute_genetic_start']),
+                "format_name": str(x['format_name']),
                 "dna_scores": x['dna_scores'],
                 "protein_scores": x['protein_scores'],
-                "snp_seqs": x['snp_seqs'] }
-        
-        bulk_data.append({
-                "index": {
-                    "_index": INDEX_NAME,
-                    "_id": "variant_" + x['format_name']
-                }
-            })         
-        bulk_data.append(obj)            
-        if len(bulk_data) == 300:
+                "snp_seqs": x['snp_seqs']
+            }
+            
+            bulk_data.append({
+                    "index": {
+                        "_index": INDEX_NAME,
+                        "_id": "variant_" + x['format_name']
+                    }
+                })         
+            bulk_data.append(obj)            
+            if len(bulk_data) == 50:
                 es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
                 bulk_data = []
-    if len(bulk_data) > 0:
-        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+        if len(bulk_data) > 0:
+            es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+    except Exception as e:
+        logging.error(e.message)
     
 if __name__ == "__main__":
     cleanup()
