@@ -33,6 +33,7 @@ log = logging.getLogger()
 ES_INDEX_NAME = os.environ.get('ES_INDEX_NAME', 'searchable_items_aws')
 ES_VARIANT_INDEX_NAME = os.environ.get('ES_VARIANT_INDEX_NAME', 'variant_data_index')
 
+
 models_helper = ModelsHelper()
 
 @view_config(route_name='home', request_method='GET', renderer='home.jinja2')

@@ -881,7 +881,6 @@ def index_part_2():
     index_disease_terms()
     index_complex_names()
     index_references()
-
     
 def index_toolbar_links():
     links = [
