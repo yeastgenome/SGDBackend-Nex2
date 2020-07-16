@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 import importlib
 importlib.reload(sys)  # Reload does the trick!
-from src.models import Dbentity, LocusAlias, Source, Filedbentity, Edam
+from src.models import Dbentity, Locusdbentity, LocusAlias, Source, Filedbentity, Edam
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
 
@@ -54,6 +54,7 @@ def update_data(infile):
     fw = open(log_file,"w")
 
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
+    locus_id_to_name = dict([(x.dbentity_id, x.systematic_name) for x in nex_session.query(Locusdbentity).all()])
     
     id_to_source = {}
     source_to_id = {}
@@ -74,6 +75,7 @@ def update_data(infile):
         locus_id_to_sgdid[x.dbentity_id] = x.sgdid
         sgdid_to_locus_id[x.sgdid] = x.dbentity_id
     
+        
     log.info("Reading data from uniprot data file...")
 
     [sgdid_to_uniprot_id, uniprot_id_to_sgdid_list, key_to_ids] = read_uniprot_file(infile, source_to_id)
