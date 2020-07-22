@@ -260,11 +260,11 @@ def dump_data():
 
     fw.close()
 
-    gzip_file =gzip_gff_file(gff_file,datestamp)
+    gzip_file = gzip_gff_file(gff_file,datestamp)
 
-    log.info("Uploading gff3 file to S3...")
+    # log.info("Uploading gff3 file to S3...")
 
-    update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_id, edam_to_id)
+    # update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_id, edam_to_id)
 
     nex_session.close()
 
@@ -432,9 +432,9 @@ def write_header(fw, datestamp):
     fw.write("# Features from the 16 nuclear chromosomes labeled chrI to chrXVI,\n")
     fw.write("# plus the mitochondrial genome labeled chrmt.\n")
     fw.write("#\n")
-    fw.write("# Created by Saccharomyces Genome Database (http://www.yeastgenome.org/)\n")
+    fw.write("# Created by Saccharomyces Genome Database (http://www.yeastgenome.org/) for Alliance project.\n")
     fw.write("#\n")
-    fw.write("# Weekly updates of this file are available for download from:\n")
+    fw.write("# SGD versions of this file are available for download from:\n")
     fw.write("# https://downloads.yeastgenome.org/latest/saccharomyces_cerevisiae.gff.gz\n")
     fw.write("#\n")
     fw.write("# Please send comments and suggestions to sgd-helpdesk@lists.stanford.edu\n")
