@@ -1292,7 +1292,7 @@ class CuratorActivity(Base):
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
     activity_category = Column(String(100), nullable=False)
-    dbentity_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
+    dbentity_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
     message = Column(String(500), nullable=False)
     json = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
