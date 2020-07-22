@@ -1289,7 +1289,7 @@ def ptm_file_insert(request):
                 rows = ','.join([ str(r+2) for r in rows])
                 log.error('No values in column ' + col + ' rows '+ rows)
                 list_of_posttranslationannotation_errors.append('No values in column ' + col + ' rows '+ rows)
-
+             
         if list_of_posttranslationannotation_errors:
             err = [e + '\n' for e in list_of_posttranslationannotation_errors]
             log.info('PTM file upload complete for file '+filename + ' with errors.')
@@ -1301,6 +1301,7 @@ def ptm_file_insert(request):
         posttranslationannotation_to_site = models_helper.posttranslationannotation_with_key_index()
         pubmed_id_to_reference, reference_to_dbentity_id = models_helper.get_references_all()
 
+        found = {}
         for index_row, row in df.iterrows():
             index = index_row + 2
             column = ''
@@ -1425,9 +1426,10 @@ def ptm_file_insert(request):
                 posttranslationannotation_existing['site_residue'] = str(row[COLUMNS['residue']]).split(SEPARATOR)[0]
                 if SEPARATOR in residue:
                     posttranslationannotation_update['site_residue'] = str(row[COLUMNS['residue']]).split(SEPARATOR)[1]
-
+                    
                 column = COLUMNS['modifier']
                 modifier = row[column]
+                
                 if(pd.isnull(modifier)):
                     pass
                 else:
@@ -1446,13 +1448,19 @@ def ptm_file_insert(request):
                             posttranslationannotation_update['modifier_id'] = systematic_name_to_dbentity_id[(modifier_new, 'LOCUS')]
                     
                 list_of_posttranslationannotation.append((posttranslationannotation_existing,posttranslationannotation_update))
-            
+                
+                check_key = gene + "; " + str(taxonomy) + "; " + str(reference) + "; " +str(site_index) + "; " + str(residue) + "; " + str(psimod) + "; " +str(modifier)
+                
+                if check_key in found:
+                    list_of_posttranslationannotation_errors.append('The row ' + str(index) + ' is a duplicate for row ' + found[check_key] + ' : ' + check_key) 
+                found[check_key] = str(index)
+                
             except ValueError as e:
                 log.error('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
-                list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
+                list_of_posttranslationannotation_errors.append('Error in row ' + str(index) + ', column ' + column + ', It is not a valid number.')
             except Exception as e:
                 log.exception('Error in on row ' + str(index) + ', column ' + column)
-                list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + str(e))
+                list_of_posttranslationannotation_errors.append('Error in row ' + str(index) + ', column ' + column + ' ' + str(e))
 
         if list_of_posttranslationannotation_errors:
             err = [ e + '\n'  for e in list_of_posttranslationannotation_errors]
@@ -2950,7 +2958,7 @@ def transfer_delete_reference_annotations(request):
                         transfer_delete_method(Proteinsequenceannotation)
                     elif(table == 'Regulationannotation'):
                         transfer_delete_method(Regulationannotation)
-                    
+                                            
                 transaction.commit()
                 
                 sgd_id = request.matchdict['id']
@@ -3036,10 +3044,13 @@ def delete_reference(request):
                         delete_helper(Referenceunlink,table_name)
                     elif table_name == 'ReferenceFile':
                         delete_helper(ReferenceFile,table_name)
-                    elif table_name == 'CuratorActivity':
-                        delete_helper(CuratorActivity,table_name)
-                    
-                
+
+            ### delete rows in CuratorActivity if there are any
+            count = curator_session.query(CuratorActivity).filter_by(dbentity_id = reference.dbentity_id).count()
+            if count > 0:
+                curator_session.query(CuratorActivity).filter_by(dbentity_id = reference.dbentity_id).delete()
+                log.info('{} records being deleted from {} for reference_id {}'.format(count, "CuratorActivity",sgd_id))
+        
             curator_session.delete(reference)
             transaction.commit()
 
