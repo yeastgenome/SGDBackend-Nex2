@@ -2873,7 +2873,12 @@ def transfer_delete_reference_annotations(request):
             if int(row['pmid']) in pmid_to_referencedbentity:
                 log.info('{}: Transfer the record {} to new reference {}'.format(table,row["id"],row["pmid"]))
                 annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
-                annotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
+                try:
+                    annotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
+                except Exception as e:
+                    log.exception(e)
+                    transaction.abort()
+                    return HTTPBadRequest(body=json.dumps({'error': "The pmid: " + row['pmid'] + " is associated with the same annotation already. See error message: " + str(ex)}), content_type='text/json')
             else:
                 raise Exception('{} pmid does not exisit in the database.'.format(row['pmid']))
     if not check_csrf_token(request, raises=False):
