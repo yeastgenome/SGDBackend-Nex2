@@ -1292,7 +1292,7 @@ class CuratorActivity(Base):
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
     activity_category = Column(String(100), nullable=False)
-    dbentity_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
+    dbentity_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
     message = Column(String(500), nullable=False)
     json = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
@@ -2657,6 +2657,138 @@ class Referencedbentity(Dbentity):
         except Exception as e:
             traceback.print_exc()
             transaction.abort()
+            raise(e)
+        finally:
+            if curator_session:
+                curator_session.close()
+
+    def get_all_annotations(self, username):
+
+        curator_session = None  
+        annotation_list = dict()
+
+        self.returnValue = {
+            "annotations":[],
+            "not_annotations":[]
+        }
+        def helper(key,items):
+            val = None
+            try:    
+                obj = {}
+                values = []
+                for item in items:
+                    val = item
+                    values.append(item.__dict__)
+                    if '_sa_instance_state' in values[-1]:
+                        values[-1].pop('_sa_instance_state')
+                    if 'date_created' in values[-1]:
+                        values[-1].pop('date_created')
+                    if 'date_assigned' in values[-1]:
+                        values[-1].pop('date_assigned')
+                    if 'source_id' in values[-1]:
+                        values[-1].pop('source_id')
+                    if 'bud_id' in values[-1]:
+                        values[-1].pop('bud_id')
+                    if 'taxonomy_id' in values[-1]:
+                        values[-1].pop('taxonomy_id')
+                if len(values) > 0:
+                    obj[key] = values
+                    self.returnValue['annotations'].append(obj)
+                
+            except Exception as ex:
+                log.exception(ex)
+
+        def get_count(table_name,key):
+            count = curator_session.query(table_name).filter_by(reference_id=self.dbentity_id).count()
+            if count >0 :
+                self.returnValue['not_annotations'].append({key: count})
+
+        try:
+            curator_session = get_curator_session(username)
+
+            binding_motif = curator_session.query(Bindingmotifannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Bindingmotifannotation",binding_motif)
+
+            literature_annot = curator_session.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Literatureannotation",literature_annot)
+
+            disease_annot = curator_session.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Diseaseannotation",disease_annot)
+
+            disease_subset_annot = curator_session.query(Diseasesubsetannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Diseasesubsetannotation",disease_subset_annot)
+
+            dnaseq_annot = curator_session.query(Dnasequenceannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Dnasequenceannotation",dnaseq_annot)
+
+            enzyme_annot = curator_session.query(Enzymeannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Enzymeannotation",enzyme_annot)
+
+            expression_annot = curator_session.query(Expressionannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Expressionannotation",expression_annot)
+
+            goslim_annot = curator_session.query(Goslimannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Goslimannotation",goslim_annot)
+
+            pathway_annot = curator_session.query(Pathwayannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Pathwayannotation",pathway_annot)
+
+            phenotype_annot = curator_session.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Phenotypeannotation",phenotype_annot)
+
+            posttranslation_annot = curator_session.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Posttranslationannotation",posttranslation_annot)
+            
+            proteindomain_annot = curator_session.query(Proteindomainannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Proteindomainannotation",proteindomain_annot)
+
+            proteinexpt_annot = curator_session.query(Proteinexptannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Proteinexptannotation",proteinexpt_annot)
+            
+            proteinseq_annot = curator_session.query(Proteinsequenceannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Proteinsequenceannotation",proteinseq_annot)
+            
+            regulation_annot = curator_session.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Regulationannotation",regulation_annot)
+
+            # Table that are not annotations.
+            # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
+            # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
+            
+            
+                
+            # this sets of table are not transfered/ delete 
+
+            get_count(Geninteractionannotation,"Geninteractionannotation")
+            get_count(Goannotation,"Goannotation")
+            get_count(Physinteractionannotation,"Physinteractionannotation")
+            get_count(ColleagueReference,"ColleagueReference")
+            get_count(CurationReference,"CurationReference")        
+            get_count(DatasetReference,"DatasetReference")
+            get_count(LocusReferences,"LocusReferences")            
+            get_count(LocusAliasReferences,"LocusAliasReferences")
+            get_count(LocusnoteReference,"LocusnoteReference")
+            get_count(LocusRelationReference,"LocusRelationReference")
+            get_count(LocussummaryReference,"LocussummaryReference")
+            get_count(PathwaysummaryReference,"PathwaysummaryReference")
+            get_count(Reservedname,"Reservedname")
+            get_count(StrainsummaryReference,"StrainsummaryReference")
+            get_count(ReferenceAlias,"ReferenceAlias")
+            get_count(ReferenceUrl,"ReferenceUrl")
+            get_count(Referenceauthor,"Referenceauthor")
+            get_count(Referencedocument,"Referencedocument")
+            get_count(Referencetype,"Referencetype")
+            get_count(Referenceunlink,"Referenceunlink")
+            get_count(ReferenceFile,"ReferenceFile")
+            
+            
+            
+            return self.returnValue
+
+        except Exception as e:
+            traceback.print_exc()
+            transaction.abort()
+            curator_session.rollback()
             raise(e)
         finally:
             if curator_session:

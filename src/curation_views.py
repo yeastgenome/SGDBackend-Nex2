@@ -41,7 +41,16 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      CurationReference, Locussummary, validate_tags,\
      convert_space_separated_pmids_to_list, Psimod,\
      Posttranslationannotation, Regulationannotation, \
-     Apo, Allele, Reporter, Chebi, Eco, Source
+     Apo, Allele, Reporter, Chebi, Eco, Source, \
+     Bindingmotifannotation,Diseaseannotation,Diseasesubsetannotation,\
+     Dnasequenceannotation,Enzymeannotation,Expressionannotation,\
+     Goslimannotation,Pathwayannotation,Phenotypeannotation,\
+     Proteindomainannotation,Proteinexptannotation,Proteinsequenceannotation,\
+     Geninteractionannotation,Goannotation,Physinteractionannotation,ColleagueReference, \
+     DatasetReference,LocusReferences,LocusAliasReferences,\
+     LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
+     Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
+     Referencedocument,Referencetype,Referenceunlink,ReferenceFile
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
@@ -163,8 +172,8 @@ def get_new_reference_info(request):
             record = Medline.read(Entrez.efetch(db='pubmed', id=str(x), rettype='medline'))
             warning = Referencedbentity.get_deletion_warnings(x)
             journal_title = record.get('JT', '')
-            if len(journal_title) <= 1:
-                raise ValueError('Cannot import PMID ' + str(x) + ' because journal title is blank.')
+            # if len(journal_title) <= 1:
+            #    raise ValueError('Cannot import PMID ' + str(x) + ' because journal title is blank.')
             confirmation_item = {
                 'name': record.get('TI') + ' PMID: ' + str(x),
                 'pmid': x,
@@ -1280,7 +1289,7 @@ def ptm_file_insert(request):
                 rows = ','.join([ str(r+2) for r in rows])
                 log.error('No values in column ' + col + ' rows '+ rows)
                 list_of_posttranslationannotation_errors.append('No values in column ' + col + ' rows '+ rows)
-
+             
         if list_of_posttranslationannotation_errors:
             err = [e + '\n' for e in list_of_posttranslationannotation_errors]
             log.info('PTM file upload complete for file '+filename + ' with errors.')
@@ -1292,6 +1301,7 @@ def ptm_file_insert(request):
         posttranslationannotation_to_site = models_helper.posttranslationannotation_with_key_index()
         pubmed_id_to_reference, reference_to_dbentity_id = models_helper.get_references_all()
 
+        found = {}
         for index_row, row in df.iterrows():
             index = index_row + 2
             column = ''
@@ -1416,9 +1426,10 @@ def ptm_file_insert(request):
                 posttranslationannotation_existing['site_residue'] = str(row[COLUMNS['residue']]).split(SEPARATOR)[0]
                 if SEPARATOR in residue:
                     posttranslationannotation_update['site_residue'] = str(row[COLUMNS['residue']]).split(SEPARATOR)[1]
-
+                    
                 column = COLUMNS['modifier']
                 modifier = row[column]
+                
                 if(pd.isnull(modifier)):
                     pass
                 else:
@@ -1437,13 +1448,19 @@ def ptm_file_insert(request):
                             posttranslationannotation_update['modifier_id'] = systematic_name_to_dbentity_id[(modifier_new, 'LOCUS')]
                     
                 list_of_posttranslationannotation.append((posttranslationannotation_existing,posttranslationannotation_update))
-            
+                
+                check_key = gene + "; " + str(taxonomy) + "; " + str(reference) + "; " +str(site_index) + "; " + str(residue) + "; " + str(psimod) + "; " +str(modifier)
+                
+                if check_key in found:
+                    list_of_posttranslationannotation_errors.append('The row ' + str(index) + ' is a duplicate for row ' + found[check_key] + ' : ' + check_key) 
+                found[check_key] = str(index)
+                
             except ValueError as e:
                 log.error('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
-                list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ', It is not a valid number.')
+                list_of_posttranslationannotation_errors.append('Error in row ' + str(index) + ', column ' + column + ', It is not a valid number.')
             except Exception as e:
                 log.exception('Error in on row ' + str(index) + ', column ' + column)
-                list_of_posttranslationannotation_errors.append('Error in on row ' + str(index) + ', column ' + column + ' ' + str(e))
+                list_of_posttranslationannotation_errors.append('Error in row ' + str(index) + ', column ' + column + ' ' + str(e))
 
         if list_of_posttranslationannotation_errors:
             err = [ e + '\n'  for e in list_of_posttranslationannotation_errors]
@@ -2822,3 +2839,231 @@ def triage_count(request):
         log.exception('DB error corrected. Rollingback previous error in db connection')
         DBSession.rollback()
         return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
+
+
+@view_config(route_name='get_reference_annotations',request_method='GET',renderer='json')
+@authenticate
+def get_reference_annotations(request):
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    try:
+        sgd_id = request.matchdict['id']
+        username = request.session['username']
+        reference = DBSession.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+        log.debug("Ref ID = " + reference.sgdid)
+        return reference.get_all_annotations(username)
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+    
+
+@view_config(route_name='transfer_delete_reference_annotations', request_method='POST', renderer='json')
+@authenticate
+def transfer_delete_reference_annotations(request):
+
+    def transfer_delete_method(table_name):
+        
+        if 'delete' in row and row['delete'] is True:
+            log.info('{}: Delete the record {}'.format(table,row["id"]))
+            annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
+            if annotation:
+                curator_session.delete(annotation)
+
+        elif 'pmid' in row :
+            if int(row['pmid']) in pmid_to_referencedbentity:
+                log.info('{}: Transfer the record {} to new reference {}'.format(table,row["id"],row["pmid"]))
+                annotation = curator_session.query(table_name).filter_by(annotation_id=int(row['id'])).one_or_none()
+                annotation.reference_id = pmid_to_referencedbentity[int(row['pmid'])]
+            else:
+                raise Exception('{} pmid does not exisit in the database.'.format(row['pmid']))
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    try:
+        body = request.json_body
+        table_primary_key = {
+            'Bindingmotifannotation':'annotation_id',
+            'Literatureannotation':'annotation_id',
+            'Diseaseannotation':'annotation_id',
+            'Diseasesubsetannotation':'annotation_id',
+            'Dnasequenceannotation':'annotation_id',
+            'Enzymeannotation':'annotation_id',
+            'Expressionannotation':'annotation_id',
+            'Geninteractionannotation':'annotation_id',
+            'Goannotation':'annotation_id',
+            'Goslimannotation':'annotation_id',
+            'Pathwayannotation':'annotation_id',
+            'Phenotypeannotation':'annotation_id',
+            'Physinteractionannotation':'annotation_id',
+            'Posttranslationannotation':'annotation_id',
+            'Proteindomainannotation':'annotation_id',
+            'Proteinexptannotation':'annotation_id',
+            'Proteinsequenceannotation':'annotation_id',
+            'Regulationannotation':'annotation_id',
+
+            'ColleagueReference':'colleague_reference_id',
+            'CurationReference':'curation_id',
+            'DatasetReference':'dataset_reference_id',
+            'Locusreferences':'locus_reference_id',
+            'LocusAliasreferences':'locusalias_reference_id',
+            'Locusnotereference':'note_reference_id',
+            'LocusRelationreference':'locusrelation_reference_id',
+            'Locussummaryreference':'summary_reference_id',
+            'Pathwaysummaryreference':'summary_reference_id',
+            'Reservedname':'reservedname_id',
+            'Strainsummaryreference':'summary_reference_id',
+            'Referencefile':'reference_file_id',
+        }
+        curator_session = get_curator_session(request.session['username'])
+
+        references = curator_session.query(Referencedbentity).with_entities(Referencedbentity.pmid,Referencedbentity.dbentity_id).all()
+        pmid_to_referencedbentity = {}
+        
+        for pmid,dbentity_id in references:
+            pmid_to_referencedbentity[pmid] = dbentity_id
+        
+        try:
+            for table in body:
+                log.info('Process table {}'.format(table))
+                
+                for record_id in body[table]:
+                    row = body[table][record_id]
+                    
+                    if(table == 'Bindingmotifannotation'):
+                        transfer_delete_method(Bindingmotifannotation)
+                    elif(table == 'Literatureannotation'):
+                        transfer_delete_method(Literatureannotation)
+                    elif(table == 'Diseaseannotation'):
+                        transfer_delete_method(Diseaseannotation)
+                    elif(table == 'Diseasesubsetannotation'):
+                        transfer_delete_method(Diseasesubsetannotation)
+                    elif(table == 'Dnasequenceannotation'):
+                        transfer_delete_method(Dnasequenceannotation)
+                    elif(table == 'Enzymeannotation'):
+                        transfer_delete_method(Enzymeannotation)
+                    elif(table == 'Expressionannotation'):
+                        transfer_delete_method(Expressionannotation)
+                    elif(table == 'Goslimannotation'):
+                        transfer_delete_method(Goslimannotation)
+                    elif(table == 'Pathwayannotation'):
+                        transfer_delete_method(Pathwayannotation)
+                    elif(table == 'Phenotypeannotation'):
+                        transfer_delete_method(Phenotypeannotation)
+                    elif(table == 'Posttranslationannotation'):
+                        transfer_delete_method(Posttranslationannotation)
+                    elif(table == 'Proteindomainannotation'):
+                        transfer_delete_method(Proteindomainannotation)
+                    elif(table == 'Proteinexptannotation'):
+                        transfer_delete_method(Proteinexptannotation)
+                    elif(table == 'Proteinsequenceannotation'):
+                        transfer_delete_method(Proteinsequenceannotation)
+                    elif(table == 'Regulationannotation'):
+                        transfer_delete_method(Regulationannotation)
+                                            
+                transaction.commit()
+                
+                sgd_id = request.matchdict['id']
+                reference = curator_session.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+                log.debug("Ref ID = " + reference.sgdid)
+                all_annotations =  reference.get_all_annotations(request.session['username'])
+                all_annotations['success'] = 'Successfully completed transfer and delete operations'
+        
+        except Exception as ex:
+            log.exception(ex)
+            transaction.abort()
+            return HTTPBadRequest(body=json.dumps({'error': str(ex)}), content_type='text/json')
+        
+        finally:
+            if curator_session:
+                curator_session.close()
+        
+        return HTTPOk(body=json.dumps(all_annotations), content_type='text/json')
+
+    except Exception as e:
+        log.exception(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+
+@view_config(route_name='delete_reference', request_method='DELETE', renderer='json')
+@authenticate
+def delete_reference(request):
+
+    def delete_helper(table,table_name):
+        count = curator_session.query(table).filter_by(reference_id = reference.dbentity_id).count()
+        curator_session.query(table).filter_by(reference_id = reference.dbentity_id).delete()
+        log.info('{} records being deleted from {} for reference_id {}'.format(count,table_name,sgd_id))
+
+    if not check_csrf_token(request, raises=False):
+        return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
+    try:
+        body = request.json_body
+        sgd_id = request.matchdict['id']
+        curator_session = get_curator_session(request.session['username'])
+
+        reference = curator_session.query(Referencedbentity).filter_by(sgdid=sgd_id).one_or_none()
+        if  reference:
+            for table in body:
+                for table_name in table:
+                    if table_name == 'Geninteractionannotation':
+                        delete_helper(Geninteractionannotation,table_name)
+                    elif table_name == 'Goannotation':
+                        delete_helper(Goannotation,table_name)
+                    elif table_name == 'Physinteractionannotation':
+                        delete_helper(Physinteractionannotation,table_name)
+                    elif table_name == 'ColleagueReference':
+                        delete_helper(ColleagueReference,table_name)
+                    elif table_name == 'CurationReference':
+                        delete_helper(CurationReference,table_name)
+                    elif table_name == 'DatasetReference':
+                        delete_helper(DatasetReference,table_name)
+                    elif table_name == 'LocusReferences':
+                        delete_helper(LocusReferences,table_name)
+                    elif table_name == 'LocusAliasReferences':
+                        delete_helper(LocusAliasReferences,table_name)
+                    elif table_name == 'LocusnoteReference':
+                        delete_helper(LocusnoteReference,table_name)
+                    elif table_name == 'LocusRelationReference':
+                        delete_helper(LocusRelationReference,table_name)
+                    elif table_name == 'LocussummaryReference':
+                        delete_helper(LocussummaryReference,table_name)
+                    elif table_name == 'PathwaysummaryReference':
+                        delete_helper(PathwaysummaryReference,table_name)
+                    elif table_name == 'Reservedname':
+                        delete_helper(Reservedname,table_name)
+                    elif table_name == 'StrainsummaryReference':
+                        delete_helper(StrainsummaryReference,table_name)
+                    elif table_name == 'ReferenceAlias':
+                        delete_helper(ReferenceAlias,table_name)
+                    elif table_name == 'ReferenceUrl':
+                        delete_helper(ReferenceUrl,table_name)
+                    elif table_name == 'Referenceauthor':
+                        delete_helper(Referenceauthor,table_name)
+                    elif table_name == 'Referencedocument':
+                        delete_helper(Referencedocument,table_name)
+                    elif table_name == 'Referencetype':
+                        delete_helper(Referencetype,table_name)
+                    elif table_name == 'Referenceunlink':
+                        delete_helper(Referenceunlink,table_name)
+                    elif table_name == 'ReferenceFile':
+                        delete_helper(ReferenceFile,table_name)
+
+            ### delete rows in CuratorActivity if there are any
+            count = curator_session.query(CuratorActivity).filter_by(dbentity_id = reference.dbentity_id).count()
+            if count > 0:
+                curator_session.query(CuratorActivity).filter_by(dbentity_id = reference.dbentity_id).delete()
+                log.info('{} records being deleted from {} for reference_id {}'.format(count, "CuratorActivity",sgd_id))
+        
+            curator_session.delete(reference)
+            transaction.commit()
+
+            log.info('{} reference is delete successfully'.format(sgd_id))
+        else:
+            return HTTPBadRequest(body=json.dumps({'error': 'no reference found for sgd id {}'.format(sgd_id)}), content_type='text/json')
+    
+        return HTTPOk(body=json.dumps({'success':'Reference deleted successfully'}), content_type='text/json')
+
+    except Exception as e:
+        log.exception(e)
+        transaction.abort()
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+    finally:
+        if curator_session:
+            curator_session.close()

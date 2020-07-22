@@ -18,10 +18,12 @@ import {Switch,Route} from 'react-router-dom';
 import CurateLitBasic from '../curateLit/basic';
 import CurateLitPhenotype from '../curateLit/phenotype';
 import {requireAuthentication} from '../authenticateComponent';
+import Referencesetting from './referencesettings';
 
 const BASE_CURATE_URL = '/curate/reference';
 const SECTIONS = [
-  'tags'
+  'tags',
+  'Settings'
 ];
 
 class CurateLitLayout extends Component {
@@ -103,6 +105,7 @@ class CurateLitLayout extends Component {
           <div className={LARGE_COL_CLASS}>
             <div>
               <Switch>
+                <Route component={Referencesetting} path='/curate/reference/:id/settings'/>
                 <Route component={CurateLitBasic} exact/>
                 {/* TODO: Navigate to phenotypes */}
                 {/* <Route component={CurateLitPhenotype} path='/curate/reference/:id/phenotypes' exact/> */}
