@@ -238,6 +238,11 @@ def insert_referencedbentity(pmid, source_id, record, created_by, method_obtaine
         publication_status = epub_status
         fulltext_status = epub_pdf_status
 
+    if year:
+        year = int(year)
+    if journal_id:
+        journal_id = int(journal_id)
+
     x = Referencedbentity(display_name = citation.split(')')[0] + ')',
                           source_id = source_id,
                           subclass = 'REFERENCE',
@@ -246,7 +251,7 @@ def insert_referencedbentity(pmid, source_id, record, created_by, method_obtaine
                           publication_status = publication_status,
                           fulltext_status = fulltext_status,
                           citation = citation,
-                          year = int(year),
+                          year = year,
                           pmid = int(pmid),
                           pmcid = pmcid,
                           date_published = pubdate,
@@ -256,7 +261,7 @@ def insert_referencedbentity(pmid, source_id, record, created_by, method_obtaine
                           volume = volume,
                           title = title,
                           doi = doi,
-                          journal_id = int(journal_id),
+                          journal_id = journal_id,
                           created_by = created_by)
 
     DBSession.add(x)
@@ -301,11 +306,15 @@ def get_journal_id(record, created_by):
         journals = DBSession.query(Journal).filter_by(issn_print=issn_print).all()
         if len(journals) > 0:
             return journals[0].journal_id, journals[0].med_abbr, journal_full_name, issn_print
+        
+    if journal_abbr == '':
+        return None, '', '', ''
+    
     if journal_abbr:
         journals = DBSession.query(Journal).filter_by(med_abbr=journal_abbr).all()
         if len(journals) > 0:
             return journals[0].journal_id, journals[0].med_abbr, journal_full_name, issn_print
-
+      
     source_id = 824 # 'PubMed'
     shortened_full_name = (journal_full_name[:197] + '...') if len(journal_full_name) > 200 else journal_full_name
     format_name = journal_full_name.replace(' ', '_') + journal_abbr.replace(' ', '_')
