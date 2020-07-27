@@ -1094,6 +1094,28 @@ COMMENT ON COLUMN nex.allele_alias.allele_alias_id IS 'Unique identifier (serial
 ALTER TABLE nex.allele_alias ADD CONSTRAINT allele_alias_uk UNIQUE (allele_alias_id,display_name,alias_type);
 CREATE INDEX allelealias_source_fk_index ON nex.allele_alias (source_id);
 
+DROP TABLE IF EXISTS nex.allele_geninteraction CASCADE;
+CREATE TABLE nex.allele_geninteraction(
+    allele_geninteraction_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    allele_id bigint NOT NULL,
+    interaction_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT allele_geninteraction_pk PRIMARY KEY (allele_geninteraction_id)
+) ;
+COMMENT ON TABLE nex.allele_geninteraction IS 'Interactions associated with a allele.';
+COMMENT ON COLUMN allele_geninteraction.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.allele_geninteraction.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.allele_geninteraction.interaction_id IS 'FK to GENINTERACTION.ANNOTATION_ID.';
+ALTER TABLE nex.allele_geninteractionannotation ADD CONSTRAINT allele_geninteractionannotation_uk UNIQUE (allele_id,interaction_id);
+CREATE INDEX allelegeninteraction_source_fk_index ON nex.allele_geninteraction (source_id);
+CREATE INDEX allelegeninteraction_int_fk_index ON nex.allele_geninteraction(interaction_id);
+
+
 
 DROP TABLE IF EXISTS nex.locus_allele CASCADE; 
 CREATE TABLE nex.locus_allele (

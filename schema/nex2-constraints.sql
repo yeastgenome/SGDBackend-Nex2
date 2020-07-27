@@ -615,7 +615,7 @@ ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_ref_fk FOREIGN K
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_locus_fk FOREIGN KEY (allele_alias_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_locusallele_fk FOREIGN KEY (locus_allele_id) REFERENCES locus_allele(locus_allele_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;

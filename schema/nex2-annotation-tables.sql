@@ -383,7 +383,7 @@ CREATE TABLE nex.goannotation (
 	go_id bigint NOT NULL,
 	eco_id bigint NOT NULL,
 	annotation_type varchar(40) NOT NULL,
-	go_qualifier varchar(40) NOT NULL,
+	go_qualifier varchar(100) NOT NULL,
 	date_assigned timestamp NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,

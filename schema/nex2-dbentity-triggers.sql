@@ -3473,21 +3473,15 @@ DECLARE
 BEGIN
   IF (TG_OP = 'UPDATE') THEN
 
-    IF (OLD.allele_name != NEW.allele_name) THEN
-        PERFORM nex.insertupdatelog('ALLELEDBENTITY'::text, 'ALLELE_NAME'::text, OLD.dbentity_id, OLD.allele_name, NEW.allele_name, USER);
-    END IF;
     IF (OLD.description != NEW.description) THEN
         PERFORM nex.insertupdatelog('ALLELEDBENTITY'::text, 'DESCRIPTION'::text, OLD.dbentity_id, OLD.description, NEW.description, USER);
-    END IF;
-    IF (OLD.structural_variant != NEW.structural_variant) THEN
-        PERFORM nex.insertupdatelog('ALLELEDBENTITY'::text, 'ALLELE_NAME'::text, OLD.dbentity_id, OLD.structural_variant, NEW.structural_variant, USER);
     END IF;
 
     RETURN NEW;
 
   ELSIF (TG_OP = 'DELETE') THEN
        
-        v_row := OLD.dbentity_id || '[:]' ||  OLD.allele_name || '[:]' || OLD.description 
+        v_row := OLD.dbentity_id || '[:]' || OLD.description 
         || '[:]' || OLD.structural_variant;
 
         PERFORM nex.insertdeletelog('ALLELEDBENTITY'::text, OLD.dbentity_id, v_row, USER);
@@ -3509,14 +3503,6 @@ BEGIN
 
     IF (NEW.dbentity_id != OLD.dbentity_id) THEN
         RAISE EXCEPTION 'Primary key cannot be updated';
-    END IF;
-    
-    IF (NEW.date_created != OLD.date_created) THEN
-        RAISE EXCEPTION 'Audit columns cannot be updated.';
-    END IF;
-
-    IF (NEW.created_by != OLD.created_by) THEN
-        RAISE EXCEPTION 'Audit columns cannot be updated.';
     END IF;
 
 RETURN NEW;
@@ -3910,4 +3896,83 @@ $BODY$ LANGUAGE 'plpgsql';
 CREATE TRIGGER locusallelereference_biur
 BEFORE INSERT OR UPDATE ON nex.locusallele_reference FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_locusallelereference_biur();
+
+
+ubuntu@sgd-primary:~/sql_scripts$ more allele_geninteraction.sql 
+DROP TRIGGER IF EXISTS allelegeninteraction_audr ON nex.allele_geninteraction CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_allelegeninteraction_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.allele_id != NEW.allele_id) THEN
+        PERFORM nex.insertupdatelog('ALLELE_GENINTERACTION'::text, 'ALLELE_ID'::text, OLD.allele_geninteraction_id, OLD.
+allele_id::text, NEW.allele_id::text, USER);
+    END IF;
+
+     IF (OLD.reference_id != NEW.reference_id) THEN
+        PERFORM nex.insertupdatelog('ALLELE_GENINTERACTION'::text, 'INTERACTION_ID'::text, OLD.allele_geninteraction_id,
+ OLD.interaction_id::text, NEW.interaction_id::text, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+     PERFORM nex.insertupdatelog('ALLELE_GENINTERACTION'::text, 'SOURCE_ID'::text, OLD.allele_geninteraction_id, OLD.sou
+rce_id::text, NEW.source_id::text, USER);
+    END IF;
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.allele_geninteraction_id || '[:]' || OLD.allele_id || '[:]' ||
+             OLD.interaction_id || '[:]' ||
+             OLD.source_id || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+             PERFORM nex.insertdeletelog('ALLELE_GENINTERACTION'::text, OLD.allele_geninteraction_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER allelegeninteraction_audr
+AFTER UPDATE OR DELETE ON nex.allele_geninteraction FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_allelegeninteraction_audr();
+
+DROP TRIGGER IF EXISTS allelegeninteraction_biur ON nex.allele_geninteraction CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_allelegeninteraction_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := upper(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.allele_geninteraction_id != OLD.allele_geninteraction_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+    RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER allelegeninteraction_biur
+BEFORE INSERT OR UPDATE ON nex.allele_geninteraction FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_allelegeninteraction_biur();
 
