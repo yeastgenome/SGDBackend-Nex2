@@ -643,7 +643,7 @@ def get_search_query_context(name, type, fields=None):
 
 def is_digit(term, int_flag=False):
     temp = ['go', 'pmid', 'sgd', 'chebi', 'doid']
-    is_sgd_list = re.findall(r"([Ss]\d{2,10})", term)
+    is_sgd_list = re.findall(r"([Ss]\d{9,10})", term)
 
     if term:
         num_list = []
