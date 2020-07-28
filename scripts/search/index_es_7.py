@@ -366,7 +366,7 @@ def index_genes():
                 keys.append(k.lower())
         
         ncbi_obj = None
-        if gene.dbentity_id():
+        if gene.dbentity_id:
             ncbi_obj = IndexESHelper.get_locus_ncbi_data(gene.dbentity_id)
         obj = {
             "name":
