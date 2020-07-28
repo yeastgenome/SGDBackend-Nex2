@@ -587,6 +587,20 @@ mapping = {
             "chemical_name": {
                 "type": "text",
                 "analyzer": "chebi_search"
+            },
+            "ncbi": {
+                "properties": {
+                    "url": {
+                        "type": "text"},
+                    "sgdid": {
+                        "type": "text"},
+                    "name": {
+                        "type": "text"},
+                    "link": {
+                        "type": "text"
+                    }
+
+                }
             }
 
         }

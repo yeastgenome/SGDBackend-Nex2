@@ -364,7 +364,7 @@ def index_genes():
         for k in _keys:
             if k:
                 keys.append(k.lower())
-
+        ncbi_obj = IndexESHelper.get_locus_ncbi_data(gene.dbentity_id)
         obj = {
             "name":
                 _name,
@@ -421,13 +421,13 @@ def index_genes():
                 gene.dbentity_id,
             "keys":
                 list(keys),
-            "is_quick_flag": str(is_quick_flag)
+            "is_quick_flag": str(is_quick_flag),
+            "ncbi": ncbi_obj
         }
 
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
                 "_id": str(uuid.uuid4())
             }
         })
@@ -956,7 +956,7 @@ if __name__ == "__main__":
     '''
     # index_strains()
     # index_genes()
-
+    
     cleanup()
     setup()
     

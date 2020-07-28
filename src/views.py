@@ -190,6 +190,7 @@ def search(request):
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
     # see if we can search for a simple gene name in db without using ES
+
     aliases_count = 0
     if is_quick_flag == 'true' and terms_digits_flag == False:
         t_query = query.strip().upper()

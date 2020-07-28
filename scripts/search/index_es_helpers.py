@@ -1,7 +1,7 @@
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusnote, Filedbentity, FileKeyword, LocusnoteReference, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi , Goextension, Interactor
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
-from es7_mapping import mapping
+# from es7_mapping import mapping
 import os
 import requests
 import json
@@ -627,3 +627,18 @@ class IndexESHelper:
     @classmethod
     def get_readme_file(cls, id):
         _data = DBSession.query(Filedbentity).filter_by(Filedbentity.dbentity_id == id).all()
+
+    @classmethod
+    def get_locus_ncbi_data(cls, id):
+
+        data = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==id, LocusAlias.alias_type=='RefSeq protein version ID')).one_or_none()
+        if data:
+            obj = {
+                'display_name': data.display_name.split(".")[0],
+                'sgdid': data.locus.sgdid,
+                'url': '/locus/' + data.locus.sgdid + '/protein',
+                'link': data.obj_url
+            }
+            import pdb ; pdb.set_trace()
+            return obj
+        return None
