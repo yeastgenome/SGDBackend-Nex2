@@ -637,10 +637,10 @@ class IndexESHelper:
             if data:
                 for item in data:
                     obj = {
-                        'display_name': data.display_name.split(".")[0],
-                        'sgdid': data.locus.sgdid,
-                        'url': '/locus/' + data.locus.sgdid + '/protein',
-                        'link': data.obj_url
+                        'display_name': item.display_name.split(".")[0],
+                        'sgdid': item.locus.sgdid,
+                        'url': '/locus/' + item.locus.sgdid + '/protein',
+                        'link': item.obj_url
                     }
                     temp.append(obj)
 
