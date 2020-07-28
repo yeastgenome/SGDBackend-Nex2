@@ -630,15 +630,17 @@ class IndexESHelper:
 
     @classmethod
     def get_locus_ncbi_data(cls, id):
+        try:
+            data = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==id, LocusAlias.alias_type=='RefSeq protein version ID')).one_or_none()
+            if data:
+                obj = {
+                    'display_name': data.display_name.split(".")[0],
+                    'sgdid': data.locus.sgdid,
+                    'url': '/locus/' + data.locus.sgdid + '/protein',
+                    'link': data.obj_url
+                }
 
-        data = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==id, LocusAlias.alias_type=='RefSeq protein version ID')).one_or_none()
-        if data:
-            obj = {
-                'display_name': data.display_name.split(".")[0],
-                'sgdid': data.locus.sgdid,
-                'url': '/locus/' + data.locus.sgdid + '/protein',
-                'link': data.obj_url
-            }
-            import pdb ; pdb.set_trace()
-            return obj
-        return None
+                return obj
+            return None
+        except Exception as e:
+            print(e)
