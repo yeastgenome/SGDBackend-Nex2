@@ -6,6 +6,7 @@ import os
 import requests
 import json
 from multiprocess import Pool
+import logging
 
 engine = create_engine(os.environ["NEX2_URI"], pool_recycle=3600)
 DBSession.configure(bind=engine)
@@ -643,4 +644,4 @@ class IndexESHelper:
                 return obj
             return None
         except Exception as e:
-            print(e)
+            logging.error({'Found more rows for param': id})
