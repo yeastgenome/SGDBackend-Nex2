@@ -366,9 +366,9 @@ def index_genes():
             if k:
                 keys.append(k.lower())
         
-        ncbi_obj = None
+        ncbi_arr = None
         if gene.dbentity_id:
-            ncbi_obj = IndexESHelper.get_locus_ncbi_data(gene.dbentity_id)
+            ncbi_arr = IndexESHelper.get_locus_ncbi_data(gene.dbentity_id)
         obj = {
             "name":
                 _name,
@@ -426,7 +426,7 @@ def index_genes():
             "keys":
                 list(keys),
             "is_quick_flag": str(is_quick_flag),
-            "ncbi": ncbi_obj
+            "ncbi": ncbi_arr
         }
 
         bulk_data.append({
