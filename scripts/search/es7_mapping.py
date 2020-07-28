@@ -589,18 +589,7 @@ mapping = {
                 "analyzer": "chebi_search"
             },
             "ncbi": {
-                "properties": {
-                    "url": {
-                        "type": "text"},
-                    "sgdid": {
-                        "type": "text"},
-                    "name": {
-                        "type": "text"},
-                    "link": {
-                        "type": "text"
-                    }
-
-                }
+                "type": "nested"
             }
 
         }

@@ -632,16 +632,19 @@ class IndexESHelper:
     @classmethod
     def get_locus_ncbi_data(cls, id):
         try:
-            data = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==id, LocusAlias.alias_type=='RefSeq protein version ID')).one_or_none()
+            data = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==id, LocusAlias.alias_type=='RefSeq protein version ID')).all()
+            temp = []
             if data:
-                obj = {
-                    'display_name': data.display_name.split(".")[0],
-                    'sgdid': data.locus.sgdid,
-                    'url': '/locus/' + data.locus.sgdid + '/protein',
-                    'link': data.obj_url
-                }
+                for item in data:
+                    obj = {
+                        'display_name': data.display_name.split(".")[0],
+                        'sgdid': data.locus.sgdid,
+                        'url': '/locus/' + data.locus.sgdid + '/protein',
+                        'link': data.obj_url
+                    }
+                    temp.append(obj)
 
-                return obj
+                return temp
             return None
         except Exception as e:
-            logging.error({'Found more rows for param': id})
+            logging.error(e.message)
