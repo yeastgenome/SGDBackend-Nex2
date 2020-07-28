@@ -261,7 +261,8 @@ def index_genes():
         ["Uniform", "Non-uniform", "Retired name", "UniProtKB ID"])
 
     ###################################
-    not_mapped_genes = IndexESHelper.get_not_mapped_genes()
+    # TODO: remove line below in the next release
+    # not_mapped_genes = IndexESHelper.get_not_mapped_genes()
     is_quick_flag = True
 
     for gene in all_genes:
