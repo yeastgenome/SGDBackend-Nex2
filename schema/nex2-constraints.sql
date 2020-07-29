@@ -615,6 +615,10 @@ ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_ref_fk FOREIGN K
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_fk FOREIGN KEY (interaction_id) REFERENCES geninteractionannotation(annotation_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
 ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
