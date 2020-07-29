@@ -19,7 +19,7 @@ def build_autocomplete_search_body_request(query,
                         "multi_match": {
                             "query": query,
                             "fields": [
-                                "locus_name.engram^10",
+                                "locus_name.engram^15",
                                 "colleague_name.engram^7",
                                 "name.autocomplete^8",
                                 "name_description",
@@ -197,7 +197,8 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
 
 
 def build_search_query(query, search_fields, category, category_filters, args, alias_flag=False, terms=[], ids=[], wildcard=None):
-    es_query = build_search_params(query, search_fields, alias_flag, terms, ids, wildcard, category)
+    es_query = build_search_params(
+        query, search_fields, alias_flag, terms, ids, wildcard, category)
     if category == '':
         return es_query
     
@@ -643,7 +644,7 @@ def get_search_query_context(name, type, fields=None):
 
 def is_digit(term, int_flag=False):
     temp = ['go', 'pmid', 'sgd', 'chebi', 'doid']
-    is_sgd_list = re.findall(r"([Ss]\d{2,10})", term)
+    is_sgd_list = re.findall(r"([Ss]\d{9,10})", term)
 
     if term:
         num_list = []
@@ -706,3 +707,45 @@ def has_long_query(term):
                 terms = []
                 break
     return terms
+
+
+def is_ncbi_term(term):
+    ''' check if term is ncbi name '''
+    flag = False
+    if term:
+        if re.findall(r"(^NP_\d{6,8})", term):
+            flag = True
+
+    return flag
+
+
+def get_ncbi_search_item(term, source, highlight):
+    if term:
+        obj = {}
+        _query = {
+            "nested": {
+                "path": "ncbi",
+                "query": {
+                        "bool": {
+                            "must": [
+                                {
+                                    "match": {
+                                        "ncbi.display_name": term.upper()
+                                    }
+                                }
+                            ]
+                        }
+                }
+            }
+        }
+        obj["search_body"] = {
+            "_source": source,
+            "highlight": highlight,
+            "query": _query,
+            "track_total_hits": True
+        }
+        obj["es_query"] = _query
+     
+        return obj
+
+    return None

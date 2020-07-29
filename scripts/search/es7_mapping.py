@@ -587,6 +587,9 @@ mapping = {
             "chemical_name": {
                 "type": "text",
                 "analyzer": "chebi_search"
+            },
+            "ncbi": {
+                "type": "nested"
             }
 
         }

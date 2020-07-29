@@ -1,11 +1,12 @@
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusnote, Filedbentity, FileKeyword, LocusnoteReference, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi , Goextension, Interactor
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
-from es7_mapping import mapping
+# from es7_mapping import mapping
 import os
 import requests
 import json
 from multiprocess import Pool
+import logging
 
 engine = create_engine(os.environ["NEX2_URI"], pool_recycle=3600)
 DBSession.configure(bind=engine)
@@ -627,3 +628,23 @@ class IndexESHelper:
     @classmethod
     def get_readme_file(cls, id):
         _data = DBSession.query(Filedbentity).filter_by(Filedbentity.dbentity_id == id).all()
+
+    @classmethod
+    def get_locus_ncbi_data(cls, id):
+        try:
+            data = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==id, LocusAlias.alias_type=='RefSeq protein version ID')).all()
+            temp = []
+            if data:
+                for item in data:
+                    obj = {
+                        'display_name': item.display_name.split(".")[0],
+                        'sgdid': item.locus.sgdid,
+                        'url': '/locus/' + item.locus.sgdid + '/protein',
+                        'link': item.obj_url
+                    }
+                    temp.append(obj)
+
+                return temp
+            return None
+        except Exception as e:
+            logging.error(e.message)
