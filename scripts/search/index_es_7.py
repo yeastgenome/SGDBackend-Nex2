@@ -894,7 +894,6 @@ def index_part_2():
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_complex_names()
 
-
 def index_toolbar_links():
     links = [
         ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do", []),
