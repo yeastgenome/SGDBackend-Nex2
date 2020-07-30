@@ -21,7 +21,7 @@ from pathlib import Path
 
 from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
-from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query
+from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
 from .models import SGD_SOURCE_ID, TAXON_ID
 from .variant_helpers import get_variant_data, get_all_variant_data
@@ -88,6 +88,8 @@ def search(request):
                 break
 
     digit_container = is_digit(query, int_flag)
+
+    ncbi_term = is_ncbi_term(query.upper())
     if digit_container:
         ids = digit_container
 
@@ -190,6 +192,7 @@ def search(request):
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
     # see if we can search for a simple gene name in db without using ES
+
     aliases_count = 0
     if is_quick_flag == 'true' and terms_digits_flag == False:
         t_query = query.strip().upper()
@@ -230,18 +233,74 @@ def search(request):
 
     args = {}
 
+    search_body = None
+    es_query = None
     for key in list(request.params.keys()):
         args[key] = request.params.getall(key)
 
-    es_query = build_search_query(query, search_fields, category,
-                                  category_filters, args, alias_flag,
-                                  terms, ids, wildcard)
-    search_body = build_es_search_body_request(query,
-                                               category,
-                                               es_query,
-                                               json_response_fields,
-                                               search_fields,
-                                               sort_by)
+    if ncbi_term:
+        _source = [
+            "is_quick_flag", "category", "keys", "name", "href", "ncbi",
+            "summary", "description"
+            ]
+        highlight = {
+            "fields": {
+                "name": {}, 
+                "is_quick_flag": {},
+                "href": {},
+                "ncbi": {},
+                "category": {},
+                "summary": {},
+                "description": {}
+            }
+        }
+        search_obj = get_ncbi_search_item(query, _source, highlight)
+        if search_obj:
+            try:
+                es_query = search_obj["es_query"]
+                search_body = search_obj["search_body"]
+                search_results = ESearch.search(
+                    index=ES_INDEX_NAME,
+                    body=search_body,
+                    size=limit,
+                    from_=offset,
+                    preference='p_'+query
+                )
+
+                arr = search_results["hits"]["hits"]
+                if len(arr) == 1:
+                    temp = arr[0]
+                    if temp["_source"]["is_quick_flag"]:
+                        href = temp["_source"]["ncbi"][0]["url"]
+                        result = {
+                            "total": 1,
+                            "results": [
+                                {
+                                    "is_quick": True,
+                                    "href": href
+                                }
+                            ],
+                            "aggregations": []
+                        }
+                        return result
+            except Exception as e:
+                logging.error(e.message)
+                return {
+                    "total": 0,
+                    "results": [],
+                    "aggregations": []
+                }
+
+    else:
+        es_query = build_search_query(query, search_fields, category,
+                                    category_filters, args, alias_flag,
+                                    terms, ids, wildcard)
+        search_body = build_es_search_body_request(query,
+                                                category,
+                                                es_query,
+                                                json_response_fields,
+                                                search_fields,
+                                                sort_by)
     valid_query = ESearch.indices.validate_query(
         index=ES_INDEX_NAME,
         body=search_body,

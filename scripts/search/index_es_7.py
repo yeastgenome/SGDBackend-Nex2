@@ -261,7 +261,8 @@ def index_genes():
         ["Uniform", "Non-uniform", "Retired name", "UniProtKB ID"])
 
     ###################################
-    not_mapped_genes = IndexESHelper.get_not_mapped_genes()
+    # TODO: remove line below in the next release
+    # not_mapped_genes = IndexESHelper.get_not_mapped_genes()
     is_quick_flag = True
 
     for gene in all_genes:
@@ -364,7 +365,10 @@ def index_genes():
         for k in _keys:
             if k:
                 keys.append(k.lower())
-
+        
+        ncbi_arr = None
+        if gene.dbentity_id:
+            ncbi_arr = IndexESHelper.get_locus_ncbi_data(gene.dbentity_id)
         obj = {
             "name":
                 _name,
@@ -421,13 +425,13 @@ def index_genes():
                 gene.dbentity_id,
             "keys":
                 list(keys),
-            "is_quick_flag": str(is_quick_flag)
+            "is_quick_flag": str(is_quick_flag),
+            "ncbi": ncbi_arr
         }
 
         bulk_data.append({
             "index": {
                 "_index": INDEX_NAME,
-                
                 "_id": str(uuid.uuid4())
             }
         })
@@ -863,25 +867,33 @@ def index_chemicals():
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
+
 def index_part_1():
     index_phenotypes()
-    index_downloads()
     index_not_mapped_genes()
-    index_genes()
     index_strains()
     index_colleagues()
-    index_chemicals()
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        index_downloads()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        index_genes()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        index_chemicals()
 
 
 def index_part_2():
     index_reserved_names()
     index_toolbar_links()
     index_observables()
-    index_go_terms()
     index_disease_terms()
-    index_complex_names()
     index_references()
-    
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        index_go_terms()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        index_complex_names()
+
 def index_toolbar_links():
     links = [
         ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do", []),
@@ -956,7 +968,7 @@ if __name__ == "__main__":
     '''
     # index_strains()
     # index_genes()
-
+    
     cleanup()
     setup()
     
