@@ -3,9 +3,22 @@ from sqlalchemy.exc import IntegrityError, DataError
 import transaction
 import json
 from src.models import DBSession, Phenotypeannotation, PhenotypeannotationCond, Phenotype,\
-     Allele, Reporter, Apo, Chebi, Source, Dbentity, Locusdbentity, Referencedbentity,\
-     Straindbentity
+     Alleledbentity, Reporter, Apo, Chebi, Source, Dbentity, Locusdbentity, Referencedbentity,\
+     Straindbentity, So, LocusAllele, LocusalleleReference
 from src.curation_helpers import get_curator_session
+
+# "mutant_type": "functional_effect_variant",
+mutant_to_so_mapping = { "mutant_type": "functional_effect_variant",
+                         "overexpression": "increased_transcript_level_variant",
+                         "gain of function": "gain_of_function_variant",
+                         "null": "null_mutation",
+                         "repressible": "decreased_transcript_level_variant",
+                         "reduction of function": "loss_of_function_variant",
+                         "unspecified": "function_uncertain_variant",
+                         "dominant negative": "dominant_negative_variant",
+                         "misexpression": "transcript_function_variant",
+                         "activation": "translational_product_function_variant",
+                         "conditional": "translational_product_function_variant" }
 
 def insert_phenotype(curator_session, CREATED_BY, source_id, format_name, display_name, observable_id, qualifier_id):
 
@@ -60,22 +73,34 @@ def insert_phenotype(curator_session, CREATED_BY, source_id, format_name, displa
     else:
         return returnValue
 
-def insert_allele(curator_session, CREATED_BY, source_id, allele):
+def insert_allele(curator_session, CREATED_BY, source_id, allele, mutant_id):
 
-    a = curator_session.query(Allele).filter_by(display_name=allele).one_or_none()
+    a = curator_session.query(Alleledbentity).filter_by(display_name=allele).one_or_none()
     if a is not None:
-        return a.allele_id
+        return a.dbentity_id
 
     isSuccess = False
     returnValue = ""
     allele_id = None
+
+    mutant = curator_session.query(Apo).filter_by(apo_id=mutant_id).one_or_none()
+    so_term = mutant_to_so_mapping.get(mutant.display_name)
+    if so_term is None:
+        return "The mutant: " + mutant.display_name + " is not in the mutant to SO mapping."
+    so = curator_session.query(So).filter_by(term_name=so_term).one_or_none()
+    if so is None:
+        return "The SO term: " + so_term + " is not in the database."
+    so_id = so.so_id
+    x = None
     try:
         format_name = allele.replace(" ", "_")
-        x = Allele(format_name = format_name,
-                   display_name = allele,
-                   obj_url = '/allele/' + format_name,
-                   source_id = source_id,
-                   created_by = CREATED_BY)
+        x = Alleledbentity(format_name = format_name,
+                           display_name = allele,
+                           source_id = source_id,
+                           subclass = 'ALLELE',
+                           dbentity_status = 'Active',
+                           so_id = so_id,
+                           created_by = CREATED_BY)
         curator_session.add(x)
         transaction.commit()
         isSuccess = True
@@ -99,7 +124,7 @@ def insert_allele(curator_session, CREATED_BY, source_id, allele):
         isSuccess = False
         returnValue = 'Insert allele failed' + ' ' + str(e.orig.pgerror)
     finally:
-        allele_id = x.allele_id
+        allele_id = x.dbentity_id
 
     if isSuccess:
         return allele_id
@@ -228,14 +253,6 @@ def insert_phenotypeannotation(curator_session, CREATED_BY, source_id, dbentity_
 
 def insert_phenotypeannotation_cond(curator_session, CREATED_BY, annotation_id, group_id, condition_class, condition_name, condition_value, condition_unit):
 
-    # conds = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id=annotation_id,
-    #                                                           condition_class=condition_class,
-    #                                                           condition_name=condition_name,
-    #                                                           condition_value=condition_value,
-    #                                                           condition_unit=condition_unit).all()
-    # if len(conds) > 0:
-    #    return [conds[0].condition_id, 0]
-    #
     try:
         x = PhenotypeannotationCond(annotation_id=annotation_id,
                                     group_id = group_id,
@@ -357,7 +374,7 @@ def check_allele(allele, gene_count, gene_name):
         return HTTPBadRequest(body=json.dumps({'error': "Make sure no allele provided since you have entered the multiple genes."}), content_type='text/json')
 
     if str(allele).isdigit():
-        allele_obj = DBSession.query(Allele).filter_by(allele_id=int(allele)).one_or_none()
+        allele_obj = DBSession.query(Alleledbentity).filter_by(dbentity_id=int(allele)).one_or_none()
         if allele_obj is None:
             return HTTPBadRequest(body=json.dumps({'error': "allele_id " + allele + " is not in the database."}), content_type='text/json')
         allele = allele_obj.display_name
@@ -624,6 +641,53 @@ def parse_conditions(request, observable_id, qualifier_id, reporter_id):
 
     return [1, conditions]
 
+def insert_locus_allele(curator_session, locus_id, allele_id, source_id, created_by):
+
+    la = curator_session.query(LocusAllele).filter_by(locus_id=locus_id, allele_id=allele_id).one_or_none()
+    if la:
+        return la.locus_allele_id
+
+    returnValue = None
+    try:
+        x = LocusAllele(locus_id = locus_id,
+                        allele_id = allele_id,
+                        source_id = source_id,
+                        created_by = created_by)
+
+        curator_session.add(x)
+        curator_session.flush()
+        curator_session.refresh(x)
+        returnValue = x.locus_allele_id
+    except Exception as e:
+        transaction.abort()
+        if curator_session:
+            curator_session.rollback()
+        returnValue = 'Insert locus_allele failed: ' + str(e.orig.pgerror)
+        
+    return returnValue 
+
+
+def insert_locusallele_reference(curator_session, reference_id, locus_allele_id, source_id, created_by):
+
+    lar = curator_session.query(LocusalleleReference).filter_by(reference_id=reference_id, locus_allele_id=locus_allele_id).one_or_none()
+    if lar:
+        return 1
+
+    returnValue = 1
+    try:
+        x = LocusalleleReference(reference_id = reference_id,
+                                 locus_allele_id = locus_allele_id,
+                                 source_id = source_id,
+                                 created_by = created_by)
+        curator_session.add(x)
+    except Exception as e:
+        transaction.abort()
+        if curator_session:
+            curator_session.rollback()
+        returnValue = 'Insert locusallele_reference failed: ' + str(e.orig.pgerror)
+
+    return returnValue
+
 
 def add_phenotype_annotations(request):
 
@@ -738,7 +802,7 @@ def add_phenotype_annotations(request):
                 if str(allele).isdigit():
                     allele_id = int(allele)
                 else:
-                    returnValue = insert_allele(curator_session, CREATED_BY, source_id, allele)
+                    returnValue = insert_allele(curator_session, CREATED_BY, source_id, allele, mutant_id)
                     if str(returnValue).isdigit():
                         allele_id = returnValue
                         success_message = success_message + "<br>" + "The new allele '" + allele + "' has been added into the database. "
@@ -746,7 +810,7 @@ def add_phenotype_annotations(request):
                         return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             else:
                 return err
-
+            
         # return HTTPBadRequest(body=json.dumps({'error': "TEST-4"}), content_type='text/json') 
 
         ## adding reporter if it is not in the database yet
@@ -820,6 +884,18 @@ def add_phenotype_annotations(request):
 
             index = index + 1
 
+
+            ## adding allele and gene into locus_allele table if it is not there already
+            if allele_id is not None:
+                returnValue = insert_locus_allele(curator_session, dbentity_id, allele_id, source_id, CREATED_BY)
+                if str(returnValue).isdigit() is False:
+                    return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+                locus_allele_id = int(returnValue)
+                returnValue = insert_locusallele_reference(curator_session, reference_id, locus_allele_id, source_id, CREATED_BY)
+                if str(returnValue).isdigit() is False:
+                    return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+
+                
         transaction.commit()
         return HTTPOk(body=json.dumps({'success': success_message, 'phenotype': "PHENOTYPE"}), content_type='text/json')
     except Exception as e:
@@ -1130,7 +1206,7 @@ def update_phenotype_annotations(request):
                 if str(allele).isdigit():
                     allele_id = int(allele)
                 else:
-                    returnValue = insert_allele(curator_session, CREATED_BY, source_id, allele)
+                    returnValue = insert_allele(curator_session, CREATED_BY, source_id, allele, mutant_id)
                     if str(returnValue).isdigit():
                         allele_id = returnValue
                         success_message = success_message + "<br>" + "The new allele '" + allele + "' has been added into the database. "
@@ -1347,11 +1423,17 @@ def update_phenotype_annotations(request):
                     success_message = success_message + "<br>" + "The phenotypeannotation_cond row(s) have been updated for gene " + gene_name + "."
 
 
-                # return HTTPBadRequest(body=json.dumps({'error': "TEST - UPDATE CONDITIONS"}), content_type='text/json')
+            ## return HTTPBadRequest(body=json.dumps({'error': "TEST - UPDATE CONDITIONS"}), content_type='text/json')
+            if allele_id is not None:
+                returnValue = insert_locus_allele(curator_session, paRow.dbentity_id, allele_id, source_id, CREATED_BY)
+                if str(returnValue).isdigit() is False:
+                    return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+                locus_allele_id = int(returnValue)
+                returnValue = insert_locusallele_reference(curator_session, reference_id, locus_allele_id, source_id, CREATED_BY)
+                if str(returnValue).isdigit() is False:
+                    return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
 
-
-
-
+            
             if success_message == "" or success_message == NO_UPDATE_MESSAGE:
                 success_message = "Nothing is changed in the Phenotypeannotation and Phenotypeannotation_cond tables."
             success_message = success_message + "<br>DONE!"    
