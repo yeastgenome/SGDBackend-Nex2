@@ -2215,18 +2215,11 @@ class Referencedbentity(Dbentity):
             "downloadable_files": []
         }
 
-        # if self.pmid != None:
-        if self.pmid != None and self.journal_id:
+        if self.pmid != None:
             obj["journal"] = {
                 "med_abbr": self.journal.med_abbr
             }
 
-
-        return obj
-    
-
-            
-            
         datasets = DBSession.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
         obj["expression_datasets"] = [data.dataset.to_dict(self) for data in datasets]
 
