@@ -1574,7 +1574,7 @@ def allele(request):
     allele = request.matchdict['id'].replace('SGD:S', 'S')
     alleleObj = None
     if allele.startswith('S0'):
-	alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+        alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
     else:
         alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
 
