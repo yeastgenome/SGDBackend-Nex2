@@ -2215,7 +2215,7 @@ class Referencedbentity(Dbentity):
             "downloadable_files": []
         }
 
-        if self.pmid != None:
+        if self.pmid != None and self.journal_id:
             obj["journal"] = {
                 "med_abbr": self.journal.med_abbr
             }
