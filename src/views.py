@@ -19,7 +19,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -1567,6 +1567,73 @@ def complex(request):
         return complex.protein_complex_details()
     else:
         return {}
+
+@view_config(route_name='allele', renderer='json', request_method='GET')
+def allele(request):
+
+    allele = request.matchdict['id'].replace('SGD:S', 'S')
+    alleleObj = None
+    if allele.startswith('S0'):
+        alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+    else:
+        alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
+
+    if alleleObj is not None:
+        return alleleObj.to_dict()
+    else:
+        return {}
+
+@view_config(route_name='allele_phenotype_details', renderer='json', request_method='GET')
+def allele_phenotype_details(request):
+
+    allele = request.matchdict['id'].replace('SGD:S', 'S')
+
+    alleleObj = None
+    if allele.startswith('S0'):
+        alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+    else:
+        alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
+
+    if alleleObj is not None:
+        return alleleObj.phenotype_to_dict()
+    else:
+        return []
+    
+
+@view_config(route_name='allele_interaction_details', renderer='json', request_method='GET')
+def allele_interaction_details(request):
+
+    allele = request.matchdict['id'].replace('SGD:S', 'S')
+
+    alleleObj = None
+    if allele.startswith('S0'):
+        alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+    else:
+        alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
+
+    if alleleObj is not None:
+        return alleleObj.interaction_to_dict()
+    else:
+        return []
+
+
+@view_config(route_name='allele_network_graph', renderer='json', request_method='GET')
+def allele_network_graph(request):
+
+    allele = request.matchdict['id'].replace('SGD:S', 'S')
+
+    alleleObj = None
+    if allele.startswith('S0'):
+        alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+    else:
+        alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
+
+    if alleleObj is not None:
+        return alleleObj.allele_network()
+    else:
+        # return HTTPNotFound()
+        return []
+
 
 @view_config(route_name='alignment', renderer='json', request_method='GET')
 def alignment(request):

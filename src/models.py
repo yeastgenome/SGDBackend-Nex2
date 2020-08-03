@@ -27,7 +27,6 @@ from scripts.loading.util import link_gene_complex_names
 
 from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
-
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
@@ -106,21 +105,21 @@ class CacheBase(object):
 
 Base = declarative_base(cls=CacheBase)
 
-class Allele(Base):
-    __tablename__ = 'allele'
-    __table_args__ = {'schema': 'nex'}
+# class Allele(Base):
+#    __tablename__ = 'allele'
+#    __table_args__ = {'schema': 'nex'}
+#
+#    allele_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+#    format_name = Column(String(100), nullable=False, unique=True)
+#    display_name = Column(String(500), nullable=False)
+#    obj_url = Column(String(500), nullable=False)
+#    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+#    bud_id = Column(Integer)
+#    description = Column(String(500))
+#    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+#    created_by = Column(String(12), nullable=False)
 
-    allele_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    format_name = Column(String(100), nullable=False, unique=True)
-    display_name = Column(String(500), nullable=False)
-    obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    bud_id = Column(Integer)
-    description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
-    created_by = Column(String(12), nullable=False)
-
-    source = relationship('Source')
+#    source = relationship('Source')
 
 
 class Apo(Base):
@@ -2662,9 +2661,10 @@ class Referencedbentity(Dbentity):
             if curator_session:
                 curator_session.close()
 
+
     def get_all_annotations(self, username):
 
-        curator_session = None  
+        curator_session = None
         annotation_list = dict()
 
         self.returnValue = {
@@ -2673,7 +2673,7 @@ class Referencedbentity(Dbentity):
         }
         def helper(key,items):
             val = None
-            try:    
+            try:
                 obj = {}
                 values = []
                 for item in items:
@@ -2694,7 +2694,7 @@ class Referencedbentity(Dbentity):
                 if len(values) > 0:
                     obj[key] = values
                     self.returnValue['annotations'].append(obj)
-                
+
             except Exception as ex:
                 log.exception(ex)
 
@@ -2738,34 +2738,34 @@ class Referencedbentity(Dbentity):
 
             posttranslation_annot = curator_session.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Posttranslationannotation",posttranslation_annot)
-            
+
             proteindomain_annot = curator_session.query(Proteindomainannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Proteindomainannotation",proteindomain_annot)
 
             proteinexpt_annot = curator_session.query(Proteinexptannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Proteinexptannotation",proteinexpt_annot)
-            
+
             proteinseq_annot = curator_session.query(Proteinsequenceannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Proteinsequenceannotation",proteinseq_annot)
-            
+
             regulation_annot = curator_session.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).all()
             helper("Regulationannotation",regulation_annot)
 
             # Table that are not annotations.
             # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
             # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
-            
-            
-                
-            # this sets of table are not transfered/ delete 
+
+
+
+            # this sets of table are not transfered/ delete
 
             get_count(Geninteractionannotation,"Geninteractionannotation")
             get_count(Goannotation,"Goannotation")
             get_count(Physinteractionannotation,"Physinteractionannotation")
             get_count(ColleagueReference,"ColleagueReference")
-            get_count(CurationReference,"CurationReference")        
+            get_count(CurationReference,"CurationReference")
             get_count(DatasetReference,"DatasetReference")
-            get_count(LocusReferences,"LocusReferences")            
+            get_count(LocusReferences,"LocusReferences")
             get_count(LocusAliasReferences,"LocusAliasReferences")
             get_count(LocusnoteReference,"LocusnoteReference")
             get_count(LocusRelationReference,"LocusRelationReference")
@@ -2780,9 +2780,8 @@ class Referencedbentity(Dbentity):
             get_count(Referencetype,"Referencetype")
             get_count(Referenceunlink,"Referenceunlink")
             get_count(ReferenceFile,"ReferenceFile")
-            
-            
-            
+
+
             return self.returnValue
 
         except Exception as e:
@@ -2792,8 +2791,9 @@ class Referencedbentity(Dbentity):
             raise(e)
         finally:
             if curator_session:
-                curator_session.close()
+                curator_session.close()            
 
+                
 class FilePath(Base):
     __tablename__ = 'file_path'
     __table_args__ = {'schema': 'nex'}
@@ -3338,7 +3338,9 @@ class Locusdbentity(Dbentity):
 
         for dna in dnas:
             strain = Straindbentity.get_strains_by_taxon_id(dna.taxonomy_id)
-
+            so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
+            so_id = so.so_id
+            
             if len(strain) < 1:
                 continue
 
@@ -3349,7 +3351,7 @@ class Locusdbentity(Dbentity):
             start = max(1, midpoint - 5000)
             end = min(len(dna.contig.residues), start + 10000)
 
-            neighbors = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.dna_type == 'GENOMIC', Dnasequenceannotation.contig_id == dna.contig_id, Dnasequenceannotation.end_index >= start, Dnasequenceannotation.start_index <= end, ~Dnasequenceannotation.dbentity_id.in_(inactive_loci))).all()
+            neighbors = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.dna_type == 'GENOMIC', Dnasequenceannotation.so_id != so_id, Dnasequenceannotation.contig_id == dna.contig_id, Dnasequenceannotation.end_index >= start, Dnasequenceannotation.start_index <= end, ~Dnasequenceannotation.dbentity_id.in_(inactive_loci))).all()
 
             for neighbor in neighbors:
                 locus_ids.add(neighbor.dbentity_id)
@@ -6472,8 +6474,8 @@ class Dnasequenceannotation(Base):
 
         if len(strains) == 0:
             return None
-
-        if loci:
+        
+        if loci and self.dbentity.subclass == 'LOCUS':
             locus = loci[self.dbentity_id]
         else:
             locus = DBSession.query(Locusdbentity).filter_by(dbentity_id=self.dbentity_id).one_or_none()
@@ -6483,6 +6485,16 @@ class Dnasequenceannotation(Base):
             tags = DBSession.query(Dnasubsequence).filter_by(annotation_id=self.annotation_id).all()
 
         tags = sorted(tags, key=lambda t: t.contig_end_index, reverse=(self.strand == "-"))
+
+        if self.dbentity.subclass != 'LOCUS':
+            return {
+                "start": self.start_index,
+                "end": self.end_index,
+                "residues": self.residues,
+                "contig": self.contig.to_dict_sequence_widget(),
+                "strand": self.strand,
+                "dna_type": self.dna_type
+            }
 
         return {
             "start": self.start_index,
@@ -8423,7 +8435,7 @@ class Phenotypeannotation(Base):
     phenotype_id = Column(ForeignKey('nex.phenotype.phenotype_id', ondelete='CASCADE'), nullable=False, index=True)
     experiment_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
     mutant_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
-    allele_id = Column(ForeignKey('nex.allele.allele_id', ondelete='CASCADE'), index=True)
+    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), index=True)
     reporter_id = Column(ForeignKey('nex.reporter.reporter_id', ondelete='CASCADE'), index=True)
     assay_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), index=True)
     strain_name = Column(String(100))
@@ -8434,7 +8446,7 @@ class Phenotypeannotation(Base):
     allele_comment = Column(String(200))
     reporter_comment = Column(String(200))
 
-    allele = relationship('Allele')
+    allele = relationship('Alleledbentity', foreign_keys=[allele_id])
     assay = relationship('Obi')
     dbentity = relationship('Dbentity')
     experiment = relationship('Apo', primaryjoin='Phenotypeannotation.experiment_id == Apo.apo_id')
@@ -9617,6 +9629,448 @@ class Proteinabundanceannotation(Base):
         }
 
 
+class Alleledbentity(Dbentity):
+    __tablename__ = 'alleledbentity'
+    __table_args__ = {'schema': 'nex'}
+    __url_segment__ = '/allele/'
+
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
+    description = Column(String(500), nullable=True)
+
+    so = relationship('So')
+    
+    def to_dict(self):
+
+        obj = { "sgdid": self.sgdid,
+                "allele_type": self.so.display_name,
+                "description": self.description,
+        }
+        reference_mapping = {}
+        ref_order = 1
+        obj["name"] = self.get_name(reference_mapping, ref_order)
+        obj['aliases'] = self.get_aliases(reference_mapping, ref_order)
+        obj['affected_gene'] = self.get_gene_name_info(reference_mapping, ref_order)     
+        obj['phenotype'] = self.phenotype_to_dict()
+        obj['interaction'] = self.interaction_to_dict()
+        obj['network_graph'] = self.allele_network()
+        obj['references'] = self.get_references()
+        obj['urls'] = self.get_resource_urls()
+        obj["reference_mapping"] = reference_mapping
+        
+        return obj
+
+    def get_name(self, reference_mapping, ref_order):
+        
+        references = []
+        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id).all()
+        for x in alleleRefs:
+            reference = x.reference.to_dict_citation()
+            references.append(reference)
+            if reference["id"] not in reference_mapping:
+                reference_mapping[reference["id"]] = ref_order
+                ref_order += 1
+
+        return { "display_name": self.display_name,
+                 "references": references }
+
+    def get_resource_urls(self):
+        
+        gene_name = self.get_gene_name()
+                
+        locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name == gene_name, Locusdbentity.systematic_name == gene_name)).one_or_none()
+        if locus is None:
+            return []
+
+        obj = locus.to_dict()
+        allUrls = obj['urls']
+        urls = []
+        for x in allUrls:
+            if x['category'] in ['LOCUS_PHENOTYPE_RESOURCES_MUTANT_STRAINS', 'LOCUS_PHENOTYPE_RESOURCES_PHENOTYPE_RESOURCES', 'LOCUS_PHENOTYPE_RESOURCES_ONTOLOGY', 'LOCUS_INTERACTION']:
+                urls.append(x)
+        return urls
+    
+    
+    def get_references(self):
+
+        references = []
+        found = {}
+        # allele_reference
+        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id).all()
+        for x in alleleRefs:
+            references.append(x.reference.to_dict_citation())
+            found[x.reference.dbentity_id] = 1
+            
+        # allelealias_reference
+        alleleAliases = DBSession.query(AlleleAlias).filter_by(allele_id=self.dbentity_id).all()
+        for x in alleleAliases:
+            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            for x in allelealiasRefs:
+                if x.reference.dbentity_id not in found:
+                    references.append(x.reference.to_dict_citation())
+                    found[x.reference.dbentity_id] = 1
+            
+        # locusallele_reference
+        locusAllele = DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).one_or_none()
+        if locusAllele is not None:
+            locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(locus_allele_id=locusAllele.locus_allele_id).all()
+            for x in locusalleleRefs:
+                if x.reference.dbentity_id not in found:
+                    references.append(x.reference.to_dict_citation())
+        return references
+
+    def interaction_to_dict(self):
+
+        interaction_ids = DBSession.query(AlleleGeninteraction.interaction_id).distinct(AlleleGeninteraction.interaction_id).filter_by(allele_id=self.dbentity_id).all()
+        
+        annotations = DBSession.query(Geninteractionannotation).filter(Geninteractionannotation.annotation_id.in_(interaction_ids)).all()
+                    
+        obj = []
+        for annotation in annotations:
+            obj.append(annotation.to_dict())
+
+        return obj
+
+    
+    def phenotype_to_dict(self):
+        
+        annotations = DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all()
+        
+        obj = []
+        for annotation in annotations:
+            obj += annotation.to_dict()
+
+        return obj
+
+
+    def get_gene_name(self):
+
+        la = DBSession.query(LocusAllele).filter_by(allele_id = self.dbentity_id).one_or_none()
+        if la is None:
+            return ''
+        return la.locus.display_name
+    
+    def get_gene_name_info(self, reference_mapping, ref_order):
+        
+        gene = self.get_gene_name()
+        if gene is None:
+            return { "display_name": '',
+                     "references": [] }
+        
+        locusAllele = DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).one_or_none()
+        references = []
+        if locusAllele is not None:
+            locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(locus_allele_id=locusAllele.locus_allele_id).all()
+            for x in locusalleleRefs:
+                reference = x.reference.to_dict_citation()
+                references.append(reference)
+                if reference["id"] not in reference_mapping:
+                    reference_mapping[reference["id"]] = ref_order
+                    ref_order += 1
+                                    
+        return { "display_name": gene,
+                 "references": references }
+
+    
+    def get_aliases(self, reference_mapping, ref_order):
+
+        alleleAliases = DBSession.query(AlleleAlias).filter_by(allele_id = self.dbentity_id).all()
+        objs = []
+        for x in alleleAliases:
+            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            references = []
+            for x in allelealiasRefs:
+                reference = x.reference.to_dict_citation()
+                references.append(reference)
+                if reference["id"] not in reference_mapping:
+                    reference_mapping[reference["id"]] = ref_order
+                    ref_order += 1
+            objs.append({ "display_name": x.alias.display_name,
+                          "references": references })
+        return objs
+
+    def allele_network(self):
+
+        network_nodes =[]
+        network_edges =[]
+
+        network_nodes_ids = {}
+        network_edges_added = {}
+
+        network_nodes.append({
+            "name": self.display_name,
+            "id": self.format_name,
+            "href": "/allele/" + self.format_name,
+            "category": "FOCUS",
+        })
+        network_nodes_ids[self.format_name] = True
+
+        ## phenotype
+                
+        phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all()
+        allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(Dbentity).filter_by(subclass='ALLELE').all()])
+
+        allele_key_to_phenotype_list = {}
+        
+        for p in phenotype_annotations:
+            if p.allele_id is None:
+                continue
+
+            ## one phenotype = combination of phenotype_id, experiment_id, mutant_id, taxonomy_id
+            ## in order to show up in the diagram, other allele nodes have to share
+            ## at least two phenotypes with the focus one
+
+            pheno_id = "phenotype_" + str(p.phenotype_id) + "_"	+ str(p.experiment_id) + "_" + str(p.mutant_id) + "_" + str(p.taxonomy_id)
+
+            other_annotations = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=p.phenotype_id, experiment_id=p.experiment_id, mutant_id=p.mutant_id, taxonomy_id=p.taxonomy_id).all()
+                
+            for x in other_annotations:
+                if x.allele_id is None:
+                    continue
+                if x.allele_id == self.dbentity_id:
+                    continue
+                allele_display_name = allele_id_to_name.get(x.allele_id)
+                if allele_display_name is None:
+                    continue
+                allele_format_name = allele_display_name.replace(' ', '_')
+                phenotype_list = []
+                allele_key = (allele_display_name, allele_format_name, "/allele/" + allele_format_name)
+                if allele_key in allele_key_to_phenotype_list:
+                    phenotype_list = allele_key_to_phenotype_list[allele_key]
+                phenotype_key = (p.phenotype.display_name, pheno_id, p.phenotype.obj_url)
+                if phenotype_key not in phenotype_list:
+                    phenotype_list.append(phenotype_key)
+                    allele_key_to_phenotype_list[allele_key] = phenotype_list
+                
+        for key in allele_key_to_phenotype_list:
+            phenotype_list = allele_key_to_phenotype_list[key]
+            if len(phenotype_list) > 1:
+                (allele_display_name, allele_format_name, allele_link) = key                
+                if allele_format_name not in network_nodes_ids:
+                    network_nodes.append({
+                        "name": allele_display_name,
+                        "id": allele_format_name,
+                        "href": allele_link,
+                        "category": "ALLELE",
+                    })
+                    network_nodes_ids[allele_format_name] = True
+                for phenotype in phenotype_list:
+                    (pheno_display_name, pheno_id, pheno_link) = phenotype
+                    if pheno_id not in network_nodes_ids:
+                        network_nodes.append({
+                            "name": pheno_display_name,
+                            "id": pheno_id,
+                            "href": pheno_link,
+                            "category": "PHENOTYPE",
+                        })
+                        network_nodes_ids[pheno_id] = True
+                    if (self.format_name, pheno_id) not in network_edges_added:
+                        network_edges.append({
+                            "source": self.format_name,
+                            "target": pheno_id
+                        })
+                        network_edges_added[(self.format_name, pheno_id)] = True
+                    if (allele_format_name, pheno_id) not in network_edges_added:
+                        network_edges.append({
+                            "source": allele_format_name,
+                            "target": pheno_id
+                        })
+                        network_edges_added[(allele_format_name, pheno_id)] = True
+                                        
+        ## interaction 
+
+        allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(Dbentity).filter_by(subclass='ALLELE').all()])
+        
+        interaction_ids = DBSession.query(AlleleGeninteraction.interaction_id).distinct(AlleleGeninteraction.interaction_id).filter_by(allele_id=self.dbentity_id).all()
+             
+        allAlleleIds = DBSession.query(AlleleGeninteraction.allele_id).distinct(AlleleGeninteraction.allele_id).filter(AlleleGeninteraction.interaction_id.in_(interaction_ids)).all()
+        
+        curr_allele = self.display_name
+        
+        for row in allAlleleIds:
+            
+            allele_id = row[0]
+            if allele_id == self.dbentity_id:
+                continue
+            other_allele = allele_id_to_name.get(allele_id)
+            if other_allele is None:                
+                continue
+
+            allele_format_name = other_allele.replace(' ', '_')
+            interaction_format_name = curr_allele + "|" + allele_format_name
+
+            if interaction_format_name not in network_nodes_ids:
+                network_nodes.append({
+                    "name": '',
+                    "id": interaction_format_name,
+                    "href": '/allele/' + allele_format_name,
+                    "category": "INTERACTION",
+                })
+                network_nodes_ids[interaction_format_name] = True
+            if allele_format_name not in network_nodes_ids:
+                network_nodes.append({
+                    "name": other_allele,
+                    "id": allele_format_name,
+                    "href": "/allele/" + allele_format_name,
+                    "category": "ALLELE",
+                })
+                network_nodes_ids[allele_format_name] = True      
+            if (self.format_name, interaction_format_name) not in network_edges_added:
+                network_edges.append({
+                    "source": self.format_name,
+                    "target": interaction_format_name
+                })
+                network_edges_added[(self.format_name, interaction_format_name)] = True
+            if (allele_format_name, interaction_format_name) not in network_edges_added:
+                network_edges.append({
+                    "source": allele_format_name,
+                    "target": interaction_format_name
+                })
+                network_edges_added[(allele_format_name, interaction_format_name)] = True
+
+        data = { "edges": network_edges, "nodes": network_nodes }
+        
+        return data
+
+    
+class AlleleReference(Base):
+    __tablename__ = 'allele_reference'
+    __table_args__ = (
+        UniqueConstraint('allele_id', 'reference_id'),
+        {'schema': 'nex'}
+    )
+
+    allele_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    allele = relationship('Alleledbentity')
+    source = relationship('Source')
+    reference = relationship('Referencedbentity')
+    
+class AlleleGeninteraction(Base):
+    __tablename__ = 'allele_geninteraction'
+    __table_args__ = (
+        UniqueConstraint('allele_id', 'interaction_id'),
+        {'schema': 'nex'}
+    )
+
+    allele_geninteraction_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    interaction_id = Column(ForeignKey('nex.geninteractionannotation.annotation_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    allele = relationship('Alleledbentity')
+    source = relationship('Source')
+    interaction = relationship('Geninteractionannotation')
+
+    
+class AlleleAlias(Base):
+    __tablename__ = 'allele_alias'
+    __table_args__ = (
+        UniqueConstraint('allele_id', 'display_name', 'alias_type'),
+        {'schema': 'nex'}
+    )
+
+    allele_alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    display_name = Column(String(500), nullable=False)
+    obj_url = Column(String(500), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    alias_type = Column(String(40), nullable=False)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    allele = relationship('Alleledbentity')
+    source = relationship('Source')
+
+class AllelealiasReference(Base):
+    __tablename__ = 'allelealias_reference'
+    __table_args__ = (
+        UniqueConstraint('allele_alias_id', 'reference_id'),
+        {'schema': 'nex'}
+    )
+
+    allelealias_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    allele_alias_id = Column(ForeignKey('nex.allele_alias.allele_alias_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    alias = relationship('AlleleAlias')
+    source = relationship('Source')
+    reference = relationship('Referencedbentity')
+
+class LocusAllele(Base):
+    __tablename__ = 'locus_allele'
+    __table_args__ = (
+        UniqueConstraint('locus_id', 'allele_id'),
+        {'schema': 'nex'}
+    )
+
+    locus_allele_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    locus = relationship('Locusdbentity')
+    source = relationship('Source')
+    allele = relationship('Alleledbentity')
+
+class LocusalleleReference(Base):
+    __tablename__ = 'locusallele_reference'
+    __table_args__ = (
+	UniqueConstraint('locus_allele_id', 'reference_id'),
+        {'schema': 'nex'}
+    )
+
+    locusallele_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    locus_allele_id = Column(ForeignKey('nex.locus_allele.locus_allele_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    locusallele = relationship('LocusAllele')
+    source = relationship('Source')
+    reference = relationship('Referencedbentity')
+
+class Transcriptdbentity(Dbentity):
+    __tablename__ = 'transcriptdbentity'
+    __table_args__ = {'schema': 'nex'}
+    __url_segment__ = '/transcript/'
+
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    condition_name = Column(String(50), nullable=True)
+    condition_value = Column(String(50), nullable=True)
+    in_ncbi = Column(Boolean, nullable=False)
+
+class TranscriptReference(Base):
+    __tablename__ = 'transcript_reference'
+    __table_args__ = (
+        UniqueConstraint('transcript_id', 'reference_id'),
+        {'schema': 'nex'}
+    )
+
+    transcript_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    transcript_id = Column(ForeignKey('nex.transcriptdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    transcript = relationship('Transcriptdbentity')
+    source = relationship('Source')
+    reference = relationship('Referencedbentity')
+    
 class Complexdbentity(Dbentity):
     __tablename__ = 'complexdbentity'
     __table_args__ = {'schema': 'nex'}
