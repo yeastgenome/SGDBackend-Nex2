@@ -36,7 +36,7 @@ COMMENT ON COLUMN nex.dbentity.dbentity_status IS 'Current state of the dbentity
 COMMENT ON COLUMN nex.dbentity.subclass IS 'What object inherits from DBENTITY (DBENTITY, FILE, LOCUS, REFERENCE, STRAIN, PATHWAY, ALLELE).';
 COMMENT ON COLUMN nex.dbentity.date_created IS 'Date the record was entered into the database.';
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_uk UNIQUE (format_name,subclass);
-ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_subclass_ck CHECK (SUBCLASS IN ('FILE','LOCUS','REFERENCE','STRAIN', 'PATHWAY', 'ALLELE', 'COMPLEX'));
+ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_subclass_ck CHECK (SUBCLASS IN ('COMPLEX','FILE','LOCUS','REFERENCE','STRAIN', 'PATHWAY', 'ALLELE', 'TRANSCRIPT'));
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_status_ck CHECK (DBENTITY_STATUS IN ('Active','Merged','Deleted','Archived'));
 CREATE INDEX dbentity_source_fk_index ON nex.dbentity (source_id);
 CREATE UNIQUE INDEX dbentity_sgdid_index ON nex.dbentity (sgdid);
@@ -1097,7 +1097,10 @@ CREATE INDEX allelealias_source_fk_index ON nex.allele_alias (source_id);
 DROP TABLE IF EXISTS nex.allele_geninteraction CASCADE;
 CREATE TABLE nex.allele_geninteraction(
     allele_geninteraction_id bigint NOT NULL DEFAULT nextval('link_seq'),
-    allele_id bigint NOT NULL,
+    allele1_id bigint NOT NULL,
+	allele2_id bigint NOT NULL,
+	sgd_score numeric,
+    pvalue numeric,
     interaction_id bigint NOT NULL,
     source_id bigint NOT NULL,
     date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1106,12 +1109,13 @@ CREATE TABLE nex.allele_geninteraction(
 ) ;
 COMMENT ON TABLE nex.allele_geninteraction IS 'Interactions associated with a allele.';
 COMMENT ON COLUMN allele_geninteraction.date_created IS 'Date the record was entered into the database.';
-COMMENT ON COLUMN nex.allele_geninteraction.allele_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele1_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele2_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
 COMMENT ON COLUMN nex.allele_geninteraction.allele_reference_id IS 'Unique identifier (serial number).';
 COMMENT ON COLUMN nex.allele_geninteraction.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.allele_geninteraction.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.allele_geninteraction.interaction_id IS 'FK to GENINTERACTION.ANNOTATION_ID.';
-ALTER TABLE nex.allele_geninteractionannotation ADD CONSTRAINT allele_geninteractionannotation_uk UNIQUE (allele_id,interaction_id);
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allele_geninteraction_uk UNIQUE (allele1_id,allele2_id,interaction_id);
 CREATE INDEX allelegeninteraction_source_fk_index ON nex.allele_geninteraction (source_id);
 CREATE INDEX allelegeninteraction_int_fk_index ON nex.allele_geninteraction(interaction_id);
 
