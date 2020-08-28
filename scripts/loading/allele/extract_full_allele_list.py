@@ -14,12 +14,6 @@ allele_to_id = dict([(x.display_name.upper(), x.dbentity_id) for x in nex_sessio
 reference_id_to_pmid =  dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
 
 all = nex_session.query(Geninteractionannotation).filter(Geninteractionannotation.description.like('%|alleles:%')).filter(Geninteractionannotation.description.like('%[SGA score%')).all()
-
-allele_to_skip = {}
-f = open("scripts/loading/allele/data/genInteractionAlleles2NOTload072020.tsv")
-for line in f:
-    allele_to_skip[line.strip().upper()] = 1
-f.close()
     
 for x in all:
     (orf, gene) = locus_id_to_names.get(x.dbentity1_id)
@@ -50,54 +44,39 @@ for x in all:
                 type = 'negative'
             if type is None:
                 continue
-            
-            if allele1 in allele_to_skip:
-                allele1 = None
-            if allele2 in allele_to_skip:
-                allele2 = None
-            if allele1 is None and allele2 is None:
-                continue
 
-            if allele1 is not None:
-                if allele1.upper() == gene.upper() or allele1.upper() == gene2.upper():
-                # if allele1 in [gene.upper(), gene2.upper(), orf.upper(), orf2.upper()]:
+            if allele1.upper() == gene.upper() or allele1.upper() == gene2.upper() or allele1.upper() == orf.upper() or allele1.upper() == orf2.upper():
+                allele1 = allele1 + "_Δ"
+            if allele2.upper() == gene.upper() or allele2.upper() == gene2.upper() or allele2.upper() == orf.upper() or allele2.upper() == orf2.upper():
+                allele2 = allele2 + "_Δ"
+                
+            if not allele1.upper().startswith(gene.upper()) and not allele1.upper().startswith(gene2.upper()) and not allele1.upper().startswith(orf.upper()) and not allele1.upper().startswith(orf2.upper()):
+                pieces = allele1.split('-')  
+                locus_id = alias_to_locus_id.get(pieces[0].upper())
+                if locus_id is None:
                     allele1 = None
-                elif not allele1.upper().startswith(gene.upper()) and not allele1.upper().startswith(gene2.upper()):
-                    pieces = allele1.split('-')
-                    if len(pieces) == 1:
+                else:
+                    (thisOrf, thisGene) = locus_id_to_names.get(locus_id)
+                    if thisOrf == orf:
+                        allele1 = gene.lower() + "-(" + allele1 + ")"
+                    elif thisOrf == orf2:
+                        allele1 = gene2.lower() + "-(" + allele1 + ")"
+                    else:
                         allele1 = None
-                    else:
-                        locus_id = alias_to_locus_id.get(pieces[0].upper())
-                        if locus_id is None:
-                            allele1 = None
-                        else:
-                            (thisOrf, thisGene) = locus_id_to_names.get(locus_id)
-                            if thisOrf == orf:
-                                allele1 = gene.lower() + "-(" + allele1 + ")"
-                            elif thisOrf == orf2:
-                                allele1 = gene2.lower() + "-(" + allele1 + ")"
-                            else:
-                                allele1 = None
-            if allele2 is not None:
-                if allele2.upper() == gene.upper() or allele2.upper() == gene2.upper():
-                # if allele2 in [gene.upper(), gene2.upper(), orf.upper(), orf2.upper()]:
+                                
+            if not allele2.upper().startswith(gene.upper()) and not allele2.upper().startswith(gene2.upper()) and not allele2.upper().startswith(orf.upper()) and not allele2.upper().startswith(orf2.upper()):
+                pieces = allele2.split('-')
+                locus_id = alias_to_locus_id.get(pieces[0].upper())
+                if locus_id is None:
                     allele2 = None
-                elif not allele2.upper().startswith(gene.upper()) and not allele2.upper().startswith(gene2.upper()):
-                    pieces = allele2.split('-')
-                    if len(pieces) == 1:
-                        allele2 = None
+                else:
+                    (thisOrf, thisGene) = locus_id_to_names.get(locus_id)
+                    if thisOrf == orf:
+                        allele2 = gene.lower() + "-(" + allele2 + ")"
+                    elif thisOrf == orf2:
+                        allele2 = gene2.lower() + "-(" + allele2 + ")"
                     else:
-                        locus_id = alias_to_locus_id.get(pieces[0].upper())
-                        if locus_id is None:
-                            allele2 = None
-                        else:
-                            (thisOrf, thisGene) = locus_id_to_names.get(locus_id)
-                            if thisOrf == orf:
-                                allele2 = gene.lower() + "-(" + allele2 + ")"
-                            elif thisOrf == orf2:
-                                allele2 = gene2.lower() + "-(" + allele2 + ")"
-                            else:
-                                allele2 = None
+                        allele2 = None
                                     
             # if allele1 is None or allele2 is None:
             if allele1 is None and allele2 is None: 

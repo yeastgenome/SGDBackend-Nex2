@@ -19,7 +19,9 @@ def load_data():
 
     log.info(str(datetime.now()))
     log.info("Getting data from database...")
-    
+
+    allele_to_dbentity_id = dict([(x.display_name.upper(), x.dbentity_id) for x in nex_session.query(Dbentity).filter_by(subclass='ALLELE').all()])
+
     source = nex_session.query(Source).filter_by(display_name='SGD').one_or_none()
     source_id = source.source_id
     so = nex_session.query(So).filter_by(display_name='structural variant').one_or_none()
@@ -29,9 +31,12 @@ def load_data():
 
     allAllele = nex_session.query(Allele).all()
     for x in allAllele:
+        if x.display_name.upper() in allele_to_dbentity_id:
+            continue
         log.info("adding alleledbentiy: " + x.display_name + "...")
         insert_alleledbentity(nex_session, x.format_name, x.display_name, x.description,
                               source_id, so_id, x.date_created, x.created_by)
+        count = count + 1
         if count >= 300:
             # nex_session.rollback()  
             nex_session.commit()
