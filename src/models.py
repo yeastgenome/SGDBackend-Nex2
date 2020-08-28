@@ -9951,7 +9951,7 @@ class Alleledbentity(Dbentity):
                 network_nodes.append({
                     "name": '',
                     "id": interaction_format_name,
-                    "href": '/allele/' + interaction_format_name,
+                    "href": '',
                     "category": "INTERACTION",
                 })
                 network_nodes_ids[interaction_format_name] = True
