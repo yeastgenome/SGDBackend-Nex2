@@ -7001,7 +7001,7 @@ class Geninteractionannotation(Base):
 
         obj = {
             "id": self.annotation_id,
-            "note": self.description,
+            "note": self.description.split('|')[0],
             "bait_hit": self.bait_hit,
             "locus1": {
                 "id": self.dbentity1_id,
