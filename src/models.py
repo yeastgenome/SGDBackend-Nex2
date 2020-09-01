@@ -6999,9 +6999,13 @@ class Geninteractionannotation(Base):
         if reference is None:
             reference = self.reference
 
+        note = self.description
+        if note:
+            note = self.description.split('|')[0]
+            
         obj = {
             "id": self.annotation_id,
-            "note": self.description.split('|')[0],
+            "note": note,
             "bait_hit": self.bait_hit,
             "locus1": {
                 "id": self.dbentity1_id,
