@@ -168,7 +168,7 @@ COMMENT ON COLUMN nex.chebi_alias.alias_id IS 'Unique identifier (serial number)
 COMMENT ON COLUMN nex.chebi_alias.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.chebi_alias.created_by IS 'Username of the person who entered the record into the database.';
 ALTER TABLE nex.chebi_alias ADD CONSTRAINT chebi_alias_uk UNIQUE (chebi_id,display_name,alias_type);
-ALTER TABLE nex.chebi_alias ADD CONSTRAINT chebialias_type_ck CHECK (ALIAS_TYPE IN ('EXACT','RELATED','Secondary ChEBI ID','IUPAC name'));
+ALTER TABLE nex.chebi_alias ADD CONSTRAINT chebialias_type_ck CHECK (ALIAS_TYPE IN ('EXACT','RELATED','Secondary ChEBI ID','IUPAC name', 'PharmGKB ID', 'YeastPathway ID'));
 CREATE INDEX chebialias_source_fk_index ON nex.chebi_alias (source_id);
 
 DROP TABLE IF EXISTS nex.chebi_url cascade;

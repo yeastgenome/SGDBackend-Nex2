@@ -7,12 +7,12 @@ SET client_encoding TO 'UTF8';
 \set ON_ERROR_STOP ON
 
 -- Set privilege on TABLE ALLELE
-ALTER TABLE nex.allele OWNER TO nex;
-GRANT ALL ON nex.allele TO nex;
-REVOKE ALL ON nex.allele FROM PUBLIC;
-GRANT SELECT,INSERT,UPDATE,DELETE ON nex.allele TO curator;
-GRANT SELECT ON nex.allele TO PUBLIC;
-GRANT SELECT ON nex.allele TO DBSELECT;
+ALTER TABLE nex.alleledbentity OWNER TO nex;
+GRANT ALL ON nex.alleledbentity TO nex;
+REVOKE ALL ON nex.alleledbentity FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.alleledbentity TO curator;
+GRANT SELECT ON nex.alleledbentity TO PUBLIC;
+GRANT SELECT ON nex.alleledbentity TO DBSELECT;
 
 -- Set privilege on TABLE APO
 ALTER TABLE nex.apo OWNER TO nex;
@@ -1286,3 +1286,69 @@ grant select on all sequences in schema nex to curator;
 
 -- Set privilege on FUNCTIONS
 grant execute on all functions in schema nex to curator;
+
+
+-- Set privilege on TABLE TRANSCRIPTDBENTITY
+ALTER TABLE nex.transcriptdbentity OWNER TO nex;
+GRANT ALL ON nex.transcriptdbentity TO nex;
+REVOKE ALL ON nex.transcriptdbentity FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.transcriptdbentity TO curator;
+GRANT SELECT ON nex.transcriptdbentity TO PUBLIC;
+GRANT SELECT ON nex.transcriptdbentity TO DBSELECT;
+
+-- Set privilege on TABLE TRANSCRIPT_REFERENCE
+ALTER TABLE nex.transcript_reference OWNER TO nex;
+GRANT ALL ON nex.transcript_reference TO nex;
+REVOKE ALL ON nex.transcript_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.transcript_reference TO curator;
+GRANT SELECT ON nex.transcript_reference TO PUBLIC;
+GRANT SELECT ON nex.transcript_reference TO DBSELECT;
+
+
+-- Set privilege on Allele Tables
+ALTER TABLE nex.allele_reference OWNER TO nex;
+GRANT ALL ON nex.allele_reference TO nex;
+REVOKE ALL ON nex.allele_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.allele_reference TO curator;
+GRANT SELECT ON nex.allele_reference TO PUBLIC;
+GRANT SELECT ON nex.allele_reference TO DBSELECT;
+
+
+ALTER TABLE nex.allele_alias OWNER TO nex;
+GRANT ALL ON nex.allele_alias TO nex;
+REVOKE ALL ON nex.allele_alias FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.allele_alias TO curator;
+GRANT SELECT ON nex.allele_alias TO PUBLIC;
+GRANT SELECT ON nex.allele_alias TO DBSELECT;
+
+
+ALTER TABLE nex.locus_allele OWNER TO nex;
+GRANT ALL ON nex.locus_allele TO nex;
+REVOKE ALL ON nex.locus_allele FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.locus_allele TO curator;
+GRANT SELECT ON nex.locus_allele TO PUBLIC;
+GRANT SELECT ON nex.locus_allele TO DBSELECT;
+
+
+ALTER TABLE nex.locusallele_reference OWNER TO nex;
+GRANT ALL ON nex.locusallele_reference TO nex;
+REVOKE ALL ON nex.locusallele_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.locusallele_reference TO curator;
+GRANT SELECT ON nex.locusallele_reference TO PUBLIC;
+GRANT SELECT ON nex.locusallele_reference TO DBSELECT;
+
+
+-- Set privilege on TABLE ALLELEALIAS_REFERENCE
+ ALTER TABLE nex.allelealias_reference OWNER TO nex;
+GRANT ALL ON nex.allelealias_reference TO nex;
+REVOKE ALL ON nex.allelealias_reference FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.allelealias_reference TO curator;
+GRANT SELECT ON nex.allelealias_reference TO PUBLIC;
+GRANT SELECT ON nex.allelealias_reference TO DBSELECT;
+
+ALTER TABLE nex.allele_geninteraction OWNER TO nex;
+GRANT ALL ON nex.allele_geninteraction TO nex;
+REVOKE ALL ON nex.allele_geninteraction FROM PUBLIC;
+GRANT SELECT,INSERT,UPDATE,DELETE ON nex.allele_geninteraction TO curator;
+GRANT SELECT ON nex.allele_geninteraction TO PUBLIC;
+GRANT SELECT ON nex.allele_geninteraction TO DBSELECT;

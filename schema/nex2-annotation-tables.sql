@@ -383,7 +383,7 @@ CREATE TABLE nex.goannotation (
 	go_id bigint NOT NULL,
 	eco_id bigint NOT NULL,
 	annotation_type varchar(40) NOT NULL,
-	go_qualifier varchar(40) NOT NULL,
+	go_qualifier varchar(100) NOT NULL,
 	date_assigned timestamp NOT NULL,
 	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	created_by varchar(12) NOT NULL,
@@ -573,7 +573,7 @@ COMMENT ON COLUMN nex.phenotypeannotation.assay_id IS 'FK to OBI.OBI_ID.';
 COMMENT ON COLUMN nex.phenotypeannotation.strain_name IS 'Additional information about the strain background.';
 COMMENT ON COLUMN nex.phenotypeannotation.experiment_id IS 'FK to APO.APO_ID.';
 COMMENT ON COLUMN nex.phenotypeannotation.taxonomy_id IS 'FK to TAXONOMY.TAXONOMY_ID.';
-COMMENT ON COLUMN nex.phenotypeannotation.allele_id IS 'FK to ALLELE.ALLELE_ID.';
+COMMENT ON COLUMN nex.phenotypeannotation.allele_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
 COMMENT ON COLUMN nex.phenotypeannotation.bud_id IS 'From BUD.PHENO_ANNOTATION.PHENO_ANNOTATION_NO.';
 COMMENT ON COLUMN nex.phenotypeannotation.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.phenotypeannotation.reporter_id IS 'FK to REPORTER.REPORTER_ID.';
