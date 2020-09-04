@@ -3314,12 +3314,12 @@ BEGIN
         PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'DBENTITY_ID'::text, OLD.dbentity_id, OLD.dbentity_id::text, NEW.dbentity_id::text, USER);
     END IF;
 
-    IF (OLD.condition_name != NEW.condition_name) THEN
-        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'CONDITION_NAME'::text, OLD.dbentity_id, OLD.condition_name, NEW.condition_name, USER);
+    IF (OLD.is_gal!= NEW.is_gal) THEN
+        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'IS_GAL'::text, OLD.dbentity_id, OLD.is_gal, NEW.is_gal, USER);
     END IF;
 
-    IF (OLD.condition_value != NEW.condition_value) THEN
-        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'CONDITION_VALUE'::text, OLD.dbentity_id, OLD.condition_value, NEW.condition_value, USER);
+    IF (OLD.is_ypd != NEW.is_ypd) THEN
+        PERFORM nex.insertupdatelog('TRANSCRIPTDBENTITY'::text, 'IS_YPD'::text, OLD.dbentity_id, OLD.is_ypd, NEW.is_ypd, USER);
     END IF;
 
     IF (OLD.in_ncbi != NEW.in_ncbi) THEN
@@ -3330,8 +3330,8 @@ BEGIN
 
   ELSIF (TG_OP = 'DELETE') THEN
 
-    v_row := OLD.dbentity_id || '[:]' || OLD.condition_name || '[:]' ||
-             OLD.condition_value || '[:]' || OLD.in_ncbi;
+    v_row := OLD.dbentity_id || '[:]' || OLD.is_gal || '[:]' ||
+             OLD.is_ypd || '[:]' || OLD.in_ncbi;
             PERFORM nex.insertdeletelog('TRANSCRIPTDBENTITY'::text, OLD.dbentity_id, v_row, USER);
 
      RETURN OLD;
@@ -3349,11 +3349,11 @@ CREATE OR REPLACE FUNCTION trigger_fct_transcriptdbentity_biur() RETURNS trigger
 BEGIN
   IF (TG_OP = 'INSERT') THEN
 
-    IF (NEW.condition_name IS NOT NULL) THEN
-        NEW.condition_name := upper(NEW.condition_name);
+    IF (NEW.is_gal IS NOT NULL) THEN
+        NEW.is_gal := upper(NEW.is_gal);
     END IF;
-    IF (NEW.condition_value IS NOT NULL) THEN
-        NEW.condition_value := upper(NEW.condition_value);
+    IF (NEW.is_ypd IS NOT NULL) THEN
+        NEW.is_ypd := upper(NEW.is_ypd);
     END IF;
 
     IF (NEW.in_ncbi IS NOT NULL) THEN
@@ -3368,11 +3368,11 @@ BEGIN
         RAISE EXCEPTION 'Primary key cannot be updated';
     END IF;
 
-    IF (NEW.condition_name IS NOT NULL) THEN
-        NEW.condition_name := upper(NEW.condition_name);
+    IF (NEW.is_gal IS NOT NULL) THEN
+        NEW.is_gal := upper(NEW.is_gal);
     END IF;
-    IF (NEW.condition_value IS NOT NULL) THEN
-        NEW.condition_value := upper(NEW.condition_value);
+    IF (NEW.is_ypd IS NOT NULL) THEN
+        NEW.is_ypd := upper(NEW.is_ypd);
     END IF;
 
     IF (NEW.in_ncbi IS NOT NULL) THEN

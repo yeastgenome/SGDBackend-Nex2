@@ -1001,8 +1001,8 @@ CREATE INDEX referencefile_source_fk_index ON nex.reference_file (source_id);
 DROP TABLE IF EXISTS nex.transcriptdbentity CASCADE; 
 CREATE TABLE nex.transcriptdbentity (
 	dbentity_id bigint NOT NULL DEFAULT nextval('object_seq'),
-	condition_name varchar(50) NOT NULL,
-	condition_value varchar(50) NOT NULL,
+	in_gal boolean NOT NULL,	
+	in_ypd boolean NOT NULL,
 	in_ncbi boolean NOT NULL,
 	CONSTRAINT transcriptdbentity_pk PRIMARY KEY (dbentity_id)
 ) ;
