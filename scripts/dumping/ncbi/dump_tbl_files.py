@@ -125,7 +125,10 @@ def dump_data():
     for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
         if x.contig_id not in contig_id_to_chrnum:
             continue
-        locus = dbentity_id_to_locus[x.dbentity_id]
+        locus = dbentity_id_to_locus.get(x.dbentity_id)
+        if locus is None:
+            ## transcript
+            continue
         if dbentity_id_to_status[x.dbentity_id] != 'Active':
             continue
         if locus.qualifier == 'Dubious':
@@ -137,7 +140,8 @@ def dump_data():
     log.info("Getting subfeatures from the database...")
 
     type_mapping = type_to_show()
-
+    ncRNA_class_mapping = ncRNA_class()
+    
     [annotation_id_to_cds_data, annotation_id_to_frameshift, annotation_id_to_cde_data] = get_cds_data(nex_session, annotation_id_to_strand, type_mapping)
 
     log.info(str(datetime.now()))
@@ -195,7 +199,7 @@ def dump_data():
             add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, 
                           gene_name, start, stop, desc, annotation_id_to_cds_data, 
                           go_section, go_to_pmid_list, type, feature_type, 
-                          locus_id_to_ncbi_protein_name)
+                          locus_id_to_ncbi_protein_name, ncRNA_class_mapping)
             continue
 
         if feature_type == 'centromere':
@@ -389,7 +393,7 @@ def add_NTS_features(files, chrnum, systematic_name, sgdid, start, stop, desc):
         files[chrnum].write(TABS + "note\t" + systematic_name + "\n") 
     files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
-def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, annotation_id_to_cds_data, go_section, go_to_pmid_list, type, feature_type, locus_id_to_ncbi_protein_name):
+def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, annotation_id_to_cds_data, go_section, go_to_pmid_list, type, feature_type, locus_id_to_ncbi_protein_name, ncRNA_class_mapping):
     
     files[chrnum].write(str(start)+"\t"+str(stop)+"\tgene\n")
 
@@ -414,8 +418,8 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
 
     if type == 'ncRNA':
         type = feature_type.replace("_gene", "").replace(" gene", "")
-        # class = ncRNA_class_mapping.get(gene_name, 'other')
-        files[chrnum].write(TABS + "ncRNA_class\tother\n")
+        rna_class = ncRNA_class_mapping.get(gene_name, 'other')
+        files[chrnum].write(TABS + "ncRNA_class\t" + rna_class + "\n")
         product = gene_name if gene_name else systematic_name
 
     if locus_id in locus_id_to_ncbi_protein_name:
@@ -547,12 +551,14 @@ def rpt_to_show():
              'LTR retrotransposon'             : 'Transposon' }
 
 
-# def ncRNA_class():
-#
-#    return { 'TLC1' : 'telomerase_RNA',
-#             'RPR1' : 'RNase_P_RNA',
-#             'SCR1' : 'SRP_RNA',
-#             'RPM1' : 'RNase_MRP_RNA' }
+def ncRNA_class():
+
+    return { 'TLC1' : 'telomerase_RNA',
+             'RPR1' : 'RNase_P_RNA',
+             'SCR1' : 'SRP_RNA',
+             'RME2' : 'antisense_RNA',
+             'RME3' : 'antisense_RNA',
+             'NME1' : 'RNase_MRP_RNA' }
 
 
 def open_file_handles():
