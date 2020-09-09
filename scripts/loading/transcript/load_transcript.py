@@ -39,7 +39,8 @@ def load_data():
     chr_to_contig = dict([(x.format_name, (x.contig_id, x.residues)) for x in nex_session.query(Contig).filter(Contig.format_name.like('Chromosome_%')).all()])
 
     count = 0
-    
+
+    found_transcript = {}
     for file in file_names:
         
         log.info("Loading data from " + file + "...")
@@ -68,6 +69,14 @@ def load_data():
         
             log.info("adding transcriptdbentiy: " + display_name + "...")
 
+            if (display_name, start, end) in found_transcript:
+                transcript_id = found_transcript[(display_name, start, end)]
+                if cond_name == 'gal':
+                    nex_session.query(Transcriptdbentity).filter_by(dbentity_id=transcript_id).update({"is_gal": '1'})
+                elif cond_name == 'ypd':
+                    nex_session.query(Transcriptdbentity).filter_by(dbentity_id=transcript_id).update({"is_ypd": '1'})
+                continue
+            
             transcript_id = insert_transcriptdbentity(nex_session, display_name, cond_name, cond_value, source_id)
         
             log.info("adding transcript_reference for transcript_id = " + str(transcript_id) + "...")
@@ -82,6 +91,8 @@ def load_data():
             
             insert_dnasequenceannotation(nex_session, transcript_id, source_id, taxonomy_id, so_id, contig_id, start, end, strand, file_header, download_filename, seq)
 
+            found_transcript[(display_name, start, end)] = transcript_id
+            
             if count >= 300:
                 # nex_session.rollback()  
                 nex_session.commit()
