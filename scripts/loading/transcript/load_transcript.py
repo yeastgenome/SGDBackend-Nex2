@@ -37,8 +37,18 @@ def load_data():
     reference = nex_session.query(Referencedbentity).filter_by(pmid=PMID).one_or_none()
     reference_id = reference.dbentity_id
     chr_to_contig = dict([(x.format_name, (x.contig_id, x.residues)) for x in nex_session.query(Contig).filter(Contig.format_name.like('Chromosome_%')).all()])
-
+    
     count = 0
+
+    dbentity_id_to_coords = dict([(x.dbentity_id, (x.start_index, x.end_index)) for x in nex_session.query(Dnasequenceannotation).filter_by(so_id=so_id).all()])
+
+    key_to_transcript_id = {}
+    for x in nex_session.query(Dbentity).filter_by(subclass='TRANSCRIPT').all():
+        if x.dbentity_id not in dbentity_id_to_coords:
+            continue
+        (start_index, end_index) = dbentity_id_to_coords.get(x.dbentity_id)
+        key = (x.display_name, start_index, end_index)
+        key_to_transcript_id[key] = x.dbentity_id
 
     found_transcript = {}
     for file in file_names:
@@ -66,18 +76,31 @@ def load_data():
             cond_name = transcript[0].split('=')[0]
             cond_value = transcript[0].split('=')[1]
             display_name = transcript[1].split("=")[1]
-        
+
+            is_gal = '0'
+            is_ypd = '0'
+            if cond_name == 'gal':
+                is_gal = '1'
+            elif cond_name == 'ypd':
+                is_ypd = '1'
+                
             log.info("adding transcriptdbentiy: " + display_name + "...")
 
-            if (display_name, start, end) in found_transcript:
-                transcript_id = found_transcript[(display_name, start, end)]
-                if cond_name == 'gal':
-                    nex_session.query(Transcriptdbentity).filter_by(dbentity_id=transcript_id).update({"is_gal": '1'})
-                elif cond_name == 'ypd':
-                    nex_session.query(Transcriptdbentity).filter_by(dbentity_id=transcript_id).update({"is_ypd": '1'})
+            key = (display_name, start, end) 
+            if key in found_transcript or key in key_to_transcript_id:
+                transcript_id = None
+                if key in found_transcript:
+                    transcript_id = found_transcript[key]
+                else:
+                    transcript_id = key_to_transcript_id[key]
+                if is_gal == '1':
+                    nex_session.query(Transcriptdbentity).filter_by(dbentity_id=transcript_id).update({"in_gal": '1'})
+                elif is_ypd == '1':
+                    nex_session.query(Transcriptdbentity).filter_by(dbentity_id=transcript_id).update({"in_ypd": '1'})
                 continue
-            
-            transcript_id = insert_transcriptdbentity(nex_session, display_name, cond_name, cond_value, source_id)
+
+            ## insert new transcript
+            transcript_id = insert_transcriptdbentity(nex_session, display_name, is_gal, is_ypd, source_id)
         
             log.info("adding transcript_reference for transcript_id = " + str(transcript_id) + "...")
             
@@ -94,14 +117,14 @@ def load_data():
             found_transcript[(display_name, start, end)] = transcript_id
             
             if count >= 300:
-                nex_session.rollback()  
-                # nex_session.commit()
+                # nex_session.rollback()  
+                nex_session.commit()
                 count = 0
             
         f.close()
         
-        nex_session.rollback()
-        # nex_session.commit()
+        # nex_session.rollback()
+        nex_session.commit()
         
     nex_session.close()
     log.info("Done!")
@@ -147,16 +170,16 @@ def insert_transcript_reference(nex_session, transcript_id, reference_id, source
 
     nex_session.add(x)
 
-def insert_transcriptdbentity(nex_session, display_name, cond_name, cond_value, source_id):
+def insert_transcriptdbentity(nex_session, display_name, is_gal, is_ypd, source_id):
     
-    x = Transcriptdbentity(format_name= display_name + "_" + cond_name,
+    x = Transcriptdbentity(format_name= display_name,
                            display_name = display_name,
                            source_id = source_id,
                            subclass = 'TRANSCRIPT',
                            dbentity_status = 'Active',
                            created_by = CREATED_BY,
-                           condition_name = cond_name,
-                           condition_value = cond_value,
+                           in_gal = is_gal,
+                           in_ypd = is_ypd,
                            in_ncbi = '0')
     
     nex_session.add(x)
