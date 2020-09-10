@@ -10116,8 +10116,8 @@ class Transcriptdbentity(Dbentity):
     __url_segment__ = '/transcript/'
 
     dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    condition_name = Column(String(50), nullable=True)
-    condition_value = Column(String(50), nullable=True)
+    in_gal = Column(Boolean, nullable=False)
+    in_ypd = Column(Boolean, nullable=False)
     in_ncbi = Column(Boolean, nullable=False)
 
 class TranscriptReference(Base):
