@@ -108,7 +108,7 @@ def load_data():
 
             seq = get_seq_from_chr(chrSeq, start, end, strand)
             file_header = display_name + " " + pieces[0] + ":" + str(start) + ".." + str(end)
-            download_filename = display_name + "_" + cond_name + ".fsa"
+            download_filename = display_name + ".fsa"
 
             log.info("adding dnasequenceannotation for transcript_id = " + str(transcript_id) + "...")
             
