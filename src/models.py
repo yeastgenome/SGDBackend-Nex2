@@ -1575,7 +1575,11 @@ class Contig(Base):
         return obj
 
     def sequence_details(self):
-        dnas = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC")).all()
+
+        so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
+        so_id = so.so_id
+        
+        dnas = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC", Dnasequenceannotation.so_id != so_id)).all()
 
         active_genomic_dna = []
         for dna in dnas:
