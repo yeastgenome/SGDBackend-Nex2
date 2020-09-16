@@ -120,7 +120,10 @@ def insert_allele_etc(nex_session, allele_name, gene1, name1, gene2, name2, refe
         if len(pieces) == 1:
             log.info("Warning: bad allele_name: " + allele_name)
             return None
-        gene = pieces[0]
+        if allele_name.endswith('-Δ'):
+            gene = allele_name.replace('-Δ', '')
+        else:
+            gene = pieces[0]
         
     locus_id = None
     if gene.upper() == gene1.upper() or gene.upper() == name1.upper():

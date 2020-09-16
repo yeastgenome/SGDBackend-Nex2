@@ -46,9 +46,9 @@ for x in all:
                 continue
 
             if allele1.upper() == gene.upper() or allele1.upper() == gene2.upper() or allele1.upper() == orf.upper() or allele1.upper() == orf2.upper():
-                allele1 = allele1 + "_Δ"
+                allele1 = allele1 + "-Δ"
             if allele2.upper() == gene.upper() or allele2.upper() == gene2.upper() or allele2.upper() == orf.upper() or allele2.upper() == orf2.upper():
-                allele2 = allele2 + "_Δ"
+                allele2 = allele2 + "-Δ"
                 
             if not allele1.upper().startswith(gene.upper()) and not allele1.upper().startswith(gene2.upper()) and not allele1.upper().startswith(orf.upper()) and not allele1.upper().startswith(orf2.upper()):
                 pieces = allele1.split('-')  
