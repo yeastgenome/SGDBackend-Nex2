@@ -418,7 +418,12 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
 
     if type == 'ncRNA':
         type = feature_type.replace("_gene", "").replace(" gene", "")
-        rna_class = ncRNA_class_mapping.get(gene_name, 'other')
+        rna_class = ncRNA_class_mapping.get(gene_name)
+        if rna_class is None:
+            if type == 'ncRNA':
+                rna_class = 'other'
+            else:
+                rna_class = type
         files[chrnum].write(TABS + "ncRNA_class\t" + rna_class + "\n")
         product = gene_name if gene_name else systematic_name
 

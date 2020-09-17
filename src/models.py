@@ -1548,9 +1548,11 @@ class Contig(Base):
         inactive_ids_raw = DBSession.query(Locusdbentity.dbentity_id).filter(Locusdbentity.dbentity_status != 'Active').all()
         inactive_ids = [d[0]for d in inactive_ids_raw]
 
+        so_id = get_transcript_so_id()
+        
         sequences = DBSession.\
             query(Dnasequenceannotation.so_id, func.count(Dnasequenceannotation.annotation_id)).\
-            filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC", Dnasequenceannotation.taxonomy_id == TAXON_ID, ~Dnasequenceannotation.dbentity_id.in_(inactive_ids))).\
+            filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC", Dnasequenceannotation.taxonomy_id == TAXON_ID, Dnasequenceannotation.so_id != so_id, ~Dnasequenceannotation.dbentity_id.in_(inactive_ids))).\
             group_by(Dnasequenceannotation.so_id).all()
         so_ids = set([ov[0] for ov in sequences])
         so = DBSession.query(So).filter(So.so_id.in_(list(so_ids))).all()
@@ -1576,8 +1578,7 @@ class Contig(Base):
 
     def sequence_details(self):
 
-        so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
-        so_id = so.so_id
+        so_id = get_transcript_so_id()
         
         dnas = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC", Dnasequenceannotation.so_id != so_id)).all()
 
@@ -3342,8 +3343,7 @@ class Locusdbentity(Dbentity):
 
         for dna in dnas:
             strain = Straindbentity.get_strains_by_taxon_id(dna.taxonomy_id)
-            so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
-            so_id = so.so_id
+            so_id = get_transcript_so_id()
             
             if len(strain) < 1:
                 continue
@@ -11729,6 +11729,7 @@ class Updatelog(Base):
     old_value = Column(Text)
     new_value = Column(Text)
 
+
 # should be valid genes (by standard name or systematic name) and should not be primary, additional, or review for same gene
 def validate_tags(tags):
     extra_tag_list = ['regulation_information', 'ptm', 'homology_disease', 'gene_model', 'pathways', 'engineering', 'alleles']
@@ -11844,3 +11845,7 @@ def convert_space_separated_pmids_to_list(str_pmids):
     str_list = str_pmids.split(SEPARATOR)
     int_list = [int(x) for x in str_list]
     return int_list
+
+def get_transcript_so_id():
+    so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
+    return so.so_id
