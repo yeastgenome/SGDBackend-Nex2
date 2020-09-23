@@ -2678,6 +2678,7 @@ class Referencedbentity(Dbentity):
         }
         def helper(key,items):
             val = None
+
             try:
                 obj = {}
                 values = []
@@ -2699,6 +2700,7 @@ class Referencedbentity(Dbentity):
                 if len(values) > 0:
                     obj[key] = values
                     self.returnValue['annotations'].append(obj)
+
 
             except Exception as ex:
                 log.exception(ex)
@@ -2760,14 +2762,11 @@ class Referencedbentity(Dbentity):
             # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
             # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
 
-
-
-            # this sets of table are not transfered/ delete
-
             get_count(Geninteractionannotation,"Geninteractionannotation")
             get_count(Goannotation,"Goannotation")
             get_count(Physinteractionannotation,"Physinteractionannotation")
             get_count(ColleagueReference,"ColleagueReference")
+
             get_count(CurationReference,"CurationReference")
             get_count(DatasetReference,"DatasetReference")
             get_count(LocusReferences,"LocusReferences")
@@ -2786,7 +2785,6 @@ class Referencedbentity(Dbentity):
             get_count(Referenceunlink,"Referenceunlink")
             get_count(ReferenceFile,"ReferenceFile")
 
-
             return self.returnValue
 
         except Exception as e:
@@ -2798,7 +2796,6 @@ class Referencedbentity(Dbentity):
             if curator_session:
                 curator_session.close()            
 
-                
 class FilePath(Base):
     __tablename__ = 'file_path'
     __table_args__ = {'schema': 'nex'}

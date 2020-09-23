@@ -918,7 +918,7 @@ def index_part_1():
     index_not_mapped_genes()
     index_strains()
     index_colleagues()
-    
+
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_downloads()
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
