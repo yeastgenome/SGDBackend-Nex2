@@ -6,7 +6,7 @@ SET client_encoding TO 'UTF8';
 
 \set ON_ERROR_STOP ON
 
--- Dbentity (Locus, Strain, File, Pathway, Reference)
+-- Dbentity (Locus, Strain, File, Pathway, Reference, Allele)
 
 DROP TABLE IF EXISTS nex.dbentity cascade;
 CREATE TABLE nex.dbentity (
@@ -33,10 +33,10 @@ COMMENT ON COLUMN nex.dbentity.dbentity_id IS 'Unique identifier (serial number)
 COMMENT ON COLUMN nex.dbentity.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.dbentity.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.dbentity.dbentity_status IS 'Current state of the dbentity (Active, Merged, Deleted, Archived).';
-COMMENT ON COLUMN nex.dbentity.subclass IS 'What object inherits from DBENTITY (DBENTITY, FILE, LOCUS, REFERENCE, STRAIN).';
+COMMENT ON COLUMN nex.dbentity.subclass IS 'What object inherits from DBENTITY (DBENTITY, FILE, LOCUS, REFERENCE, STRAIN, PATHWAY, ALLELE).';
 COMMENT ON COLUMN nex.dbentity.date_created IS 'Date the record was entered into the database.';
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_uk UNIQUE (format_name,subclass);
-ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_subclass_ck CHECK (SUBCLASS IN ('FILE','LOCUS','REFERENCE','STRAIN', 'PATHWAY'));
+ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_subclass_ck CHECK (SUBCLASS IN ('COMPLEX','FILE','LOCUS','REFERENCE','STRAIN', 'PATHWAY', 'ALLELE', 'TRANSCRIPT'));
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_status_ck CHECK (DBENTITY_STATUS IN ('Active','Merged','Deleted','Archived'));
 CREATE INDEX dbentity_source_fk_index ON nex.dbentity (source_id);
 CREATE UNIQUE INDEX dbentity_sgdid_index ON nex.dbentity (sgdid);
@@ -996,3 +996,188 @@ ALTER TABLE nex.reference_file ADD CONSTRAINT reference_file_uk UNIQUE (referenc
 ALTER TABLE nex.reference_file ADD CONSTRAINT reference_file_type_ck CHECK (FILE_TYPE IN ('Dataset','Supplemental'));
 CREATE INDEX referencefile_file_fk_index ON nex.reference_file (file_id);
 CREATE INDEX referencefile_source_fk_index ON nex.reference_file (source_id);
+
+
+DROP TABLE IF EXISTS nex.transcriptdbentity CASCADE; 
+CREATE TABLE nex.transcriptdbentity (
+	dbentity_id bigint NOT NULL DEFAULT nextval('object_seq'),
+	in_gal boolean NOT NULL,	
+	in_ypd boolean NOT NULL,
+	in_ncbi boolean NOT NULL,
+	CONSTRAINT transcriptdbentity_pk PRIMARY KEY (dbentity_id)
+) ;
+COMMENT ON TABLE nex.transcriptdbentity IS 'A transcript entity. Inherits from DBENTITY.';
+COMMENT ON COLUMN nex.transcriptdbentity.condition_name IS 'Condition name like YPD, GAL.';
+COMMENT ON COLUMN nex.transcriptdbentity.condition_value IS 'Condition value like YES or NO.';
+COMMENT ON COLUMN nex.transcriptdbentity.in_ncbi IS 'Dump for submitting to NCBI or not.';
+
+
+DROP TABLE IF EXISTS nex.transcript_reference CASCADE; 
+CREATE TABLE nex.transcript_reference (
+	transcript_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+	transcript_id bigint NOT NULL,
+	reference_id bigint NOT NULL,
+	source_id bigint NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT transcript_reference_pk PRIMARY KEY (transcript_reference_id)
+) ;
+COMMENT ON TABLE nex.transcript_reference IS 'References associatd with a transcript.';
+COMMENT ON COLUMN nex.transcript_reference.transcript_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.transcript_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.transcript_reference.transcript_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.transcript_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.transcript_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.transcript_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+CREATE INDEX transcriptreference_ref_fk_index ON nex.transcriptreference (reference_id);
+CREATE INDEX transcriptreference_source_fk_index ON nex.transcript_reference (source_id);
+
+
+DROP TABLE IF EXISTS nex.alleledbentity CASCADE;
+CREATE TABLE nex.alleledbentity (
+	dbentity_id bigint NOT NULL DEFAULT nextval('object_seq'),
+	allele_name varchar(500) NOT NULL,
+	description varchar(500),
+	structural_variant bigint NOT NULL,
+	CONSTRAINT alleledbentity_pk PRIMARY KEY (dbentity_id)
+) ;
+COMMENT ON TABLE nex.alleledbentity IS 'Gene variants or alleles that show observable phenotypic traits.';
+COMMENT ON COLUMN nex.alleledbentity.description IS 'Description or comment.';
+COMMENT ON COLUMN nex.alleledbentity.allele_name IS 'Public display name.';
+COMMENT ON COLUMN nex.alleledbentity.structural_variant IS 'Structural variant FK to SO.ID.';
+ALTER TABLE nex.alleledbentity ADD CONSTRAINT alleledbentity_uk UNIQUE (allele_name);
+
+
+DROP TABLE IF EXISTS nex.allele_reference CASCADE;
+CREATE TABLE nex.allele_reference (
+    allele_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    allele_id bigint NOT NULL,
+    reference_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT allele_reference_pk PRIMARY KEY (allele_reference_id)
+) ;
+COMMENT ON TABLE nex.allele_reference IS 'References associated with a allele.';
+COMMENT ON COLUMN nex.allele_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.allele_reference.allele_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_reference.allele_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.allele_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.allele_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.allele_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allele_reference_uk UNIQUE (allele_id,reference_id);
+CREATE INDEX allelereference_source_fk_index ON nex.allele_reference (source_id);
+CREATE INDEX allelereference_ref_fk_index ON nex.allele_reference (reference_id);
+
+
+DROP TABLE IF EXISTS nex.allele_alias CASCADE; 
+CREATE TABLE nex.allele_alias (
+	allele_alias_id bigint NOT NULL DEFAULT nextval('alias_seq'),
+	display_name varchar(500) NOT NULL,
+	obj_url varchar(500),
+	source_id bigint NOT NULL,
+	allele_id bigint NOT NULL,
+	alias_type varchar(40) NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT allele_alias_pk PRIMARY KEY (allele_alias_id)
+) ;
+COMMENT ON TABLE nex.allele_alias IS 'Other names, synonyms, or dbxrefs for a feature or gene.';
+COMMENT ON COLUMN nex.allele_alias.display_name IS 'Public display name.';
+COMMENT ON COLUMN nex.allele_alias.obj_url IS 'URL of the object (relative for local links or complete for external links).';
+COMMENT ON COLUMN nex.allele_alias.allele_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_alias.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.allele_alias.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.allele_alias.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.allele_alias.alias_type IS 'Type of alias or dbxref.';
+COMMENT ON COLUMN nex.allele_alias.allele_alias_id IS 'Unique identifier (serial number).';
+ALTER TABLE nex.allele_alias ADD CONSTRAINT allele_alias_uk UNIQUE (allele_alias_id,display_name,alias_type);
+CREATE INDEX allelealias_source_fk_index ON nex.allele_alias (source_id);
+
+DROP TABLE IF EXISTS nex.allele_geninteraction CASCADE;
+CREATE TABLE nex.allele_geninteraction(
+    allele_geninteraction_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    allele1_id bigint NOT NULL,
+	allele2_id bigint NOT NULL,
+	sgd_score numeric,
+    pvalue numeric,
+    interaction_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT allele_geninteraction_pk PRIMARY KEY (allele_geninteraction_id)
+) ;
+COMMENT ON TABLE nex.allele_geninteraction IS 'Interactions associated with a allele.';
+COMMENT ON COLUMN allele_geninteraction.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele1_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele2_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.allele_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.allele_geninteraction.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.allele_geninteraction.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.allele_geninteraction.interaction_id IS 'FK to GENINTERACTION.ANNOTATION_ID.';
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allele_geninteraction_uk UNIQUE (allele1_id,allele2_id,interaction_id);
+CREATE INDEX allelegeninteraction_source_fk_index ON nex.allele_geninteraction (source_id);
+CREATE INDEX allelegeninteraction_int_fk_index ON nex.allele_geninteraction(interaction_id);
+
+
+
+DROP TABLE IF EXISTS nex.locus_allele CASCADE; 
+CREATE TABLE nex.locus_allele (
+	locus_allele_id bigint NOT NULL DEFAULT nextval('alias_seq'),
+	source_id bigint NOT NULL,
+	locus_id bigint NOT NULL,
+	allele_id bigint NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT locus_allele_pk PRIMARY KEY (locus_allele_id)
+) ;
+COMMENT ON TABLE nex.locus_allele IS 'Alleles associated for a feature or gene.';
+COMMENT ON COLUMN nex.locus_allele.locus_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.locus_allele.allele_id IS 'FK to ALLELEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.locus_allele.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.locus_allele.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.locus_allele.date_created IS 'Date the record was entered into the database.';
+ALTER TABLE nex.locus_allele ADD CONSTRAINT locus_allele_uk UNIQUE (locus_id,allele_id);
+CREATE INDEX locusallele_source_fk_index ON nex.locus_allele (source_id);
+
+
+DROP TABLE IF EXISTS nex.locusallele_reference CASCADE;
+CREATE TABLE nex.locusallele_reference (
+    locusallele_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+	locus_allele_id bigint NOT NULL,
+    reference_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT locusallele_reference_pk PRIMARY KEY (locusallele_reference_id)
+) ;
+COMMENT ON COLUMN nex.locusallele_reference.locusallele_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON TABLE nex.locusallele_reference IS 'References associated with a locus alias.';
+COMMENT ON COLUMN nex.locusallele_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.locusallele_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.locusallele_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.locusallele_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallele_reference_uk UNIQUE (locus_allele_id,reference_id);
+CREATE INDEX locusallelereference_source_fk_index ON nex.locusallele_reference (source_id);
+CREATE INDEX locusallelereference_ref_fk_index ON nex.locusallele_reference (reference_id);
+
+DROP TABLE IF EXISTS nex.allelealias_reference CASCADE;
+CREATE TABLE nex.allelealias_reference (
+    allelealias_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
+    allele_alias_id bigint NOT NULL,
+    reference_id bigint NOT NULL,
+    source_id bigint NOT NULL,
+    date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+    created_by varchar(12) NOT NULL,
+    CONSTRAINT locusalias_reference_pk PRIMARY KEY (locusalias_reference_id)
+) ;
+COMMENT ON TABLE nex.allelealias_reference IS 'References associated with a locus alias.';
+COMMENT ON COLUMN nex.allelealias_reference.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.allelealias_reference.alias_id IS 'FK to ALLELEALIAS.ALIAS_ID.';
+COMMENT ON COLUMN nex.allelealias_reference.locusalias_reference_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.allelealias_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.allelealias_reference.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.allelealias_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+ALTER TABLE nex.allelealias_reference ADD CONSTRAINT allelealias_reference_uk UNIQUE (allele_alias_id,reference_id);
+CREATE INDEX allelealiasreference_source_fk_index ON nex.allelealias_reference (source_id);
+CREATE INDEX allelealiasreference_ref_fk_index ON nex.allelealias_reference (reference_id);

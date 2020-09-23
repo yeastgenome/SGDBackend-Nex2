@@ -6,94 +6,6 @@ SET client_encoding TO 'UTF8';
 
 \set ON_ERROR_STOP ON
 
-DROP TRIGGER IF EXISTS allele_audr ON nex.allele CASCADE;
-CREATE OR REPLACE FUNCTION trigger_fct_allele_audr() RETURNS trigger AS $BODY$
-DECLARE
-    v_row       nex.deletelog.deleted_row%TYPE;
-BEGIN
-  IF (TG_OP = 'UPDATE') THEN
-
-    IF (OLD.format_name != NEW.format_name) THEN
-       PERFORM nex.insertupdatelog('ALLELE'::text, 'FORMAT_NAME'::text, OLD.allele_id, OLD.format_name, NEW.format_name, USER);
-    END IF;
-
-    IF (OLD.display_name != NEW.display_name) THEN
-       PERFORM nex.insertupdatelog('ALLELE'::text, 'DISPLAY_NAME'::text, OLD.allele_id, OLD.display_name, NEW.display_name, USER);
-    END IF;
-
-    IF (OLD.obj_url != NEW.obj_url) THEN
-       PERFORM nex.insertupdatelog('ALLELE'::text, 'OBJ_URL'::text, OLD.allele_id, OLD.obj_url, NEW.obj_url, USER);
-    END IF;
-
-     IF (OLD.source_id != NEW.source_id) THEN
-       PERFORM nex.insertupdatelog('ALLELE'::text, 'SOURCE_ID'::text, OLD.allele_id, OLD.source_id::text, NEW.source_id::text, USER);
-    END IF;
-
-    IF (((OLD.bud_id IS NULL) AND (NEW.bud_id IS NOT NULL)) OR ((OLD.bud_id IS NOT NULL) AND (NEW.bud_id IS NULL)) OR (OLD.bud_id != NEW.bud_id)) THEN
-       PERFORM nex.insertupdatelog('ALLELE'::text, 'BUD_ID'::text, OLD.allele_id, OLD.bud_id::text, NEW.bud_id::text, USER);
-    END IF;
-
-    IF (OLD.description != NEW.description) THEN
-       PERFORM nex.insertupdatelog('ALLELE'::text, 'DESCRIPTION'::text, OLD.allele_id, OLD.description, NEW.description, USER);
-    END IF;
-
-    RETURN NEW;
-    
-  ELSIF (TG_OP = 'DELETE') THEN
-
-    v_row := OLD.allele_id || '[:]' || OLD.format_name || '[:]' ||
-	     OLD.display_name || '[:]' || OLD.obj_url || '[:]' ||
-             OLD.source_id || '[:]' || coalesce(OLD.bud_id,0) || '[:]' ||
-             OLD.description || '[:]' ||
-             OLD.date_created || '[:]' || OLD.created_by;
-
-            PERFORM nex.insertdeletelog('ALLELE'::text, OLD.allele_id, v_row, USER);
-
-     RETURN OLD;
-  END IF;
-
-END;
-$BODY$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER allele_audr
-AFTER UPDATE OR DELETE ON nex.allele FOR EACH ROW
-EXECUTE PROCEDURE trigger_fct_allele_audr();
-
-DROP TRIGGER IF EXISTS allele_biur ON nex.allele CASCADE;
-CREATE OR REPLACE FUNCTION trigger_fct_allele_biur() RETURNS trigger AS $BODY$
-BEGIN
-  IF (TG_OP = 'INSERT') THEN
-
-       NEW.created_by := UPPER(NEW.created_by);
-       PERFORM nex.checkuser(NEW.created_by);
-
-       RETURN NEW;
-
-  ELSIF (TG_OP = 'UPDATE') THEN
-
-    IF (NEW.allele_id != OLD.allele_id) THEN
-        RAISE EXCEPTION 'Primary key cannot be updated';
-    END IF;
-
-    IF (NEW.date_created != OLD.date_created) THEN
-        RAISE EXCEPTION 'Audit columns cannot be updated.';
-    END IF;
-
-    IF (NEW.created_by != OLD.created_by) THEN
-        RAISE EXCEPTION 'Audit columns cannot be updated.';
-    END IF;
-
-    RETURN NEW;
-  END IF;
-
-END;
-$BODY$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER allele_biur
-BEFORE INSERT OR UPDATE ON nex.allele FOR EACH ROW
-EXECUTE PROCEDURE trigger_fct_allele_biur();
-
-
 DROP TRIGGER IF EXISTS colleague_audr ON nex.colleague CASCADE;
 CREATE OR REPLACE FUNCTION trigger_fct_colleague_audr() RETURNS trigger AS $BODY$
 DECLARE
@@ -2647,6 +2559,10 @@ BEGIN
         PERFORM nex.insertupdatelog('TOOLS'::text, 'STATUS'::text, OLD.tool_id, OLD.status, NEW.status, USER);
     END IF;
 
+   IF (OLD.index_key!= NEW.index_key) THEN
+        PERFORM nex.insertupdatelog('TOOLS'::text, 'STATUS'::text, OLD.tool_id, OLD.index_key, NEW.index_key, USER);
+    END IF;
+
 
     RETURN NEW;
 
@@ -2655,7 +2571,7 @@ BEGIN
     v_row := OLD.tool_id || '[:]' || 
 	       OLD.format_name || '[:]' ||
              OLD.display_name || '[:]' ||
-             OLD.link_url|| '[:]' || OLD.status || '[:]' || 
+             OLD.link_url|| '[:]' || OLD.status || '[:]' || OLD.index_key || '[:]' || 
              OLD.date_created || '[:]' || OLD.created_by;
 
            PERFORM nex.insertdeletelog('TOOLS'::text, OLD.tool_id, v_row, USER);

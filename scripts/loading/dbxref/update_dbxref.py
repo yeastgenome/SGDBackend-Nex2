@@ -365,7 +365,8 @@ def sgdid_to_tpa_mapping():
              'S000001535' : 'DAA09105.1', # ASK1 ; it has a TPA_exp
              'S000004205' : 'DAA06809.1', # CDC123 ; it has a TPA_exp
              'S000001157' : 'DAA06809.1', # DMA1 ; it has a TPA_exp
-             'S000005060' : 'DAA10432.1' }
+             'S000005060' : 'DAA10432.1',
+             'S000004205' : 'DAA09532.1' }
 
 if __name__ == '__main__':
 

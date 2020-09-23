@@ -176,6 +176,8 @@ ALTER TABLE nex.taxonomy_url ADD CONSTRAINT taxonomyurl_source_fk FOREIGN KEY (s
 
 ALTER TABLE nex.dbentity ADD CONSTRAINT dbentity_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE NO ACTION NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.alleledbentity ADD CONSTRAINT alleledbentity_fk FOREIGN KEY (dbentity_id) REFERENCES dbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.alleledbentity ADD CONSTRAINT alleledbentity_so_fk FOREIGN KEY (structural_variant) REFERENCES so(so_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE nex.locusdbentity ADD CONSTRAINT locusdbentity_fk FOREIGN KEY (dbentity_id) REFERENCES dbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -299,9 +301,6 @@ ALTER TABLE nex.reference_file ADD CONSTRAINT referencefile_ref_fk FOREIGN KEY (
 ALTER TABLE nex.reference_file ADD CONSTRAINT referencefile_file_fk FOREIGN KEY (file_id) REFERENCES filedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 -- Object tables
-
-ALTER TABLE nex.allele ADD CONSTRAINT allele_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
-
 
 ALTER TABLE nex.colleague ADD CONSTRAINT colleague_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -513,7 +512,7 @@ ALTER TABLE nex.pathwayannotation ADD CONSTRAINT pathwayanno_dbentity_fk FOREIGN
 
 
 ALTER TABLE nex.phenotypeannotation ADD CONSTRAINT phenotypeanno_mutant_fk FOREIGN KEY (mutant_id) REFERENCES apo(apo_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE nex.phenotypeannotation ADD CONSTRAINT phenotypeanno_allele_fk FOREIGN KEY (allele_id) REFERENCES allele(allele_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.phenotypeannotation ADD CONSTRAINT phenotypeanno_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.phenotypeannotation ADD CONSTRAINT phenotypeanno_assay_fk FOREIGN KEY (assay_id) REFERENCES obi(obi_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.phenotypeannotation ADD CONSTRAINT phenotypeanno_reporter_fk FOREIGN KEY (reporter_id) REFERENCES reporter(reporter_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE nex.phenotypeannotation ADD CONSTRAINT phenotypeanno_phenotype_fk FOREIGN KEY (phenotype_id) REFERENCES phenotype(phenotype_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
@@ -605,5 +604,36 @@ ALTER TABLE nex.arch_dnasubsequence ADD CONSTRAINT archdnasubsequence_anno_fk FO
 
 ALTER TABLE nex.arch_proteinsequenceannotation ADD CONSTRAINT archproteinsequenceanno_contig_fk FOREIGN KEY (contig_id) REFERENCES arch_contig(contig_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE nex.transcriptdbentity ADD CONSTRAINT transcriptdbentity_fk FOREIGN KEY (dbentity_id) REFERENCES dbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
 
 
+ALTER TABLE nex.transcript_reference ADD CONSTRAINT transcriptreference_ref_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.transcript_reference ADD CONSTRAINT transcriptreference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.transcript_reference ADD CONSTRAINT transcriptreference_transcript_fk FOREIGN KEY (transcript_id) REFERENCES transcriptdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_ref_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_fk FOREIGN KEY (interaction_id) REFERENCES geninteractionannotation(annotation_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_allele1_fk FOREIGN KEY (allele1_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_geninteraction ADD CONSTRAINT allelegeninteraction_allele2_fk FOREIGN KEY (allele2_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+
+ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allele_alias ADD CONSTRAINT allelealias_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_locusallele_fk FOREIGN KEY (locus_allele_id) REFERENCES locus_allele(locus_allele_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locusallele_reference ADD CONSTRAINT locusallelereference_ref_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+
+ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_allele_fk FOREIGN KEY (allele_id) REFERENCES alleledbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.locus_allele ADD CONSTRAINT locusallele_locus_fk FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+
+
+ALTER TABLE nex.allelealias_reference ADD CONSTRAINT allelealiasreference_ref_fk FOREIGN KEY (reference_id) REFERENCES referencedbentity(dbentity_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allelealias_reference ADD CONSTRAINT allelealiasreference_source_fk FOREIGN KEY (source_id) REFERENCES source(source_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE nex.allelealias_reference ADD CONSTRAINT allelealiasreference_alias_fk FOREIGN KEY (alias_id) REFERENCES allele_alias(allele_alias_id) ON DELETE RESTRICT NOT DEFERRABLE INITIALLY IMMEDIATE;

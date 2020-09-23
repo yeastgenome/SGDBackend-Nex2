@@ -52,6 +52,11 @@ def main(global_config, **settings):
     config.add_route('chemical_complex_details', '/chemical/{id}/complex_details', request_method='GET')
     config.add_route('chemical_network_graph', '/chemical/{id}/network_graph', request_method='GET')
 
+    config.add_route('allele', '/allele/{id}', request_method='GET')
+    config.add_route('allele_phenotype_details', '/allele/{id}/phenotype_details', request_method='GET')
+    config.add_route('allele_interaction_details', '/allele/{id}/interaction_details', request_method='GET')
+    config.add_route('allele_network_graph', '/allele/{id}/network_graph', request_method='GET')
+
     config.add_route('phenotype', '/phenotype/{format_name}', request_method='GET')
     config.add_route('phenotype_locus_details', '/phenotype/{id}/locus_details', request_method='GET')
 

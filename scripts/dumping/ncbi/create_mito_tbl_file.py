@@ -1,7 +1,7 @@
 from datetime import datetime
 datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
 
-# chrmt.tbl file: newly dumpedfrom database
+# chrmt.tbl file: newly dumped from database
 # mito_ncbi.tbl: newly downloaded from NCBI https://www.ncbi.nlm.nih.gov/nuccore/KP263414.1/
 # mito_ncbi.tbl_[datestamp]: updated file for ncbi submission
 # mito_update.log: log file for changes

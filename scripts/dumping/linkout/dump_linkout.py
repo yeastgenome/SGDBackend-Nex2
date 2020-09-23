@@ -36,7 +36,7 @@ def write_protein_resource_head(fw):
 
     fw.write('<!DOCTYPE LinkSet PUBLIC "-//NLM//DTD LinkOut 1.0//EN" "LinkOut.dtd"' + "\n") 
     fw.write('[ <!ENTITY icon.url  "https://d1x6jdqbvd5dr.cloudfront.net/legacy_img/SGD-t.gif">' + "\n") 
-    fw.write('<!ENTITY base.url  "https://www.yeastgenome.org/search?">]>' + "\n")
+    fw.write('<!ENTITY base.url  "https://www.yeastgenome.org/search?is_quick=true&q=">]>' + "\n")
     fw.write("<LinkSet>\n\n") 
     fw.write("    <Link>\n") 
     fw.write("    <LinkId>1</LinkId>\n") 

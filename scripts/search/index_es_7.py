@@ -1,4 +1,4 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, Tools, Alleledbentity, AlleleAlias
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -835,7 +835,52 @@ def index_complex_names():
 
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+
+def index_alleles():
+
+    so_id_to_term = dict([(x.so_id, x.display_name) for x in DBSession.query(So).all()])
     
+    alleles = DBSession.query(Alleledbentity).all()
+    
+    print(("Indexing " + str(len(alleles)) + " allele names"))
+
+    bulk_data = []
+
+    for a in alleles:
+
+        allele_type = so_id_to_term.get(a.so_id)
+        
+        synonyms = DBSession.query(AlleleAlias.display_name).filter_by(
+            allele_id=a.dbentity_id).all()
+
+        obj = {
+            "name": a.display_name,
+            "allele_name": a.display_name,
+            "href": "/allele/" + a.format_name,
+            "description": a.description,
+            "category": "Allele",
+            "synonyms": [s[0] for s in synonyms],
+            "allele_type": allele_type
+        }
+
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+
+        if len(bulk_data) == 800:
+            es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+            bulk_data = []
+
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+
 def index_chemicals():
     all_chebi_data = DBSession.query(Chebi).all()
     _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
@@ -888,76 +933,32 @@ def index_part_2():
     index_observables()
     index_disease_terms()
     index_references()
-
+    index_alleles()
+    
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_go_terms()
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_complex_names()
 
 def index_toolbar_links():
-    links = [
-        ("Gene List", "https://yeastmine.yeastgenome.org/yeastmine/bag.do", []),
-        ("Yeastmine", "https://yeastmine.yeastgenome.org", "yeastmine"),
-        ("Submit Data", "/submitData", []),
-        ("SPELL", "https://spell.yeastgenome.org", "spell"),
-        ("BLAST", "/blast-sgd", "blast"),
-        ("Fungal BLAST", "/blast-fungal", "blast"),
-        ("Pattern Matching", "/nph-patmatch", []),
-        ("Design Primers", "/primer3", []),
-        ("Restriction Mapper", "/restrictionMapper", []),
-        ("Genome Browser", "https://browse.yeastgenome.org", []),
-        ("Gene/Sequence Resources", "/seqTools", []),
-        ("Download Genome", "https://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/", "download"),
-        ("Genome Snapshot", "/genomesnapshot", []),
-        ("Chromosome History", "https://wiki.yeastgenome.org/index.php/Summary_of_Chromosome_Sequence_and_Annotation_Updates", []),
-        ("Systematic Sequencing Table", "/cache/chromosomes.shtml", []),
-        ("Original Sequence Papers",
-         "http://wiki.yeastgenome.org/index.php/Original_Sequence_Papers", []),
-        ("Variant Viewer", "/variant-viewer", []),
-        ("GO Term Finder", "/goTermFinder", "go"),
-        ("GO Slim Mapper", "/goSlimMapper", "go"),
-        ("GO Slim Mapping File",
-         "https://downloads.yeastgenome.org/curation/literature/go_slim_mapping.tab", "go"),
-        ("Expression", "https://spell.yeastgenome.org/#", []),
-        ("Biochemical Pathways", "http://pathway.yeastgenome.org/", []),
-        ("Browse All Phenotypes", "/ontology/phenotype/ypo", []),
-        ("Interactions", "/interaction-search", []),
-        ("YeastGFP", "https://yeastgfp.yeastgenome.org/", "yeastgfp"),
-        ("Full-text Search", "http://textpresso.yeastgenome.org/", "texxtpresso"),
-        ("New Yeast Papers", "/reference/recent", []),
-        ("Genome-wide Analysis Papers",
-         "https://yeastmine.yeastgenome.org/yeastmine/loadTemplate.do?name=GenomeWide_Papers&scope=all&method=results&format=tab", []),
-        ("Find a Colleague", "/search?q=&category=colleague", []),
-        ("Add or Update Info", "/colleague_update", []),
-        ("Career Resources", "http://wiki.yeastgenome.org/index.php/Career_Resources", []),
-        ("Future", "http://wiki.yeastgenome.org/index.php/Meetings#Upcoming_Conferences_.26_Courses", []),
-        ("Yeast Genetics", "http://wiki.yeastgenome.org/index.php/Meetings#Past_Yeast_Meetings", []),
-        ("Submit a Gene Registration", "/reserved_name/new", []),
-        ("Nomenclature Conventions",
-         "https://sites.google.com/view/yeastgenome-help/community-help/nomenclature-conventions", []),
-        ("Strains and Constructs", "http://wiki.yeastgenome.org/index.php/Strains", []),
-        ("Reagents", "http://wiki.yeastgenome.org/index.php/Reagents", []),
-        ("Protocols and Methods", "http://wiki.yeastgenome.org/index.php/Methods", []),
-        ("Physical & Genetic Maps",
-         "http://wiki.yeastgenome.org/index.php/Combined_Physical_and_Genetic_Maps_of_S._cerevisiae", []),
-        ("Genetic Maps", "http://wiki.yeastgenome.org/index.php/Yeast_Mortimer_Maps_-_Edition_12", []),
-        ("Sequence", "http://wiki.yeastgenome.org/index.php/Historical_Systematic_Sequence_Information", []),
-        ("Wiki", "http://wiki.yeastgenome.org/index.php/Main_Page", "wiki"),
-        ("Resources", "http://wiki.yeastgenome.org/index.php/External_Links", [])
-    ]
 
-    print(("Indexing " + str(len(links)) + " toolbar links"))
+    tools = DBSession.query(Tools).all()
+    
+    print(("Indexing " + str(len(tools)) + " toolbar links"))
 
-    for l in links:
+    for x in tools:
+        keys = []
+        if x.index_key:
+            keys = x.index_key
         obj = {
-            "name": l[0],
-            "resource_name": l[0],
-            "href": l[1],
+            "name": x.display_name,
+            "resource_name": x.display_name,
+            "href": x.link_url,
             "description": None,
             "category": "resource",
-            "keys": l[2]
+            "keys": keys
         }
-        es.index(index=INDEX_NAME, body=obj, id=l[1])
+        es.index(index=INDEX_NAME, body=obj, id=x.link_url)
 
 
 if __name__ == "__main__":
