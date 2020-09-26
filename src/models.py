@@ -7001,8 +7001,8 @@ class Geninteractionannotation(Base):
             reference = self.reference
 
         note = self.description
-        if note is not None:
-            note = note.split('|')[0]
+        if note:
+            note = self.description.split('|')[0]
             
         obj = {
             "id": self.annotation_id,
@@ -9941,7 +9941,7 @@ class Alleledbentity(Dbentity):
         all_linked_allele_ids = []
         # network_nodes_ids = {}
 
-        for x in DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score > 0).all():
+        for x in DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all():
                 
             if x.allele2_id is None:
                 continue
