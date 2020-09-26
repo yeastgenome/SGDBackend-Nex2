@@ -9946,7 +9946,7 @@ class Alleledbentity(Dbentity):
 
         all_negatives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score < 0).order_by(AlleleGeninteraction.sga_score).all()
         
-        for x in all_positives[0:50] + all_negatives[0:50]:
+        for x in all_positives[0:30] + all_negatives[0:30]:
                 
             if x.allele2_id is None:
                 continue
