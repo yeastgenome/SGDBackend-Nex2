@@ -9942,7 +9942,7 @@ class Alleledbentity(Dbentity):
         # network_nodes_ids = {}
 
         for x in DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all():
-
+                
             if x.allele2_id is None:
                 continue
             other_allele = None
@@ -9967,12 +9967,20 @@ class Alleledbentity(Dbentity):
 
                 interaction_format_name = self.format_name + "_" + allele_format_name
 
-                network_nodes.append({
-                    "name": '',
-                    "id": interaction_format_name,
-                    "href": '',
-                    "category": "INTERACTION",
-                })
+                if x.sga_score > 0:
+                    network_nodes.append({
+                        "name": '',
+                        "id": interaction_format_name,
+                        "href": '',
+                        "category": "POSITIVE INTERACTION",
+                    })
+                else:
+                    network_nodes.append({
+                        "name": '',
+                        "id": interaction_format_name,
+                        "href": '',
+                        "category": "NEGATIVE INTERACTION",
+                    })
                 
                 network_edges.append({
                     "source": self.format_name,
