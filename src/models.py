@@ -9981,15 +9981,23 @@ class Alleledbentity(Dbentity):
                         "href": '',
                         "category": "NEGATIVE INTERACTION",
                     })
-                
+
+                action = 'positive interaction'
+                if x.sga_score < 0:
+                    action = 'negative interaction'
+                    
                 network_edges.append({
                     "source": self.format_name,
-                    "target": interaction_format_name
+                    "target": interaction_format_name,
+                    "evidence": x.sga_score,
+                    "action": action
                 })
                 
                 network_edges.append({
                     "source": allele_format_name,
-                    "target": interaction_format_name
+                    "target": interaction_format_name,
+                    "evidence": x.sga_score,
+                    "action": action
                 })
                 
         # for x in DBSession.query(AlleleGeninteraction).filter(AlleleGeninteraction.allele1_id.in_(all_linked_allele_ids)).filter(AlleleGeninteraction.allele2_id.in_(all_linked_allele_ids)).all():
