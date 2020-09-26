@@ -9939,9 +9939,14 @@ class Alleledbentity(Dbentity):
         curr_allele = self.display_name
 
         all_linked_allele_ids = []
+
         # network_nodes_ids = {}
 
-        for x in DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score > 0).all():
+        all_positives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score > 0).order_by(AlleleGeninteraction.sga_score.desc()).all()
+
+        all_negatives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score < 0).order_by(AlleleGeninteraction.sga_score).all()
+        
+        for x in all_positives[0:50] + all_negatives[0:50]:
                 
             if x.allele2_id is None:
                 continue
