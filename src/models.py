@@ -2224,11 +2224,6 @@ class Referencedbentity(Dbentity):
             obj["journal"] = {
                 "med_abbr": self.journal.med_abbr
             }
-
-        if self.book:
-            obj["journal"] = {
-                "med_abbr": self.book.display_name
-            }
         
         datasets = DBSession.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
         obj["expression_datasets"] = [data.dataset.to_dict(self) for data in datasets]
