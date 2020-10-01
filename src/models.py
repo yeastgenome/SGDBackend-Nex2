@@ -9834,13 +9834,13 @@ class Alleledbentity(Dbentity):
         for x in alleleAliases:
             allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
             references = []
-            for x in allelealiasRefs:
-                reference = x.reference.to_dict_citation()
+            for y in allelealiasRefs:
+                reference = y.reference.to_dict_citation()
                 references.append(reference)
                 if reference["id"] not in reference_mapping:
                     reference_mapping[reference["id"]] = ref_order
                     ref_order += 1
-            objs.append({ "display_name": x.alias.display_name,
+            objs.append({ "display_name": x.display_name,
                           "references": references })
         return objs
 
