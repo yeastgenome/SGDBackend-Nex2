@@ -2220,11 +2220,11 @@ class Referencedbentity(Dbentity):
             "downloadable_files": []
         }
 
-        if self.pmid != None:
+        if self.pmid != None and self.journal:
             obj["journal"] = {
                 "med_abbr": self.journal.med_abbr
             }
-
+        
         datasets = DBSession.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
         obj["expression_datasets"] = [data.dataset.to_dict(self) for data in datasets]
 
@@ -9834,13 +9834,13 @@ class Alleledbentity(Dbentity):
         for x in alleleAliases:
             allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
             references = []
-            for x in allelealiasRefs:
-                reference = x.reference.to_dict_citation()
+            for y in allelealiasRefs:
+                reference = y.reference.to_dict_citation()
                 references.append(reference)
                 if reference["id"] not in reference_mapping:
                     reference_mapping[reference["id"]] = ref_order
                     ref_order += 1
-            objs.append({ "display_name": x.alias.display_name,
+            objs.append({ "display_name": x.display_name,
                           "references": references })
         return objs
 
@@ -9939,10 +9939,15 @@ class Alleledbentity(Dbentity):
         curr_allele = self.display_name
 
         all_linked_allele_ids = []
+
         # network_nodes_ids = {}
 
-        for x in DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all():
+        all_positives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score > 0).order_by(AlleleGeninteraction.sga_score.desc()).all()
 
+        all_negatives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score < 0).order_by(AlleleGeninteraction.sga_score).all()
+        
+        for x in all_positives[0:30] + all_negatives[0:30]:
+                
             if x.allele2_id is None:
                 continue
             other_allele = None
@@ -9967,12 +9972,20 @@ class Alleledbentity(Dbentity):
 
                 interaction_format_name = self.format_name + "_" + allele_format_name
 
-                network_nodes.append({
-                    "name": '',
-                    "id": interaction_format_name,
-                    "href": '',
-                    "category": "INTERACTION",
-                })
+                if x.sga_score > 0:
+                    network_nodes.append({
+                        "name": '',
+                        "id": interaction_format_name,
+                        "href": '',
+                        "category": "POSITIVE INTERACTION",
+                    })
+                else:
+                    network_nodes.append({
+                        "name": '',
+                        "id": interaction_format_name,
+                        "href": '',
+                        "category": "NEGATIVE INTERACTION",
+                    })
                 
                 network_edges.append({
                     "source": self.format_name,
