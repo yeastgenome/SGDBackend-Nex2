@@ -19,7 +19,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -191,6 +191,34 @@ def search(request):
         'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'aliases', 'year',
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
+
+
+
+    
+    ## added for allele search
+    if is_quick_flag == 'true' and terms_digits_flag == False and ( '-' in query or 'delta' in query):
+        allele_name = query.strip().lower()
+        maybe_allele_url = DBSession.query(Dbentity.obj_url).filter_by(display_name=allele_name).one_or_none()
+        if maybe_allele_url is None:
+            aa = DBSession.query(AlleleAlias).filter_by(display_name=allele_name).one_or_none()
+            if aa is not None:
+                maybe_allele_url = aa.allele.obj_url
+        if maybe_allele_url:
+            allele_search_obj = {
+                'href': maybe_allele_url,
+                'is_quick': True
+            }
+            return {
+                'total': 1,
+                'results': [allele_search_obj],
+                'aggregations': []
+            }
+
+    ## end of allele search section
+
+
+
+            
     # see if we can search for a simple gene name in db without using ES
 
     aliases_count = 0
@@ -1990,7 +2018,11 @@ def allele(request):
             alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
         else:
             alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
-
+        if alleleObj is None:
+            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele)).one_or_none()
+            if aa is not None:
+                alleleObj = aa.allele
+                
         if alleleObj is not None:
             return alleleObj.to_dict()
         else:
