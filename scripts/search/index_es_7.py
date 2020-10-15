@@ -740,8 +740,11 @@ def index_references():
         for k in key_values:
             if k is not None:
                 keys.add(str(k).lower())
+
+        name = ', '.join(authors) + ' (' + ' '.join(reference.citation.split('(')[1:])
+        
         obj = {
-            "name": reference.citation,
+            "name": name,
             "reference_name": reference.citation,
             "href": reference.obj_url,
             "description": abstract,
