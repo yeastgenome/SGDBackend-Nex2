@@ -9,6 +9,7 @@ from datetime import timedelta
 from primer3 import bindings, designPrimers
 from collections import defaultdict
 from sqlalchemy.orm import joinedload
+from urllib.request import Request, urlopen
 
 import os
 import re
@@ -192,9 +193,6 @@ def search(request):
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
 
-
-
-    
     ## added for allele search
     if is_quick_flag == 'true' and terms_digits_flag == False and ( '-' in query or 'delta' in query):
         allele_name = query.strip().lower()
@@ -215,10 +213,7 @@ def search(request):
             }
 
     ## end of allele search section
-
-
-
-            
+        
     # see if we can search for a simple gene name in db without using ES
 
     aliases_count = 0
@@ -226,10 +221,36 @@ def search(request):
         t_query = query.strip().upper()
         sys_pattern = re.compile(r'(?i)^y.{2,}')
         is_sys_name_match = sys_pattern.match(t_query)
+        
+        ## adding code to check if it is an unmapped gene
+        is_unmapped = 0
+        unmapped_url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+        response = urlopen(unmapped_url)
+        unmapped_data = response.read().decode('utf-8').split("\n")
+        for line in unmapped_data:
+            if line == '' or line.startswith('#') or line.startswith('FEATURE_NAME'):
+                continue
+            pieces = line.split('\t')
+            if pieces[0] == t_query:
+                is_unmapped = 1
+                break
+        if is_unmapped == 1:
+            unmapped_search_obj = {
+                'href': '/search?q=' + query + '&category=locus',
+                'is_quick': True
+            }
+            return {
+                'total': 1,
+                'results': [unmapped_search_obj],
+                'aggregations': []
+            }
+        
+        ## end of unmapped gene check
+        
         if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
             maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
             aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
-            if aliases_count == 0 and  maybe_gene_url:
+            if aliases_count == 0 and maybe_gene_url:
                 fake_search_obj = {
                     'href': maybe_gene_url,
                     'is_quick': True
@@ -238,8 +259,7 @@ def search(request):
                     'total': 1,
                     'results': [fake_search_obj],
                     'aggregations': []
-                }
-            
+                }            
             elif aliases_count > 0:
                 alias_flag = True
     elif (Locusdbentity.is_valid_gene_name(query.strip().upper()) and terms_digits_flag == False):
