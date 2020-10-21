@@ -96,8 +96,8 @@ def load_data():
 
     fw.close()
 
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
 
 
 def insert_datasetsample(nex_session, fw, x):

@@ -12,7 +12,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 log_file = "scripts/loading/dataset/logs/load_dataset.log"
 
-files_to_load = ["scripts/loading/dataset/data/GEO-datasetstoload.tsv"]
+files_to_load = ["scripts/loading/dataset/data/dataset2020-01to07.tsv"]
 
 def load_data():
 
@@ -51,10 +51,12 @@ def load_data():
 
                 format_name = pieces[0].strip()
                 if format_name in found:
+                    print (format_name, "is in the file already.")
                     continue
                 found[format_name] = 1
 
                 if format_name in dataset_to_id:
+                    print (format_name, "is in the database already.")
                     continue
 
                 if format_name in format_name_to_id:
