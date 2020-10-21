@@ -3620,9 +3620,9 @@ BEGIN
 
   ELSIF (TG_OP = 'DELETE') THEN
 
-    v_row := OLD.alias_id || '[:]' || OLD.display_name || '[:]' ||
+    v_row := OLD.allele_alias_id || '[:]' || OLD.display_name || '[:]' ||
              coalesce(OLD.obj_url,'') || '[:]' || OLD.source_id || '[:]' ||
-             OLD.locus_id || '[:]' ||  OLD.alias_type || '[:]' ||
+             OLD.allele_id || '[:]' ||  OLD.alias_type || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 
           PERFORM nex.insertdeletelog('ALLELE_ALIAS'::text, OLD.allele_alias_id, v_row, USER);
