@@ -9,7 +9,9 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 log_file = "scripts/loading/dataset/logs/load_datasetsample.log"
 
-files_to_load = ["scripts/loading/dataset/data/datasamplesFromGEOtoload.tsv"]
+files_to_load = ["scripts/loading/dataset/data/datasample2020-01to07.tsv"]
+
+DBXREF_URL = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc='
 
 def load_data():
 
@@ -94,11 +96,15 @@ def load_data():
 
     fw.close()
 
-    # nex_session.rollback()
-    nex_session.commit()
+    nex_session.rollback()
+    # nex_session.commit()
 
 
 def insert_datasetsample(nex_session, fw, x):
+
+    dbxref_url = ''
+    if x.get('dbxref_id'):
+        dbxref_url = DBXREF_URL + x.get('dbxref_id')
 
     print("Load ", x['format_name'])
 
@@ -114,6 +120,7 @@ def insert_datasetsample(nex_session, fw, x):
                       taxonomy_id = x.get('taxonomy_id'),
                       dbxref_type = x.get('dbxref_type'),
                       dbxref_id = x.get('dbxref_id'),
+                      dbxref_url = dbxref_url,
                       created_by = CREATED_BY)
 
     nex_session.add(y)
