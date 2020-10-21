@@ -10023,7 +10023,8 @@ class AlleleReference(Base):
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-
+    reference_class = Column(String(100), nullable=True)
+    
     allele = relationship('Alleledbentity')
     source = relationship('Source')
     reference = relationship('Referencedbentity')
