@@ -80,7 +80,7 @@ def update_data():
                              created_by = 'OTTO')
             nex_session.add(aa)
             nex_session.flush()
-            nex_session.refresh(x)
+            nex_session.refresh(aa)
             new_allele_alias_id = aa.allele_alias_id
 
             print (" new_allele_alias_id=",  new_allele_alias_id)
@@ -100,7 +100,10 @@ def update_data():
                              alias_type = 'SGD Secondary',
                              source_id = src.source_id,
                              created_by = 'OTTO')
-
+            nex_session.add(aa)
+            nex_session.flush()
+            nex_session.refresh(aa)
+            
             print ("updating phenotypeannotation to point allele_id to new_allele_id where allele_id=x.dbentity_id")
 
             nex_session.query(Phenotypeannotation).filter_by(allele_id=x.dbentity_id).update({"allele_id": new_allele_id})
@@ -113,8 +116,8 @@ def update_data():
             nex_session.query(Dbentity).filter_by(dbentity_id=allele_id).delete()
             
             
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
     nex_session.close()
 
     

@@ -89,19 +89,19 @@ def load_data():
 
         ## link to other db pages
         for db in db_list:
-            key = (x.sgdid, db)
+            key = (sgdid, db)
             if key in key_to_link:
                 insert_locus_url(nex_session, dbentity_id, source_id, db, key_to_link[key])
 
         if i > 300:        
-            nex_session.rollback()
-            # nex_session.commit()
+            # nex_session.rollback()
+            nex_session.commit()
             i = 0
 
     f.close()
     
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
     
     nex_session.close()
 
@@ -118,13 +118,13 @@ def insert_locus_url(nex_session, locus_id, source_id, display_name, link_url):
     elif display_name == 'RGD':
         display_name = "C " + display_name
     elif display_name == 'ZFIN':
-	display_name = "D " + display_name
+        display_name = "D " + display_name
     elif display_name == 'FB':
-	display_name = "E " + display_name
+        display_name = "E " + display_name
     elif display_name == 'WB':
-	display_name = "F " + display_name
+        display_name = "F " + display_name
     elif display_name == 'SGD':
-	display_name = "G " + display_name
+        display_name = "G " + display_name
         
     print (locus_id, source_id, display_name, link_url)
     
