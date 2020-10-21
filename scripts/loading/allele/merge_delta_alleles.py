@@ -60,11 +60,11 @@ def update_data():
 
             print ("old_reference_ids=", old_reference_ids)
             
-            print ("deleting allele_reference where allele_id = x.dbentity_id")
+            print ("deleting allele_reference rows where allele_id = x.dbentity_id")
 
-            ar = nex_session.query(AlleleReference).filter_by(allele_id=x.dbentity_id).one_or_none()
-            if ar is not None:
-                nex_session.delete(ar)
+            old_ar = nex_session.query(AlleleReference).filter_by(allele_id=x.dbentity_id).all()
+            for x in old_ar:
+                nex_session.delete(x)
             
             print ("updating allele_alias to set allele_id to new allele_id where allele_id = x.dbentity_id")
             
@@ -85,7 +85,7 @@ def update_data():
 
             print (" new_allele_alias_id=",  new_allele_alias_id)
             
-            print ("adding newly created allele_alias_id to locusallele_referece and link the row with old reference_ids")
+            print ("adding newly created allele_alias_id to locusalias_referece and link the row with old reference_ids")
             
             for reference_id in old_reference_ids:
                 aar = AllelealiasReference(allele_allele_id = new_allele_alias_id,
@@ -113,8 +113,8 @@ def update_data():
             nex_session.query(Dbentity).filter_by(dbentity_id=allele_id).delete()
             
             
-    # nex_session.rollback()
-    nex_session.commit()
+    nex_session.rollback()
+    # nex_session.commit()
     nex_session.close()
 
     
