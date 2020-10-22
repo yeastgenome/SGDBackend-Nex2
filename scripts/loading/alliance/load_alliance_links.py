@@ -55,14 +55,14 @@ def load_data():
         link_url2 = ''
         if len(ids) > 1:
             link_url = db2linkTemplate[db].replace("_SUBSTITUTE_", pieces[4].replace('|', '+'))
-            link_url2 = db2linkTemplate[db].replace("_SUBSTITUTE_", query)
-            if len(link_url) > 500:
-                # print ("TOO LONG ID LIST: len=", len(link_url),  link_url)
-                if len(link_url2) <= 500:
-                    link_url = link_url2
-                else:
-                    # print ("TOO LONG QUERY LIST: len=", len(link_url2),  link_url2)
-                    link_url = db2linkTemplate[db].replace("_SUBSTITUTE_", gene)
+            # link_url2 = db2linkTemplate[db].replace("_SUBSTITUTE_", query)
+            # if len(link_url) > 500:
+            #    # print ("TOO LONG ID LIST: len=", len(link_url),  link_url)
+            #    if len(link_url2) <= 500:
+            #        link_url = link_url2
+            #    else:
+            #        # print ("TOO LONG QUERY LIST: len=", len(link_url2),  link_url2)
+            #        link_url = db2linkTemplate[db].replace("_SUBSTITUTE_", gene)
         else:
             link_url = root_url + "gene/" + ids[0]
         key = (sgdid, db)
@@ -89,19 +89,19 @@ def load_data():
 
         ## link to other db pages
         for db in db_list:
-            key = (x.sgdid, db)
+            key = (sgdid, db)
             if key in key_to_link:
                 insert_locus_url(nex_session, dbentity_id, source_id, db, key_to_link[key])
 
         if i > 300:        
-            nex_session.rollback()
-            # nex_session.commit()
+            # nex_session.rollback()
+            nex_session.commit()
             i = 0
 
     f.close()
     
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
     
     nex_session.close()
 
@@ -111,6 +111,21 @@ def load_data():
 
 def insert_locus_url(nex_session, locus_id, source_id, display_name, link_url):
 
+    if display_name == 'HGNC':
+        display_name = "A " + display_name
+    elif display_name == 'MGI':
+        display_name = "B " + display_name
+    elif display_name == 'RGD':
+        display_name = "C " + display_name
+    elif display_name == 'ZFIN':
+        display_name = "D " + display_name
+    elif display_name == 'FB':
+        display_name = "E " + display_name
+    elif display_name == 'WB':
+        display_name = "F " + display_name
+    elif display_name == 'SGD':
+        display_name = "G " + display_name
+        
     print (locus_id, source_id, display_name, link_url)
     
     x = LocusUrl(locus_id = locus_id,
