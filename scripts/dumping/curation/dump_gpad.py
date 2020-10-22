@@ -52,6 +52,8 @@ def dump_data():
     reference_id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
     go_id_to_goid = dict([(x.go_id, (x.goid, x.go_namespace)) for x in nex_session.query(Go).all()])
     eco_id_to_ecoid = dict([(x.eco_id, x.format_name) for x in nex_session.query(Eco).all()])
+    source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
+    edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     
     annotation_id_to_supportingevidencs = {}
     for x in nex_session.query(Gosupportingevidence).all():
@@ -145,7 +147,7 @@ def dump_data():
    
     log.info("Uploading GPAD file to S3...")
 
-    # update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_to_id, datestamp)
+    update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_to_id, datestamp)
 
     nex_session.close()
 
@@ -194,13 +196,20 @@ def get_curator_to_orcid_mapping():
              'ANAND'      : 'GOC:as'
     }
 
+def upload_file_to_s3(file, filename):
+
+    s3_path = filename
+    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
+    bucket = conn.get_bucket(S3_BUCKET)
+    k = Key(bucket)
+    k.key = s3_path
+    k.set_contents_from_file(file, rewind=True)
+    k.make_public()
+    transaction.commit()
+
 def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_to_id, datestamp):
 
-    # gene_association.sgd.20171204.gaf.gz
-    # gene_association.sgd-yeastmine.20171204.gaf.gz
-
-    # datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
-    gzip_file = gpad_file + "." + datestamp + ".gaf.gz"
+    gzip_file = gpad_file + "." + datestamp + ".gz"
     import gzip
     import shutil
     with open(gpad_file, 'rb') as f_in, gzip.open(gzip_file, 'wb') as f_out:
@@ -208,15 +217,17 @@ def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_t
 
     local_file = open(gzip_file, mode='rb')
 
-    ### upload a current GAF file to S3 with a static URL for Go Community ###
-    # if is_public == '1':
-    #    upload_gpad_to_s3(local_file, "latest/gpad.sgd.gaf.gz")
+    # print ("uploading file to latest...")
+    
+    ### upload a current GPAD file to S3 with a static URL for Go Community ###
+    upload_file_to_s3(local_file, "latest/gpad.sgd.gz")
     ##########################################################################
 
+    # print ("uploading file to s3 sgdid system...")
+    
     import hashlib
     gpad_md5sum = hashlib.md5(gzip_file.encode()).hexdigest()
-    row = nex_session.query(Filedbentity).filter_by(
-        md5sum=gpad_md5sum).one_or_none()
+    row = nex_session.query(Filedbentity).filter_by(md5sum=gpad_md5sum).one_or_none()
 
     if row is not None:
         return
@@ -228,17 +239,22 @@ def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_t
         Dbentity.dbentity_status == 'Active').update({"dbentity_status": 'Archived'}, synchronize_session='fetch')
     nex_session.commit()
 
-    data_id = edam_to_id.get('EDAM:2048')  # data:2048 Report
-    topic_id = edam_to_id.get('EDAM:0085')  # topic:0085 Functional genomics
-    format_id = edam_to_id.get('EDAM:3475')  # format:3475 TSV
+    data_id = edam_to_id.get('EDAM:2048')  # data:2048 Report                                              
+    topic_id = edam_to_id.get('EDAM:0085')  # topic:0085 Functional genomics                               
+    format_id = edam_to_id.get('EDAM:3475')  # format:3475 TSV  
 
+    from sqlalchemy import create_engine
+    from src.models import DBSession
+    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
+    DBSession.configure(bind=engine)
+    
     readme = nex_session.query(Dbentity).filter_by(
-        display_name="gpad.README", dbentity_status='Active').one_or_none()
+        display_name="gpad.sgd.README", dbentity_status='Active').one_or_none()
     readme_file_id = None
     if readme is not None:
         readme_file_id = readme.dbentity_id
 
-    # path.path = /reports/function
+    # path.path = /reports/function 
 
     upload_file(CREATED_BY, local_file,
                 filename=gzip_file,
@@ -250,7 +266,7 @@ def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_t
                 topic_id=topic_id,
                 status='Active',
                 readme_file_id=readme_file_id,
-                is_public=is_public,
+                is_public='1',
                 is_in_spell='0',
                 is_in_browser='0',
                 file_date=datetime.now(),
