@@ -101,3 +101,7 @@ location = /cgi-bin/submitData.pl {
 location = /cgi-bin/web-primer {
     return 301 /primer3;
 }
+
+location = /download-data/ {
+    return 301 http://sgd-archive.yeastgenome.org/;
+}
