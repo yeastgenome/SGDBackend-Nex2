@@ -222,7 +222,7 @@ def search(request):
     # see if we can search for a simple gene name in db without using ES
 
     aliases_count = 0
-    if is_quick_flag == 'true' and terms_digits_flag == False:
+    if is_quick_flag == 'true' and query != '' and terms_digits_flag == False:
         t_query = query.strip().upper()
         sys_pattern = re.compile(r'(?i)^y.{2,}')
         is_sys_name_match = sys_pattern.match(t_query)
