@@ -10,6 +10,8 @@ def copy_files():
    
     nex_session = get_session()
 
+    copy_sgd_gpad_gpi(nex_session)
+    
     copy_gff(nex_session)
     copy_gaf(nex_session)
     copy_gpad(nex_session)
@@ -39,6 +41,37 @@ def copy_noctua_gpad(nex_session):
         dstFile = dstDir + gpad_file
         print (x.dbentity_status, srcFile, dstFile)
         boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
+
+def copy_sgd_gpad_gpi(nex_session):
+    
+    dstDir = "latest/"
+    gpad_file = "gpad.sgd.gz"
+    gpi_file = "gpi.sgd.gz"
+
+    all_gpad = nex_session.query(Filedbentity).filter(Filedbentity.previous_file_name.like('gpad.sgd%.gz')).filter(Filedbentity.dbentity_status=='Active').all()
+    if len(all_gpad) > 0:
+        gpad = all_gpad.pop()
+        if gpad.s3_url is not None:
+            urlParam = gpad.s3_url.split('/')
+            filename = urlParam[4].split('?')[0]
+            srcFile = urlParam[3] + '/' + filename
+            
+            dstFile = dstDir + gpad_file
+            print (gpad.dbentity_status, srcFile, dstFile)
+            boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
+
+    all_gpi = nex_session.query(Filedbentity).filter(Filedbentity.previous_file_name.like('gpi.sgd%.gz')).filter(Filedbentity.dbentity_status=='Active').all()
+    
+    if len(all_gpi) > 0:
+        gpi = all_gpi.pop()
+        if gpi.s3_url is not None:
+            urlParam = gpi.s3_url.split('/')
+            filename = urlParam[4].split('?')[0]
+            srcFile = urlParam[3] + '/' + filename
+
+            dstFile = dstDir + gpi_file
+            print (gpi.dbentity_status, srcFile, dstFile)
+            boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
 
 def copy_gpi(nex_session):
 

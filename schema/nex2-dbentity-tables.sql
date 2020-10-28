@@ -215,7 +215,7 @@ DROP TABLE IF EXISTS nex.locus_url CASCADE;
 CREATE TABLE nex.locus_url (
 	url_id bigint NOT NULL DEFAULT nextval('url_seq'),
 	display_name varchar(500) NOT NULL,
-	obj_url varchar(500) NOT NULL,
+	obj_url varchar(2000) NOT NULL,
 	source_id bigint NOT NULL,
 	bud_id integer,
 	locus_id bigint NOT NULL,
@@ -237,7 +237,7 @@ COMMENT ON COLUMN nex.locus_url.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.locus_url.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.locus_url.placement IS 'Location of the URL on the web page.';
 ALTER TABLE nex.locus_url ADD CONSTRAINT locus_url_uk UNIQUE (locus_id,display_name,obj_url,placement);
-ALTER TABLE nex.locus_url ADD CONSTRAINT locusurl_type_ck CHECK (URL_TYPE IN ('External id','SGDID','Systematic name','Internal web service'));
+ALTER TABLE nex.locus_url ADD CONSTRAINT locusurl_type_ck CHECK (URL_TYPE IN ('External id','SGDID','Systematic name','Internal web service', 'Alliance'));
 CREATE INDEX locusurl_source_fk_index ON nex.locus_url (source_id);
 
 DROP TABLE IF EXISTS nex.locussummary CASCADE; 
@@ -1053,6 +1053,7 @@ CREATE TABLE nex.allele_reference (
     allele_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
     allele_id bigint NOT NULL,
     reference_id bigint NOT NULL,
+	  reference_class varchar(40),
     source_id bigint NOT NULL,
     date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
     created_by varchar(12) NOT NULL,
@@ -1065,6 +1066,9 @@ COMMENT ON COLUMN nex.allele_reference.allele_reference_id IS 'Unique identifier
 COMMENT ON COLUMN nex.allele_reference.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.allele_reference.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.allele_reference.reference_id IS 'FK to REFERENCEDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.allele_reference.reference_class IS 'The column in ALLELEDBENTITY that is associated with the reference.';
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allele_reference_uk UNIQUE (allele_id,reference_id);
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_class_ck CHECK (REFERENCE_CLASS is NULL or REFERENCE_CLASS in ('allele_name', 'so_term' , 'allele_description'));
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allele_reference_uk UNIQUE (allele_id,reference_id);
 CREATE INDEX allelereference_source_fk_index ON nex.allele_reference (source_id);
 CREATE INDEX allelereference_ref_fk_index ON nex.allele_reference (reference_id);
