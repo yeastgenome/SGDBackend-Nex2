@@ -9,6 +9,7 @@ from datetime import timedelta
 from primer3 import bindings, designPrimers
 from collections import defaultdict
 from sqlalchemy.orm import joinedload
+from urllib.request import Request, urlopen
 
 import os
 import re
@@ -19,7 +20,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -191,17 +192,70 @@ def search(request):
         'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'aliases', 'year',
         'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
+
+    ## added for allele search
+    # query2 = query.replace('Δ', "delta").replace('-', "delta")
+    # if is_quick_flag == 'true' and ('delta' in query2):
+    if is_quick_flag:
+        allele_name = query.strip()
+        maybe_allele_url = None
+        maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(query)).one_or_none()
+        if maybe_allele:
+            maybe_allele_url = maybe_allele.obj_url
+        if maybe_allele_url is None:
+            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele_name)).one_or_none()
+            if aa is not None:
+                maybe_allele_url = aa.allele.obj_url
+        if maybe_allele_url:
+            allele_search_obj = {
+                'href': maybe_allele_url,
+                'is_quick': True
+            }
+            return {
+                'total': 1,
+                'results': [allele_search_obj],
+                'aggregations': []
+            }
+
+    ## end of allele search section
+        
     # see if we can search for a simple gene name in db without using ES
 
     aliases_count = 0
-    if is_quick_flag == 'true' and terms_digits_flag == False:
+    if is_quick_flag == 'true' and query != '' and terms_digits_flag == False:
         t_query = query.strip().upper()
         sys_pattern = re.compile(r'(?i)^y.{2,}')
         is_sys_name_match = sys_pattern.match(t_query)
+        
+        ## adding code to check if it is an unmapped gene
+        is_unmapped = 0
+        unmapped_url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+        response = urlopen(unmapped_url)
+        unmapped_data = response.read().decode('utf-8').split("\n")
+        for line in unmapped_data:
+            if line == '' or line.startswith('#') or line.startswith('FEATURE_NAME'):
+                continue
+            pieces = line.split('\t')
+            if pieces[0] == t_query:
+                is_unmapped = 1
+                break
+        if is_unmapped == 1:
+            unmapped_search_obj = {
+                'href': '/search?q=' + query + '&category=locus',
+                'is_quick': True
+            }
+            return {
+                'total': 1,
+                'results': [unmapped_search_obj],
+                'aggregations': []
+            }
+        
+        ## end of unmapped gene check
+        
         if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
             maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
             aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
-            if aliases_count == 0 and  maybe_gene_url:
+            if aliases_count == 0 and maybe_gene_url:
                 fake_search_obj = {
                     'href': maybe_gene_url,
                     'is_quick': True
@@ -210,8 +264,7 @@ def search(request):
                     'total': 1,
                     'results': [fake_search_obj],
                     'aggregations': []
-                }
-            
+                }            
             elif aliases_count > 0:
                 alias_flag = True
     elif (Locusdbentity.is_valid_gene_name(query.strip().upper()) and terms_digits_flag == False):
@@ -1990,7 +2043,11 @@ def allele(request):
             alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
         else:
             alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
-
+        if alleleObj is None:
+            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele)).one_or_none()
+            if aa is not None:
+                alleleObj = aa.allele
+                
         if alleleObj is not None:
             return alleleObj.to_dict()
         else:
