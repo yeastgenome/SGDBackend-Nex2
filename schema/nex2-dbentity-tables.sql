@@ -1053,7 +1053,7 @@ CREATE TABLE nex.allele_reference (
     allele_reference_id bigint NOT NULL DEFAULT nextval('link_seq'),
     allele_id bigint NOT NULL,
     reference_id bigint NOT NULL,
-	reference_class varchar(40),
+	  reference_class varchar(40),
     source_id bigint NOT NULL,
     date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
     created_by varchar(12) NOT NULL,
@@ -1069,6 +1069,7 @@ COMMENT ON COLUMN nex.allele_reference.reference_id IS 'FK to REFERENCEDBENTITY.
 COMMENT ON COLUMN nex.allele_reference.reference_class IS 'The column in ALLELEDBENTITY that is associated with the reference.';
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allele_reference_uk UNIQUE (allele_id,reference_id);
 ALTER TABLE nex.allele_reference ADD CONSTRAINT allelereference_class_ck CHECK (REFERENCE_CLASS is NULL or REFERENCE_CLASS in ('allele_name', 'so_term' , 'allele_description'));
+ALTER TABLE nex.allele_reference ADD CONSTRAINT allele_reference_uk UNIQUE (allele_id,reference_id);
 CREATE INDEX allelereference_source_fk_index ON nex.allele_reference (source_id);
 CREATE INDEX allelereference_ref_fk_index ON nex.allele_reference (reference_id);
 
