@@ -6,6 +6,7 @@ import fetchData from '../../lib/fetchData';
 const GET_OBSERVABLES = '/get_observable';
 const GET_ALLELES = '/get_allele';
 const GET_REPORTERS = '/get_reporter';
+const GET_ALLELE_TYPES = '/get_allele_types';
 
 class AutocompleteSection extends Component {
   constructor(props) {
@@ -25,6 +26,9 @@ class AutocompleteSection extends Component {
     else if (this.props.id == 'reporter_id') {
       this.getData(GET_REPORTERS);
     }
+    else if (this.props.id == 'so_id') {
+      this.getData(GET_ALLELE_TYPES);
+    }
     else {
       this.props.dispatch(setError('Unknown ID: ' + this.props.id));
     }
@@ -39,6 +43,17 @@ class AutocompleteSection extends Component {
   }
 
   render() {
+    if (this.props.id == 'so_id') {
+      return (	  
+        <div className='row'>
+          {
+            this.state.options.length > 0?
+            <DataList options={this.state.options} id={this.props.id} left={this.props.value1} right={this.props.value2} selectedIdName={this.props.selectedIdName} onOptionChange={this.props.onOptionChange} selectedId={this.props.selectedId} placeholder={this.props.placeholder} setNewValue={this.props.setNewValue} />
+            :''
+          }
+        </div>
+      );	  
+    }      
     return (
       <div className='row'>
         <div className='columns medium-12'>
