@@ -109,7 +109,7 @@ class IndexESHelper:
         obj = {}
         _authors = DBSession.query(Referencedbentity, Referenceauthor).join(
             Referenceauthor, Referencedbentity.dbentity_id ==
-            Referenceauthor.reference_id).all()
+            Referenceauthor.reference_id).order_by(Referenceauthor.reference_id, Referenceauthor.author_order).all()
         for item in _authors:
             if item[0].dbentity_id not in obj:
                 obj[item[0].dbentity_id] = []
