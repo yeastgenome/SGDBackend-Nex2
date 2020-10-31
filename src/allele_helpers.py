@@ -1009,7 +1009,9 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         topic = 'Primary Literature'
-        old_primary_ref_ids = curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all()
+        old_primary_ref_ids = []
+        for x in curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all():
+            old_primary_ref_ids.append(x.reference_id)
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_primary_ref_ids, reference_ids)
 
@@ -1032,7 +1034,9 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         topic = 'Additional Literature'
-        old_additional_ref_ids = curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all()
+        old_additional_ref_ids = []
+        for x in curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all():
+            old_additional_ref_ids.append(x.reference_id)
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_additional_ref_ids, reference_ids)
 
@@ -1055,7 +1059,9 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         topic = 'Reviews'
-        old_review_ref_ids = curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all()
+        old_review_ref_ids = []
+        for x in curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all():
+            old_review_ref_ids.append(x.reference_id)
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_review_ref_ids, reference_ids)
 
