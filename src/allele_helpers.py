@@ -729,11 +729,16 @@ def update_allele_data(request):
         source_id = sgd.source_id
 
         ## allele name & references                                                                                                  
-
         sgdid = request.params.get('sgdid')
         if sgdid == '':
             return HTTPBadRequest(body=json.dumps({'error': "No SGDID is passed in."}), content_type='text/json')
+
+
         
+        return HTTPBadRequest(body=json.dumps({'error': "SGDID="+sgdid}), content_type='text/json')
+    
+
+    
         d = curator_session.query(Dbentity).filter_by(subclass='ALLELE', sgdid=sgdid).one_or_none()
 
         if d is None:
