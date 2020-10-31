@@ -709,8 +709,6 @@ def insert_delete_allele_reference_rows(curator_session, CREATED_BY, ref_ids_to_
         success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELE_REFERENCE table for reference_class='" + str(reference_class) + "'. "
 
     ## delete
-    if reference_class is None:
-        reference_class = ''
     for reference_id in ref_ids_to_delete:
         ar = curator_session.query(AlleleReference).filter_by(allele_id=allele_id, reference_id=reference_id, reference_class=reference_class).one_or_none()
         if ar is not None:
