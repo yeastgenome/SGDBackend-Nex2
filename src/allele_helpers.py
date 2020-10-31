@@ -1171,8 +1171,8 @@ def delete_allele_data(request):
         
         ## delete alleledbentity & dbentity 
 
-        nex_session.query(Alleledbentity).filter_by(dbentity_id=allele_id).delete()
-        nex_session.query(Dbentity).filter_by(dbentity_id=allele_id).delete()
+        curator_session.query(Alleledbentity).filter_by(dbentity_id=allele_id).delete()
+        curator_session.query(Dbentity).filter_by(dbentity_id=allele_id).delete()
         
         success_message = success_message + "<br>" + "The alleledbentity/dbentity rows have been deleted."
         
