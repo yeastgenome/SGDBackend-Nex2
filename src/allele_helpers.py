@@ -1097,7 +1097,7 @@ def delete_allele_data(request):
         d = curator_session.query(Dbentity).filter_by(subclass='ALLELE', sgdid=sgdid).one_or_none()
 
         if d is None:
-            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + sgdid + " is not in the database."}), content_type='text/json')
+            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + str(sgdid) + " is not in the database."}), content_type='text/json')
 
         allele_id = d.dbentity_id
 
