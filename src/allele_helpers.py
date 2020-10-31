@@ -732,12 +732,6 @@ def update_allele_data(request):
         sgdid = request.params.get('sgdid')
         if sgdid == '':
             return HTTPBadRequest(body=json.dumps({'error': "No SGDID is passed in."}), content_type='text/json')
-
-
-        
-        return HTTPBadRequest(body=json.dumps({'error': "SGDID="+sgdid}), content_type='text/json')
-    
-
     
         d = curator_session.query(Dbentity).filter_by(subclass='ALLELE', sgdid=sgdid).one_or_none()
 
@@ -758,6 +752,10 @@ def update_allele_data(request):
             d.display_name = allele_name
             curator_session.add(d)
 
+            
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+
+    
         ## update so_id
         
         a = curator_session.query(Alleledbentity).filter_by(dbentity_id=allele_id).one_or_none()
