@@ -1088,10 +1088,7 @@ def update_allele_data(request):
 def delete_allele_data(request):
 
     try:
-        # CREATED_BY = request.session['username']
         curator_session = get_curator_session(request.session['username'])
-        # sgd = DBSession.query(Source).filter_by(display_name='SGD').one_or_none()
-        # source_id = sgd.source_id
 
         sgdid = request.params.get('sgdid')
         if sgdid == '':
@@ -1115,7 +1112,11 @@ def delete_allele_data(request):
                 curator_session.delete(lar)
             curator_session.delete(la)
             success_message = "The locus_allele row has been deleted. "
+
             
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+
+    
         ## delete allelealias_reference & allele_alias
 
         all_aa = curator_session.query(AlleleAlias).filter_by(allele_id=allele_id).all()
