@@ -920,11 +920,7 @@ def update_allele_data(request):
         else:
             return HTTPBadRequest(body=json.dumps({'error': "The affected gene name " + affected_gene + " doesn't match allele_name " + allele_name + "."}), content_type='text/json')
 
-        ###
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-        ###
-    
-        
+               
         ## update aliases & references
         
         old_alias_to_allele_alias_ref = {}
@@ -999,6 +995,13 @@ def update_allele_data(request):
             curator_session.delete(aa)
             success_message = success_message + "<br>" + "The alias " + alias_name + " has been deleted from ALLELE_ALIAS table. "
 
+
+            
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+
+
+    
+            
         ## update papers for primary literature
 
         taxonomy = DBSession.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
