@@ -1113,10 +1113,6 @@ def delete_allele_data(request):
                 curator_session.delete(lar)
             curator_session.delete(la)
             success_message = "The locus_allele row has been deleted. "
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
     
         ## delete allelealias_reference & allele_alias
 
