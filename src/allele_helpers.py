@@ -925,7 +925,10 @@ def update_allele_data(request):
         
         old_alias_to_allele_alias_ref = {}
         for x in DBSession.query(AlleleAlias).filter_by(allele_id=allele_id).all():
-            ref_ids = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            ref_ids = []
+            all_aar = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            for aar in all_aar:
+                ref_ids.append(aar.reference_id)
             old_alias_to_allele_alias_ref[x.display_name.upper()] = (x.allele_alias_id, ref_ids)
 
             
