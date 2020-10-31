@@ -1173,8 +1173,10 @@ def delete_allele_data(request):
 
         ad = curator_session.query(Alleledbentity).filter_by(dbentity_id=allele_id).one_or_none()
         curator_session.delete(ad)
-        d = curator_session.query(Dbentity).filter_by(dbentity_id=allele_id).one_or_none()
-        curator_session.delete(d)
+
+        # d = curator_session.query(Dbentity).filter_by(dbentity_id=allele_id).one_or_none()
+        # curator_session.delete(d)
+        
         success_message = success_message + "<br>" + "The alleledbentity/dbentity rows have been deleted."
         
         transaction.commit()
