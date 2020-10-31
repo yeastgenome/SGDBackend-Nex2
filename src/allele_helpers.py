@@ -1146,11 +1146,6 @@ def delete_allele_data(request):
             deleted = 1
         if deleted == 1:
             success_message = success_message + "<br>" + "The literatureannotation row(s) have been deleted. "
-
-
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
-
     
         ## update phenotypeannotation and set allele_id to null
 
@@ -1162,7 +1157,12 @@ def delete_allele_data(request):
             updated = 1
         if updated == 1:
             success_message = success_message + "<br>" + "The allele_id for phenotypeannotation row(s) have been set to null. "
-        
+
+            
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+
+
+    
         ## delete allele_geninteraction
 
         all_ai = curator_session.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==allele_id, AlleleGeninteraction.allele2_id==allele_id)).all()
