@@ -819,11 +819,6 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
             success_message = success_message + message
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
-
     
         ## update papers for allele_type (so term)
         
@@ -843,6 +838,10 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
             success_message = success_message + message
+
+
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+    
             
         ## update papers for description
 
