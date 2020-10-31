@@ -902,14 +902,12 @@ def update_allele_data(request):
             if err_message != '':
                 return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
-            old_ref_ids = DBSession.query(LocusalleleReference.reference_id).filter_by(locus_allele_id=locus_allele_id).all()
+            old_ref_ids = []
+            for x in DBSession.query(LocusalleleReference).filter_by(locus_allele_id=locus_allele_id).all():
+                old_ref_ids.append(x.reference_id)
+            
             (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_ref_ids, reference_ids)
 
-            
-            return HTTPBadRequest(body=json.dumps({'error': str(old_ref_ids)}), content_type='text/json')
-
-        
-            
             (message, error) = insert_delete_locusallele_reference_rows(curator_session, CREATED_BY,
                                                                         ref_ids_to_insert,
                                                                         ref_ids_to_delete,
