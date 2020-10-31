@@ -726,7 +726,8 @@ def update_allele_data(request):
         sgd = DBSession.query(Source).filter_by(display_name='SGD').one_or_none()
         source_id = sgd.source_id
 
-        ## allele name & references                                                                                                  
+        ## allele name & references
+
         sgdid = request.params.get('sgdid')
         if sgdid == '':
             return HTTPBadRequest(body=json.dumps({'error': "No SGDID is passed in."}), content_type='text/json')
@@ -1092,13 +1093,13 @@ def delete_allele_data(request):
 
         sgdid = request.params.get('sgdid')
         if sgdid == '':
-            return HTTPBadRequest(body=json.dumps({'error': "SGDID for allele is not passed in"}), content_type='text/json')
+            return HTTPBadRequest(body=json.dumps({'error': "No SGDID is passed in."}), content_type='text/json')
 
         d = curator_session.query(Dbentity).filter_by(subclass='ALLELE', sgdid=sgdid).one_or_none()
 
         if d is None:
-            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + str(sgdid) + " is not in the database."}), content_type='text/json')
-
+            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + sgdid + " is not in the database."}), content_type='text/json')
+        
         allele_id = d.dbentity_id
 
         success_message = ''
