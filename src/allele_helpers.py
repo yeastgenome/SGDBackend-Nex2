@@ -1168,11 +1168,6 @@ def delete_allele_data(request):
             deleted = 1
         if deleted == 1:
             success_message = success_message + "<br>" + "The allele_geninteraction row(s) have been deleted. "
-
-
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
-    
         
         ## delete alleledbentity & dbentity 
 
