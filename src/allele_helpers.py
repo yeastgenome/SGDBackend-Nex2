@@ -752,10 +752,6 @@ def update_allele_data(request):
             d.display_name = allele_name
             curator_session.add(d)
 
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
-    
         ## update so_id
         
         a = curator_session.query(Alleledbentity).filter_by(dbentity_id=allele_id).one_or_none()
@@ -774,6 +770,10 @@ def update_allele_data(request):
             a.so_id = so_id
             allele_update = 1
 
+            
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+    
+            
         ## update description
         desc = request.params.get('description')
         if desc != old_desc:
