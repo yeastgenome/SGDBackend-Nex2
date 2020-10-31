@@ -779,11 +779,7 @@ def update_allele_data(request):
             
         if allele_update > 0:
             curator_session.add(a)
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-    
-            
+ 
         ## get all allele_reference rows
         
         old_allele_name_ref_ids = []
@@ -802,8 +798,9 @@ def update_allele_data(request):
             else:
                 old_other_ref_ids.append(ar.reference_id)
 
-
+        ##############################
         pmid_to_reference_id = {}
+        ##############################
         
         ## update papers for allele name
         
@@ -813,7 +810,9 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_allele_name_ref_ids, reference_ids)
-
+        
+        return HTTPBadRequest(body=json.dumps({'error': "ref_ids_to_insert="+str(ref_ids_to_insert) + ", ref_ids_to_delete)="+str(ref_ids_to_delete) }), content_type='text/json')   
+        
         reference_class = 'allele_name'
         (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
                                                                ref_ids_to_insert, ref_ids_to_delete,
