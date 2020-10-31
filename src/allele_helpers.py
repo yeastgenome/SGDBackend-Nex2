@@ -769,10 +769,6 @@ def update_allele_data(request):
             success_message = "The so_id has been updated from " + str(old_so_id) + " to " + str(so_id) + "."
             a.so_id = so_id
             allele_update = 1
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-    
             
         ## update description
         desc = request.params.get('description')
@@ -784,6 +780,10 @@ def update_allele_data(request):
         if allele_update > 0:
             curator_session.add(a)
 
+            
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+    
+            
         ## get all allele_reference rows
         
         old_allele_name_ref_ids = []
