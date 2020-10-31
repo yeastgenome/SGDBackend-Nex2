@@ -928,6 +928,11 @@ def update_allele_data(request):
             ref_ids = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
             old_alias_to_allele_alias_ref[x.display_name.upper()] = (x.allele_alias_id, ref_ids)
 
+            
+        return HTTPBadRequest(body=json.dumps({'error': str(old_alias_to_allele_alias_ref)}), content_type='text/json')
+
+    
+            
         alias_list = request.params.get('aliases', '')
         alias_pmid_list = request.params.get('alias_pmids', '')
 
