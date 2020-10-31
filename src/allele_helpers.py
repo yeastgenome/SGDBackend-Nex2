@@ -930,11 +930,6 @@ def update_allele_data(request):
             for aar in all_aar:
                 ref_ids.append(aar.reference_id)
             old_alias_to_allele_alias_ref[x.display_name.upper()] = (x.allele_alias_id, ref_ids)
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': str(old_alias_to_allele_alias_ref)}), content_type='text/json')
-
-    
             
         alias_list = request.params.get('aliases', '')
         alias_pmid_list = request.params.get('alias_pmids', '')
