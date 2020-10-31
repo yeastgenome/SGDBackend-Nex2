@@ -876,10 +876,6 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
             success_message = success_message + message
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-    
             
         ## update papers for affected gene
 
@@ -921,6 +917,11 @@ def update_allele_data(request):
         else:
             return HTTPBadRequest(body=json.dumps({'error': "The affected gene name " + affected_gene + " doesn't match allele_name " + allele_name + "."}), content_type='text/json')
 
+        ###
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+        ###
+    
+        
         ## update aliases & references
         
         old_alias_to_allele_alias_ref = {}
