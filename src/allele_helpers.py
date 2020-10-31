@@ -1152,16 +1152,11 @@ def delete_allele_data(request):
         all_pa = curator_session.query(Phenotypeannotation).filter_by(allele_id=allele_id).all()
         updated = 0
         for pa in all_pa:
-            pa.allele_id = ''
+            pa.allele_id = None
             curator_session.add(pa)
             updated = 1
         if updated == 1:
             success_message = success_message + "<br>" + "The allele_id for phenotypeannotation row(s) have been set to null. "
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
-
     
         ## delete allele_geninteraction
 
@@ -1173,6 +1168,11 @@ def delete_allele_data(request):
             deleted = 1
         if deleted == 1:
             success_message = success_message + "<br>" + "The allele_geninteraction row(s) have been deleted. "
+
+
+        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
+
+    
         
         ## delete alleledbentity & dbentity 
 
