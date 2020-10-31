@@ -647,7 +647,7 @@ def insert_delete_allelealias_reference_rows(curator_session, CREATED_BY, ref_id
 
     ## delete
     for reference_id in ref_ids_to_delete:
-        aar = curator_session.query(AllelealiasReference).filter_by(allele_alias_id=allele_alias_id, reference_id=reference_id, alias_type='Synonym').one_or_none()
+        aar = curator_session.query(AllelealiasReference).filter_by(allele_alias_id=allele_alias_id, reference_id=reference_id).one_or_none()
         if aar is not None:
             curator_session.delete(aar)
             success_message = success_message + "<br>" + "The paper for reference_id=" + str(reference_id) + " has been deleted from ALLELEALIAS_REFERENCE table. "
