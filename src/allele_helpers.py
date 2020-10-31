@@ -997,13 +997,6 @@ def update_allele_data(request):
             aa = curator_session.query(AlleleAlias).filter_by(allele_alias_id=allele_alias_id).one_or_none()
             curator_session.delete(aa)
             success_message = success_message + "<br>" + "The alias " + alias_name + " has been deleted from ALLELE_ALIAS table. "
-
-
-            
-        return HTTPBadRequest(body=json.dumps({'error': success_message}), content_type='text/json')
-
-
-    
             
         ## update papers for primary literature
 
