@@ -634,7 +634,7 @@ def check_old_new_references(old_ref_ids, new_references):
 
     return (ref_ids_to_insert, ref_ids_to_delete)
 
-def insert_delete_allelealias_reference_rows(curator_session, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_alias_id):
+def insert_delete_allelealias_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_alias_id):
 
     success_message = ""
     ## insert
@@ -655,7 +655,7 @@ def insert_delete_allelealias_reference_rows(curator_session, ref_ids_to_insert,
     return (success_message, '')
 
 
-def insert_delete_locusallele_reference_rows(curator_session, ref_ids_to_insert, ref_ids_to_delete, source_id, locus_allele_id):
+def insert_delete_locusallele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, locus_allele_id):
 
     success_message = ""
     ## insert
@@ -676,7 +676,7 @@ def insert_delete_locusallele_reference_rows(curator_session, ref_ids_to_insert,
     return (success_message, '')
 
 
-def insert_delete_literatureannotation_rows(curator_session, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, taxonomy_id, topic):
+def insert_delete_literatureannotation_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, taxonomy_id, topic):
 
     success_message = ""
     ## insert
@@ -697,7 +697,7 @@ def insert_delete_literatureannotation_rows(curator_session, ref_ids_to_insert, 
     return (success_message, '')
 
                                         
-def insert_delete_allele_reference_rows(curator_session, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, reference_class):
+def insert_delete_allele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, reference_class):
 
     success_message = ""
     ## insert
@@ -812,9 +812,9 @@ def update_allele_data(request):
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_allele_name_ref_ids, reference_ids)
 
         reference_class = 'allele_name'
-        (message, error) = insert_delete_allele_reference_rows(curator_session, ref_ids_to_insert,
-                                                               ref_ids_to_delete, source_id, allele_id,
-                                                               reference_class)
+        (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
+                                                               ref_ids_to_insert, ref_ids_to_delete,
+                                                               source_id, allele_id, reference_class)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
@@ -829,8 +829,10 @@ def update_allele_data(request):
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_allele_type_ref_ids, reference_ids)
 
         reference_class = 'so_term'
-        (message, error) = insert_delete_allele_reference_rows(curator_session, ref_ids_to_insert,
-                                                               ref_ids_to_delete, source_id, allele_id,
+        (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
+                                                               ref_ids_to_insert,
+                                                               ref_ids_to_delete,
+                                                               source_id, allele_id,
                                                                reference_class)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -846,8 +848,10 @@ def update_allele_data(request):
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_desc_ref_ids, reference_ids)
 
         reference_class = 'allele_description'
-        (message, error) = insert_delete_allele_reference_rows(curator_session, ref_ids_to_insert,
-                                                               ref_ids_to_delete, source_id, allele_id,
+        (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
+                                                               ref_ids_to_insert,
+                                                               ref_ids_to_delete,
+                                                               source_id, allele_id,
                                                                reference_class)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -864,8 +868,10 @@ def update_allele_data(request):
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_other_ref_ids, reference_ids)
 
         reference_class = None
-        (message, error) = insert_delete_allele_reference_rows(curator_session, ref_ids_to_insert,
-                                                               ref_ids_to_delete, source_id, allele_id,
+        (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
+                                                               ref_ids_to_insert,
+                                                               ref_ids_to_delete,
+                                                               source_id, allele_id,
                                                                reference_class)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -900,8 +906,10 @@ def update_allele_data(request):
             old_ref_ids = DBSession.query(LocusalleleReference.reference_id).filter_by(locus_allele_id=locus_allele_id).all()
             (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_ref_ids, reference_ids)
 
-            (message, error) = insert_delete_locusallele_reference_rows(curator_session, ref_ids_to_insert,
-                                                                        ref_ids_to_delete, source_id,
+            (message, error) = insert_delete_locusallele_reference_rows(curator_session, CREATED_BY,
+                                                                        ref_ids_to_insert,
+                                                                        ref_ids_to_delete,
+                                                                        source_id,
                                                                         locus_allele_id)
             if error != '':
                 return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -945,8 +953,11 @@ def update_allele_data(request):
                 ## update references for given alias
                 (this_allele_alias_id, old_ref_ids) = old_alias_to_allele_alias_ref[alias_name.upper()]
                 (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_ref_ids, reference_ids)
-                (message, error) = insert_delete_allelealias_reference_rows(curator_session, ref_ids_to_insert,
-                                                                            ref_ids_to_delete, source_id,
+                (message, error) = insert_delete_allelealias_reference_rows(curator_session,
+                                                                            CREATED_BY,
+                                                                            ref_ids_to_insert,
+                                                                            ref_ids_to_delete,
+                                                                            source_id,
                                                                             this_allele_alias_id)
                 if error != '':
                     return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -996,8 +1007,11 @@ def update_allele_data(request):
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_primary_ref_ids, reference_ids)
 
-        (message, error) = insert_delete_literatureannotation_rows(curator_session, ref_ids_to_insert,
-                                                                   ref_ids_to_delete, source_id, allele_id,
+        (message, error) = insert_delete_literatureannotation_rows(curator_session,
+                                                                   CREATED_BY,
+                                                                   ref_ids_to_insert,
+                                                                   ref_ids_to_delete,
+                                                                   source_id, allele_id,
                                                                    taxonomy_id, topic)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -1016,8 +1030,11 @@ def update_allele_data(request):
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_additional_ref_ids, reference_ids)
 
-        (message, error) = insert_delete_literatureannotation_rows(curator_session, ref_ids_to_insert,
-                                                                   ref_ids_to_delete, source_id, allele_id,
+        (message, error) = insert_delete_literatureannotation_rows(curator_session,
+                                                                   CREATED_BY,
+                                                                   ref_ids_to_insert,
+                                                                   ref_ids_to_delete,
+                                                                   source_id, allele_id,
                                                                    taxonomy_id, topic)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
@@ -1036,8 +1053,11 @@ def update_allele_data(request):
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_review_ref_ids, reference_ids)
 
-        (message, error) = insert_delete_literatureannotation_rows(curator_session, ref_ids_to_insert,
-                                                                   ref_ids_to_delete, source_id, allele_id,
+        (message, error) = insert_delete_literatureannotation_rows(curator_session,
+                                                                   CREATED_BY,
+                                                                   ref_ids_to_insert,
+                                                                   ref_ids_to_delete,
+                                                                   source_id, allele_id,
                                                                    taxonomy_id, topic)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
