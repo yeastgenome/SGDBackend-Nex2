@@ -788,7 +788,7 @@ def update_allele_data(request):
         old_desc_ref_ids = []
         old_other_ref_ids = []
 
-        all_allele_refs = curator_session.query(AlleleReference).filter_by(dbentity_id=allele_id).all()
+        all_allele_refs = curator_session.query(AlleleReference).filter_by(allele_id=allele_id).all()
         for ar in all_allele_refs:
             if ar.reference_class == 'allele_name':
                 old_allele_name_ref_ids.append(ar.reference_id)
