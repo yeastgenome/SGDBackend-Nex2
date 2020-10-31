@@ -73,6 +73,9 @@ class EditAllele extends Component {
   handleDelete(e) {
     e.preventDefault();
     let formData = new FormData();
+    for(let key in this.props.allele){
+      formData.append(key,this.props.allele[key]);
+    }
     fetchData(DELETE_ALLELE, {
       type: 'POST',
       data: formData,
