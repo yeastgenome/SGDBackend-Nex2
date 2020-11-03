@@ -4,7 +4,7 @@ import fetchData from '../../lib/fetchData';
 import Loader from '../../components/loader';
 import { connect } from 'react-redux';
 import { setError, setMessage } from '../../actions/metaActions';
-// import { PREVIEW_URL } from '../../constants.js';
+import { PREVIEW_URL } from '../../constants.js';
 import { setAllele } from '../../actions/alleleActions';
 import OneAllele from './oneAllele';
 const UPDATE_ALLELE = '/allele_update';
@@ -156,10 +156,11 @@ class EditAllele extends Component {
   }
     
   displayForm() {
-    // let previewUrl = `${PREVIEW_URL}/allele/${this.state.allele_name}`;
+    let previewUrl = `${PREVIEW_URL}/allele/${this.state.allele_name}`;
     // <a href='{previewUrl}'>Preview this Allele page</a>
     return (
-      <div>{previewUrl}</div>	  
+      <div>{previewUrl}</div>
+      <div>
         <form onSubmit={this.handleUpdate} ref='form'>
           <input name='sgdid' value={this.props.allele.sgdid} className="hide" />
           <OneAllele allele={this.props.allele} onOptionChange={this.handleChange} />
