@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import or_
 from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 from sqlalchemy.exc import IntegrityError, DataError
@@ -9,6 +10,7 @@ from src.models import DBSession, So, SoRelation, Dbentity, Alleledbentity, Alle
                        Phenotypeannotation, AlleleGeninteraction
 from src.curation_helpers import get_curator_session
 
+PREVIEW_URL = os.environ['PREVIEW_URL']
 
 PARENT_SO_TERM = 'structural variant'
 TAXON = 'TAX:4932'
@@ -607,6 +609,9 @@ def add_allele_data(request):
             if returnValue != 1:
                 return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             success_message = success_message + "<br>" + "The reviews literature for PMID= " + pmid + " has been added into LITERATUREANNOTATION table. "
+        
+        preview_url = PREVIEW_URL + 'allele/' + allele_name.replace(' ', '_')
+        success_message = "<br> + <a href=preview_url target='new'>Preview this Allele page</a><br>" + success_message
         
         transaction.commit()
         return HTTPOk(body=json.dumps({'success': success_message, 'allele': "ALLELE"}), content_type='text/json')
