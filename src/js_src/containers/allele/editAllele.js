@@ -156,9 +156,10 @@ class EditAllele extends Component {
   }
     
   displayForm() {
-    // let previewUrl = `${PREVIEW_URL}/allele/${this.state.allele_name}`;
+    let previewUrl = `${PREVIEW_URL}/allele/${this.state.allele_name}`;
     // <a href='{previewUrl}'>Preview this Allele page</a>
     return (
+      <div>{previewUrl}</div>	  
       <div>
         <form onSubmit={this.handleUpdate} ref='form'>
           <input name='sgdid' value={this.props.allele.sgdid} className="hide" />
