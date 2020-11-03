@@ -150,13 +150,13 @@ class EditAllele extends Component {
     let allele_name = urlList[urlList.length-1];
     let url = GET_ALLELE + '/' + allele_name;  
     this.setState({
-      allele_name: allele_name
+      allele_name: allele_name,
     });
     return url;
   }
     
   displayForm() {
-    let previewUrl = `${PREVIEW_URL}/allele/${this.props.match.params.id}`;
+    let previewUrl = `${PREVIEW_URL}/allele/${this.state.allele_name}`;
     return (
       <div>
         <a href='{previewUrl}'>Preview this Allele page</a>
