@@ -210,8 +210,12 @@ def get_all_allele_types(request):
         
         data = []
         so_id_to_so = dict([(x.so_id, x) for x in DBSession.query(So).all()])
+        found = {}
         for so_id in so_id_list:
             so = so_id_to_so[so_id]
+            if so_id in found:
+                continue
+            found[so_id] = 1
             data.append( { 'so_id': so_id,
                            'format_name': so.term_name,
                            'display_name': so.display_name } )
