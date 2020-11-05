@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
-// import CommentSection from '../phenotype/commentSection';
 import TwoColTextField from './twoColTextField';
-import OneColTextField from './oneColTextField';
 import AutocompleteSection from '../phenotype/autocompleteSection';
 
 class OneAllele extends Component {
