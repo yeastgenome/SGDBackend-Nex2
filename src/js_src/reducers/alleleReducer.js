@@ -9,12 +9,8 @@ const DEFAULT_STATE = {
     allele_type_pmids: '',
     description: '',
     description_pmids: '',
-    other_pmids: '',
     aliases: '',
-    alias_pmids: '',
-    primary_pmids: '',
-    additional_pmids: '',
-    review_pmids: ''  
+    alias_pmids: ''
   }
 };
 

@@ -72,26 +72,6 @@ def insert_allele_reference(curator_session, CREATED_BY, source_id, allele_id, r
         if curator_session:
             curator_session.rollback()
         return str(e)
-
-    
-def insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id, reference_id, topic, taxonomy_id):
-
-    x = None
-    try:
-        x = Literatureannotation(dbentity_id = allele_id,
-                                 reference_id = reference_id,
-                                 topic = topic,
-                                 taxonomy_id = taxonomy_id,
-                                 source_id = source_id,
-                                 created_by = CREATED_BY)
-        curator_session.add(x)
-        # transaction.commit()
-        return 1
-    except Exception as e:
-        transaction.abort()
-        if curator_session:
-            curator_session.rollback()
-        return str(e)
     
 def insert_allele_alias(curator_session, CREATED_BY, source_id, allele_id, alias_name):
 
@@ -252,7 +232,6 @@ def get_one_allele(request):
         allele_name_pmids = []
         description_pmids = []
         allele_type_pmids = []
-        other_pmids = []
         for x in DBSession.query(AlleleReference).filter_by(allele_id=a.dbentity_id).all():        
             if x.reference_class == 'allele_name':
                 allele_name_pmids.append(x.reference.pmid)
@@ -260,13 +239,10 @@ def get_one_allele(request):
                 description_pmids.append(x.reference.pmid)
             elif x.reference_class == 'so_term':
                 allele_type_pmids.append(x.reference.pmid)
-            else:
-                other_pmids.append(x.reference.pmid)        
         data['allele_name_pmids'] = allele_name_pmids
         data['description_pmids'] = description_pmids
         data['allele_type_pmids'] = allele_type_pmids
-        data['other_pmids'] = other_pmids
-    
+        
         ## get affected_gene and pmids from locus_allele & locusallele_reference
         x = DBSession.query(LocusAllele).filter_by(allele_id=a.dbentity_id).one_or_none()
         pmids = []
@@ -286,21 +262,6 @@ def get_one_allele(request):
             aliases.append( { 'display_name': x.display_name,
                               'pmids': pmids } )
         data['aliases'] = aliases
-
-        ## get pmids from literatureannotation table
-        primary_pmids = []
-        additional_pmids = []
-        review_pmids = []
-        for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=a.dbentity_id).all():
-            if x.topic == 'Primary Literature':
-                primary_pmids.append(x.reference.pmid)
-            elif x.topic == 'Additional Literature':
-                additional_pmids.append(x.reference.pmid)
-            elif x.topic == 'Reviews':
-                review_pmids.append(x.reference.pmid)
-        data['primary_pmids'] = primary_pmids
-        data['additional_pmids'] = additional_pmids
-        data['review_pmids'] = review_pmids        
         
         return HTTPOk(body=json.dumps(data),content_type='text/json')
     except Exception as e:
@@ -500,23 +461,7 @@ def add_allele_data(request):
             if returnValue != 1:
                 return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
             success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELE_REFERENCE table for 'allele_description'. "
-
-            
-        ## references for OTHER
-        other_pmids = request.params.get('other_pmids')
-
-        (reference_ids, err_message) = check_pmids(other_pmids, pmid_to_reference_id)
-
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        for (reference_id, pmid) in reference_ids:
-            returnValue = insert_allele_reference(curator_session, CREATED_BY, source_id,
-                                                  allele_id, reference_id, None)
-            if returnValue != 1:
-                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
-            success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELE_REFERENCE table for OTHER. "
-            
+    
         ## aliases & reference(s)
         
         alias_list = request.params.get('aliases', '')
@@ -559,60 +504,6 @@ def add_allele_data(request):
                 if returnValue != 1:
                     return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
                 success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELEALIAS_REFERENCE table for alias " + alias_name + ". "
-
-
-                
-        ## papers for primary literacture
-
-        taxonomy = DBSession.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
-        taxonomy_id = taxonomy.taxonomy_id
-
-    
-        # return HTTPBadRequest(body=json.dumps({'error': "PRIMARY LITERATURE"}), content_type='text/json')
-
-    
-        primary_pmids = request.params.get('primary_pmids')
-
-        (reference_ids, err_message) = check_pmids(primary_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        for (reference_id, pmid) in reference_ids:
-            returnValue = insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id,
-                                                      reference_id, 'Primary Literature', taxonomy_id) 
-            if returnValue != 1:
-                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
-            success_message = success_message + "<br>" + "The primary literature for PMID= " + pmid + " has been added into LITERATUREANNOTATION table. "
-            
-        ## papers for additional literacture
-        
-        additional_pmids = request.params.get('additional_pmids')
-
-        (reference_ids, err_message) = check_pmids(additional_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        for (reference_id, pmid) in reference_ids:
-            returnValue = insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id,
-                                                      reference_id, 'Additional Literature', taxonomy_id)
-            if returnValue != 1:
-                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
-            success_message = success_message + "<br>" + "The additional literature for PMID= " + pmid + " has been added into LITERATUREANNOTATION table. "
-
-        ## papers for review literacture
-        
-        review_pmids = request.params.get('review_pmids')
-        
-        (reference_ids, err_message) = check_pmids(review_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        for (reference_id, pmid) in reference_ids:
-            returnValue = insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id,
-                                                      reference_id, 'Reviews', taxonomy_id)
-            if returnValue != 1:
-                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
-            success_message = success_message + "<br>" + "The reviews literature for PMID= " + pmid + " has been added into LITERATUREANNOTATION table. "
         
         preview_url = PREVIEW_URL + 'allele/' + allele_name.replace(' ', '_')
         update_url = "/#/curate/allele/" + allele_name.replace(' ', '_')
@@ -685,28 +576,6 @@ def insert_delete_locusallele_reference_rows(curator_session, CREATED_BY, ref_id
             success_message = success_message + "<br>" + "The paper for reference_id=" + str(reference_id) + " has been deleted from LOCUSALLELE_REFERENCE table. "
 
     return (success_message, '')
-
-
-def insert_delete_literatureannotation_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, taxonomy_id, topic):
-
-    success_message = ""
-    ## insert
-    for (reference_id, pmid) in ref_ids_to_insert:
-        returnValue = insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id,
-                                                      reference_id, topic, taxonomy_id)
-        if returnValue != 1:
-            return ('', returnValue)
-        success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into LITERATUREANNOTATION table for " + topic + ". "
-
-    ## delete
-    for reference_id in ref_ids_to_delete:
-        la = curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, reference_id=reference_id, topic=topic).one_or_none()
-        if la is not None:
-            curator_session.delete(la)
-            success_message = success_message + "<br>" + "The paper for reference_id=" + str(reference_id) + " has been deleted from LITERATUREANNOTATION table for " + topic + ". "
-
-    return (success_message, '')
-
                                         
 def insert_delete_allele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, reference_class):
 
@@ -868,27 +737,7 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
             success_message = success_message + message
-          
-        ## update papers for other (reference_class is null)
-        # old_other_ref_ids
-
-        other_pmids = request.params.get('other_pmids')
-        (reference_ids, err_message) = check_pmids(other_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-        (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_other_ref_ids, reference_ids)
-
-        reference_class = None
-        (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
-                                                               ref_ids_to_insert,
-                                                               ref_ids_to_delete,
-                                                               source_id, allele_id,
-                                                               reference_class)
-        if error != '':
-            return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
-        if message != '':
-            success_message = success_message + message
-            
+                      
         ## update papers for affected gene
 
         affected_gene = request.params.get('affected_gene')
@@ -1009,84 +858,6 @@ def update_allele_data(request):
             aa = curator_session.query(AlleleAlias).filter_by(allele_alias_id=allele_alias_id).one_or_none()
             curator_session.delete(aa)
             success_message = success_message + "<br>" + "The alias " + alias_name + " has been deleted from ALLELE_ALIAS table. "
-            
-        ## update papers for primary literature
-
-        taxonomy = DBSession.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
-        taxonomy_id = taxonomy.taxonomy_id
-
-        primary_pmids = request.params.get('primary_pmids')
-        (reference_ids, err_message) = check_pmids(primary_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        topic = 'Primary Literature'
-        old_primary_ref_ids = []
-        for x in curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all():
-            old_primary_ref_ids.append(x.reference_id)
-
-        (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_primary_ref_ids, reference_ids)
-
-        (message, error) = insert_delete_literatureannotation_rows(curator_session,
-                                                                   CREATED_BY,
-                                                                   ref_ids_to_insert,
-                                                                   ref_ids_to_delete,
-                                                                   source_id, allele_id,
-                                                                   taxonomy_id, topic)
-        if error != '':
-            return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
-        if message != '':
-            success_message = success_message + message
-
-        ## update papers for additional literature
-
-        additional_pmids = request.params.get('additional_pmids')
-        (reference_ids, err_message) = check_pmids(additional_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        topic = 'Additional Literature'
-        old_additional_ref_ids = []
-        for x in curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all():
-            old_additional_ref_ids.append(x.reference_id)
-
-        (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_additional_ref_ids, reference_ids)
-
-        (message, error) = insert_delete_literatureannotation_rows(curator_session,
-                                                                   CREATED_BY,
-                                                                   ref_ids_to_insert,
-                                                                   ref_ids_to_delete,
-                                                                   source_id, allele_id,
-                                                                   taxonomy_id, topic)
-        if error != '':
-            return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
-        if message != '':
-            success_message = success_message + message
-        
-        ## update papers for review literature
-
-        review_pmids = request.params.get('review_pmids')
-        (reference_ids, err_message) = check_pmids(review_pmids, pmid_to_reference_id)
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
-
-        topic = 'Reviews'
-        old_review_ref_ids = []
-        for x in curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, topic=topic).all():
-            old_review_ref_ids.append(x.reference_id)
-
-        (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_review_ref_ids, reference_ids)
-
-        (message, error) = insert_delete_literatureannotation_rows(curator_session,
-                                                                   CREATED_BY,
-                                                                   ref_ids_to_insert,
-                                                                   ref_ids_to_delete,
-                                                                   source_id, allele_id,
-                                                                   taxonomy_id, topic)
-        if error != '':
-            return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
-        if message != '':
-            success_message = success_message + message
         
         transaction.commit()
         return HTTPOk(body=json.dumps({'success': success_message, 'allele': "ALLELE"}), content_type='text/json')

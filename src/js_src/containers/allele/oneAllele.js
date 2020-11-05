@@ -51,17 +51,8 @@ class OneAllele extends Component {
           <div className='columns medium-6 small-6'>
             <div> <label> PMID(s) for description (optional) </label> </div>
             <input type='text' name='description_pmids' value={this.props.allele.description_pmids} onChange={this.props.onOptionChange} />
-            <div> <label> PMID(s) for reference_class='' (optional) </label> </div>
-            <input type='text' name='other_pmids' value={this.props.allele.other_pmids} onChange={this.props.onOptionChange} />
           </div>
         </div>
-
-	
-        {/* literature */}
-        <OneColTextField sec_title='PMID(s) for Primary Literature:' name='primary_pmids' value={this.props.allele.primary_pmids} onOptionChange={this.props.onOptionChange} />
-        <OneColTextField sec_title='PMID(s) for Additional Literature:' name='additional_pmids' value={this.props.allele.additional_pmids} onOptionChange={this.props.onOptionChange} />
-        <OneColTextField sec_title='PMID(s) for Review Literature:' name='review_pmids' value={this.props.allele.review_pmids} onOptionChange={this.props.onOptionChange} />
-
 	
       </div>
 

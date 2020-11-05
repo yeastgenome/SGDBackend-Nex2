@@ -57,11 +57,7 @@ class NewAllele extends Component {
       so_id: '',
       allele_type_pmids: '',
       description: '',
-      description_pmids: '',
-      other_pmids: '',
-      primary_pmids: '',
-      additional_pmids: '',
-      review_pmids: ''
+      description_pmids: ''
     };
     this.props.dispatch(setAllele(currentAllele));
   }
