@@ -69,7 +69,7 @@ class SearchAllele extends Component {
   getDataRows(data) {
     let rows = data.map((d, i) => {
       let linkUrl = '/#/curate/allele/' + d.format_name;
-      linkUrl = linkUrl.replace('search_allele#/', '');
+      linkUrl = linkUrl.replace('/#/search_allele', '');	
       return (
         <tr key={i}>
           <td>{ d.allele_name }</td>
