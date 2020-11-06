@@ -338,6 +338,11 @@ def add_allele_data(request):
         allele_name = request.params.get('allele_name')
         if allele_name == '':
             return HTTPBadRequest(body=json.dumps({'error': "Allele name field is blank"}), content_type='text/json')
+
+        d = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(allele_name)).one_or_none()
+        if d is not None:
+            return HTTPBadRequest(body=json.dumps({'error': "The allele name " + allele_name + " is already in the database."}), content_type='text/json')
+        
         so_id = request.params.get('so_id')
         if so_id and str(so_id).isdigit():
             so_id = int(so_id)
