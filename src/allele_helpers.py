@@ -278,7 +278,7 @@ def get_one_allele(request):
 def get_list_of_alleles(request):
 
     try:
-        allele_query = request.params.get('allele_query')
+        allele_query = str(request.matchdict['allele_query'])
         data = []
         for x in DBSession.query(Alleledbentity).filter(Alleledbentity.display_name.ilike('%'+allele_query+'%')).order_by(Alleledbentity.display_name).all():
             data.append({ 'allele_name': x.display_name,
