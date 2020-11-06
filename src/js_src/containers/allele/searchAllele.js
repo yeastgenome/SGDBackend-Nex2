@@ -68,12 +68,13 @@ class SearchAllele extends Component {
 
   getDataRows(data) {
     let rows = data.map((d, i) => {
+      let linkUrl = window.location.host + '#/curate/allele/' + d.format_name;
       return (
         <tr key={i}>
           <td>{ d.allele_name }</td>
           <td>{ d.allele_type }</td>
           <td>{ d.description}</td>
-          <td><Link to={`/#/curate/allele/${d.format_name}`} target='new'><i className='fa fa-edit' /> Curate </Link></td>
+          <td><Link to={ linkUrl } target='new'><i className='fa fa-edit' /> Curate </Link></td>
         </tr>
       );
     });
