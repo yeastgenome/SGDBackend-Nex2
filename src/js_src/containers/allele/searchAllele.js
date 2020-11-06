@@ -66,13 +66,24 @@ class SearchAllele extends Component {
     );
   }
 
+  getDataRows(data) {
+    let rows = data.map((d, i) => {
+      return (
+        <tr key={i}>
+          <td>{ d.allele_name }</td>
+          <td>{ d.allele_type }</td>
+          <td>{ d.description}</td>
+          <td><Link to={`#/curate/allele/${d.format_name}`} target='new'><i className='fa fa-edit' /> Curate </Link></td>
+        </tr>
+      );
+    });
+    return rows;
+  }
+    
   displayAlleles() {
-    let data = this.state.alleleData;
-
-    let rows = [];
-      
-      
+    let data = this.state.alleleData; 
     if (data.length > 0) {
+      let rows = this.getDataRows(data);	
       return (
         <div>	    
           { this.searchForm() }
@@ -80,8 +91,8 @@ class SearchAllele extends Component {
             <thead>
               <tr>
                 <th>Allele name</th> 
-                <th>Descrition</th>
-                <th>Aliases</th>
+                <th>Allele type</th>
+                <th>Description</th>
                 <th>Actions</th>
               </tr>
             </thead>
