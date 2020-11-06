@@ -1,3 +1,4 @@
+import logging
 import os
 from sqlalchemy import or_
 from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
@@ -14,6 +15,8 @@ PREVIEW_URL = os.environ['PREVIEW_URL']
 
 PARENT_SO_TERM = 'structural variant'
 TAXON = 'TAX:4932'
+
+log = logging.getLogger('curation')
 
 def insert_locusallele_reference(curator_session, CREATED_BY, source_id, locus_allele_id, reference_id):
 
@@ -285,7 +288,7 @@ def get_list_of_alleles(request):
                           'description': x.description })
         return HTTPOk(body=json.dumps(data),content_type='text/json')
     except Exception as e:
-        log.ereror(e)
+        log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
     finally:
         if DBSession:
