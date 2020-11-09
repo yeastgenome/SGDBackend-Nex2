@@ -82,6 +82,9 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
             x['term'] = 'mutant_type'
         if x['term'] == 'experiment type':
             x['term'] = 'experiment_type'
+            
+        x['term'] = x['term'].replace('null mutant', 'null')
+        
         if x['id'] in apoid_to_apo:
             ## in database
             y = apoid_to_apo[x['id']]
