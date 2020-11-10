@@ -2287,6 +2287,7 @@ class Referencedbentity(Dbentity):
         loci = []
         complexes = []
         pathways = []
+        alleles = []
         for annotation in annotations:
             annotation_dict = annotation.to_dict()
             if annotation_dict["locus"] is not None:
@@ -2295,10 +2296,12 @@ class Referencedbentity(Dbentity):
                     complexes.append(annotation.to_dict())
                 elif 'pathway' in locus["link"]:
                     pathways.append(annotation.to_dict())
+                elif 'allele' in locus["link"]:
+                    alleles.append(annotation.to_dict())
                 else:
                     loci.append(annotation.to_dict())
 
-        return loci + complexes + pathways
+        return loci + complexes + pathways + alleles
     
     def annotations_summary_to_dict(self):
         preview_url = '/reference/' + self.sgdid
@@ -2456,6 +2459,14 @@ class Referencedbentity(Dbentity):
             name = x.Literatureannotation.get_name()
             items.append((name, pathway_name))
 
+        lit_annotations = DBSession.query(Literatureannotation, Alleledbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
+        for x in lit_annotations:
+            allele_name = None
+            allele= x.Alleledbentity
+            if allele:
+                allele_name = allele.display_name
+            name = x.Literatureannotation.get_name()
+            items.append((name, allele_name))
 
         for (name, dbentity_name) in items:
             # ignore omics tags bc already have internal   
@@ -2558,6 +2569,10 @@ class Referencedbentity(Dbentity):
                         ## check for pathway ID
                         if gene_dbentity_id is None:
                             gene_dbentity_id = curator_session.query(Pathwaydbentity.dbentity_id).filter_by(biocyc_id=upper_g_id).one_or_none()
+
+                        ## check for allele name
+                        if gene_dbentity_id is None:
+                            gene_dbentity_id = curator_session.query(Alleledbentity.dbentity_id).filter(Alleledbentity.display_name.ilike(upper_g_id)).one_or_none()
                             
                         # ignore duplicates
                         if gene_dbentity_id in tag_dbentity_ids:
@@ -7896,7 +7911,9 @@ class Literatureannotation(Base):
             elif entity.subclass == 'PATHWAY':
                 pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
                 link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + pathway.biocyc_id + '&detail-level=2'
-            
+            elif entity.subclass == 'ALLELE':
+                link = '/allele/' + entity.format_name
+                
             obj["locus"] = {
                 "display_name": entity.display_name,
                 "link": link
@@ -11813,6 +11830,11 @@ def validate_tags(tags):
                 if pathway is not None:
                     valid_identifiers.append(x)
                     added = added + 1
+                else:
+                    allele = DBSession.query(Alleledbentity).filter(Alleledbentity.display_name.ilike(x)).one_or_none()
+                    if allele is not None:
+                        valid_identifiers.append(x)
+                        added = added + 1
             else:
                 valid_identifiers.append(x)
                 added = added + 1
