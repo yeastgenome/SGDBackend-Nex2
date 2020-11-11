@@ -55,6 +55,8 @@ from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
+from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
+      add_allele_data, update_allele_data, delete_allele_data
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
@@ -2141,7 +2143,6 @@ def phenotype_add(request):
 
     return add_phenotype_annotations(request)
 
-
 @view_config(route_name='get_phenotypes',renderer='json',request_method='GET')
 def get_phenotypes(request):
     try:
@@ -2174,6 +2175,49 @@ def phenotype_delete(request):
 
     return delete_phenotype_annotations(request)
 
+@view_config(route_name='get_allele_types', renderer='json', request_method='GET')
+def get_allele_types(request):
+
+    return get_all_allele_types(request)
+    
+@view_config(route_name='allele_add', renderer='json', request_method='POST')
+@authenticate
+def allele_add(request):
+
+    return add_allele_data(request)
+    
+@view_config(route_name='get_alleles', renderer='json', request_method='GET')
+def get_alleles(request):
+    try:
+        return get_list_of_alleles(request)
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='get_allele_data', renderer='json', request_method='GET')
+def get_allele_data(request):
+    try:
+        return get_one_allele(request)
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()    
+
+@view_config(route_name='allele_update', renderer='json', request_method='POST')
+@authenticate
+def allele_update(request):
+
+    return update_allele_data(request)
+
+@view_config(route_name='allele_delete',renderer='json',request_method='POST')
+@authenticate
+def allele_delete(request):
+
+    return delete_allele_data(request)
+    
 @view_config(route_name='add_author_response',renderer='json',request_method='POST')
 def add_author_response(request):
 

@@ -2287,6 +2287,7 @@ class Referencedbentity(Dbentity):
         loci = []
         complexes = []
         pathways = []
+        alleles = []
         for annotation in annotations:
             annotation_dict = annotation.to_dict()
             if annotation_dict["locus"] is not None:
@@ -2295,10 +2296,12 @@ class Referencedbentity(Dbentity):
                     complexes.append(annotation.to_dict())
                 elif 'pathway' in locus["link"]:
                     pathways.append(annotation.to_dict())
+                elif 'allele' in locus["link"]:
+                    alleles.append(annotation.to_dict()) 
                 else:
                     loci.append(annotation.to_dict())
 
-        return loci + complexes + pathways
+        return loci + complexes + pathways + alleles
     
     def annotations_summary_to_dict(self):
         preview_url = '/reference/' + self.sgdid
@@ -2456,6 +2459,14 @@ class Referencedbentity(Dbentity):
             name = x.Literatureannotation.get_name()
             items.append((name, pathway_name))
 
+        lit_annotations = DBSession.query(Literatureannotation, Alleledbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
+        for x in lit_annotations:
+            allele_name = None
+            allele= x.Alleledbentity
+            if allele:
+                allele_name = allele.display_name
+            name = x.Literatureannotation.get_name()                                                        
+            items.append((name, allele_name))
 
         for (name, dbentity_name) in items:
             # ignore omics tags bc already have internal   
@@ -2558,6 +2569,10 @@ class Referencedbentity(Dbentity):
                         ## check for pathway ID
                         if gene_dbentity_id is None:
                             gene_dbentity_id = curator_session.query(Pathwaydbentity.dbentity_id).filter_by(biocyc_id=upper_g_id).one_or_none()
+
+                        ## check for allele name
+                        if gene_dbentity_id is None:
+                            gene_dbentity_id = curator_session.query(Alleledbentity.dbentity_id).filter(Alleledbentity.display_name.ilike(upper_g_id)).one_or_none()
                             
                         # ignore duplicates
                         if gene_dbentity_id in tag_dbentity_ids:
@@ -7896,7 +7911,9 @@ class Literatureannotation(Base):
             elif entity.subclass == 'PATHWAY':
                 pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
                 link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + pathway.biocyc_id + '&detail-level=2'
-            
+            elif entity.subclass == 'ALLELE':
+                link = '/allele/' + entity.format_name
+                
             obj["locus"] = {
                 "display_name": entity.display_name,
                 "link": link
@@ -9679,40 +9696,42 @@ class Alleledbentity(Dbentity):
     
     def to_dict(self):
 
-        obj = { "sgdid": self.sgdid,
-                "allele_type": self.so.display_name,
-                "description": self.description,
-        }
         reference_mapping = {}
         ref_order = 1
-        obj["name"] = self.get_name(reference_mapping, ref_order)
+        obj = { "sgdid": self.sgdid }
+        obj["name"] = self.get_basic_info(self.display_name, 'allele_name', reference_mapping, ref_order)
         obj['aliases'] = self.get_aliases(reference_mapping, ref_order)
-        obj['affected_gene'] = self.get_gene_name_info(reference_mapping, ref_order)     
+        obj['affected_gene'] = self.get_gene_name_info(reference_mapping, ref_order)
+        obj['allele_type'] = self.get_basic_info(self.so.display_name, 'so_term', reference_mapping, ref_order)
+        obj['description'] = self.get_basic_info(self.description, 'allele_description', reference_mapping, ref_order)
         obj['phenotype'] = self.phenotype_to_dict()
         obj['interaction'] = self.interaction_to_dict()
         obj['network_graph'] = self.allele_network()
         obj['references'] = self.get_references()
         obj['phenotype_references'] = self.get_phenotype_references()
         obj['interaction_references'] = self.get_interaction_references()
+        obj['primary_references'] = self.get_literatureannotation_references("Primary Literature")
+        obj['additional_references'] = self.get_literatureannotation_references("Additional Literature")
+        obj['review_references'] = self.get_literatureannotation_references("Reviews")
         obj['urls'] = self.get_resource_urls()
         obj["reference_mapping"] = reference_mapping
         
         return obj
 
-    def get_name(self, reference_mapping, ref_order):
-        
+    def get_basic_info(self, display_text, reference_class, reference_mapping, ref_order):
+
         references = []
-        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id).all()
+        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id, reference_class=reference_class).all()
         for x in alleleRefs:
             reference = x.reference.to_dict_citation()
             references.append(reference)
             if reference["id"] not in reference_mapping:
                 reference_mapping[reference["id"]] = ref_order
-                ref_order += 1
+                ref_order = ref_order + 1
 
-        return { "display_name": self.display_name,
+        return { "display_text": display_text,
                  "references": references }
-
+    
     def get_resource_urls(self):
         
         gene_name = self.get_gene_name()
@@ -9728,7 +9747,14 @@ class Alleledbentity(Dbentity):
             if x['category'] in ['LOCUS_PHENOTYPE_RESOURCES_MUTANT_STRAINS', 'LOCUS_PHENOTYPE_RESOURCES_PHENOTYPE_RESOURCES', 'LOCUS_PHENOTYPE_RESOURCES_ONTOLOGY', 'LOCUS_INTERACTION']:
                 urls.append(x)
         return urls
-  
+
+    def get_literatureannotation_references(self, topic):
+        references = []
+        for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
+            if x.reference.to_dict_citation() not in references:
+                references.append(x.reference.to_dict_citation())
+        return references
+        
     def get_phenotype_references(self):
         references = []
         for x in DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all():
@@ -9753,6 +9779,8 @@ class Alleledbentity(Dbentity):
         # allele_reference
         alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id).all()
         for x in alleleRefs:
+            if x.reference.dbentity_id in found:
+                continue
             references.append(x.reference.to_dict_citation())
             found[x.reference.dbentity_id] = 1
             
@@ -9772,6 +9800,15 @@ class Alleledbentity(Dbentity):
             for x in locusalleleRefs:
                 if x.reference.dbentity_id not in found:
                     references.append(x.reference.to_dict_citation())
+                    found[x.reference.dbentity_id] = 1
+                    
+        # literatureannotation
+        all_la = DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id).all() 
+        for x in all_la:
+            if x.reference.dbentity_id not in found:
+                references.append(x.reference.to_dict_citation())
+            found[x.reference.dbentity_id] = 1
+            
         return references
 
     def interaction_to_dict(self):
@@ -11813,6 +11850,11 @@ def validate_tags(tags):
                 if pathway is not None:
                     valid_identifiers.append(x)
                     added = added + 1
+                else:
+                    allele = DBSession.query(Alleledbentity).filter(Alleledbentity.display_name.ilike(x)).one_or_none()
+                    if allele is not None:
+                        valid_identifiers.append(x)
+                        added = added + 1 
             else:
                 valid_identifiers.append(x)
                 added = added + 1

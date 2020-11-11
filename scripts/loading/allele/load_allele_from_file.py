@@ -46,7 +46,8 @@ def load_data(infile):
     f = open(infile)
     
     count = 0
-    
+
+    loaded = {}
     for line in f:
         pieces = line.strip().split("\t")
         if pieces[0] in ['PMID', 'pmid']:
@@ -56,7 +57,7 @@ def load_data(infile):
             continue
         reference_id = pmid_to_reference_id.get(int(pieces[0]))
         if reference_id is None:
-            log.info("The PMID: " + pieces[1] + " is not in the database")
+            log.info("The PMID: " + pieces[0] + " is not in the database")
             continue
         locus_id = gene_to_locus_id.get(pieces[1])
         if locus_id is None:
@@ -66,7 +67,7 @@ def load_data(infile):
         if allele_name == '':
             log.info("Missing allele name for line: " + line)
             continue
-        allele_desc = pieces[3]
+        allele_desc = pieces[3].replace('"', '')
         so_id = so_to_id.get(pieces[4].replace("_", " "))
         if so_id is None:
             log.info("The so term: " + pieces[4].replace("_", " ") + " is not in the database")
@@ -82,10 +83,14 @@ def load_data(infile):
         allele_id = allele_to_id.get(allele_name.upper())
 
         if allele_id is None:
+            allele_id = loaded.get(allele_name.upper())
+        
+        if allele_id is None:
             log.info("loading data into dbentity/alleledbentity table...")
             allele_id = insert_alleledbentity(nex_session, allele_name.replace(" ", "_"), allele_name, allele_desc,
                                               source_id, so_id, created_by)
-
+            loaded[allele_name.upper()] = allele_id
+            
         if (allele_id, reference_id) not in allele_reference_to_id:
             log.info("loading data into allele_reference table...")
             insert_allele_reference(nex_session, allele_id, reference_id, source_id, created_by)
