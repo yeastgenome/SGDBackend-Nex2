@@ -35,7 +35,6 @@ TwoColTextField.propTypes = {
   sec_title2: PropTypes.string,
   name2: PropTypes.string,
   value2: PropTypes.string,
-  onOptionChange2: PropTypes.func, 
 };
 
 export default TwoColTextField;
