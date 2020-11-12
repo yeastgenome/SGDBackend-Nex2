@@ -21,7 +21,7 @@ class OneAllele extends Component {
         <TwoColTextField sec_title='Allele name' name='allele_name' value={this.props.allele.allele_name} onOptionChange={this.props.onOptionChange} sec_title2='PMID(s) for allele name (optional)' name2='allele_name_pmids' value2={this.props.allele.allele_name_pmids} onOptionChange2={this.props.onOptionChange} />
 
         {/* affected gene name & references */}
-        <TwoColTextField sec_title='Affected gene name' name='affected_gene' value={this.props.allele.affected_gene} onOptionChange={this.props.onOptionChange} sec_title2='PMID(s) for affected gene name (optional)' name2='affected_gene_pmids' value2={this.props.allele.affected_gene_pmids} onOptionChange2={this.props.onOptionChange} />
+        <TwoColTextField sec_title='Affected gene (sgdid, systematic name)' name='affected_gene' value={this.props.allele.affected_gene} onOptionChange={this.props.onOptionChange} sec_title2='PMID(s) for affected gene (optional)' name2='affected_gene_pmids' value2={this.props.allele.affected_gene_pmids} onOptionChange2={this.props.onOptionChange} />
 	
         {/* alias names & references */}
         <TwoColTextField sec_title='Alias names ("|" delimited)' name='aliases' value={this.props.allele.aliases} onOptionChange={this.props.onOptionChange} sec_title2='PMID(s) for aliases (optional, "|" delimited)' name2='alias_pmids' value2={this.props.allele.alias_pmids} onOptionChange2={this.props.onOptionChange} />
