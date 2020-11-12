@@ -171,6 +171,24 @@ def insert_allele(curator_session, CREATED_BY, source_id, allele_name, so_id, de
     else:
         return returnValue
 
+def insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id, reference_id, topic, taxonomy_id):
+
+    x = None
+    try:
+        x = Literatureannotation(dbentity_id = allele_id,
+                                 reference_id = reference_id,
+                                 topic = topic,
+                                 taxonomy_id = taxonomy_id,
+                                 source_id = source_id,
+                                 created_by = CREATED_BY)
+        curator_session.add(x)
+        # transaction.commit()
+        return 1
+    except Exception as e:
+        transaction.abort()
+        if curator_session:
+            curator_session.rollback()
+        return str(e)
         
 def get_all_allele_types(request):
 
@@ -371,6 +389,8 @@ def add_allele_data(request):
         
         # return HTTPBadRequest(body=json.dumps({'error': "allele_name_pmids="+str(allele_name_pmids)}), content_type='text/json')
 
+        all_reference_id = []
+        
         pmid_to_reference_id = {}
 
         (reference_ids, err_message) = check_pmids(allele_name_pmids, pmid_to_reference_id)
@@ -379,6 +399,8 @@ def add_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         for (reference_id, pmid) in reference_ids:
+            if reference_id not in all_reference_id:
+                all_reference_id.append(reference_id)
             returnValue = insert_allele_reference(curator_session, CREATED_BY, source_id,
                                                   allele_id, reference_id, "allele_name")
             if returnValue != 1:
@@ -387,15 +409,18 @@ def add_allele_data(request):
 
         # return HTTPBadRequest(body=json.dumps({'error': "allele_name reference_ids="+str(reference_ids)}), content_type='text/json')
 
-      
         ## affected gene & reference(s)
         
         affected_gene = request.params.get('affected_gene')
+        affected_gene = affected_gene.replace("SGD:", '')
+        
+        locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.systematic_name.ilike(affected_gene), Locusdbentity.sgdid.ilike(affected_gene))).one_or_none()
+        if locus is None:
+            return HTTPBadRequest(body=json.dumps({'error': "The affected gene " + affected_gene + " is not in the database. Please enter an ORF name or a SGDID."}), content_type='text/json')
 
+        affected_gene = locus.display_name
+        
         if allele_name.upper().startswith(affected_gene.upper()):
-            locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name.ilike(affected_gene), Locusdbentity.systematic_name.ilike(affected_gene))).one_or_none()
-            if locus is None:
-                return HTTPBadRequest(body=json.dumps({'error': "The affected gene name " + affected_gene + " is not in the database."}), content_type='text/json')
             locus_id = locus.dbentity_id
             returnValue = insert_locus_allele(curator_session, CREATED_BY, source_id, allele_id, locus_id)
             locus_allele_id = None
@@ -423,6 +448,8 @@ def add_allele_data(request):
                 return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
             
             for (reference_id, pmid) in reference_ids:
+                if reference_id not in all_reference_id:
+                    all_reference_id.append(reference_id)
                 returnValue = insert_locusallele_reference(curator_session, CREATED_BY, source_id,
                                                            locus_allele_id, reference_id)
                 if returnValue != 1:
@@ -446,6 +473,8 @@ def add_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         for (reference_id, pmid) in reference_ids:
+            if reference_id not in all_reference_id:
+                all_reference_id.append(reference_id)
             returnValue = insert_allele_reference(curator_session, CREATED_BY, source_id,
                                                   allele_id, reference_id, "so_term")
             if returnValue != 1:
@@ -453,22 +482,24 @@ def add_allele_data(request):
             success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELE_REFERENCE table for 'so_term'. "
             
         ## references for description
-        
-        desc_pmids = request.params.get('description_pmids')
+        if desc:
+            desc_pmids = request.params.get('description_pmids')
 
-        (reference_ids, err_message) = check_pmids(desc_pmids, pmid_to_reference_id)
+            (reference_ids, err_message) = check_pmids(desc_pmids, pmid_to_reference_id)
 
-        # return HTTPBadRequest(body=json.dumps({'error': "description reference_ids="+str(reference_ids)}), content_type='text/json')
+            # return HTTPBadRequest(body=json.dumps({'error': "description reference_ids="+str(reference_ids)}), content_type='text/json')
                 
-        if err_message != '':
-            return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
+            if err_message != '':
+                return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
-        for (reference_id, pmid) in reference_ids:
-            returnValue = insert_allele_reference(curator_session, CREATED_BY, source_id,
-                                                  allele_id, reference_id, "allele_description")
-            if returnValue != 1:
-                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
-            success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELE_REFERENCE table for 'allele_description'. "
+            for (reference_id, pmid) in reference_ids:
+                if reference_id not in all_reference_id:
+                    all_reference_id.append(reference_id)
+                returnValue = insert_allele_reference(curator_session, CREATED_BY, source_id,
+                                                      allele_id, reference_id, "allele_description")
+                if returnValue != 1:
+                    return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+                success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELE_REFERENCE table for 'allele_description'. "
     
         ## aliases & reference(s)
         
@@ -507,12 +538,25 @@ def add_allele_data(request):
         
     
             for (reference_id, pmid) in reference_ids:
+                if reference_id not in all_reference_id:
+                    all_reference_id.append(reference_id)
                 returnValue = insert_allelealias_reference(curator_session, CREATED_BY, source_id,
                                                            allele_alias_id, reference_id)
                 if returnValue != 1:
                     return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
                 success_message = success_message + "<br>" + "The paper for PMID= " + pmid + " has been added into ALLELEALIAS_REFERENCE table for alias " + alias_name + ". "
+
+        taxonomy = DBSession.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
+        taxonomy_id = taxonomy.taxonomy_id
         
+        ## add all papers to Literatureannotation table
+        for reference_id in all_reference_id:
+            returnValue = insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id, reference_id, 'Additional Literature', taxonomy_id)
+            if returnValue != 1:
+                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+        if len(all_reference_id) > 0:
+            success_message = success_message + "<br>" + "All paper(s) have been added into LITERATUREANNOTATION table. "
+            
         preview_url = PREVIEW_URL + 'allele/' + allele_name.replace(' ', '_')
         update_url = "/#/curate/allele/" + allele_name.replace(' ', '_')
         
@@ -673,7 +717,7 @@ def update_allele_data(request):
         old_allele_type_ref_ids = []
         old_desc_ref_ids = []
         old_other_ref_ids = []
-
+        
         all_allele_refs = curator_session.query(AlleleReference).filter_by(allele_id=allele_id).all()
         for ar in all_allele_refs:
             if ar.reference_class == 'allele_name':
@@ -749,13 +793,17 @@ def update_allele_data(request):
         ## update papers for affected gene
 
         affected_gene = request.params.get('affected_gene')
+        affected_gene = affected_gene.replace("SGD:", '')
+        locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.systematic_name.ilike(affected_gene), Locusdbentity.sgdid.ilike(affected_gene))).one_or_none()
+        if locus is None:
+            return HTTPBadRequest(body=json.dumps({'error': "The affected gene " + affected_gene + " is not in the database. Please enter an ORF name or a SGDID."}), content_type='text/json')
+
+        affected_gene = locus.display_name
+
         if allele_name.upper().startswith(affected_gene.upper()):
             la = curator_session.query(LocusAllele).filter_by(allele_id=allele_id).one_or_none()
             locus_allele_id = None
             if la is None:
-                locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name.ilike(affected_gene), Locusdbentity.systematic_name.ilike(affected_gene))).one_or_none()
-                if locus is None:
-                    return HTTPBadRequest(body=json.dumps({'error': "The affected gene name " + affected_gene + " is not in the database."}), content_type='text/json')
                 locus_id = locus.dbentity_id
                 returnValue = insert_locus_allele(curator_session, CREATED_BY, source_id, allele_id, locus_id)
                 if str(returnValue).isdigit():
