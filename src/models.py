@@ -9697,6 +9697,7 @@ class Alleledbentity(Dbentity):
     def to_dict(self):
 
         reference_mapping = {}
+        unique_references = []
         ref_order = 1
         obj = { "sgdid": self.sgdid }
         (obj["name"], ref_order) = self.get_basic_info(self.display_name, 'allele_name', reference_mapping, ref_order)
@@ -9708,13 +9709,14 @@ class Alleledbentity(Dbentity):
         obj['interaction'] = self.interaction_to_dict()
         obj['network_graph'] = self.allele_network()
         obj['references'] = self.get_references()
-        obj['phenotype_references'] = self.get_phenotype_references()
-        obj['interaction_references'] = self.get_interaction_references()
-        obj['primary_references'] = self.get_literatureannotation_references("Primary Literature")
-        obj['additional_references'] = self.get_literatureannotation_references("Additional Literature")
-        obj['review_references'] = self.get_literatureannotation_references("Reviews")
+        obj['phenotype_references'] = self.get_phenotype_references(unique_references)
+        obj['interaction_references'] = self.get_interaction_references(unique_references)
+        obj['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
+        obj['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
+        obj['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
         obj['urls'] = self.get_resource_urls()
         obj["reference_mapping"] = reference_mapping
+        obj['unique_references'] = unique_references
         
         return obj
 
@@ -9748,21 +9750,27 @@ class Alleledbentity(Dbentity):
                 urls.append(x)
         return urls
 
-    def get_literatureannotation_references(self, topic):
+    def get_literatureannotation_references(self, topic, unique_references):
         references = []
         for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
             if x.reference.to_dict_citation() not in references:
                 references.append(x.reference.to_dict_citation())
+            if x.reference.dbentity_id not in unique_references:
+                unique_references.append(x.reference.dbentity_id)
+                
         return references
         
-    def get_phenotype_references(self):
+    def get_phenotype_references(self, unique_references):
         references = []
         for x in DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all():
             if x.reference.to_dict_citation() not in references:
                 references.append(x.reference.to_dict_citation())
+            if x.reference.dbentity_id not in unique_references:
+                unique_references.append(x.reference.dbentity_id)
+                
         return references
 
-    def get_interaction_references(self):
+    def get_interaction_references(self, unique_references):
 
         interaction_ids = DBSession.query(AlleleGeninteraction.interaction_id).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all()
         
@@ -9770,6 +9778,9 @@ class Alleledbentity(Dbentity):
         for x in DBSession.query(Geninteractionannotation).filter(Geninteractionannotation.annotation_id.in_(interaction_ids)).all():
             if x.reference.to_dict_citation() not in references:
                 references.append(x.reference.to_dict_citation())
+            if x.reference.dbentity_id	not in unique_references:
+                unique_references.append(x.reference.dbentity_id)
+                
         return references
     
     def get_references(self):
@@ -9807,23 +9818,6 @@ class Alleledbentity(Dbentity):
             for x in alleleRefs:
                 if x.reference.dbentity_id in found:
                     continue
-                references.append(x.reference.to_dict_citation())
-                found[x.reference.dbentity_id] = 1
-
-            
-        # locusallele_reference
-        # locusAllele = DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).one_or_none()
-        # if locusAllele is not None:
-        #    locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(locus_allele_id=locusAllele.locus_allele_id).all()
-        #    for x in locusalleleRefs:
-        #        if x.reference.dbentity_id not in found:
-        #            references.append(x.reference.to_dict_citation())
-        #            found[x.reference.dbentity_id] = 1
-                    
-        # literatureannotation
-        all_la = DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id).all() 
-        for x in all_la:
-            if x.reference.dbentity_id not in found:
                 references.append(x.reference.to_dict_citation())
                 found[x.reference.dbentity_id] = 1
                 
