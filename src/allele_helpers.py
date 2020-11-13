@@ -173,6 +173,14 @@ def insert_allele(curator_session, CREATED_BY, source_id, allele_name, so_id, de
 
 def insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id, reference_id, topic, taxonomy_id):
 
+    all = curator_session.query(Literatureannotation).filter_by(dbentity_id=allele_id, reference_id=reference_id).all()
+    found = 0
+    for x in all:
+        if x.topic in ['Additional Literature', 'Primary Literature']:
+            found = 1
+    if found == 1:
+        return 1
+        
     x = None
     try:
         x = Literatureannotation(dbentity_id = allele_id,
@@ -270,7 +278,7 @@ def get_one_allele(request):
         for y in DBSession.query(LocusalleleReference).filter_by(locus_allele_id=x.locus_allele_id).all():
             pmids.append(y.reference.pmid)
 
-        data['affected_gene'] = { 'display_name': x.locus.display_name,
+        data['affected_gene'] = { 'display_name': x.locus.systematic_name,
                                   'sgdid': x.locus.sgdid,
                                   'pmids': pmids } 
    
@@ -588,11 +596,13 @@ def check_old_new_references(old_ref_ids, new_references):
 
     return (ref_ids_to_insert, ref_ids_to_delete)
 
-def insert_delete_allelealias_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_alias_id):
+def insert_delete_allelealias_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_alias_id, all_reference_id):
 
     success_message = ""
     ## insert
     for (reference_id, pmid) in ref_ids_to_insert:
+        if reference_id not in all_reference_id:
+            all_reference_id.append(reference_id)
         returnValue = insert_allelealias_reference(curator_session, CREATED_BY, source_id,
                                                    allele_alias_id, reference_id)
         if returnValue != 1:
@@ -609,11 +619,13 @@ def insert_delete_allelealias_reference_rows(curator_session, CREATED_BY, ref_id
     return (success_message, '')
 
 
-def insert_delete_locusallele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, locus_allele_id):
+def insert_delete_locusallele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, locus_allele_id, all_reference_id):
 
     success_message = ""
     ## insert
     for (reference_id, pmid) in ref_ids_to_insert:
+        if reference_id not in all_reference_id:
+            all_reference_id.append(reference_id)
         returnValue = insert_locusallele_reference(curator_session, CREATED_BY, source_id,
                                                    locus_allele_id, reference_id)
         if returnValue != 1:
@@ -629,11 +641,13 @@ def insert_delete_locusallele_reference_rows(curator_session, CREATED_BY, ref_id
 
     return (success_message, '')
                                         
-def insert_delete_allele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, reference_class):
+def insert_delete_allele_reference_rows(curator_session, CREATED_BY, ref_ids_to_insert, ref_ids_to_delete, source_id, allele_id, reference_class, all_reference_id):
 
     success_message = ""
     ## insert
     for (reference_id, pmid) in ref_ids_to_insert:
+        if reference_id not in all_reference_id:
+            all_reference_id.append(reference_id)
         returnValue = insert_allele_reference(curator_session, CREATED_BY, source_id,
                                               allele_id, reference_id, reference_class)
         if returnValue != 1:
@@ -741,11 +755,16 @@ def update_allele_data(request):
             return HTTPBadRequest(body=json.dumps({'error': err_message}), content_type='text/json')
 
         (ref_ids_to_insert, ref_ids_to_delete) = check_old_new_references(old_allele_name_ref_ids, reference_ids)
-    
+
+        
+        all_reference_id = []
+
+        
         reference_class = 'allele_name'
         (message, error) = insert_delete_allele_reference_rows(curator_session, CREATED_BY,
                                                                ref_ids_to_insert, ref_ids_to_delete,
-                                                               source_id, allele_id, reference_class)
+                                                               source_id, allele_id, reference_class,
+                                                               all_reference_id )
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
@@ -764,7 +783,8 @@ def update_allele_data(request):
                                                                ref_ids_to_insert,
                                                                ref_ids_to_delete,
                                                                source_id, allele_id,
-                                                               reference_class)
+                                                               reference_class,
+                                                               all_reference_id)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
@@ -784,7 +804,8 @@ def update_allele_data(request):
                                                                ref_ids_to_insert,
                                                                ref_ids_to_delete,
                                                                source_id, allele_id,
-                                                               reference_class)
+                                                               reference_class,
+                                                               all_reference_id)
         if error != '':
             return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
         if message != '':
@@ -829,7 +850,8 @@ def update_allele_data(request):
                                                                         ref_ids_to_insert,
                                                                         ref_ids_to_delete,
                                                                         source_id,
-                                                                        locus_allele_id)
+                                                                        locus_allele_id,
+                                                                        all_reference_id)
             if error != '':
                 return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
             if message != '':
@@ -881,7 +903,8 @@ def update_allele_data(request):
                                                                             ref_ids_to_insert,
                                                                             ref_ids_to_delete,
                                                                             source_id,
-                                                                            this_allele_alias_id)
+                                                                            this_allele_alias_id,
+                                                                            all_reference_id)
                 if error != '':
                     return HTTPBadRequest(body=json.dumps({'error': error}), content_type='text/json')
                 if message != '':
@@ -914,7 +937,20 @@ def update_allele_data(request):
             aa = curator_session.query(AlleleAlias).filter_by(allele_alias_id=allele_alias_id).one_or_none()
             curator_session.delete(aa)
             success_message = success_message + "<br>" + "The alias " + alias_name + " has been deleted from ALLELE_ALIAS table. "
-        
+
+        taxonomy = DBSession.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
+        taxonomy_id = taxonomy.taxonomy_id
+
+        ## add all papers to Literatureannotation table                                                                   
+        for reference_id in all_reference_id:
+            returnValue = insert_literatureannotation(curator_session, CREATED_BY, source_id, allele_id, reference_id, 'Additional Literature', taxonomy_id)
+            if returnValue != 1:
+                return HTTPBadRequest(body=json.dumps({'error': returnValue}), content_type='text/json')
+        if len(all_reference_id) > 0:
+            success_message = success_message + "<br>" + "All paper(s) have been added into LITERATUREANNOTATION table. "
+
+
+            
         transaction.commit()
         return HTTPOk(body=json.dumps({'success': success_message, 'allele': "ALLELE"}), content_type='text/json')
     except Exception as e:
@@ -936,7 +972,7 @@ def delete_allele_data(request):
         d = curator_session.query(Dbentity).filter_by(subclass='ALLELE', sgdid=sgdid).one_or_none()
 
         if d is None:
-            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + sgdid + " is not in the database."}), content_type='text/json')
+            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + sgdid + " is not in the database."}), content_type='text/jseon')
         
         allele_id = d.dbentity_id
 
