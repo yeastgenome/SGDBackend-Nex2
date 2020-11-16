@@ -2429,7 +2429,21 @@ class Referencedbentity(Dbentity):
                 'comment': x.CurationReference.curator_comment
             }
             tags.append(obj)
-        
+
+        ## for allele vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Alleledbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
+        for x in curation_refs:
+            allele_name = None
+            allele = x.Alleledbentity
+            if allele:
+                allele_name = allele.format_name
+            obj = {
+                'name': x.CurationReference.get_name(),
+                'dbentity_name': allele_name,
+                'comment': x.CurationReference.curator_comment
+            }
+            tags.append(obj)
+            
         ## Literatureannotation
         items = []
         lit_annotations = DBSession.query(Literatureannotation, Locusdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
