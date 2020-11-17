@@ -2478,7 +2478,7 @@ class Referencedbentity(Dbentity):
             allele_name = None
             allele= x.Alleledbentity
             if allele:
-                allele_name = allele.display_name
+                allele_name = allele.format_name
             name = x.Literatureannotation.get_name()                                                        
             items.append((name, allele_name))
 
