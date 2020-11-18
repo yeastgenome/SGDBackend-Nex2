@@ -718,7 +718,7 @@ def update_allele_data(request):
         ## update description
         desc = request.params.get('description')
         if desc != old_desc:
-            success_message = "The description has been updated from '" + old_desc + "' to '" + desc + "'."
+            success_message = "The description has been updated from '" + str(old_desc) + "' to '" + str(desc) + "'."
             a.description = desc
             allele_update = 1
             
