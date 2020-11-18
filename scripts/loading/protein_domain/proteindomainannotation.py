@@ -1,23 +1,22 @@
-from datetime import datetime
+import os
 import sys
-import importlib
-importlib.reload(sys)  # Reload does the trick!
-sys.setdefaultencoding('utf-8')
-sys.path.insert(0, '../../../src/')
-from models import Source, Dbentity, Taxonomy, Proteindomain, Proteindomainannotation
-sys.path.insert(0, '../')
-from config import CREATED_BY
-from database_session import get_nex_session as get_session
+from src.models import Source, Proteindomain, Locusdbentity, Taxonomy, \
+                       Proteindomainannotation
+from scripts.loading.database_session import get_session
                  
 __author__ = 'sweng66'
+
+
+domain_file = 'scripts/loading/protein_domain/data/orf_trans_all.fasta_full.tvs'
+log_file = 'scripts/loading/protein_domain/logs/protein_domain_annotation.log'
+
+CREATED_BY = os.environ['DEFAULT_USER']
 
 ## Created on June 2017
 ## This script is used to update protein domains and their annotations in NEX2.
 
-domain_file = 'data/protein_domains.lst'
-log_file = 'logs/protein_domain_annotation.log'
 taxid = "TAX:4932"
-today = "2017-06-29"
+today = "2020-11-16"
 
 def load_domain_annotations():
 
@@ -35,7 +34,7 @@ def read_data_and_update_database(nex_session, fw):
 
     ipr = nex_session.query(Source).filter_by(format_name='InterPro').one_or_none()
     taxon = nex_session.query(Taxonomy).filter_by(taxid=taxid).one_or_none() 
-    sgdid_to_dbentity_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
+    name_to_dbentity_id = dict([(x.systematic_name, x.dbentity_id) for x in nex_session.query(Locusdbentity).all()])
     format_name_to_id =  dict([(x.format_name, x.proteindomain_id) for x in nex_session.query(Proteindomain).all()])
     
     source_id = ipr.source_id
@@ -48,44 +47,48 @@ def read_data_and_update_database(nex_session, fw):
 
     f = open(domain_file)
 
+    key_in_new = {}
+    
     i = 0
     for line in f:
         items = line.strip().split("\t")
-        dbentity_id = sgdid_to_dbentity_id.get(items[0])
+        dbentity_id = name_to_dbentity_id.get(items[0])
         if dbentity_id is None:
-            print("The SGDID: ", items[0], " is not in the DBENTITY table.")
+            print("The systematic_name: ", items[0], " is not in the database.")
             continue
-        format_name = items[1].replace(' ', '_')
+        format_name = items[4].replace(' ', '_')
         proteindomain_id = format_name_to_id.get(format_name)
         if proteindomain_id is None:
             print("The domain name:", format_name, " is not in the PROTEINDOMAIN table.")
             continue
-        start = int(items[3])
-        end = int(items[4])
+        start = int(items[6])
+        end = int(items[7])
         key = (dbentity_id, proteindomain_id, start, end)
         if key not in key_to_annotation:
+            print ("NEW: ", items[0], format_name, (dbentity_id, proteindomain_id, start, end))
             i = i + 1
             insert_annotation(nex_session, fw, dbentity_id, proteindomain_id,
                               source_id, taxonomy_id, start, end)
             if i > 500:
                 nex_session.commit()
                 i = 0
-        else:
-            # it is in the database; remove it from the dictionary 
-            # key_to_annotation so we can delete the rest
-            key_to_annotation.pop(key)
 
+        key_in_new[key] = 1
+        
     f.close()
+
     
-    delete_annotations(nex_session, fw, key_to_annotation)
+    delete_annotations(nex_session, fw, key_to_annotation, key_in_new)
 
     nex_session.commit()
 
 
-def delete_annotations(nex_session, fw, key_to_annotation):
+def delete_annotations(nex_session, fw, key_to_annotation, key_in_new):
 
     i = 0
     for key in key_to_annotation:
+        if key in key_in_new:
+            continue
         i = i + 1
         x = key_to_annotation[key]
         nex_session.delete(x)
