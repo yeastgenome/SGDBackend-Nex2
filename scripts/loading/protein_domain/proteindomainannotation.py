@@ -12,11 +12,10 @@ log_file = 'scripts/loading/protein_domain/logs/protein_domain_annotation.log'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-## Created on June 2017
-## This script is used to update protein domains and their annotations in NEX2.
+## This script is used to update protein domains and their annotations in NEX2 for reference genome.
 
-taxid = "TAX:4932"
-today = "2020-11-16"
+taxid = "TAX:559292"
+today = "2020-11-18"
 
 def load_domain_annotations():
 
@@ -41,7 +40,7 @@ def read_data_and_update_database(nex_session, fw):
     taxonomy_id = taxon.taxonomy_id
 
     key_to_annotation = {}
-    for x in nex_session.query(Proteindomainannotation).all():
+    for x in nex_session.query(Proteindomainannotation).filter_by(taxonomy_id=taxonomy_id).all():
         key = (x.dbentity_id, x.proteindomain_id, x.start_index, x.end_index)
         key_to_annotation[key] = x
 
