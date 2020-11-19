@@ -69,7 +69,8 @@ def read_data_and_update_database(nex_session, fw):
                 
     f.close()
 
-    delete_old_domains(nex_session, fw, format_name_to_domain, inNew)
+    ## comment out so it won't delete the domains for other strains
+    # delete_old_domains(nex_session, fw, format_name_to_domain, inNew)
 
 
 def delete_old_domains(nex_session, fw, format_name_to_domain, inNew):
