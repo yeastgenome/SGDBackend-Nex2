@@ -397,6 +397,17 @@ mapping = {
                     }
                 }
             },
+            "complex_loci": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "chemical": {
                 "type": "keyword"
             },
