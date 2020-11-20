@@ -9716,7 +9716,8 @@ class Alleledbentity(Dbentity):
         obj = { "sgdid": self.sgdid }
         (obj["name"], ref_order) = self.get_basic_info(self.display_name, 'allele_name', reference_mapping, ref_order)
         (obj['aliases'], ref_order) = self.get_aliases(reference_mapping, ref_order)
-        obj['affected_gene'] = self.get_gene_name_info()
+        # obj['affected_gene'] = self.get_gene_name_info()
+        obj['affected_gene'] = self.get_gene_name()  
         (obj['allele_type'], ref_order) = self.get_basic_info(self.so.display_name, 'so_term', reference_mapping, ref_order)
         (obj['description'], ref_order) = self.get_basic_info(self.description, 'allele_description', reference_mapping, ref_order)
         obj['phenotype'] = self.phenotype_to_dict()
@@ -9750,8 +9751,9 @@ class Alleledbentity(Dbentity):
     
     def get_resource_urls(self):
         
-        gene_name = self.get_gene_name()
-                
+        gene_names = self.get_gene_name()
+        gene_name = gene_names[0]
+        
         locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name == gene_name, Locusdbentity.systematic_name == gene_name)).one_or_none()
         if locus is None:
             return []
@@ -9863,32 +9865,25 @@ class Alleledbentity(Dbentity):
 
     def get_gene_name(self):
 
-        la = DBSession.query(LocusAllele).filter_by(allele_id = self.dbentity_id).one_or_none()
-        if la is None:
-            return ''
-        return la.locus.display_name
+        names = []
+        for x in DBSession.query(LocusAllele).filter_by(allele_id = self.dbentity_id).all():
+            names.append(x.locus.display_name)
+        return names
     
     def get_gene_name_info(self):
-        
-        gene = self.get_gene_name()
-        if gene is None:
-            return { "display_name": '',
-                     "references": [] }
-        
-        locusAllele = DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).one_or_none()
-        references = []
-        if locusAllele is not None:
-            locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(locus_allele_id=locusAllele.locus_allele_id).all()
-            for x in locusalleleRefs:
-                reference = x.reference.to_dict_citation()
-                references.append(reference)
-                # if reference["id"] not in reference_mapping:
-                #    reference_mapping[reference["id"]] = ref_order
-                #    ref_order += 1
-                                    
-        return { "display_name": gene,
-                 "references": references }
 
+        data = []
+        for x in DBSession.query(LocusAllele).filter_by(allele_id = self.dbentity_id).all():
+            gene = x.locus.display_name
+            references = []
+            locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(locus_allele_id=x.locus_allele_id).all()
+            for y in locusalleleRefs:
+                reference = y.reference.to_dict_citation()
+                references.append(reference)
+            data.append({ "display_name": gene,
+                          "references": references })
+
+        return data
     
     def get_aliases(self, reference_mapping, ref_order):
 
