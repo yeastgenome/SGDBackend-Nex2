@@ -1,6 +1,6 @@
 <!DOCTYPE LinkSet PUBLIC "-//NLM//DTD LinkOut 1.0//EN" "LinkOut.dtd"
 [ <!ENTITY icon.url  "https://d1x6jdqbvd5dr.cloudfront.net/legacy_img/SGD-t.gif">
-<!ENTITY base.url  "https://www.yeastgenome.org/search?">]>
+<!ENTITY base.url  "https://www.yeastgenome.org/search?is_quick=true&q=">]>
 <LinkSet>
 
     <Link>
