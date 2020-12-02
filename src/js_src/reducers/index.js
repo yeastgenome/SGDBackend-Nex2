@@ -8,6 +8,7 @@ import newsLetterReducer from './newsLetterReducer';
 import regulationReducer from './regulationReducer';
 import diseaseReducer from './diseaseReducer';
 import phenotypeReducer from './phenotypeReducer';
+import alleleReducer from './alleleReducer';
 import authorResponseReducer from './authorResponseReducer';
 import litguideReducer from './litguideReducer';
 
@@ -22,6 +23,7 @@ export default {
   regulation:regulationReducer,
   disease: diseaseReducer,
   phenotype:phenotypeReducer,
+  allele:alleleReducer,
   authorResponse:authorResponseReducer,
   litguide:litguideReducer
 };

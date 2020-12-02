@@ -31,6 +31,9 @@ def group_papers(curationObjs):
             elif dbentity.subclass == 'PATHWAY':
                 pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=dbentity.dbentity_id).one_or_none()
                 name = pathway.biocyc_id
+            elif dbentity.subclass == 'ALLELE':
+                name = dbentity.display_name
+                
             name = name + '|' + str(x.curation_id) + '|' + str(annotation_id)
 
             genelist = []
@@ -87,10 +90,12 @@ def get_list_of_papers(request):
             dbentity = DBSession.query(Dbentity).filter_by(format_name=gene, subclass='COMPLEX').one_or_none()
         if dbentity is None:
             dbentity = DBSession.query(Pathwaydbentity).filter_by(biocyc_id=gene).one_or_none()
+        if dbentity is None:
+            dbentity = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(gene)).one_or_none()
         if dbentity is not None:
             dbentity_id = dbentity.dbentity_id
         else:
-            HTTPBadRequest(body=json.dumps({'error': 'Gene name/Complex ID/Pathway ID ' + gene + ' is not in the database.'}), content_type='text/json')
+            HTTPBadRequest(body=json.dumps({'error': 'Gene name/Complex ID/Pathway ID/Allele name ' + gene + ' is not in the database.'}), content_type='text/json')
 
     ref_ids = []
     if year.isdigit():

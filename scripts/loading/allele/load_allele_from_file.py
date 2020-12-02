@@ -62,11 +62,11 @@ def load_data(infile):
         if locus_id is None:
             log.info("The gene: " + pieces[1] + " is not in the database")
             continue
-        allele_name = pieces[2]
+        allele_name = pieces[2].replace('"', '')
         if allele_name == '':
             log.info("Missing allele name for line: " + line)
             continue
-        allele_desc = pieces[3]
+        allele_desc = pieces[3].replace('"', '')
         so_id = so_to_id.get(pieces[4].replace("_", " "))
         if so_id is None:
             log.info("The so term: " + pieces[4].replace("_", " ") + " is not in the database")

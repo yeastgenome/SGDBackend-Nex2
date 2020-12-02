@@ -129,6 +129,11 @@ def search(request):
         "reference": [("author", "author"), ("journal", "journal"),
                       ("year", "year"), ("reference_locus", "reference_loci")],
         "contig": [("strain", "strain")],
+        "complex": [("references", "references"),
+                    ("complex_loci", "complex_loci"),
+                    ('molecular function', 'molecular_function'),
+                    ('cellular component','cellular_component'),
+                    ('biological process', 'biological_process')],
         "colleague": [("last_name", "last_name"), ("position", "position"),
                       ("institution", "institution"), ("country", "country"),
                       ("keywords", "keywords"), ("colleague_loci",
@@ -423,7 +428,8 @@ def genomesnapshot(request):
                 parent = DBSession.query(Go).filter(Go.display_name==go_namespace.replace('_', ' ')).one_or_none()
                 go_slim_relationships.append([go_slim['id'], parent.go_id])
         genome_snapshot['go_slim_relationships'] = go_slim_relationships
-        distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).all()
+        so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
+        distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).filter(Dnasequenceannotation.so_id != so.so_id).all()
         rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()
         contigs = DBSession.query(Contig).filter(or_(Contig.display_name.like("%micron%"), Contig.display_name.like("Chromosome%"))).order_by(Contig.contig_id).all()
         columns = [contig.to_dict_sequence_widget() for contig in contigs]

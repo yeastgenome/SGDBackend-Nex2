@@ -1,4 +1,4 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, Tools, Alleledbentity, AlleleAlias
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, ComplexGo, Tools, Alleledbentity, AlleleAlias
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -790,7 +790,20 @@ def index_complex_names():
             complex_id=c.dbentity_id).all()
         for ref in refs:
             references.add(ref.reference.display_name)
-
+            
+        all_go = DBSession.query(ComplexGo).filter_by(
+                        complex_id=c.dbentity_id).all()
+        process = set([])
+        component = set([])
+        function = set([])
+        for x in all_go:
+            if x.go.go_namespace == 'biological process':
+                process.add(x.go.display_name)
+            elif x.go.go_namespace == 'cellular component':
+                component.add(x.go.display_name)
+            else:
+                function.add(x.go.display_name)
+            
         complex_loci = set([])
         annotations = DBSession.query(Complexbindingannotation).filter_by(
             complex_id=c.dbentity_id).all()
@@ -819,6 +832,9 @@ def index_complex_names():
             "intact_id": c.intact_id,
             "complex_accession": c.complex_accession,
             "complex_loci": sorted(list(complex_loci)),
+            "cellular_component": sorted(list(component)),
+            "biological_process": sorted(list(process)),
+            "molecular_function": sorted(list(function)),
             "references": list(references),
             "keys": list(keys)
         }

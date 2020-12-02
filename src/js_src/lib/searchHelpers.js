@@ -8,6 +8,10 @@ export function makeFieldDisplayName(unformattedName) {
   const labels = {
     locus: 'Gene',
     reference: 'Reference',
+    allele: 'Allele',
+    chemical: 'Chemical',
+    disease: 'Disease',
+    complex: 'Complex',
     cellular_component: 'Cellular Component',
     molecular_function: 'Molecular Function',
     biological_process: 'Biological Process',
