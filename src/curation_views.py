@@ -1943,7 +1943,7 @@ def ptm_update(request):
         
         if modifier_id: 
             dbentity_in_db = None
-            dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == modifier_id, Dbentity.format_name == modifier_id)).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.sublass == 'COMPLEX')).one_or_none()
+            dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == modifier_id, Dbentity.format_name == modifier_id)).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).one_or_none()
             if dbentity_in_db is not None:
                 modifier_id = dbentity_in_db.dbentity_id
             else:
