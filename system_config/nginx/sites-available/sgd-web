@@ -39,7 +39,7 @@ server {
         access_log /var/log/nginx/sgd-frontend-access.log client_ip;
         error_log /var/log/nginx/sgd-frontend-error.log;
 
-        add_header Strict-Transport-Security "max-age=120; includeSubDomains" always;
+#        add_header Strict-Transport-Security "max-age=120; includeSubDomains" always;
 
         proxy_http_version		1.1;
         proxy_set_header		Connection "";
@@ -68,7 +68,7 @@ server {
         access_log /var/log/nginx/sgd-backend-access.log client_ip;
         error_log /var/log/nginx/sgd-backend-error.log;
 
-        add_header Strict-Transport-Security "max-age=120; includeSubDomains" always;
+#        add_header Strict-Transport-Security "max-age=120; includeSubDomains" always;
         proxy_pass				http://backend/;
 	proxy_http_version			1.1;
 	proxy_set_header			Connection "";
