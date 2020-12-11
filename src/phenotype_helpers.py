@@ -75,7 +75,7 @@ def insert_phenotype(curator_session, CREATED_BY, source_id, format_name, displa
 
 def insert_allele(curator_session, CREATED_BY, source_id, allele, mutant_id):
 
-    a = curator_session.query(Alleledbentity).filter_by(display_name=allele).one_or_none()
+    a = curator_session.query(Alleledbentity).filter(Alleledbentity.display_name.ilike(allele)).one_or_none()
     if a is not None:
         return a.dbentity_id
 
