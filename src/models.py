@@ -10234,6 +10234,7 @@ class Complexdbentity(Dbentity):
         data['complex_accession'] = self.format_name
         data['intact_id'] = self.intact_id
         data['systematic_name'] = self.systematic_name
+        data['sgdid'] = self.sgdid
         data['source'] = self.source.display_name
         # data['description'] = link_gene_complex_names(self.description, {self.format_name: 1}, DBSession),
         # data['properties'] = link_gene_complex_names(self.properties, {self.format_name: 1}, DBSession),
