@@ -42,13 +42,18 @@ def load_data(infile):
     dbentity_id_to_topic = dict([(x.dbentity_id, x.topic) for x in nex_session.query(Literatureannotation).all()])
 
     ## 1.  retrieve all allele ids for interactions from database
-    ## 2.  read all alleles for interactions from the flat file
-    ## 3.  insert all new alleles that are not in the database into database and all related tables
-    ## 4.  if allele is in the db, but the paper is different, update the reference linking table
-    ## 5.  if allele is in the db, but the sga/scrore is different, update allele_geninteraction table
-    ## 6.  if the allele_ids in #1 are not in allele list from #2, delete these alleles in all related tables 
-
+    ## 2.  retrieve all (allele1_id, allele2_id, interaction_id) from from database
+    ## 3.  read all alleles for interactions from the flat file
+    ## 4.  read all (allele1_id, allele2_id, interaction_id) from the flat file  
+    ## 5.  insert all new alleles that are not in the database into database and all related tables
+    ## 6.  if allele is in the db, but the paper is different, update the reference linking table
+    ## 7.  if allele is in the db, but the sga/scrore is different, update allele_geninteraction table
+    ## 8.  if the allele_ids in #1 are not in allele list from #2, delete these alleles in all related tables 
+    ## 9.  if (allele1_id, allele2_id, interaction_id) in #2 are not in list in #4, delete these
+    ##     (allele1_id, allele2_id, interaction_id) from database
+    
     ## 1.  retrieve all allele ids for interactions from database
+    ## 2.  retrieve all (allele1_id, allele2_id, interaction_id) from from database
     
     all_allele_ids_for_interaction_in_db = []
     allele_interaction_to_score = {}
@@ -63,10 +68,11 @@ def load_data(infile):
         allele_interaction_to_score[(x.allele1_id, allele2_id, x.interaction_id)] = (x.sga_score, x.pvalue)
 
 
-    ## 2.  read all alleles for interactions from the flat file
-    ## 3.  insert all new alleles that are not in the database into database and all related tables
-    ## 4.  if allele is in the db, but the paper is different, update the reference linking table                                     
-    ## 5.  if allele is in the db, but the sga/scrore is different, update allele_geninteraction table
+    ## 3.  read all alleles for interactions from the flat file
+    ## 4.  read all (allele1_id, allele2_id, interaction_id) from the flat file 
+    ## 5.  insert all new alleles that are not in the database into database and all related tables
+    ## 6.  if allele is in the db, but the paper is different, update the reference linking table                                     
+    ## 7.  if allele is in the db, but the sga/scrore is different, update allele_geninteraction table
     
     f = open(infile)
     
@@ -120,7 +126,7 @@ def load_data(infile):
         if (allele1_id, allele2_id, interaction_id) not in allele_interaction_to_score and (allele1_id, allele2_id, interaction_id) not in allele_interaction_loaded:
             log.info("loading data " + str((allele1_id, allele2_id, interaction_id)) + "into allele_geninteraction table...")
             insert_allele_geninteraction(nex_session, allele1_id, allele2_id, interaction_id, score, pvalue, source_id, date_created)
-            allele_interaction_loaded[(allele1_id, allele2_id, interaction_id)] = 1
+            # allele_interaction_loaded[(allele1_id, allele2_id, interaction_id)] = 1
         count = count + 1
 
         if (allele1_id, allele2_id, interaction_id) not in allele_interaction_loaded and (allele1_id, allele2_id, interaction_id) in allele_interaction_to_score:
@@ -130,29 +136,46 @@ def load_data(infile):
                 log.info("updating data " + str((allele1_id, allele2_id, interaction_id)) + " in the allele_geninteraction table. sga_score_db="+str(sga_score_db) + ", sga_score="+str(score) + ", pvalue_db="+str(pvalue_db) + ", pvalue="+str(pvalue))
                 
                 update_allele_geninteraction(nex_session, allele1_id, allele2_id, interaction_id, score, pvalue)
-            allele_interaction_loaded[(allele1_id, allele2_id, interaction_id)] = 1
+            # allele_interaction_loaded[(allele1_id, allele2_id, interaction_id)] = 1
 
+        allele_interaction_loaded[(allele1_id, allele2_id, interaction_id)] = 1
+            
         if count >= 300:
-            nex_session.rollback()
-            # nex_session.commit()
+            # nex_session.rollback()
+            nex_session.commit()
             count = 0
 
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
 
-    ## 6.  if the allele_ids in #1 are not in allele list from #2, delete these alleles in all related tables 
+    ## 8.  if the allele_ids in #1 are not in allele list from #2, delete these alleles in all related tables 
     for allele_id in all_allele_ids_for_interaction_in_db: 
         if allele_id not in all_allele_ids_in_flat_file:
             log.info("Deleting AlleleGeninteraction rows for allele_id = " + str(allele_id))
             delete_allele_geninteraction(nex_session, allele_id)
 
-    nex_session.rollback()
-    # nex_session.commit()
+    ## 9.  if (allele1_id, allele2_id, interaction_id) in #2 are not in list in #4, delete these
+    ##     (allele1_id, allele2_id, interaction_id) from database
+    for key in allele_interaction_to_score:
+        if key not in allele_interaction_loaded:
+            (allele1_id, allele2_id, interaction_id) = key
+            log.info("Deleting AlleleGeninteraction row for allele1_id = " + str(allele1_id) + ", allele2_id = " + str(allele2_id))
+            delete_allele_geninteraction_by_key(nex_session, allele1_id, allele2_id, interaction_id)
+    
+    # nex_session.rollback()
+    nex_session.commit()
     
     nex_session.close()
     log.info("Done!")
     log.info(str(datetime.now()))
 
+def delete_allele_geninteraction_by_key(nex_session, allele1_id, allele2_id, interaction_id):
+
+    x = nex_session.query(AlleleGeninteraction).filter_by(allele1_id=allele1_id, allele2_id=allele2_id, interaction_id=interaction_id).one_or_none()
+    if x is None:
+        return
+    nex_session.delete(x)
+    
 def delete_allele_geninteraction(nex_session, allele_id):
 
     ## delete from allele_geninteraction table
