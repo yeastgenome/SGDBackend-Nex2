@@ -60,6 +60,7 @@ from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_al
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
+from .complement_helpers import insert_update_complement_annotations, delete_complement_annotation, get_complements_by_filters, upload_complement_file
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger('curation')
@@ -3339,3 +3340,32 @@ def delete_reference(request):
     finally:
         if curator_session:
             curator_session.close()
+
+@view_config(route_name='complement_insert_update', renderer='json', request_method='POST')
+@authenticate
+def complement_insert_update(request):
+
+    return insert_update_complement_annotations(request)
+
+@view_config(route_name='complements_by_filters',renderer='json',request_method='POST')
+@authenticate
+def complements_by_filters(request):
+    try:
+        return get_complements_by_filters(request)
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complement_delete',renderer='json',request_method='DELETE')
+@authenticate
+def complement_delete(request):
+
+    return delete_complement_annotation(request)
+
+@view_config(route_name='complement_file',renderer='json',request_method='POST')
+@authenticate
+def complement_file(request):
+
+    return upload_complement_file(request)

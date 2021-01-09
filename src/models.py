@@ -6972,6 +6972,61 @@ class Expressionannotation(Base):
     def to_dict(self):
         return self.datasetsample.dataset.to_dict(self.reference)
 
+class Functionalcomplementannotation(Base):
+    __tablename__ = 'functionalcomplementannotation'
+    __table_args__ = (
+        UniqueConstraint('dbentity_id','taxonomy_id','dbxref_id','direction','eco_id','reference_id'),
+        {'schema': 'nex'}
+    )
+
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
+    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
+    dbxref_id = Column(Float(53), nullable=False)
+    obj_url = Column(Float(53), nullable=False)
+    direction = Column(Float(53), nullable=False)
+    curator_comment = Column(Float(53), nullable=False)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    dbentity = relationship('Dbentity')
+    reference = relationship('Referencedbentity', foreign_keys=[reference_id])
+    source = relationship('Source')
+    taxonomy = relationship('Taxonomy')
+
+    def to_dict(self, complement=None, reference=None):
+        if complement == None:
+            complement = self.complement
+
+        if reference == None:
+            reference = self.reference
+
+        obj = {
+            "id": self.annotation_id,
+            "obj_url": self.obj_url,
+            "date_created": self.date_created.strftime("%Y-%m-%d"),
+            "direction": self.direction,
+            "curator_comment": self.curator_comment,
+            "locus": {
+                "display_name": self.dbentity.display_name,
+                "link": self.dbentity.obj_url,
+                "id": self.dbentity.dbentity_id,
+                "format_name": self.dbentity.format_name
+            },
+            "reference": {
+                "display_name": self.reference.display_name,
+                "link": self.reference.obj_url,
+                "pubmed_id": self.reference.pmid
+            },
+            "source": {
+                "display_name": self.source.display_name
+            }
+        }
+        return obj
 
 class FileKeyword(Base):
     __tablename__ = 'file_keyword'
