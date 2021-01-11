@@ -695,6 +695,7 @@ def update_allele_data(request):
         if allele_name != d.display_name:
             success_message = "The allele name has been updated from '" + d.display_name + "' to '" + allele_name + "'."
             d.display_name = allele_name
+            d.format_name = allele_name.replace(' ', '_').replace('/', '_')
             curator_session.add(d)
 
         ## update so_id
