@@ -68,7 +68,7 @@ class FileUpload extends Component {
             <p>Template File: </p>
           </div>
           <div className='columns medium-6 end'>
-            <a href='https://docs.google.com/spreadsheets/d/1DNI7OQyqWZvKCHrCRb_tOFYqZ5DYxnHihW5h0b_dPtw/edit?usp=sharing' rel="noopener noreferrer" target='_blank' >Func Complement template file </a>
+            <a href='https://docs.google.com/spreadsheets/d/1HLYXJARlbQT_GtcN6PdfT5m53jLp9FgdT3nxjjiKtWs/edit?usp=sharing' rel="noopener noreferrer" target='_blank' >Func Complement template file </a>
           </div>
         </div>
 

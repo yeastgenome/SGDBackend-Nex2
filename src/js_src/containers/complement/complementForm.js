@@ -11,7 +11,8 @@ const GET_RO = '/ro';
 const COMPLEMENTS = '/complement';
 const GET_STRAINS = '/get_strains';
 const GET_COMPLEMENTS = 'get_complements';
-const ANNOTATION_TYPES = [null, 'computational', 'high-throughput', 'manually curated'];
+const DIRECTION_TYPES = [null, 'yeast complements other', 'other complements yeast'];
+const SOURCES = [null, 'SGD', 'P-POD'];
 const SKIP = 5;
 const TIMEOUT = 120000;
 
@@ -42,7 +43,7 @@ class ComplementForm extends Component {
     };
 
     this.getEco();
-    this.getDo();
+    this.getRo();
     this.getTaxonomy();
   }
 
@@ -54,7 +55,7 @@ class ComplementForm extends Component {
       .catch((err) => this.props.dispatch(setError(err.message)));
   }
 
-  getDo() {
+  getRo() {
     fetchData(GET_RO, { type: 'GET' })
       .then((data) => {
         this.setState({ list_of_ro: data.success });
@@ -248,8 +249,8 @@ class ComplementForm extends Component {
 
   render() {
 
-    var annotation_types = ANNOTATION_TYPES.map((item) => <option key={item}>{item}</option>);
-
+    var direction_types = DIRECTION_TYPES.map((item) => <option key={item}>{item}</option>);
+    var sources = SOURCES.map((item) => <option key={item}>{item}</option>);
     return (
       <div>
 
@@ -336,7 +337,22 @@ class ComplementForm extends Component {
             </div>
           </div>
 
-
+          <div className='row'>
+                    <div className='columns medium-12'>
+                        <div className='row'>
+                            <div className='columns medium-12'>
+                                <label> Evidence Eco </label>
+                            </div>
+                        </div>
+                        <div className='row'>
+                            <div className='columns medium-12'>
+                                <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.complement.eco_id} />
+                            </div>
+                        </div>
+                    </div>
+          
+          </div>
+                
           <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
@@ -346,7 +362,7 @@ class ComplementForm extends Component {
               </div>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <DataList options={this.state.list_of_ro} id='roid' left='display_name' right='format_name' selectedIdName='ro_id' onOptionChange={this.handleChange} selectedId={this.props.complement.ro_id} />
+                  <DataList options={this.state.list_of_ro} id='ro_id' left='display_name' right='format_name' selectedIdName='ro_id' onOptionChange={this.handleChange} selectedId={this.props.complement.ro_id} />
                 </div>
               </div>
             </div>
@@ -356,28 +372,43 @@ class ComplementForm extends Component {
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <label> With Ortholog </label>
+                  <label> Human gene HGNC:XXXX ID </label>
                 </div>
               </div>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <input type='text' name='with_ortholog' onChange={this.handleChange} value={this.props.complement.with_ortholog} />
+                  <input type='text' name='dbxref_id' onChange={this.handleChange} value={this.props.complement.dbxref_id} />
                 </div>
               </div>
             </div>
           </div>
+                
+         <div className='row'>
+            <div className='columns medium-12'>
+              <div className='row'>
+                <div className='columns medium-12'>
+                    <label> Comments </label>
+                </div>
+                </div>
+                <div className='row'>
+                    <div className='columns medium-12'>
+                        <input type='text' name='curator_comment' onChange={this.handleChange} value={this.props.complement.curator_comment} />
+                    </div>
+                </div>
+                </div>
+         </div>         
 
           <div className='row'>
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <label> Annotation Type </label>
+                  <label> Direction of complementation </label>
                 </div>
               </div>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <select onChange={this.handleChange} name='annotation_type' value={this.props.complement.annotation_type || ''}>
-                    {annotation_types}
+                  <select onChange={this.handleChange} name='direction' value={this.props.complement.direction || ''}>
+                    {direction_types}
                   </select>
                 </div>
               </div>
@@ -388,12 +419,14 @@ class ComplementForm extends Component {
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <label> Evidence Eco </label>
+                  <label> Source </label>
                 </div>
               </div>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <DataList options={this.state.list_of_eco} id='eco_id' left='display_name' right='format_name' selectedIdName='eco_id' onOptionChange={this.handleChange} selectedId={this.props.complement.eco_id} />
+                  <select onChange={this.handleChange} name='source_id' value={this.props.complement.source_id || ''}>
+                    {sources}
+                  </select>
                 </div>
               </div>
             </div>

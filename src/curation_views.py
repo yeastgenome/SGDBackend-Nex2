@@ -2145,7 +2145,20 @@ def get_all_do(request):
     finally:
         if DBSession:
             DBSession.remove()
-    
+
+@view_config(route_name='get_all_ro', renderer='json', request_method='GET')
+@authenticate
+def get_all_ro(request):
+    try:
+        ro_in_db = models_helper.get_all_ro()
+        obj = [{'ro_id':r.ro_id, 'format_name': r.format_name,'display_name':r.display_name} for r in ro_in_db]
+        return HTTPOk(body=json.dumps({'success': obj}), content_type='text/json')
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='phenotype_add', renderer='json', request_method='POST')
 @authenticate
 def phenotype_add(request):

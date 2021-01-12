@@ -1,4 +1,4 @@
-from .models import DBSession, Base, Colleague, ColleagueLocus, ColleagueRelation, Disease, FilePath, Filedbentity, FileKeyword, Path, ColleagueReference, ColleagueUrl, Colleaguetriage, Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Psimod, Posttranslationannotation, Eco
+from .models import DBSession, Base, Colleague, ColleagueLocus, ColleagueRelation, Disease, FilePath, Filedbentity, FileKeyword, Path, ColleagueReference, ColleagueUrl, Colleaguetriage, Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Psimod, Posttranslationannotation, Eco, Ro
 import os
 import requests
 
@@ -513,6 +513,13 @@ class ModelsHelper(object):
         '''
         do_in_db = DBSession.query(Disease).all()
         return do_in_db
+
+    def get_all_ro(self):
+        '''
+        Get all RO data
+        '''
+        ro_in_db = DBSession.query(Ro).all()
+        return ro_in_db    
     
     def get_all_do_mapping(self):
         '''

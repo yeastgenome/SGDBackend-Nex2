@@ -20,7 +20,7 @@ import sys
 INPUT_FILE_NAME = os.environ.get('INPUT_FILE_NAME')
 NEX2_URI = os.environ.get('NEX2_URI')
 CREATED_BY = os.environ.get('CREATED_BY')
-OBJ_URL = 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/'
+OBJ_URL = 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id'
 TAXON_ID = 'TAX:559292'
 ECO_ID = 'ECO:0007584'
 RO_ID = 'RO:HOM0000065'

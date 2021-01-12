@@ -6986,16 +6986,18 @@ class Functionalcomplementannotation(Base):
     reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
     eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
-    dbxref_id = Column(Float(53), nullable=False)
-    obj_url = Column(Float(53), nullable=False)
-    direction = Column(Float(53), nullable=False)
-    curator_comment = Column(Float(53), nullable=False)
+    dbxref_id = Column(String(30), nullable=False)
+    obj_url = Column(String(300), nullable=False)
+    direction = Column(String(70), nullable=False)
+    curator_comment = Column(String(100), nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
+    eco = relationship('Eco')
+    ro = relationship('Ro')
     taxonomy = relationship('Taxonomy')
 
     def to_dict(self, complement=None, reference=None):

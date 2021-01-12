@@ -15,9 +15,11 @@ from src.models import DBSession, Functionalcomplementannotation, Source, Dbenti
 from src.curation_helpers import get_curator_session
 
 GROUP_ID = 1
-OBJ_URL = 'http://www.alliancegenome.org/gene/'
+OBJ_URL = 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id'
 EVIDENCE_TYPE = 'with'
 RO_ID = '1968075'
+SGD_SOURCE_ID = 834
+PPOD_SOURCE_ID = 806
 
 models_helper = ModelsHelper()
 
@@ -25,7 +27,7 @@ def insert_update_complement_annotations(request):
     try:
         CREATED_BY = request.session['username']
         curator_session = get_curator_session(request.session['username'])
-        source_id = 834
+        #source_id = 834
         annotation_id = request.params.get('annotation_id')
         dbentity_id = request.params.get('dbentity_id')
         if not dbentity_id:
@@ -46,6 +48,14 @@ def insert_update_complement_annotations(request):
         ro_id = request.params.get('ro_id')
         if not ro_id:
             return HTTPBadRequest(body=json.dumps({'error': "ro_id is blank"}), content_type='text/json')       
+        
+        dbxref_id = request.params.get('dbxref_id')
+        if not dbxref_id:
+            return HTTPBadRequest(body=json.dumps({'error': "dbxref_id is blank"}), content_type='text/json')
+
+        source_id = request.params.get('source_id')
+        if not source_id:
+            return HTTPBadRequest(body=json.dumps({'error': "source_id is blank"}), content_type='text/json')
 
         direction = request.params.get('direction')
         if not direction:
@@ -89,6 +99,10 @@ def insert_update_complement_annotations(request):
         isSuccess = False
         returnValue = ''
         complement_in_db = []
+        if source_id == 'SGD':
+            source_id = SGD_SOURCE_ID
+        elif source_id == 'P-POD':
+            source_id = PPOD_SOURCE_ID
 
         if (int(annotation_id) > 0):
             
@@ -99,12 +113,13 @@ def insert_update_complement_annotations(request):
                                     'reference_id': reference_id,
                                     'eco_id': eco_id,
                                     'ro_id': int(RO_ID),
+                                    'obj_url': OBJ_URL + "/" +dbxref_id,
                                     'direction': direction,
                                     'curator_comment': curator_comment,
                                     'dbxref_id': dbxref_id
                                     }
 
-                curator_session.query(Diseaseannotation).filter(Diseaseannotation.annotation_id == annotation_id).update(update_complement)
+                curator_session.query(Functionalcomplementannotation).filter(Functionalcomplementannotation.annotation_id == annotation_id).update(update_complement)
                 curator_session.flush()
                 transaction.commit()
                
@@ -126,6 +141,7 @@ def insert_update_complement_annotations(request):
                     'direction': complement.direction,
                     'source_id': complement.source_id,
                     'dbxref_id': complement.dbxref_id,
+                    'obj_url': complement.obj_url,
                     'curator_comment': complement.curator_comment
                 }
                 if complement.eco:
@@ -176,9 +192,10 @@ def insert_update_complement_annotations(request):
                                     eco_id = eco_id,
                                     ro_id = ro_id,
                                     curator_comment = curator_comment,
-                                    direction = direction,
-                                    created_by = CREATED_BY,
-                                    date_assigned = date_created)
+                                    direction=direction,
+                                    obj_url=OBJ_URL + "/" +dbxref_id,
+                                    dbxref_id =dbxref_id,
+                                    created_by = CREATED_BY)
                 curator_session.add(y)
                 curator_session.flush()
                 transaction.commit()
@@ -247,8 +264,8 @@ def get_complements_by_filters(request):
                 reference_dbentity_id = reference_dbentity_id.dbentity_id
                 complements_in_db = complements_in_db.filter_by(reference_id=reference_dbentity_id)
       
-        complements = complements_in_db.options(joinedload(Functionalcomplementannotation.eco), joinedload(Diseaseannotation.taxonomy)
-                                                , joinedload(Diseaseannotation.reference), joinedload(Diseaseannotation.dbentity)).order_by(Diseaseannotation.annotation_id.asc()).all()
+        complements = complements_in_db.options(joinedload(Functionalcomplementannotation.eco), joinedload(Functionalcomplementannotation.taxonomy)
+                                                , joinedload(Functionalcomplementannotation.reference), joinedload(Functionalcomplementannotation.dbentity)).order_by(Functionalcomplementannotation.annotation_id.asc()).all()
 
         list_of_complements = []
         for complement in complements:
@@ -259,8 +276,10 @@ def get_complements_by_filters(request):
                     'display_name': complement.dbentity.display_name
                 },
                 'taxonomy_id': '',
+                'source_id': '',
                 'reference_id': complement.reference.pmid,
                 'eco_id': '',
+                'ro_id': '',
                 'direction': complement.direction,
                 'obj_url': complement.obj_url,
                 'ro_id': complement.ro_id,
@@ -302,7 +321,7 @@ def delete_complement_annotation(request):
                 curator_session.delete(complement_in_db)
                 transaction.commit()
                 isSuccess = True
-                returnValue = 'Diseaseannotation successfully deleted.'
+                returnValue = 'Functionalcomplementannotation successfully deleted.'
             except Exception as e:
                 transaction.abort()
                 if curator_session:
@@ -335,17 +354,18 @@ def upload_complement_file(request):
 
         COLUMNS = {
             'taxonomy': 'Taxon',
-            'gene': 'Gene',
-            'disease_id': 'DOID',
-            'with_ortholog':'With Ortholog',
+            'gene': 'Yeast Gene',
+            'dbxref_id': 'Human Gene',
+            'direction':'Direction of complementation',
             'eco_id': 'Evidence Code',
+            'ro_id': 'Implication Code',
             'reference': 'DB:Reference',
+            'curator_comment': 'Notes',
+            'source_id': 'Source',
             'created_by': 'Assigned By',    
         }
 
-        SOURCE_ID = 834
         SEPARATOR = ','
-        ANNOTATION_TYPE = 'high-throughput'
 
         list_of_complements = []
         list_of_complements_errors = []
@@ -353,7 +373,7 @@ def upload_complement_file(request):
 
         null_columns = df.columns[df.isnull().any()]
         for col in null_columns:
-            if COLUMNS['with_ortholog'] != col and COLUMNS['evidence code'] !=col:
+            if COLUMNS['gene'] != col and COLUMNS['dbxref_id'] !=col:
                 rows = df[df[col].isnull()].index.tolist()
                 rows = ','.join([str(r+2) for r in rows])
                 list_of_complements_errors.append('No values in column ' + col + ' rows ' + rows)
@@ -477,7 +497,6 @@ def upload_complement_file(request):
                         Functionalcomplementannotation.reference_id == complement['reference_id'],
                         Functionalcomplementannotation.eco_id == complement['eco_id'],
                         Functionalcomplementannotation.association_type == int(RO_ID),
-                        DiseaseFunctionalcomplementannotationannotation.date_assigned == datetime.now(),
                         Functionalcomplementannotation.created_by == complement['created_by']
                         )).one_or_none()
                     if complement_in_db is not None:
@@ -488,7 +507,6 @@ def upload_complement_file(request):
                         Functionalcomplementannotation.reference_id == complement['reference_id'],
                         Functionalcomplementannotation.eco_id == complement['eco_id'],
                         Functionalcomplementannotation.association_type == int(RO_ID),
-                        Functionalcomplementannotation.date_assigned == datetime.now(),
                         Functionalcomplementannotation.created_by == complement['created_by']
                         )).update(update_complement)
                         curator_session.flush()                 
@@ -508,7 +526,6 @@ def upload_complement_file(request):
                                 reference_id = complement['reference_id'], 
                                 eco_id = complement['eco_id'],
                                 association_type = int(RO_ID),
-                                date_assigned = datetime.now(),
                                 created_by = CREATED_BY,
                                 annotation_type = complement['annotation_type']
                             )
