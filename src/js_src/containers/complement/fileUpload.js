@@ -5,7 +5,7 @@ import Dropzone from 'react-dropzone';
 import { connect } from 'react-redux';
 import { setError, setMessage } from '../../actions/metaActions';
 const TIMEOUT = 120000;
-const FILE_INSERT = '/disease_file';
+const FILE_INSERT = '/complement_file';
 import fetchData from '../../lib/fetchData';
 import PropTypes from 'prop-types';
 class FileUpload extends Component {

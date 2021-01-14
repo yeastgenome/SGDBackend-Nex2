@@ -521,6 +521,17 @@ class ModelsHelper(object):
         ro_in_db = DBSession.query(Ro).all()
         return ro_in_db    
     
+    def get_all_ro_mapping(self):
+        '''
+        Get all RO data as dictionary with key as display_name
+        ''' 
+        ro_displayname_to_Id = {}
+        ro_in_db = self.get_all_ro()
+        for ro in ro_in_db:
+            ro_displayname_to_Id[ro.display_name] = ro.ro_id
+        
+        return ro_displayname_to_Id
+
     def get_all_do_mapping(self):
         '''
         Get all DO data as dictionary with key as display_name

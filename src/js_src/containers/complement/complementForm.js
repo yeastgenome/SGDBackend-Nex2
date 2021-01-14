@@ -105,9 +105,12 @@ class ComplementForm extends Component {
       taxonomy_id: complement.taxonomy_id,
       reference_id: complement.reference_id,
       eco_id: complement.eco_id,
-      with_ortholog: complement.with_ortholog,
-      annotation_type: complement.annotation_type,
-      association_type: complement.association_type,
+      ro_id: complement.ro_id,
+      dbxref_id: complement.dbxref_id,
+      direction: complement.direction,
+      obj_url: complement.obj_url,
+      curator_comment: complement.curator_comment,
+      source_id: complement.source_id,
       date_assigned: complement.date_assigned
     };
     this.props.dispatch(setComplement(currentComplement));
@@ -121,10 +124,13 @@ class ComplementForm extends Component {
       taxonomy_id: '',
       reference_id: '',
       eco_id: '',
-      with_ortholog: '',
-      annotation_type: '',
-      association_type: '',
-      date_assigned: ''
+      ro_id: '',
+      dbxref_id: '',
+      source_id: '',
+      direction: '',
+      obj_url: '',
+      curator_comment: '',
+      date_created: ''
     };
     this.props.dispatch(setComplement(currentComplement));
   }
@@ -372,7 +378,7 @@ class ComplementForm extends Component {
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <label> Human gene HGNC:XXXX ID </label>
+                  <label> Human gene HGNC ID </label>
                 </div>
               </div>
               <div className='row'>
