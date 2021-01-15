@@ -466,6 +466,17 @@ def upload_complement_file(request):
                 dbxref_id = row[column]
                 dbxref_id_current = None if pd.isnull(dbxref_id) else None if not str(dbxref_id) else str(dbxref_id)
                 complement_existing['dbxref_id'] = dbxref_id_current
+                complement_existing['obj_url'] = OBJ_URL + "/" + dbxref_id_current
+
+                column = COLUMNS['direction']
+                direction = row[column]
+                direction_current = None if pd.isnull(direction) else None if not str(direction) else str(direction)
+                complement_existing['direction'] = direction_current
+
+                column = COLUMNS['curator_comment']
+                curator_comment = row[column]
+                curator_comment_current = None if pd.isnull(curator_comment) else None if not str(curator_comment) else str(curator_comment)
+                complement_existing['curator_comment'] = curator_comment_current
 
 
                 list_of_complements.append([complement_existing,complement_update])

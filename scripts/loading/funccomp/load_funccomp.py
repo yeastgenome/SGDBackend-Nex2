@@ -72,7 +72,7 @@ def upload_db(obj, row_num):
             db_session.flush()
             logging.info('finished ' + obj['systematic_name'] + ', line ' + str(row_num) +  ' ' + obj['pmid']+  ' ' + obj['hgnc'])
     except:
-        logging.error('error with ' + obj['systematic_name']+ ' in row ' + str(row_num) +  ' ' + obj['pmid'] )
+        logging.error('error with ' + obj['systematic_name']+ ' in row ' + str(row_num) +  ' ' + obj['pmid'] +  ' ' + obj['hgnc'])
         traceback.print_exc()
         db_session.rollback()
         db_session.close()
