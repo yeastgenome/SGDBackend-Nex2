@@ -12,7 +12,6 @@ const COMPLEMENTS = '/complement';
 const GET_STRAINS = '/get_strains';
 const GET_COMPLEMENTS = 'get_complements';
 const DIRECTION_TYPES = [null, 'yeast complements other', 'other complements yeast'];
-const SOURCES = [null, 'SGD', 'P-POD'];
 const SKIP = 5;
 const TIMEOUT = 120000;
 
@@ -256,7 +255,6 @@ class ComplementForm extends Component {
   render() {
 
     var direction_types = DIRECTION_TYPES.map((item) => <option key={item}>{item}</option>);
-    var sources = SOURCES.map((item) => <option key={item}>{item}</option>);
     return (
       <div>
 
@@ -415,23 +413,6 @@ class ComplementForm extends Component {
                 <div className='columns medium-12'>
                   <select onChange={this.handleChange} name='direction' value={this.props.complement.direction || ''}>
                     {direction_types}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className='row'>
-            <div className='columns medium-12'>
-              <div className='row'>
-                <div className='columns medium-12'>
-                  <label> Source </label>
-                </div>
-              </div>
-              <div className='row'>
-                <div className='columns medium-12'>
-                  <select onChange={this.handleChange} name='source_id' value={this.props.complement.source_id || ''}>
-                    {sources}
                   </select>
                 </div>
               </div>

@@ -19,7 +19,6 @@ OBJ_URL = 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id'
 EVIDENCE_TYPE = 'with'
 RO_ID = '1968075'
 SGD_SOURCE_ID = 834
-PPOD_SOURCE_ID = 806
 
 models_helper = ModelsHelper()
 
@@ -27,7 +26,7 @@ def insert_update_complement_annotations(request):
     try:
         CREATED_BY = request.session['username']
         curator_session = get_curator_session(request.session['username'])
-        #source_id = 834
+
         annotation_id = request.params.get('annotation_id')
         dbentity_id = request.params.get('dbentity_id')
         if not dbentity_id:
@@ -52,10 +51,6 @@ def insert_update_complement_annotations(request):
         dbxref_id = request.params.get('dbxref_id')
         if not dbxref_id:
             return HTTPBadRequest(body=json.dumps({'error': "dbxref_id is blank"}), content_type='text/json')
-
-        source_id = request.params.get('source_id')
-        if not source_id:
-            return HTTPBadRequest(body=json.dumps({'error': "source_id is blank"}), content_type='text/json')
 
         direction = request.params.get('direction')
         if not direction:
@@ -99,20 +94,15 @@ def insert_update_complement_annotations(request):
         isSuccess = False
         returnValue = ''
         complement_in_db = []
-        if source_id == 'SGD':
-            source_id = SGD_SOURCE_ID
-        elif source_id == 'P-POD':
-            source_id = PPOD_SOURCE_ID
 
         if (int(annotation_id) > 0):
             
             try:
                 update_complement = {'dbentity_id': dbentity_id,
-                                    'source_id': source_id,
+                                    'source_id': SGD_SOURCE_ID,
                                     'taxonomy_id': taxonomy_id,
                                     'reference_id': reference_id,
                                     'eco_id': eco_id,
-                                    'source_id': source_id,
                                     'ro_id': ro_id,
                                     'obj_url': OBJ_URL + "/" +dbxref_id,
                                     'direction': direction,
@@ -154,9 +144,6 @@ def insert_update_complement_annotations(request):
                 
                 if complement.ro:
                     complement_in_db['ro_id'] = str(complement.ro.ro_id)   
-                
-                if complement.source:
-                    complement_in_db['source_id'] = str(complement.source.display_name)
 
             except IntegrityError as e:
                 transaction.abort()
@@ -193,7 +180,7 @@ def insert_update_complement_annotations(request):
                 y = None
                 date_created = datetime.now()
                 y = Functionalcomplementannotation(dbentity_id = dbentity_id,
-                                    source_id = source_id,
+                                    source_id = SGD_SOURCE_ID,
                                     taxonomy_id = taxonomy_id,
                                     reference_id = reference_id,
                                     eco_id = eco_id,
@@ -508,7 +495,7 @@ def upload_complement_file(request):
                         Functionalcomplementannotation.reference_id == complement['reference_id'],
                         Functionalcomplementannotation.eco_id == complement['eco_id'],
                         Functionalcomplementannotation.ro_id == complement['ro_id'],
-                        Functionalcomplementannotation.source_id == complement['source_id'],
+                        Functionalcomplementannotation.source_id == SGD_SOURCE_ID,
                         Functionalcomplementannotation.direction == complement['direction'],
                         Functionalcomplementannotation.obj_url == complement['obj_url'],
                         Functionalcomplementannotation.curator_comment == complement['curator_comment'],
@@ -522,7 +509,7 @@ def upload_complement_file(request):
                         Functionalcomplementannotation.reference_id == complement['reference_id'],
                         Functionalcomplementannotation.eco_id == complement['eco_id'],
                         Functionalcomplementannotation.ro_id == complement['ro_id'],
-                        Functionalcomplementannotation.source_id == complement['source_id'],
+                        Functionalcomplementannotation.source_id == SGD_SOURCE_ID,
                         Functionalcomplementannotation.direction == complement['direction'],
                         Functionalcomplementannotation.obj_url == complement['obj_url'],
                         Functionalcomplementannotation.curator_comment == complement['curator_comment'],
@@ -540,7 +527,7 @@ def upload_complement_file(request):
                             r = Functionalcomplementannotation(
                                 dbentity_id = complement['dbentity_id'],
                                 dbxref_id = complement['dbxref_id'], 
-                                source_id = complement['source_id'],
+                                source_id = SGD_SOURCE_ID,
                                 taxonomy_id = complement['taxonomy_id'],
                                 reference_id = complement['reference_id'], 
                                 eco_id = complement['eco_id'],

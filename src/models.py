@@ -4548,6 +4548,7 @@ class Locusdbentity(Dbentity):
             "description": self.description,
             "name_description": self.name_description,
             "paralogs": self.paralogs_to_dict(),
+            "complements": self.complements_to_dict(),
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
             "go_overview": self.go_overview_to_dict(),
@@ -4808,6 +4809,10 @@ class Locusdbentity(Dbentity):
         PARALOG_RO_ID = 169738
         paralog_relations = DBSession.query(LocusRelation).filter(and_(LocusRelation.ro_id == PARALOG_RO_ID, or_(LocusRelation.parent_id == self.dbentity_id, LocusRelation.child_id == self.dbentity_id))).all()
         return [a.to_dict(self.dbentity_id) for a in paralog_relations]
+    
+    def complements_to_dict(self):
+        complement_relations = DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        return [a.to_dict(self.dbentity_id) for a in complement_relations]
 
     def protein_overview_to_dict(self):
         obj = {
@@ -7012,6 +7017,7 @@ class Functionalcomplementannotation(Base):
             "obj_url": self.obj_url,
             "date_created": self.date_created.strftime("%Y-%m-%d"),
             "direction": self.direction,
+            "dbxref_id": self.dbxref_id,
             "curator_comment": self.curator_comment,
             "locus": {
                 "display_name": self.dbentity.display_name,
@@ -7019,11 +7025,11 @@ class Functionalcomplementannotation(Base):
                 "id": self.dbentity.dbentity_id,
                 "format_name": self.dbentity.format_name
             },
-            "reference": {
+            "references": [{
                 "display_name": self.reference.display_name,
                 "link": self.reference.obj_url,
                 "pubmed_id": self.reference.pmid
-            },
+            }],
             "source": {
                 "display_name": self.source.display_name
             }
