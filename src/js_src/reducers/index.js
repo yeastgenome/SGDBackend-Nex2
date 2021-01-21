@@ -7,6 +7,7 @@ import ptmReducer from './ptmReducer';
 import newsLetterReducer from './newsLetterReducer';
 import regulationReducer from './regulationReducer';
 import diseaseReducer from './diseaseReducer';
+import complementReducer from './complementReducer';
 import phenotypeReducer from './phenotypeReducer';
 import alleleReducer from './alleleReducer';
 import authorResponseReducer from './authorResponseReducer';
@@ -22,6 +23,7 @@ export default {
   newsLetter:newsLetterReducer,
   regulation:regulationReducer,
   disease: diseaseReducer,
+  complement: complementReducer,
   phenotype:phenotypeReducer,
   allele:alleleReducer,
   authorResponse:authorResponseReducer,
