@@ -929,6 +929,106 @@ BEFORE INSERT OR UPDATE ON nex.expressionannotation FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_expressionannotation_biur();
 
 
+DROP TRIGGER IF EXISTS functionalcomplementannotation_audr ON nex.functionalcomplementannotation CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_functionalcomplementannotation_audr() RETURNS trigger AS $BODY$
+DECLARE
+    v_row       nex.deletelog.deleted_row%TYPE;
+BEGIN
+  IF (TG_OP = 'UPDATE') THEN
+
+    IF (OLD.dbentity_id != NEW.dbentity_id) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'DBENTITY_ID'::text, OLD.annotation_id, OLD.dbentity_id::text, NEW.dbentity_id::text, USER);
+    END IF;
+
+     IF (OLD.source_id != NEW.source_id) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'SOURCE_ID'::text, OLD.annotation_id, OLD.source_id::text, NEW.source_id::text, USER);
+    END IF;
+
+     IF (OLD.taxonomy_id != NEW.taxonomy_id) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'TAXONOMY_ID'::text, OLD.annotation_id, OLD.taxonomy_id::text, NEW.taxonomy_id::text, USER);
+    END IF;
+
+    IF (OLD.reference_id != NEW.reference_id) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'REFERENCE_ID'::text, OLD.annotation_id, OLD.reference_id::text, NEW.reference_id::text, USER);
+    END IF;
+
+    IF (OLD.ro_id != NEW.ro_id) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'RO_ID'::text, OLD.annotation_id, OLD.ro_id::text, NEW.ro_id::text, USER);
+    END IF;
+
+    IF (OLD.eco_id != NEW.eco_id) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'ECO_ID'::text, OLD.annotation_id, OLD.eco_id::text, NEW.eco_id::text, USER);
+    END IF;
+
+    IF (OLD.association_type != NEW.association_type) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'ASSOCIATION_TYPE'::text, OLD.annotation_id, OLD.association_type::text, NEW.association_type::text, USER);
+    END IF;
+
+    IF  (((OLD.curator_comment IS NULL) AND (NEW.curator_comment IS NOT NULL)) OR ((OLD.curator_comment IS NOT NULL) AND (
+NEW.curator_comment IS NULL)) OR (OLD.curator_comment != NEW.curator_comment)) THEN
+        PERFORM nex.insertupdatelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, 'DISEASE_QUALIFIER'::text, OLD.annotation_id, 
+OLD.disease_qualifier::text, NEW.disease_qualifier::text, USER);
+    END IF;
+
+
+    RETURN NEW;
+
+  ELSIF (TG_OP = 'DELETE') THEN
+
+    v_row := OLD.annotation_id || '[:]' || OLD.dbentity_id || '[:]' ||
+             OLD.source_id || '[:]' || OLD.taxonomy_id || '[:]' ||
+             OLD.reference_id || '[:]' || OLD.ro_id || '[:]' || OLD.eco_id || '[:]' ||
+             coalesce(OLD.curator_comment,'') || '[:]' ||
+             OLD.date_created || '[:]' || OLD.created_by;
+
+           PERFORM nex.insertdeletelog('FUNCTIONALCOMPLEMENTANNOTATION'::text, OLD.annotation_id, v_row, USER);
+
+     RETURN OLD;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER functionalcomplementannotation_audr
+AFTER UPDATE OR DELETE ON nex.functionalcomplementannotation FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_functionalcomplementannotation_audr();
+
+
+DROP TRIGGER IF EXISTS functionalcomplementannotation_biur ON nex.functionalcomplementannotation CASCADE;
+CREATE OR REPLACE FUNCTION trigger_fct_functionalcomplementannotation_biur() RETURNS trigger AS $BODY$
+BEGIN
+  IF (TG_OP = 'INSERT') THEN
+
+       NEW.created_by := UPPER(NEW.created_by);
+       PERFORM nex.checkuser(NEW.created_by);
+
+       RETURN NEW;
+
+  ELSIF (TG_OP = 'UPDATE') THEN
+
+    IF (NEW.annotation_id != OLD.annotation_id) THEN
+        RAISE EXCEPTION 'Primary key cannot be updated';
+    END IF;
+
+    IF (NEW.date_created != OLD.date_created) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    IF (NEW.created_by != OLD.created_by) THEN
+        RAISE EXCEPTION 'Audit columns cannot be updated.';
+    END IF;
+
+    RETURN NEW;
+  END IF;
+
+END;
+$BODY$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER functionalcomplementannotation_biur
+BEFORE INSERT OR UPDATE ON nex.functionalcomplementannotation FOR EACH ROW
+EXECUTE PROCEDURE trigger_fct_functionalcomplementannotation_biur();
+
+
 DROP TRIGGER IF EXISTS geninteractionannotation_audr ON nex.geninteractionannotation CASCADE;
 CREATE OR REPLACE FUNCTION trigger_fct_geninteractionannotation_audr() RETURNS trigger AS $BODY$
 DECLARE
