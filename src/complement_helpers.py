@@ -14,10 +14,8 @@ from src.models import DBSession, Functionalcomplementannotation, Source, Dbenti
      Straindbentity, Ro, Eco
 from src.curation_helpers import get_curator_session
 
-GROUP_ID = 1
-OBJ_URL = 'https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id'
-EVIDENCE_TYPE = 'with'
-RO_ID = '1968075'
+
+OBJ_URL = 'https://www.alliancegenome.org/gene/hgnc_id'
 SGD_SOURCE_ID = 834
 
 models_helper = ModelsHelper()
