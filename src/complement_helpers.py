@@ -15,7 +15,7 @@ from src.models import DBSession, Functionalcomplementannotation, Source, Dbenti
 from src.curation_helpers import get_curator_session
 
 
-OBJ_URL = 'https://www.alliancegenome.org/gene/hgnc_id'
+OBJ_URL = 'https://www.alliancegenome.org/gene'
 SGD_SOURCE_ID = 834
 
 models_helper = ModelsHelper()
