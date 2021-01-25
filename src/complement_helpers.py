@@ -56,7 +56,7 @@ def insert_update_complement_annotations(request):
 
         curator_comment = request.params.get('curator_comment')
         if not curator_comment:
-            return HTTPBadRequest(body=json.dumps({'error': "curator_comment is blank"}), content_type='text/json')
+            curator_comment = None
          
         try:
             dbentity_in_db = None
