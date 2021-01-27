@@ -81,8 +81,8 @@ export default (
           <Route component={requireAuthentication(Regulation)} path='/regulation' />
           <Route component={requireAuthentication(Disease)} path='/disease' />
           <Route component={requireAuthentication(Complement)} path='/complement' />
-	        <Route component={requireAuthentication(NewPhenotype)} path='/new_phenotype' />
-	        <Route component={requireAuthentication(SearchPhenotype)} path='/search_phenotype' />  
+	  <Route component={requireAuthentication(NewPhenotype)} path='/new_phenotype' />
+	  <Route component={requireAuthentication(SearchPhenotype)} path='/search_phenotype' />  
           <Route component={requireAuthentication(EditPhenotype)} path='/edit_phenotype/:id' />
           <Route component={requireAuthentication(NewAllele)} path='/new_allele' />
           <Route component={requireAuthentication(EditAllele)} path='/curate/allele/:id' />
