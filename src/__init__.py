@@ -238,6 +238,12 @@ def main(global_config, **settings):
     config.add_route('disease_file', '/disease_file', request_method='POST')
     config.add_route('get_all_do','/do', request_method='GET')
     config.add_route('get_all_eco', '/eco', request_method='GET')
+
+    config.add_route('complement_insert_update','/complement', request_method='POST')
+    config.add_route('complements_by_filters','/get_complements',request_method='POST')
+    config.add_route('complement_delete','/complement/{id}/{dbentity_id}', request_method='DELETE')
+    config.add_route('complement_file', '/complement_file', request_method='POST')
+    config.add_route('get_all_ro','/ro', request_method='GET')
     
     config.add_route('add_author_response','/add_author_response', request_method='POST')
     config.add_route('edit_author_response','/edit_author_response', request_method='POST')

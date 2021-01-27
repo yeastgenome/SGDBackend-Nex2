@@ -38,7 +38,8 @@ import ColleaguesIndex from './containers/colleagues/index';
 import ColleaguesShow from './containers/colleagues/show';
 import NewColleague from './containers/colleagues/new';
 import Regulation from './containers/regulation/index';
-import Disease from './containers/disease/index'
+import Disease from './containers/disease/index';
+import Complement from './containers/complement/index';
 import FileCurate from './containers/fileCurate';
 import FileCurateUpdate from './containers/fileCurate/updateFile.js';
 import NewPhenotype from './containers/phenotype/new';
@@ -79,6 +80,7 @@ export default (
           <Route component={requireAuthentication(CurateLit)} path='/curate/reference/:id' />
           <Route component={requireAuthentication(Regulation)} path='/regulation' />
           <Route component={requireAuthentication(Disease)} path='/disease' />
+          <Route component={requireAuthentication(Complement)} path='/complement' />
 	  <Route component={requireAuthentication(NewPhenotype)} path='/new_phenotype' />
 	  <Route component={requireAuthentication(SearchPhenotype)} path='/search_phenotype' />  
           <Route component={requireAuthentication(EditPhenotype)} path='/edit_phenotype/:id' />

@@ -60,6 +60,7 @@ from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_al
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
+from .complement_helpers import insert_update_complement_annotations, delete_complement_annotation, get_complements_by_filters, upload_complement_file
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger('curation')
@@ -1387,7 +1388,7 @@ def ptm_file_insert(request):
             log.info('PTM file upload complete for file '+filename + ' with errors.')
             return HTTPBadRequest(body=json.dumps({"error": list_of_posttranslationannotation_errors}), content_type='text/json')
 
-        sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE'])
+        sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE', 'COMPLEX'])
         strain_to_taxonomy_id = models_helper.get_common_strains()
         psimod_to_id = models_helper.get_psimod_all()
         posttranslationannotation_to_site = models_helper.posttranslationannotation_with_key_index()
@@ -1531,6 +1532,10 @@ def ptm_file_insert(request):
                         posttranslationannotation_existing['modifier_id'] = sgd_id_to_dbentity_id[(modifier_current, 'LOCUS')]
                     elif((modifier_current, 'LOCUS') in systematic_name_to_dbentity_id):
                         posttranslationannotation_existing['modifier_id'] = systematic_name_to_dbentity_id[(modifier_current, 'LOCUS')]
+                    elif((modifier_current, 'COMPLEX') in sgd_id_to_dbentity_id):
+                        posttranslationannotation_existing['modifier_id'] = sgd_id_to_dbentity_id[(modifier_current, 'COMPLEX')]
+                    elif((modifier_current, 'COMPLEX') in systematic_name_to_dbentity_id):
+                        posttranslationannotation_existing['modifier_id'] = systematic_name_to_dbentity_id[(modifier_current, 'COMPLEX')]
 
                     if SEPARATOR in modifier:
                         modifier_new = str(row[COLUMNS['modifier']]).split(SEPARATOR)[1]
@@ -1538,6 +1543,10 @@ def ptm_file_insert(request):
                             posttranslationannotation_update['modifier_id'] = sgd_id_to_dbentity_id[(modifier_new, 'LOCUS')]
                         elif((modifier_new, 'LOCUS') in systematic_name_to_dbentity_id):
                             posttranslationannotation_update['modifier_id'] = systematic_name_to_dbentity_id[(modifier_new, 'LOCUS')]
+                        elif((modifier_new, 'COMPLEX') in sgd_id_to_dbentity_id):
+                            posttranslationannotation_update['modifier_id'] = sgd_id_to_dbentity_id[(modifier_new, 'COMPLEX')]
+                        elif((modifier_new, 'COMPLEX') in systematic_name_to_dbentity_id):
+                            posttranslationannotation_update['modifier_id'] = systematic_name_to_dbentity_id[(modifier_new, 'COMPLEX')]
                     
                 list_of_posttranslationannotation.append((posttranslationannotation_existing,posttranslationannotation_update))
                 
@@ -1935,7 +1944,7 @@ def ptm_update(request):
         
         if modifier_id: 
             dbentity_in_db = None
-            dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == modifier_id, Dbentity.format_name == modifier_id)).filter(Dbentity.subclass == 'LOCUS').one_or_none()
+            dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == modifier_id, Dbentity.format_name == modifier_id)).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).one_or_none()
             if dbentity_in_db is not None:
                 modifier_id = dbentity_in_db.dbentity_id
             else:
@@ -2136,7 +2145,20 @@ def get_all_do(request):
     finally:
         if DBSession:
             DBSession.remove()
-    
+
+@view_config(route_name='get_all_ro', renderer='json', request_method='GET')
+@authenticate
+def get_all_ro(request):
+    try:
+        ro_in_db = models_helper.get_all_ro()
+        obj = [{'ro_id':r.ro_id, 'format_name': r.format_name,'display_name':r.display_name} for r in ro_in_db]
+        return HTTPOk(body=json.dumps({'success': obj}), content_type='text/json')
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='phenotype_add', renderer='json', request_method='POST')
 @authenticate
 def phenotype_add(request):
@@ -2342,18 +2364,18 @@ def regulation_insert_update(request):
         annotation_type = MANUALLY_CURATED
 
         dbentity_in_db = None
-        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == target_id, Dbentity.format_name == target_id)).filter(Dbentity.subclass == 'LOCUS').one_or_none()
+        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == target_id, Dbentity.format_name == target_id)).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).one_or_none()
         if dbentity_in_db is not None:
             target_id = dbentity_in_db.dbentity_id
         else:
-            return HTTPBadRequest(body=json.dumps({'error': "target gene value not found in database"}), content_type='text/json')
+            return HTTPBadRequest(body=json.dumps({'error': "target gene/complex value not found in database"}), content_type='text/json')
 
         dbentity_in_db = None
-        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == regulator_id, Dbentity.format_name == regulator_id)).filter(Dbentity.subclass == 'LOCUS').one_or_none()
+        dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == regulator_id, Dbentity.format_name == regulator_id)).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).one_or_none()
         if dbentity_in_db is not None:
             regulator_id = dbentity_in_db.dbentity_id
         else:
-            return HTTPBadRequest(body=json.dumps({'error': "regulator gene value not found in database"}), content_type='text/json')
+            return HTTPBadRequest(body=json.dumps({'error': "regulator gene/complex value not found in database"}), content_type='text/json')
 
         dbentity_in_db = None
         pmid_in_db = None
@@ -2541,7 +2563,7 @@ def regulations_by_filters(request):
             target_dbentity_id = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid==target_id, Dbentity.format_name==target_id)).one_or_none()
 
             if not target_dbentity_id:
-                raise Exception('Target gene not found, please provide sgdid or systematic name')
+                raise Exception('Target gene/complex not found, please provide sgdid or systematic name/complex ID')
             else:
                 target_dbentity_id = target_dbentity_id.dbentity_id
                 regulations_in_db = regulations_in_db.filter_by(target_id=target_dbentity_id)
@@ -2550,7 +2572,7 @@ def regulations_by_filters(request):
             regulator_dbentity_id = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == regulator_id,Dbentity.format_name== regulator_id)).one_or_none()
 
             if not regulator_dbentity_id:
-                raise Exception('Regulator gene not found, please provide sgdid or systematic name')
+                raise Exception('Regulator gene/complex not found, please provide sgdid or systematic name/complex ID')
             else:
                 regulator_dbentity_id = regulator_dbentity_id.dbentity_id
                 regulations_in_db = regulations_in_db.filter_by(regulator_id=regulator_dbentity_id)
@@ -2696,7 +2718,7 @@ def regulation_file(request):
             return HTTPBadRequest(body=json.dumps({"error": list_of_regulations_errors}), content_type='text/json')
 
 
-        sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE'])
+        sgd_id_to_dbentity_id, systematic_name_to_dbentity_id = models_helper.get_dbentity_by_subclass(['LOCUS', 'REFERENCE', 'COMPLEX'])
         strain_to_taxonomy_id = models_helper.get_common_strains()
         eco_displayname_to_id = models_helper.get_all_eco_mapping()
         happensduring_to_id = models_helper.get_all_go_mapping()
@@ -2734,20 +2756,28 @@ def regulation_file(request):
                     regulation_existing['target_id'] = sgd_id_to_dbentity_id[key]
                 elif(key in systematic_name_to_dbentity_id):
                     regulation_existing['target_id'] = systematic_name_to_dbentity_id[key]
+                elif ((target_current,'COMPLEX') in sgd_id_to_dbentity_id):
+                    regulation_existing['target_id'] = sgd_id_to_dbentity_id[(target_current,'COMPLEX')]
+                elif ((target_current,'COMPLEX') in systematic_name_to_dbentity_id):
+                    regulation_existing['target_id'] = systematic_name_to_dbentity_id[(target_current,'COMPLEX')]
                 else:
-                    list_of_regulations_errors.append('Error in target gene on row ' + str(index)+ ', column ' + column)
+                    list_of_regulations_errors.append('Error in target gene/complex on row ' + str(index)+ ', column ' + column)
                     continue
                                 
                 if SEPARATOR in target:
                     target_new = str(target.split(SEPARATOR)[1]).strip()
                     key = (target_new,'LOCUS')
-                
                     if key in sgd_id_to_dbentity_id:
                         regulation_update['target_id'] = sgd_id_to_dbentity_id[key]
                     elif(key in systematic_name_to_dbentity_id):
                         regulation_update['target_id'] = systematic_name_to_dbentity_id[key]
+                    elif (target_new,'COMPLEX') in sgd_id_to_dbentity_id:
+                        regulation_update['target_id'] = sgd_id_to_dbentity_id[(target_new,'COMPLEX')]
+                    elif (target_new,'COMPLEX') in systematic_name_to_dbentity_id:
+                        regulation_update['target_id'] = systematic_name_to_dbentity_id[(target_new,'COMPLEX')]
+                        
                     else:
-                        list_of_regulations_errors.append('Error in target gene on row ' + str(index)+ ', column ' + column)
+                        list_of_regulations_errors.append('Error in target gene/complex on row ' + str(index)+ ', column ' + column)
                         continue
                 
                 column = COLUMNS['regulator_gene']
@@ -2758,8 +2788,12 @@ def regulation_file(request):
                     regulation_existing['regulator_id'] = sgd_id_to_dbentity_id[key]
                 elif(key in systematic_name_to_dbentity_id):
                     regulation_existing['regulator_id'] = systematic_name_to_dbentity_id[key]
+                elif (regulator_gene_current,'COMPLEX') in sgd_id_to_dbentity_id:
+                    regulation_existing['regulator_id'] = sgd_id_to_dbentity_id[(regulator_gene_current,'COMPLEX')]
+                elif (regulator_gene_current,'COMPLEX')	in systematic_name_to_dbentity_id:
+                    regulation_existing['regulator_id'] = systematic_name_to_dbentity_id[(regulator_gene_current,'COMPLEX')]
                 else:
-                    list_of_regulations_errors.append('Error in regulator gene on row ' + str(index)+ ', column ' + column)
+                    list_of_regulations_errors.append('Error in regulator gene/complex on row ' + str(index)+ ', column ' + column)
                     continue
                 
                 if SEPARATOR in regulator_gene:
@@ -2769,8 +2803,12 @@ def regulation_file(request):
                         regulation_update['regulator_id'] = sgd_id_to_dbentity_id[key]
                     elif(key in systematic_name_to_dbentity_id):
                         regulation_update['regulator_id'] = systematic_name_to_dbentity_id[key]
+                    elif (regulator_gene_new,'COMPLEX') in sgd_id_to_dbentity_id:
+                        regulation_update['regulator_id'] = sgd_id_to_dbentity_id[(regulator_gene_new,'COMPLEX')]
+                    elif (regulator_gene_new,'COMPLEX')	in systematic_name_to_dbentity_id:
+                        regulation_update['regulator_id'] = systematic_name_to_dbentity_id[(regulator_gene_new,'COMPLEX')]
                     else:
-                        list_of_regulations_errors.append('Error in regulator gene on row ' + str(index)+ ', column ' + column)
+                        list_of_regulations_errors.append('Error in regulator gene/complex on row ' + str(index)+ ', column ' + column)
                         continue
                 
                 column = COLUMNS['reference']
@@ -3315,3 +3353,32 @@ def delete_reference(request):
     finally:
         if curator_session:
             curator_session.close()
+
+@view_config(route_name='complement_insert_update', renderer='json', request_method='POST')
+@authenticate
+def complement_insert_update(request):
+
+    return insert_update_complement_annotations(request)
+
+@view_config(route_name='complements_by_filters',renderer='json',request_method='POST')
+@authenticate
+def complements_by_filters(request):
+    try:
+        return get_complements_by_filters(request)
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complement_delete',renderer='json',request_method='DELETE')
+@authenticate
+def complement_delete(request):
+
+    return delete_complement_annotation(request)
+
+@view_config(route_name='complement_file',renderer='json',request_method='POST')
+@authenticate
+def complement_file(request):
+
+    return upload_complement_file(request)

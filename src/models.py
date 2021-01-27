@@ -4548,6 +4548,7 @@ class Locusdbentity(Dbentity):
             "description": self.description,
             "name_description": self.name_description,
             "paralogs": self.paralogs_to_dict(),
+            "complements": self.complements_to_dict(),
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
             "go_overview": self.go_overview_to_dict(),
@@ -4808,6 +4809,10 @@ class Locusdbentity(Dbentity):
         PARALOG_RO_ID = 169738
         paralog_relations = DBSession.query(LocusRelation).filter(and_(LocusRelation.ro_id == PARALOG_RO_ID, or_(LocusRelation.parent_id == self.dbentity_id, LocusRelation.child_id == self.dbentity_id))).all()
         return [a.to_dict(self.dbentity_id) for a in paralog_relations]
+    
+    def complements_to_dict(self):
+        complement_relations = DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        return [a.to_dict(self.dbentity_id) for a in complement_relations]
 
     def protein_overview_to_dict(self):
         obj = {
@@ -6972,6 +6977,64 @@ class Expressionannotation(Base):
     def to_dict(self):
         return self.datasetsample.dataset.to_dict(self.reference)
 
+class Functionalcomplementannotation(Base):
+    __tablename__ = 'functionalcomplementannotation'
+    __table_args__ = (
+        UniqueConstraint('dbentity_id','taxonomy_id','dbxref_id','direction','eco_id','reference_id'),
+        {'schema': 'nex'}
+    )
+
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
+    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
+    dbxref_id = Column(String(30), nullable=False)
+    obj_url = Column(String(300), nullable=False)
+    direction = Column(String(70), nullable=False)
+    curator_comment = Column(String(100), nullable=False)
+    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    created_by = Column(String(12), nullable=False)
+
+    dbentity = relationship('Dbentity')
+    reference = relationship('Referencedbentity', foreign_keys=[reference_id])
+    source = relationship('Source')
+    eco = relationship('Eco')
+    ro = relationship('Ro')
+    taxonomy = relationship('Taxonomy')
+
+    def to_dict(self, complement=None, reference=None):
+        if complement == None:
+            complement = self.complement
+
+        if reference == None:
+            reference = self.reference
+
+        obj = {
+            "id": self.annotation_id,
+            "obj_url": self.obj_url,
+            "date_created": self.date_created.strftime("%Y-%m-%d"),
+            "direction": self.direction,
+            "dbxref_id": self.dbxref_id,
+            "curator_comment": self.curator_comment,
+            "locus": {
+                "display_name": self.dbentity.display_name,
+                "link": self.dbentity.obj_url,
+                "id": self.dbentity.dbentity_id,
+                "format_name": self.dbentity.format_name
+            },
+            "references": [{
+                "display_name": self.reference.display_name,
+                "link": self.reference.obj_url,
+                "pubmed_id": self.reference.pmid
+            }],
+            "source": {
+                "display_name": self.source.display_name
+            }
+        }
+        return obj
 
 class FileKeyword(Base):
     __tablename__ = 'file_keyword'
@@ -10234,6 +10297,7 @@ class Complexdbentity(Dbentity):
         data['complex_accession'] = self.format_name
         data['intact_id'] = self.intact_id
         data['systematic_name'] = self.systematic_name
+        data['sgdid'] = self.sgdid
         data['source'] = self.source.display_name
         # data['description'] = link_gene_complex_names(self.description, {self.format_name: 1}, DBSession),
         # data['properties'] = link_gene_complex_names(self.properties, {self.format_name: 1}, DBSession),

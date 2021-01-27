@@ -6,6 +6,7 @@ from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
     Filedbentity, ReferenceAlias, Dnasequenceannotation, So
 from urllib.request import urlretrieve
 from urllib.request import urlopen
+
 import transaction
 from boto.s3.key import Key
 import boto
@@ -81,7 +82,6 @@ def dump_data(noctua_gpad_file):
     nex_session = get_session()
 
     fw = open(gaf_file, "w")
-    fw2 = open(gaf_file4yeastmine, "w")
 
     datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
 
@@ -274,34 +274,24 @@ def dump_data(noctua_gpad_file):
                 found[(support_evidences, extensions)] = 1
                 if qualifier != 'Dubious':
                     fw.write(DB + "\t")
-                fw2.write(DB + "\t")
                 for i in range(0, LAST_FIELD+1):
                     if i == 6:
                         if qualifier != 'Dubious':
                             fw.write(support_evidences + "\t")
-                        fw2.write(support_evidences + "\t")
                     else:
                         if qualifier != 'Dubious':
                             fw.write(str(row[i]) + "\t")
-                        fw2.write(str(row[i]) + "\t")
 
                     if i == LAST_FIELD:
                         if qualifier != 'Dubious':
-                            fw.write(extensions + "\n")
-                        fw2.write(extensions + "\t" + x.annotation_type + "\n")
+                            fw.write(extensions + "\t\n")
 
     fw.close()
-    fw2.close()
 
     log.info("Uploading GAF file to S3...")
 
     update_database_load_file_to_s3(
         nex_session, gaf_file, '1', source_to_id, edam_to_id, datestamp)
-
-    log.info("Uploading GAF file for yeastmine to S3...")
-
-    update_database_load_file_to_s3(
-        nex_session, gaf_file4yeastmine, '0', source_to_id, edam_to_id, datestamp)
 
     nex_session.close()
 
@@ -314,7 +304,7 @@ def dump_data(noctua_gpad_file):
     log.info(str(datetime.now()))
     log.info("Done!")
 
-
+    
 def write_header(fw, datestamp):
 
     fw.write("!gaf-version: 2.0\n")
@@ -324,37 +314,12 @@ def write_header(fw, datestamp):
     fw.write("!Contact Email: sgd-helpdesk@lists.stanford.edu\n")
     fw.write("!Funding: NHGRI at US NIH, grant number U41-HG001315\n")
     fw.write("!\n")
-
-
-def read_from_go_central(url, matchSubDir=None):
-
-    response = urlopen(url)
-    html = response.read().decode('utf-8')
-    lines = html.split("\n")
-    current_sub = ""
-    current_url = ""
-    for line in lines:
-        if line == "" or "<a href" not in line:
-            continue
-        line = line.strip().replace('"', '').replace("<a href=", "").replace("</a>", "")
-
-        items = line.split(">")
-        if matchSubDir is not None and matchSubDir == items[1]:
-            return items[0]
-        else:
-            current_url = items[0]
-    return current_url
-
-
+    
 def download_sgd_gaf_from_go_central():
 
-    dated_url = read_from_go_central(go_central_url)
-    annots_url = read_from_go_central(dated_url, "annotations")
-    sgd_gaf_url = read_from_go_central(annots_url, gaf_from_go)
-
+    sgd_gaf_url = "http://current.geneontology.org/annotations/sgd.gaf.gz"
     urlretrieve(sgd_gaf_url, gaf_from_go)
-
-
+    
 def upload_gaf_to_s3(file, filename):
 
     s3_path = filename

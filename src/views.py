@@ -2029,7 +2029,7 @@ def ambiguous_names(request):
 def complex(request):
     try:
         complexAC = request.matchdict['id']
-        complex = DBSession.query(Complexdbentity).filter_by(format_name=complexAC).one_or_none()
+        complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
         if complex is not None:
             return complex.protein_complex_details()
         else:
