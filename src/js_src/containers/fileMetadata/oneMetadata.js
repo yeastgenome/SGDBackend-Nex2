@@ -114,8 +114,7 @@ class OneMetadata extends Component {
 
 OneMetadata.propTypes = {
   metadata: PropTypes.object,
-  onOptionChange: PropTypes.func,
-  onFileUpload: PropTypes.func
+  onOptionChange: PropTypes.func
 };
 
 export default OneMetadata;
