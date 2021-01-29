@@ -7,6 +7,11 @@ const GET_OBSERVABLES = '/get_observable';
 const GET_ALLELES = '/get_allele';
 const GET_REPORTERS = '/get_reporter';
 const GET_ALLELE_TYPES = '/get_allele_types';
+const GET_EDAM_DATA = '/get_edam/data';
+const GET_EDAM_TOPIC = '/get_edam/topic';
+const GET_EDAM_FORMAT = '/get_edam/format';
+const GET_PATH = '/get_path';
+const GET_README = '/get_readme';
 
 class AutocompleteSection extends Component {
   constructor(props) {
@@ -29,6 +34,21 @@ class AutocompleteSection extends Component {
     else if (this.props.id == 'so_id') {
       this.getData(GET_ALLELE_TYPES);
     }
+    else if (this.props.id == 'data_id') {
+      this.getData(GET_EDAM_DATA);
+    }
+    else if (this.props.id == 'topic_id') {
+      this.getData(GET_EDAM_TOPIC);
+    }
+    else if (this.props.id == 'format_id') {
+      this.getData(GET_EDAM_FORMAT);
+    }
+    else if (this.props.id == 'path_id') {
+      this.getData(GET_PATH);
+    }
+    else if (this.props.id == 'readme_file_id') {
+      this.getData(GET_README);
+    }  
     else {
       this.props.dispatch(setError('Unknown ID: ' + this.props.id));
     }

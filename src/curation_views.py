@@ -50,13 +50,15 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      DatasetReference,LocusReferences,LocusAliasReferences,\
      LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
      Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
-     Referencedocument,Referencetype,Referenceunlink,ReferenceFile
+     Referencedocument,Referencetype,Referenceunlink,ReferenceFile, Edam, Filedbentity,\
+     Path
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
 from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
       add_allele_data, update_allele_data, delete_allele_data
+from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
@@ -1795,7 +1797,71 @@ def get_publication_year(request):
     finally:
         if DBSession:
             DBSession.remove()
-            
+
+@view_config(route_name='get_edam', renderer='json', request_method='GET')
+def get_edam(request):
+    try:
+        namespace = request.matchdict['namespace']
+        id = namespace + "_id"
+        all_edam = DBSession.query(Edam).filter_by(edam_namespace=namespace).order_by(Edam.display_name).all()
+        return [ {'display_name': x.display_name, id: x.edam_id } for x in all_edam ]
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='get_path', renderer='json', request_method='GET')
+def get_path(request):
+    try:
+        all_path = DBSession.query(Path).order_by(Path.path).all()
+        return [ {'display_name': x.path, 'path_id': x.path_id } for x in all_path ]
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='get_readme', renderer='json', request_method='GET')
+def get_readme(request):
+    try:
+        all_readme = DBSession.query(Filedbentity).filter(Filedbentity.display_name.ilike('%.README')).order_by(Filedbentity.display_name).all()
+        return [ {'display_name': x.display_name, 'readme_file_id': x.dbentity_id } for x in all_readme ]
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='get_file_metadata', renderer='json', request_method='GET')
+def get_file_metadata(request):
+    try:
+        return get_list_of_file_metadata(request)
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='get_one_file_metadata', renderer='json', request_method='GET')
+def get_one_file_metadata(request):
+    try:
+        return get_metadata_for_one_file(request)
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='file_metadata_update', renderer='json', request_method='POST')
+@authenticate
+def file_metadata_update(request):
+
+    return update_metadata(request)
+
 @view_config(route_name='get_curation_tag', renderer='json', request_method='GET')
 def get_curation_tag(request):
     try:

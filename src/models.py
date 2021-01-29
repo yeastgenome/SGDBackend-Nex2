@@ -7895,7 +7895,8 @@ class Keyword(Base):
     description = Column(String(500))
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-
+    is_obsolete = Column(Boolean, nullable=False)
+    
     source = relationship('Source')
 
     def to_simple_dict(self):
