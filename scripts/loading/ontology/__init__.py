@@ -366,7 +366,7 @@ def read_owl(filename, ontology, is_sgd_term=None):
         # <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The distribution of mitochondria, including the mitochondrial genome, into daughter cells after mitosis or meiosis, mediated by interactions between mitochondria and the cytoskeleton.</obo:IAO_0000115> ## go.owl
         # <obo:IAO_0000115>x never in taxon T if and only if T is a class, and x does not instantiate the class expression &quot;in taxon some T&quot;. Note that this is a shortcut relation, and should be used as a hasValue restriction in OWL.</obo:IAO_0000115>
         # <oboInOwl:hasDefinition>The design of an experiment involving non-human animals.</oboInOwl:hasDefinition>               
-        if '<obo:IAO_0000115' in line or '<oboInOwl:hasDefinition' in line:
+        if '<obo1:IAO_0000115' in line or '<obo:IAO_0000115' in line or '<oboInOwl:hasDefinition' in line:
             definition = line.split('>')[1].split('<')[0]
             definition = definition.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
 
