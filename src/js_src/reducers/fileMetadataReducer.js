@@ -18,6 +18,7 @@ const DEFAULT_STATE = {
     s3_url: '',
     path: '',
     keywords: '',
+    pmids: '',
     sgdid: '',
     dbentity_status: ''
   }
