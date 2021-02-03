@@ -605,7 +605,7 @@ e database."}), content_type='text/json')
                 success_message = success_message + "<br>keyword '" + kw + "' has been added for this file."
                 insert_file_keyword(curator_session, CREATED_BY, source_id, file_id, keyword_id)
             else:
-                err_msg = keyword_id 
+                err_msg = str(keyword_id) 
                 return HTTPBadRequest(body=json.dumps({'error': err_msg}), content_type='text/json')
     
         for kw in keywords_db:
