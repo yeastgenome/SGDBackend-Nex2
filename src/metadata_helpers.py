@@ -411,7 +411,7 @@ def update_metadata(request):
             success_message = "display_name has been updated from '" + d.display_name + "' to '" + display_name + "'."
             d.display_name = display_name
             curator_session.add(d)
-
+            
         ## update dbentity_status
         dbentity_status = request.params.get('dbentity_status', None)
         if dbentity_status is None:
@@ -422,18 +422,18 @@ def update_metadata(request):
             success_message = success_message + "<br>dbentity_status has been updated from '" + d.dbentity_status + "' to '" + dbentity_status + "'."
             d.dbentity_status = dbentity_status
             curator_session.add(d)
-        
+
         ## update previous file names
         previous_file_name = request.params.get('previous_file_name', '')
-        if previous_file_name != d.previous_file_name:
-            success_message = success_message + "<br>previous_file_name has been updated from '" + d.previous_file_name + "' to '" + previous_file_name + "'."
+        if (previous_file_name or d.previous_file_name) and previous_file_name != d.previous_file_name:
+            success_message = success_message + "<br>previous_file_name has been updated from '" + str(d.previous_file_name) + "' to '" + previous_file_name + "'."
             d.previous_file_name = previous_file_name
             curator_session.add(d)
 
         ## update description
         description = request.params.get('description', '')
         if description != d.description:
-            success_message = success_message + "<br>description has been updated from '" + d.description + "' to '" + description + "'."
+            success_message = success_message + "<br>description has been updated from '" + str(d.description) + "' to '" + description + "'."
             d.description = description
             curator_session.add(d)
 
@@ -605,7 +605,7 @@ e database."}), content_type='text/json')
                 success_message = success_message + "<br>keyword '" + kw + "' has been added for this file."
                 insert_file_keyword(curator_session, CREATED_BY, source_id, file_id, keyword_id)
             else:
-                err_msg = str(keyword_id) 
+                err_msg = keyword_id 
                 return HTTPBadRequest(body=json.dumps({'error': err_msg}), content_type='text/json')
     
         for kw in keywords_db:
