@@ -96,6 +96,14 @@ class OneMetadata extends Component {
 
         {/* path_id & readme_file_id */}
         <div className='row'>
+          <div className='columns medium-12 small-12'>
+            <div> <label> file_type & pmid(s) ('|' delimited, eg: Dataset:24133141|Supplemental:16690605)</label> </div>
+            <input type='text' name='pmids' value={this.props.metadata.pmids} onChange={this.props.onOptionChange} />
+          </div>
+        </div>
+
+        {/* path_id & readme_file_id */}
+        <div className='row'>
           <div className='columns medium-6 small-6'>
             <div> <label> path_id (file_path) </label> </div>
             <AutocompleteSection sec_title='' id='path_id' value1='display_name' value2='' selectedIdName='path_id' placeholder='Enter file path' onOptionChange={this.props.onOptionChange} selectedId={this.props.metadata.path_id} setNewValue={true} />

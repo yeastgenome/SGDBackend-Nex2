@@ -10,7 +10,7 @@ class EditMetadata extends Component {
   render() {
     return (
       <CurateLayout>
-        <h1>Update Metadata</h1>
+        <h1>Update File Metadata</h1>
         <EditMETADATA /> 
       </CurateLayout>
     );

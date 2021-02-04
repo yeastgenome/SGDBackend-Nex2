@@ -6,8 +6,9 @@ from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 from sqlalchemy.exc import IntegrityError, DataError
 import transaction
 import json
-from src.models import DBSession, Dbentity, Filedbentity, FilePath, Path,\
-                       FileKeyword, Keyword, Source
+from src.models import DBSession, Dbentity, Filedbentity, Referencedbentity, FilePath, \
+                       Path, FileKeyword, ReferenceFile, Keyword, Dataset, DatasetFile,\
+                       Source
 from src.aws_helpers import get_checksum
 from src.helpers import upload_file
 from src.aws_helpers import upload_file_to_s3
@@ -60,6 +61,14 @@ def get_metadata_for_one_file(request):
             data['path_id'] = fp.path_id
         else:
             data['path_id'] = ''
+
+        all_refs = DBSession.query(ReferenceFile).filter_by(file_id=x.dbentity_id).all()
+        pmids = ''
+        for ref in all_refs:
+            if pmids != '':
+                pmids = pmids + "|"
+            pmids = pmids + ref.file_type + ":" + str(ref.reference.pmid)
+        data['pmids'] = pmids
             
         return HTTPOk(body=json.dumps(data),content_type='text/json')
     except Exception as e:
@@ -75,7 +84,33 @@ def get_list_of_file_metadata(request):
     try:
         query = str(request.matchdict['query'])
         data = []
-        for x in DBSession.query(Filedbentity).filter(or_(Filedbentity.display_name.ilike('%'+query+'%'), Filedbentity.previous_file_name.ilike('%'+query+'%'))).order_by(Filedbentity.display_name).all():        
+
+        ## search by PMID:
+        rows_by_pmid = []
+        if query.isdigit():
+            pmid = int(query)
+            ref = DBSession.query(Referencedbentity).filter_by(pmid=pmid).one_or_none()
+            if ref is not None:
+                all_refFiles = DBSession.query(ReferenceFile).filter_by(reference_id=ref.dbentity_id).all()
+                for x in all_refFiles:
+                    rows_by_pmid.append(x.file)
+
+        ## search by GEO/SRA/ArrayExpress ID:
+        rows_by_GEO = []
+        all_datasets = DBSession.query(Dataset).filter(Dataset.format_name.ilike('%'+query+'%')).all()
+        for x in all_datasets:
+            all_df = DBSession.query(DatasetFile).filter_by(dataset_id=x.dataset_id).all()
+            for y in all_df:
+                rows_by_GEO.append(y.file)
+
+        ## search by file name:
+        rows_by_filename = DBSession.query(Filedbentity).filter(or_(Filedbentity.display_name.ilike('%'+query+'%'), Filedbentity.previous_file_name.ilike('%'+query+'%'))).order_by(Filedbentity.display_name).all()
+
+        foundSGDID = {}
+        for x in rows_by_pmid + rows_by_GEO + rows_by_filename:
+            if x.sgdid in foundSGDID:
+                continue
+            foundSGDID[x.sgdid] = 1
             data.append({ 'display_name': x.display_name,
                           'previous_file_name': x.previous_file_name,
                           'sgdid': x.sgdid,
@@ -92,6 +127,20 @@ def get_list_of_file_metadata(request):
     finally:
         if DBSession:
             DBSession.remove()    
+
+def insert_reference_file(curator_session, CREATED_BY, source_id, file_id, reference_id, file_type):
+
+    try:
+        x = ReferenceFile(file_id = file_id,
+                          reference_id = reference_id,
+                          file_type = file_type,
+                          source_id = source_id,
+                          created_by = CREATED_BY)
+        curator_session.add(x)
+    except Exception as e:
+        transaction.abort()
+        if curator_session:
+            curator_session.rollback()
 
 def insert_file_path(curator_session, CREATED_BY, source_id, file_id, path_id):
 
@@ -226,7 +275,7 @@ def add_metadata(request, curator_session, CREATED_BY, source_id, old_file_id, f
                           file_size=file_size,
                           json=None,
                           s3_url=None,
-                          dbentity_status=dbentity_status,
+                          dbentity_status='Active',
                           year=year,
                           file_date=file_date,
                           description=description,
@@ -259,7 +308,22 @@ def add_metadata(request, curator_session, CREATED_BY, source_id, old_file_id, f
         if str(path_id).isdigit():
             insert_file_path(curator_session, CREATED_BY, source_id, file_id, int(path_id))
             success_message = success_message + "<br>path_id has been added for this file."
-    
+
+        #### add paper(s) and newly created file_id to reference_file table
+        pmids = request.params.get('pmids', '')
+        pmid_list = pmids.split('|')
+        for type_pmid in pmid_list:
+            type_pmid = type_pmid.replace(' ', '')
+            if type_pmid == '':
+                continue
+            [file_type, pmid] = type_pmid.split(':') 
+            ref = curator_session.query(Referencedbentity).filter_by(pmid=int(pmid)).one_or_none()
+            if ref is None:
+                return HTTPBadRequest(body=json.dumps({'error': "The PMID: " + pmid + " is not in the database."}), content_type='text/json')
+            reference_id = ref.dbentity_id
+            insert_reference_file(curator_session, CREATED_BY, source_id, file_id,
+                                  reference_id, file_type)
+            
         ### add keywords to database
         keywords = request.params.get('keywords', '')
         kw_list = keywords.split('|')
@@ -347,7 +411,7 @@ def update_metadata(request):
             success_message = "display_name has been updated from '" + d.display_name + "' to '" + display_name + "'."
             d.display_name = display_name
             curator_session.add(d)
-
+            
         ## update dbentity_status
         dbentity_status = request.params.get('dbentity_status', None)
         if dbentity_status is None:
@@ -358,18 +422,18 @@ def update_metadata(request):
             success_message = success_message + "<br>dbentity_status has been updated from '" + d.dbentity_status + "' to '" + dbentity_status + "'."
             d.dbentity_status = dbentity_status
             curator_session.add(d)
-        
+
         ## update previous file names
         previous_file_name = request.params.get('previous_file_name', '')
-        if previous_file_name != d.previous_file_name:
-            success_message = success_message + "<br>previous_file_name has been updated from '" + d.previous_file_name + "' to '" + previous_file_name + "'."
+        if (previous_file_name or d.previous_file_name) and previous_file_name != d.previous_file_name:
+            success_message = success_message + "<br>previous_file_name has been updated from '" + str(d.previous_file_name) + "' to '" + previous_file_name + "'."
             d.previous_file_name = previous_file_name
             curator_session.add(d)
 
         ## update description
         description = request.params.get('description', '')
         if description != d.description:
-            success_message = success_message + "<br>description has been updated from '" + d.description + "' to '" + description + "'."
+            success_message = success_message + "<br>description has been updated from '" + str(d.description) + "' to '" + description + "'."
             d.description = description
             curator_session.add(d)
 
@@ -488,7 +552,40 @@ def update_metadata(request):
         elif fp is not None:
             success_message = success_message + "<br>path_id has been removed from this file."
             curator_session.delete(fp)
+
+        ## update reference(s)
+        all_refs = curator_session.query(ReferenceFile).filter_by(file_id=file_id).all()
+        references_db = {}
+        for ref in all_refs:
+            references_db[ref.file_type + ":" + str(ref.reference.pmid)] = ref.reference.dbentity_id
             
+        pmids =	request.params.get('pmids', '')
+        pmid_list = pmids.split('|')
+        for type_pmid in pmid_list:
+            type_pmid = type_pmid.replace(' ', '')
+            if type_pmid == '':
+                continue
+            [file_type, pmid] = type_pmid.split(':')
+            if type_pmid in references_db:
+                del references_db[type_pmid]
+                continue
+            ref = curator_session.query(Referencedbentity).filter_by(pmid=int(pmid)).one_or_none()
+            if ref is None:
+                return HTTPBadRequest(body=json.dumps({'error': "The PMID: " + pmid + " is not in th\
+e database."}), content_type='text/json')
+            reference_id = ref.dbentity_id
+            insert_reference_file(curator_session, CREATED_BY, source_id, file_id,
+                                  reference_id, file_type)
+            success_message = success_message + "<br>PMID '" + pmid + "' has been added to this file."
+            
+        for type_pmid in references_db:
+            reference_id = references_db[type_pmid]
+            [file_type, pmid] = type_pmid.split(':')
+            rf = curator_session.query(ReferenceFile).filter_by(file_id=file_id, reference_id=reference_id, file_type=file_type).one_or_none()
+            if rf:
+                success_message = success_message + "<br>PMID '" + str(pmid) + "' has been removed from this file."
+                curator_session.delete(rf)
+
         ## update keyword(s)
         all_kw = curator_session.query(FileKeyword).filter_by(file_id=file_id).all()
         keywords_db = {}
