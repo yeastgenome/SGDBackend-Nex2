@@ -59,6 +59,7 @@ from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annot
 from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
       add_allele_data, update_allele_data, delete_allele_data
 from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata
+from .supplemental_file_helpers import add_metadata_upload_file
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
@@ -84,7 +85,6 @@ def authenticate(view_callable):
 @authenticate
 def account(request):
     return {'username': request.session['username'], 'csrfToken': request.session.get_csrf_token()}
-
 
 
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
@@ -1861,6 +1861,12 @@ def get_one_file_metadata(request):
 def file_metadata_update(request):
 
     return update_metadata(request)
+
+@view_config(route_name='upload_suppl_file', renderer='json', request_method='POST')
+@authenticate
+def upload_suppl_file(request):
+
+    return add_metadata_upload_file(request)
 
 @view_config(route_name='get_curation_tag', renderer='json', request_method='GET')
 def get_curation_tag(request):

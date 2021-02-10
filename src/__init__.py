@@ -238,6 +238,7 @@ def main(global_config, **settings):
     config.add_route('get_file_metadata','/get_file_metadata/{query}', request_method='GET')
     config.add_route('get_one_file_metadata','/get_one_file_metadata/{sgdid}', request_method='GET')
     config.add_route('file_metadata_update','/file_metadata_update', request_method='POST')
+    config.add_route('upload_suppl_file', '/upload_suppl_file', request_method='POST')
     
     config.add_route('disease_insert_update','/disease', request_method='POST')
     config.add_route('diseases_by_filters','/get_diseases',request_method='POST')
