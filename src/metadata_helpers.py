@@ -743,6 +743,8 @@ def delete_metadata(request):
         if d is not None:
             curator_session.delete(d)
 
+        success_message = "The file along with the metadata has been deleted from database." 
+            
         transaction.commit()
         return HTTPOk(body=json.dumps({'success': success_message, 'metadata': "METADATA"}), content_type='text/json')
     except Exception as e:
