@@ -155,7 +155,7 @@ def add_metadata_upload_file(request):
                 old_files = curator_session.query(Dbentity).filter_by(subclass='FILE', display_name=filename).all()
 
                 ## a new version of the file   
-                if old_file in old_files:
+                for old_file in old_files:
 
                     ## update dbentity_status to 'Archived' for old version
                     old_file.dbentity_status = 'Archived'
