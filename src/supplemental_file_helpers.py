@@ -152,10 +152,10 @@ def add_metadata_upload_file(request):
             if fd is not None:
                 success_message = success_message + "<br>"+ filename + " is already in the database"
             else:
-                old_file = curator_session.query(Dbentity).filter_by(subclass='FILE', display_name=filename).one_or_none()
+                old_files = curator_session.query(Dbentity).filter_by(subclass='FILE', display_name=filename).all()
 
                 ## a new version of the file   
-                if old_file is not None:
+                if old_file is old_files:
 
                     ## update dbentity_status to 'Archived' for old version
                     old_file.dbentity_status = 'Archived'
