@@ -3423,6 +3423,7 @@ def delete_reference(request):
             
             x = Referencedeleted(pmid=pmid,
                                  sgdid=sgdid,
+                                 reason_deleted='This paper was deleted from SGD because it was retracted by the authors.',
                                  created_by=request.session['username'])
             curator_session.add(x)
             
