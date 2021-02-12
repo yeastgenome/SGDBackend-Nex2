@@ -3422,7 +3422,8 @@ def delete_reference(request):
             transaction.commit()
             
             x = Referencedeleted(pmid=pmid,
-                                 sgdid=sgdid)
+                                 sgdid=sgdid,
+                                 created_by=request.session['username'])
             curator_session.add(x)
             
             transaction.commit()
