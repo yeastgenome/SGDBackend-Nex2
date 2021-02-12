@@ -3415,11 +3415,15 @@ def delete_reference(request):
                 curator_session.query(CuratorActivity).filter_by(dbentity_id = reference.dbentity_id).delete()
                 log.info('{} records being deleted from {} for reference_id {}'.format(count, "CuratorActivity",sgd_id))
 
-            x = Referencedeleted(pmid=reference.pmid,
-                                 sgdid=reference.sgdid)
+            pmid = reference.pmid
+            sgdid = reference.sgdid
+
+            curator_session.delete(reference)
+            
+            x = Referencedeleted(pmid=pmid,
+                                 sgdid=sgdid)
             curator_session.add(x)
             
-            curator_session.delete(reference)
             transaction.commit()
 
             log.info('{} reference is delete successfully'.format(sgd_id))
