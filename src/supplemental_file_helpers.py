@@ -181,7 +181,7 @@ def add_metadata_upload_file(request):
                                               filename, md5sum, date, topic_id, data_id, format_id,
                                               reference_id, year)
                         if msg == "loaded":
-                            if len(old_files) > 0 is not None:
+                            if len(old_files) > 0:
                                 success_message = success_message + "<br>" + filename + " is updated in s3."
                             else:
                                 success_message = success_message + "<br>" + filename + " is uploaded to s3."
