@@ -10,6 +10,7 @@ import { setFileMetadata } from '../../actions/fileMetadataActions';
 import OneMetadata from './oneMetadata';
 import style from './style.css';
 const UPDATE_METADATA = '/file_metadata_update';
+const DELETE_METADATA = '/file_metadata_delete';
 const GET_METADATA = '/get_one_file_metadata';
 
 const TIMEOUT = 300000;
@@ -20,6 +21,7 @@ class EditMetadata extends Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleUpdate = this.handleUpdate.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
     this.renderFileDrop = this.renderFileDrop.bind(this);
       
     this.state = {
@@ -100,12 +102,34 @@ class EditMetadata extends Component {
     });
   }
 
+  handleDelete(e) {
+    e.preventDefault();
+    let formData = new FormData();
+    for(let key in this.props.metadata){
+      formData.append(key,this.props.metadata[key]);
+    }
+    fetchData(DELETE_METADATA, {
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      timeout: TIMEOUT
+    }).then((data) => {
+      this.props.dispatch(setMessage(data.success));
+    }).catch((err) => {
+      this.props.dispatch(setError(err.error));
+    });
+  }
+    
   addButtons() {
     return (
       <div>
         <div className='row'>
           <div className='columns medium-6 small-6'>
             <button type='submit' id='submit' value='0' className="button expanded" onClick={this.handleUpdate.bind(this)} > Update Metadata </button>
+          </div>
+          <div className='columns medium-6 small-6'>
+            <button type='button' className="button alert expanded" onClick={(e) => { if (confirm('Are you sure you want to delete this file along with all the metadata associated with it?')) this.handleDelete(e); }} > Delete this file </button>
           </div>
         </div>
       </div>
