@@ -32,7 +32,6 @@ S3_BUCKET = os.environ['S3_BUCKET']
 CREATED_BY = os.environ['DEFAULT_USER']
 
 gaf_file = "scripts/dumping/curation/data/gene_association.sgd"
-gaf_file4yeastmine = "scripts/dumping/curation/data/gene_association.sgd-yeastmine"
 go_central_url = "http://release.geneontology.org/"
 gaf_from_go = "sgd.gaf.gz"
 
@@ -100,6 +99,8 @@ def dump_data(noctua_gpad_file):
                      for x in nex_session.query(Go).all()])
     id_to_pmid = dict([(x.dbentity_id, x.pmid)
                        for x in nex_session.query(Referencedbentity).all()])
+    id_to_uniprot = dict([(x.locus_id, x.display_name)
+                       for x in nex_session.query(LocusAlias).filter_by(alias_type='UniProtKB ID').all()])
     id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
         Dbentity).filter(Dbentity.subclass.in_(['REFERENCE', 'LOCUS'])).all()])
     id_to_ecoid = dict([(x.eco_id, x.format_name)
@@ -218,10 +219,19 @@ def dump_data(noctua_gpad_file):
             reference = id_to_go_ref[x.reference_id]
         row[REFERENCE] = reference
 
-        go_qualifier = ""
-        if x.go_qualifier in ['NOT', 'contributes to', 'colocalizes with']:
-            go_qualifier = x.go_qualifier.replace(' ', '_')
-
+        go_qualifier = x.go_qualifier
+        
+        if go_qualifier.startswith('NOT'):
+            if go_aspect == 'cellular component':
+                go_qualifier = 'NOT|part_of'
+            elif go_aspect == 'biological process':
+                go_qualifier = 'NOT|involved_in'
+            else:
+                go_qualifier = 'NOT|enables'
+                
+        # go_qualifier = x.go_qualifier.replace('acts upstream of or within ', 'acts upstream of or within, ')
+        go_qualifier = go_qualifier.replace(' ', '_')
+        
         row[QUALIFIER] = go_qualifier
         row[ASPECT] = namespace_to_code[go_aspect]
 
@@ -265,6 +275,10 @@ def dump_data(noctua_gpad_file):
 
         found = {}
 
+        gpID = id_to_uniprot.get(x.dbentity_id, '')
+        if gpID:
+            gpID = "UniProtKB:" + gpID
+        
         for evid_group_id in sorted(all_support_evidences.keys()):
             support_evidences = ",".join(all_support_evidences[evid_group_id])
             for ext_group_id in sorted(all_extensions.keys()):
@@ -284,7 +298,7 @@ def dump_data(noctua_gpad_file):
 
                     if i == LAST_FIELD:
                         if qualifier != 'Dubious':
-                            fw.write(extensions + "\t\n")
+                            fw.write(extensions + "\t" + gpID + "\n")
 
     fw.close()
 
@@ -295,7 +309,7 @@ def dump_data(noctua_gpad_file):
 
     nex_session.close()
 
-    ## download sgd gaf from go central and upload it to S3
+    ##### download sgd gaf from go central and upload it to S3
     download_sgd_gaf_from_go_central()
     local_file = open(gaf_from_go, mode='rb')
     upload_gaf_to_s3(local_file, "latest/" + gaf_from_go)
@@ -307,9 +321,9 @@ def dump_data(noctua_gpad_file):
     
 def write_header(fw, datestamp):
 
-    fw.write("!gaf-version: 2.0\n")
-    fw.write("!Date: " + datestamp + "\n")
-    fw.write("!From: Saccharomyces Genome Database (SGD)\n")
+    fw.write("!gaf-version: 2.2\n")
+    fw.write("!date-generated: " + datestamp + "\n")
+    fw.write("!generated-by: Saccharomyces Genome Database (SGD)\n")
     fw.write("!URL: https://www.yeastgenome.org/\n")
     fw.write("!Contact Email: sgd-helpdesk@lists.stanford.edu\n")
     fw.write("!Funding: NHGRI at US NIH, grant number U41-HG001315\n")
