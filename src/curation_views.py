@@ -58,7 +58,7 @@ from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annot
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
 from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
       add_allele_data, update_allele_data, delete_allele_data
-from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata
+from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata, delete_metadata
 from .supplemental_file_helpers import add_metadata_upload_file
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
@@ -1862,6 +1862,12 @@ def file_metadata_update(request):
 
     return update_metadata(request)
 
+@view_config(route_name='file_metadata_delete', renderer='json', request_method='POST')
+@authenticate
+def file_metadata_delete(request):
+
+    return delete_metadata(request)
+
 @view_config(route_name='upload_suppl_file', renderer='json', request_method='POST')
 @authenticate
 def upload_suppl_file(request):
@@ -3408,8 +3414,19 @@ def delete_reference(request):
             if count > 0:
                 curator_session.query(CuratorActivity).filter_by(dbentity_id = reference.dbentity_id).delete()
                 log.info('{} records being deleted from {} for reference_id {}'.format(count, "CuratorActivity",sgd_id))
-        
+
+            pmid = reference.pmid
+            sgdid = reference.sgdid
+
             curator_session.delete(reference)
+            transaction.commit()
+            
+            x = Referencedeleted(pmid=pmid,
+                                 sgdid=sgdid,
+                                 reason_deleted='This paper was deleted from SGD because it was retracted by the authors.',
+                                 created_by=request.session['username'])
+            curator_session.add(x)
+            
             transaction.commit()
 
             log.info('{} reference is delete successfully'.format(sgd_id))

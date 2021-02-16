@@ -696,6 +696,63 @@ e database."}), content_type='text/json')
         if curator_session:
             curator_session.remove()
 
+def delete_metadata(request):
 
+    try:
+        CREATED_BY = request.session['username']
+        curator_session = get_curator_session(request.session['username'])
+
+        sgdid = request.params.get('sgdid')
+        if sgdid == '':
+            return HTTPBadRequest(body=json.dumps({'error': "No SGDID is passed in."}), content_type='text/json')
+
+        d = curator_session.query(Filedbentity).filter_by(sgdid=sgdid).one_or_none()
+
+        if d is None:
+            return HTTPBadRequest(body=json.dumps({'error': "The SGDID " + sgdid + " is not in the database."}), content_type='text/json')
+
+        file_id = d.dbentity_id
+
+        ## reference_file
+        refFiles = curator_session.query(ReferenceFile).filter_by(file_id=file_id).all()
+        for x in refFiles:
+            curator_session.delete(x)
+            
+        ## dataset_file
+        dsFiles = curator_session.query(DatasetFile).filter_by(file_id=file_id).all() 
+        for x in dsFiles:
+            curator_session.delete(x)
+            
+        ## file_path
+        fpaths = curator_session.query(FilePath).filter_by(file_id=file_id).all()
+        for x in fpaths:
+            curator_session.delete(x)
+        
+        ## file_keyword
+        fkws = curator_session.query(FileKeyword).filter_by(file_id=file_id).all()
+        for x in fkws:
+            curator_session.delete(x)
+            
+        ## filedbentity
+        fd = curator_session.query(Filedbentity).filter_by(dbentity_id=file_id).one_or_none()
+        if fd is not None:
+            curator_session.delete(fd)
+            
+        ## dbentity
+        d = curator_session.query(Dbentity).filter_by(dbentity_id=file_id).one_or_none()
+        if d is not None:
+            curator_session.delete(d)
+
+        success_message = "The file along with the metadata has been deleted from database." 
+            
+        transaction.commit()
+        return HTTPOk(body=json.dumps({'success': success_message, 'metadata': "METADATA"}), content_type='text/json')
+    except Exception as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+    finally:
+        if curator_session:
+            curator_session.remove()
+
+        
     
     
