@@ -231,7 +231,17 @@ def main(global_config, **settings):
     config.add_route('allele_add','/allele_add', request_method='POST')
     config.add_route('allele_update','/allele_update', request_method='POST')
     config.add_route('allele_delete','/allele_delete', request_method='POST')
-      
+
+    config.add_route('get_edam','/get_edam/{namespace}',request_method='GET')
+    config.add_route('get_readme','/get_readme',request_method='GET')
+    config.add_route('get_path','/get_path',request_method='GET')
+    config.add_route('get_file_metadata','/get_file_metadata/{query}', request_method='GET')
+    config.add_route('get_one_file_metadata','/get_one_file_metadata/{sgdid}', request_method='GET')
+    config.add_route('file_metadata_update','/file_metadata_update', request_method='POST')
+    config.add_route('file_metadata_delete','/file_metadata_delete', request_method='POST')
+    
+    config.add_route('upload_suppl_file', '/upload_suppl_file', request_method='POST')
+    
     config.add_route('disease_insert_update','/disease', request_method='POST')
     config.add_route('diseases_by_filters','/get_diseases',request_method='POST')
     config.add_route('disease_delete','/disease/{id}/{dbentity_id}', request_method='DELETE')

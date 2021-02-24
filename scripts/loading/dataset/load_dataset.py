@@ -12,7 +12,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 log_file = "scripts/loading/dataset/logs/load_dataset.log"
 
-files_to_load = ["scripts/loading/dataset/data/dataset2020-01to07.tsv"]
+files_to_load = ["scripts/loading/dataset/data/dataset2020-08to2020-12.tsv"]
 
 def load_data():
 
@@ -171,8 +171,8 @@ def load_data():
 
     fw.close()
 
-    # nex_session.rollback()
-    nex_session.commit()
+    nex_session.rollback()
+    # nex_session.commit()
 
     print ("DONE loading")
 
@@ -265,9 +265,10 @@ def insert_datasetlab(nex_session, fw, dataset_id, lab_name, lab_location, coll_
             coll_institution = ', '.join(items)
 
     name = lab_name.split(' ')                                                  
-    last_name = name[0]                                                         
-    first_name = name[1].replace(', ', '')
-    lab_name = last_name + ' ' + first_name
+    lab_name = name[0]
+    if len(name) > 1:
+        first_name = name[1].replace(', ', '')
+        lab_name = lab_name + ' ' + first_name
     colleague_id = coll_name_institution_to_id.get((coll_display_name, coll_institution))
     if colleague_id is None:
         colleague_id = coll_name_to_id.get(coll_display_name)

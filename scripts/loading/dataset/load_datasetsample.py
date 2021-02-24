@@ -9,7 +9,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 log_file = "scripts/loading/dataset/logs/load_datasetsample.log"
 
-files_to_load = ["scripts/loading/dataset/data/datasample2020-01to07.tsv"]
+files_to_load = ["scripts/loading/dataset/data/datasample2020-08to2020-12.tsv"]
 
 DBXREF_URL = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc='
 
@@ -96,8 +96,8 @@ def load_data():
 
     fw.close()
 
-    # nex_session.rollback()
-    nex_session.commit()
+    nex_session.rollback()
+    # nex_session.commit()
 
 
 def insert_datasetsample(nex_session, fw, x):
