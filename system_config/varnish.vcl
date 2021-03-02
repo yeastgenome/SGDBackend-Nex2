@@ -104,7 +104,8 @@ sub vcl_backend_response {
     }
 
     if (bereq.http.host == "www.yeastgenome.org") {
-        set beresp.ttl = 23.75h;
+#        set beresp.ttl = 23.75h;
+	set beresp.ttl = 1s;
         set beresp.grace = 30s;
     }
 
