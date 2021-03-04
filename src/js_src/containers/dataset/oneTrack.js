@@ -124,7 +124,6 @@ class OneTrack extends Component {
 OneTrack.propTypes = {
   dispatch: PropTypes.func,
   data: PropTypes.object,
-  dataset: PropTypes.object,
 };
 
 function mapStateToProps(state) {

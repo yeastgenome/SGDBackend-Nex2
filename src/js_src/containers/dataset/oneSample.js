@@ -152,7 +152,6 @@ class OneSample extends Component {
 OneSample.propTypes = {
   dispatch: PropTypes.func,
   data: PropTypes.object,
-  dataset: PropTypes.object,
 };
 
 function mapStateToProps(state) {
