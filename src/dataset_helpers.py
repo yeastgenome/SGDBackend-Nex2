@@ -964,7 +964,7 @@ def update_dataset(request):
         lab1 = request.params.get('lab1', '').replace(' |', '|').replace('| ', '|')
         lab2 = request.params.get('lab2', '').replace(' |', '|').replace('| ', '|')
 
-        return HTTPBadRequest(body=json.dumps({'error': "lab1="+lab1}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'error': "lab2="+lab2}), content_type='text/json')
     
         
         for labNew in [lab1, lab2]:
