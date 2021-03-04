@@ -85,7 +85,8 @@ class OneDataset extends Component {
         <div className='row'>
           <div className='columns medium-12 small-12'>
             <div> <label> lab </label> </div>
-            <input type='text' name='lab' value={this.props.dataset.lab} onChange={this.props.onOptionChange} />
+            <input type='text' name='lab1' value={this.props.dataset.lab1} onChange={this.props.onOptionChange} />
+            <input type='text' name='lab2' value={this.props.dataset.lab2} onChange={this.props.onOptionChange} />
           </div>
         </div>
 
