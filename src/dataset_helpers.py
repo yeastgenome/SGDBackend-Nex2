@@ -962,13 +962,12 @@ def update_dataset(request):
             labs_db[key] = lab
 
         lab1 = request.params.get('lab1', '').replace(' |', '|').replace('| ', '|')
-        lab2 = request.params.get('lab2', '').replace(' |', '|').replace('| ', '|')
-
-        return HTTPBadRequest(body=json.dumps({'error': "lab2="+lab2}), content_type='text/json')
-    
+        lab2 = request.params.get('lab2', '').replace(' |', '|').replace('| ', '|')    
         
         for labNew in [lab1, lab2]:
-            [lab_name, lab_location, colleague_format_name] =   labNew.split('|')
+            if labNew is None or labNew == '':
+                continue
+            [lab_name, lab_location, colleague_format_name] = labNew.split('|')
             lab_name = lab_name.replace('lab_name: ', '')
             lab_location = lab_location.replace('lab_location: ', '')
             colleague_format_name = colleague_format_name.replace('colleague_format_name: ', '')
