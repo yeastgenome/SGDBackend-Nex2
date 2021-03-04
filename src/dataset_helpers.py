@@ -129,13 +129,17 @@ def get_keywords(dataset_id):
 def get_lab(dataset_id):
                                                                                             
     all_labInfo = DBSession.query(Datasetlab).filter_by(dataset_id=dataset_id).all()
-    lab = ''
-    if len(all_labInfo) > 0:
-        labInfo = all_labInfo[0]
+    lab1 = ''
+    lab2 = ''
+    for labInfo in all_labInfo
         lab = "lab_name: " + labInfo.lab_name + " | lab_location: " + labInfo.lab_location + " | colleague_format_name: "
         if labInfo.colleague_id:
             lab = lab + labInfo.colleague.format_name
-    return lab
+        if lab1 == '':
+            lab1 = lab
+        else:
+            lab2 = lab
+    return (lab1, lab2)
 
 def get_list_of_dataset(request):
 
@@ -171,7 +175,7 @@ def get_list_of_dataset(request):
             foundDataset[x.format_name] = 1
             pmids = get_pmids(x.dataset_id)
             keywords = get_keywords(x.dataset_id)
-            lab = get_lab(x.dataset_id)
+            (lab1, lab2) = get_lab(x.dataset_id)
             data.append({ 'format_name': x.format_name,
                           'display_name': x.display_name,
                           'dbxref_id': x.dbxref_id,
@@ -179,7 +183,7 @@ def get_list_of_dataset(request):
                           'date_public': str(x.date_public),
                           'pmids': pmids,
                           'keywords': keywords,
-                          'lab': lab })
+                          'lab': lab1 })
         return HTTPOk(body=json.dumps(data),content_type='text/json')
     except Exception as e:
         log.error(e)
@@ -223,17 +227,13 @@ def get_one_dataset(request):
         ## pmids, keywords, lab
         data['pmids'] = get_pmids(x.dataset_id)
         data['keywords'] = get_keywords(x.dataset_id)
-        data['lab'] = get_lab(x.dataset_id)
+        (data['lab1'], data['lab2']) = get_lab(x.dataset_id)
         
         ## urls
         # urls = []
         all_dsUrls = DBSession.query(DatasetUrl).filter_by(dataset_id=x.dataset_id).all()
         i = 1
         for dsUrl in all_dsUrls:
-            # row = { 'url_type': dsUrl.url_type,
-            #        'display_name': dsUrl.display_name,
-            #        'link': dsUrl.obj_url }
-            # urls.append(row)
             data['url' + str(i)] = dsUrl.display_name + ' | ' + dsUrl.obj_url
             i = i + 1
         # data['urls'] = urls
