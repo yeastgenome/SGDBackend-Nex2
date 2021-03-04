@@ -112,7 +112,9 @@ def dump_data():
     data = []
     ## get all features with 'GENOMIC' sequence in S288C
     for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id=taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
-        locus = dbentity_id_to_locus[x.dbentity_id]
+        locus = dbentity_id_to_locus.get(x.dbentity_id)
+        if locus is None:
+            continue
 
         (soid, soTerm) = so_id_to_so[x.so_id]
         if 'RNA' not in soTerm:
