@@ -135,7 +135,7 @@ class EditDataset extends Component {
         <div>
           <strong><a href={this.state.preview_url} target='preview'>Preview this Dataset Page</a> | <a href={this.state.sample_url} target='sample'>Update Dataset Sample(s)</a> | <a href={this.state.track_url} target='track'>Update Dataset Track(s)</a></strong>
         </div>
-        <div>
+        <div className='columns medium-6 small-6'>>
           <strong>Search Keywords:</strong> <AutocompleteSection sec_title='' id='keyword_id' value1='display_name' value2='' selectedIdName='Keyword_id' placeholder='Search for keywords' onOptionChange={this.props.onOptionChange} selectedId={this.props.dataset.keyword_id} setNewValue={false} />
         </div>
         <div><strong>Update data fields below:</strong>
