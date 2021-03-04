@@ -19,7 +19,9 @@ const DEFAULT_STATE = {
     pmids: '',
     url1: '',
     url2: '',
-    lab: ''
+    url3: '',
+    lab1: '',
+    lab2: ''
   }
 };
 
