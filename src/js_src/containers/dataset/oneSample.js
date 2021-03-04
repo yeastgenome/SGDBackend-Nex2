@@ -153,7 +153,6 @@ OneSample.propTypes = {
   dispatch: PropTypes.func,
   data: PropTypes.object,
   dataset: PropTypes.object,
-  index: PropTypes.integer
 };
 
 function mapStateToProps(state) {
