@@ -13,6 +13,7 @@ import alleleReducer from './alleleReducer';
 import authorResponseReducer from './authorResponseReducer';
 import litguideReducer from './litguideReducer';
 import fileMetadataReducer from './fileMetadataReducer';
+import datasetReducer from './datasetReducer';
 
 export default {
   auth: authReducer,
@@ -29,5 +30,6 @@ export default {
   allele:alleleReducer,
   authorResponse:authorResponseReducer,
   litguide:litguideReducer,
-  metadata: fileMetadataReducer
+  metadata: fileMetadataReducer,
+  dataset: datasetReducer
 };

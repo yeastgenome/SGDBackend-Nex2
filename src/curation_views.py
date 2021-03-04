@@ -51,7 +51,7 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
      Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile, Edam, Filedbentity,\
-     Path
+     Path, Dataset, Obi, Keyword
 from .tsv_parser import parse_tsv_annotations
 from .models_helpers import ModelsHelper
 from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
@@ -60,6 +60,9 @@ from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_al
       add_allele_data, update_allele_data, delete_allele_data
 from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata, delete_metadata
 from .supplemental_file_helpers import add_metadata_upload_file
+from .dataset_helpers import get_list_of_dataset, get_one_dataset, update_dataset, update_datasetsample,\
+      update_datasettrack, load_dataset, load_datasetsample, delete_dataset, delete_datasetsample,\
+      delete_datasettrack
 from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
 from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
 from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
@@ -1765,6 +1768,59 @@ def get_eco(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+@view_config(route_name='get_obi', renderer='json', request_method='GET')
+def get_obi(request):
+    try:
+        all_obi = DBSession.query(Obi).order_by(Obi.display_name).all()
+        data = []
+        for o in all_obi:
+            data.append({"assay_id": o.obi_id,
+                         "format_name": o.format_name,
+                         "display_name": o.display_name})
+        return HTTPOk(body=json.dumps(data), content_type='text/json')
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='get_keywords', renderer='json', request_method='GET')
+def get_keywords(request):
+    try:
+        all_kw = DBSession.query(Keyword).order_by(Keyword.display_name).all()
+        data = []
+        for k in all_kw:
+            data.append({"keyword_id": k.keyword_id,
+                         "format_name": k.format_name,
+                         "display_name": k.display_name})
+        return HTTPOk(body=json.dumps(data), content_type='text/json')
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+            
+@view_config(route_name='get_all_datasets', renderer='json', request_method='GET')
+def get_all_datasets(request):
+    try:
+        all_datasets = DBSession.query(Dataset).order_by(Dataset.format_name).all()
+        data = []
+        for d in all_datasets:
+            data.append({"parent_dataset_id": d.dataset_id,
+                         "format_name": d.format_name,
+                         "display_name": d.format_name})
+        return HTTPOk(body=json.dumps(data), content_type='text/json')
+    except Exception as e:
+        log.error(e)
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+
             
 @view_config(route_name='get_apo', renderer='json', request_method='GET')
 def get_apo(request):
@@ -1867,6 +1923,66 @@ def file_metadata_update(request):
 def file_metadata_delete(request):
 
     return delete_metadata(request)
+
+@view_config(route_name='get_dataset_data', renderer='json', request_method='GET')
+@authenticate
+def get_dataset_data(request):
+
+    return get_one_dataset(request)
+
+@view_config(route_name='get_datasets', renderer='json', request_method='GET')
+@authenticate
+def get_datasets(request):
+
+    return get_list_of_dataset(request)
+
+@view_config(route_name='dataset_update', renderer='json', request_method='POST')
+@authenticate
+def dataset_update(request):
+
+    return update_dataset(request)
+
+@view_config(route_name='dataset_delete', renderer='json', request_method='POST')
+@authenticate
+def dataset_delete(request):
+
+    return delete_dataset(request)
+
+@view_config(route_name='datasetsample_delete', renderer='json', request_method='POST')
+@authenticate
+def datasetsample_delete(request):
+
+    return delete_datasetsample(request)
+
+@view_config(route_name='datasettrack_delete', renderer='json', request_method='POST')
+@authenticate
+def datasettrack_delete(request):
+
+    return delete_datasettrack(request)
+
+@view_config(route_name='datasetsample_update', renderer='json', request_method='POST')
+@authenticate
+def datasetsample_update(request):
+
+    return update_datasetsample(request)
+
+@view_config(route_name='datasettrack_update', renderer='json', request_method='POST')
+@authenticate
+def datasettrack_update(request):
+
+    return update_datasettrack(request)
+
+@view_config(route_name='dataset_load', renderer='json', request_method='POST')
+@authenticate
+def dataset_load(request):
+
+    return load_dataset(request)
+
+@view_config(route_name='datasetsample_load', renderer='json', request_method='POST')
+@authenticate
+def datasetsample_load(request):
+
+    return load_datasetsample(request)
 
 @view_config(route_name='upload_suppl_file', renderer='json', request_method='POST')
 @authenticate
