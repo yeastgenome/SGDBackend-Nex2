@@ -25,8 +25,8 @@ class LoadDataset extends Component {
   }
 
   handleToggleDatasetOrSample() {
-    this.setState(function(previousState, currentProps) {
-      return { isDataset: !previousState, files: [] };
+    this.setState(function(previousState) {
+      return { isDataset: !previousState.isDataset, files: [] };
     });
   }
    
