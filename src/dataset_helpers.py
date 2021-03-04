@@ -982,8 +982,9 @@ def update_dataset(request):
             insert_datasetlab(curator_session, CREATED_BY, source_id, dataset_id, lab_name, lab_location, colleague_id)
             success_message = success_message + "<br>lab '" + labNew + "' has been added for this dataset."
 
-        for lab in labs_db:
+        for key in labs_db:
             success_message = success_message + "<br>lab '" + lab.lab_name + '|' + lab.lab_location + "' has been removed for this dataset."
+            lab = labs_db[key]
             curator_session.delete(lab)
             
         # return HTTPBadRequest(body=json.dumps({'error': "datasetlab table"}), content_type='text/json') 
