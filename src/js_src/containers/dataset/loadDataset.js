@@ -25,8 +25,7 @@ class LoadDataset extends Component {
   }
 
   handleToggleDatasetOrSample() {
-    let preState = this.state.isDataset;
-    this.setState({ isDataset: !preState });
+    this.setState({ isDataset: !this.state.isDataset, files: [] });
   }
    
   handleClear(){
