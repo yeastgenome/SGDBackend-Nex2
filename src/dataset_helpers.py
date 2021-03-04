@@ -131,7 +131,7 @@ def get_lab(dataset_id):
     all_labInfo = DBSession.query(Datasetlab).filter_by(dataset_id=dataset_id).all()
     lab1 = ''
     lab2 = ''
-    for labInfo in all_labInfo
+    for labInfo in all_labInfo:
         lab = "lab_name: " + labInfo.lab_name + " | lab_location: " + labInfo.lab_location + " | colleague_format_name: "
         if labInfo.colleague_id:
             lab = lab + labInfo.colleague.format_name
