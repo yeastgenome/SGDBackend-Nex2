@@ -127,8 +127,9 @@ class LoadDataset extends Component {
   note() {
     if (this.state.isDataset) {
       return (<div>
-        <div>Please upload one or more <strong>dataset</strong> file(s).</div>
+        <div><h3>Please upload one or more <strong>dataset</strong> file(s).</h3></div>
         <div>A dataset file has to contain the following tab-delimited fields and the 1st line of the file is the header line:</div>
+        <div><p></p></div>
         <div>dataset.format_name</div>
         <div>dataset.display_name</div>
         <div>dataset.source</div>
@@ -155,8 +156,9 @@ class LoadDataset extends Component {
     }
     else {
       return (<div>
-        <div>Please upload one or more <strong>dataset sample</strong> file(s).</div>
-              <div>A dataset sample file has to contain the following tab-delimited fields and the 1st line of the file is the header line:</div> 
+        <div><h3>Please upload one or more <strong>dataset sample</strong> file(s).</h3></div>
+        <div>A dataset sample file has to contain the following tab-delimited fields and the 1st line of the file is the header line:</div>
+        <div><p></p></div>
         <div>dataset.format_name</div>	
         <div>display_name(sample_title)</div>
         <div>description</div>		
