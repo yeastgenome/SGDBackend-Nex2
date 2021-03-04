@@ -17,10 +17,10 @@ class OneMetadata extends Component {
         <div><strong>SGDID: {this.props.metadata.sgdid}</strong></div>
         <div><strong><a href={this.props.metadata.s3_url} target='new'>Download this file from s3</a></strong></div>
         <hr />	
-        <div>
+        <div className='columns medium-6 small-6'>
           <strong>Search Keywords:</strong> <AutocompleteSection sec_title='' id='keyword_id' value1='display_name' value2='' selectedIdName='Keyword_id' placeholder='Search for keywords' onOptionChange={this.props.onOptionChange} selectedId={this.props.metadata.keyword_id} setNewValue={false} />
         </div>
-        <div><strong>Update data fields below:</strong></div>
+        <div className='columns medium-12 small-12'><strong>Update data fields below:</strong></div>
 
         <hr />
         {/* file display name & previous file name & description */}
