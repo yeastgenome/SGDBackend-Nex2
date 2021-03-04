@@ -952,45 +952,37 @@ def update_dataset(request):
     
         ## datasetlab
         
-        labNew = request.params.get('lab', '').replace(' |', '|').replace('| ', '|')
-        [lab_name, lab_location, colleague_format_name] =	labNew.split('|')
-        lab_name = lab_name.replace('lab_name: ', '')
-        lab_location = lab_location.replace('lab_location: ', '')
-        colleague_format_name = colleague_format_name.replace('colleague_format_name: ', '')
-        
-        lab = curator_session.query(Datasetlab).filter_by(dataset_id=dataset_id).one_or_none()
-        if lab is not None:
-            if lab_name == '' or lab_location == '':
-                success_message = success_message + "<br>lab '" + lab.lab_name + '|' + lab.lab_location + "' has been removed for this dataset."
-                curator_session.delete(lab)
-                
-            else: ## update
-                update = 0
-                if lab.lab_name != lab_name:
-                    lab.lab_name = lab_name
-                    update = 1
-                if lab.lab_location != lab_location:
-                    lab.lab_location = lab_location
-                    update = 1
-                if colleague_format_name:
-                    coll = curator_session.query(Colleague).filter_by(format_name=colleague_format_name).one_or_none()
-                    colleague_id = None
-                    if coll:
-                        colleague_id = coll.colleague_id
-                    if colleague_id and colleague_id != lab.colleague_id:
-                        lab.colleague_id = colleague_id
-                        update = 1
-                elif lab.colleague_id:
-                    lab.colleague_id = None
-                    update = 1
-                if update == 1:
-                    curator_session.add(lab)
-                    success_message = success_message + "<br>lab info has been updated for this dataset." 
-        elif lab_name and lab_location:
-            coll = curator_session.query(Colleague).filter_by(format_name = colleague_format_name).one_or_none()
-            insert_datasetlab(curator_session, CREATED_BY, source_id, dataset_id, lab_name, lab_location, coll.colleague_id)
-            success_message = success_message + "<br>lab '" + labNew + "' has been added for this dataset."        
+        all_labs = curator_session.query(Datasetlab).filter_by(dataset_id=dataset_id).all()
+        labs_db = {}
+        for lab in all_labs:
+            colleague_id = None
+            if lab.colleague_id:
+                colleague_id = lab.colleague_id
+            key = (lab.lab_name, lab.lab_location, colleague_id)
+            labs_db[key] = lab
 
+        lab1 = request.params.get('lab1', '').replace(' |', '|').replace('| ', '|')
+        lab2 = request.params.get('lab2', '').replace(' |', '|').replace('| ', '|')
+        
+        for labNew in [lab1, lab2]:
+            [lab_name, lab_location, colleague_format_name] =   labNew.split('|')
+            lab_name = lab_name.replace('lab_name: ', '')
+            lab_location = lab_location.replace('lab_location: ', '')
+            colleague_format_name = colleague_format_name.replace('colleague_format_name: ', '')
+            coll = curator_session.query(Colleague).filter_by(format_name=colleague_format_name).one_or_none()
+            colleague_id = None
+            if coll:
+                colleague_id = coll.colleague_id
+            key = (lab_name, lab_location, colleague_id)
+            if key in labs_db:
+                del labs_db[key]
+                continue
+            insert_datasetlab(curator_session, CREATED_BY, source_id, dataset_id, lab_name, lab_location, colleague_id)
+            success_message = success_message + "<br>lab '" + labNew + "' has been added for this dataset."
+
+        for lab in labs_db:
+            success_message = success_message + "<br>lab '" + lab.lab_name + '|' + lab.lab_location + "' has been removed for this dataset."
+            curator_session.delete(lab)
             
         # return HTTPBadRequest(body=json.dumps({'error': "datasetlab table"}), content_type='text/json') 
             
