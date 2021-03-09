@@ -81,7 +81,7 @@ def dump_data():
             uniform_names.append(TABS + "gene_syn\t" + x.display_name)
             locus_id_to_uniform_names[x.locus_id] = uniform_names
         elif x.alias_type == 'NCBI protein name':
-            locus_id_to_ncbi_protein_name[x.locus_id] = TABS + "product\t" + x.display_name
+            locus_id_to_ncbi_protein_name[x.locus_id] = TABS + "product\t" + x.display_name.strip().replace('  ', ' ')
         elif x.alias_type == 'TPA protein version ID':
             chr1to16_locus_id_to_protein_id[x.locus_id] = TABS + "protein_id\t" + x.display_name
         elif x.alias_type == 'Protein version ID' and x.display_name.startswith('AIZ988'):
@@ -489,6 +489,8 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
     protein_id = duplicate_gene_to_protein_id.get(sgdid)
     if protein_id is None:
         protein_id = locus_id_to_protein_id.get(locus_id)
+        if protein_id is None and systematic_name == 'YPR099C':
+            protein_id = TABS + "protein_id\tDAC85312.1" 
     else:
         protein_id = TABS + "protein_id\t" + protein_id
     if protein_id:
