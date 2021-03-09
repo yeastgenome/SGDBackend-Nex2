@@ -347,6 +347,11 @@ def read_uniprot_file(infile, source_to_id):
             key_to_ids[key] = id_list        
     f.close()
 
+    ### adding TPA protein ID for YPR099C (its UniProt ID: O13548
+    key = ('O13548', 'TPA protein version ID', source_to_id.get('NCBI'))
+    if key not in key_to_ids:
+        key_to_ids[key] = ['DAC85312.1']
+        
     return [sgdid_to_uniprot_id, uniprot_id_to_sgdid_list, key_to_ids] 
 
 
