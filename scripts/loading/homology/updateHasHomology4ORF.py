@@ -15,15 +15,20 @@ def update_data():
     taxonomy = nex_session.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
     taxonomy_id = taxonomy.taxonomy_id
     all = nex_session.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC', so_id=so_id, taxonomy_id=taxonomy_id).all()
-    
+
+    i = 0
     for x in all:
         print (x.taxonomy_id, x.dbentity_id)
         locus = nex_session.query(Locusdbentity).filter_by(dbentity_id=x.dbentity_id).one_or_none()
         locus.has_homology = '1'
         nex_session.add(locus)
-
-    nex_session.rollback()
-    # nex_session.commit()
+        i = i + 1
+        if i > 300:
+            nex_session.commit()
+            i = 0
+        
+    # nex_session.rollback()
+    nex_session.commit()
     
 if __name__ == "__main__":
 
