@@ -88,6 +88,10 @@ def main(global_config, **settings):
     config.add_route('locus_disease_graph', '/locus/{id}/disease_graph', request_method='GET')
     config.add_route('locus_interaction_details', '/locus/{id}/interaction_details', request_method='GET')
     config.add_route('locus_interaction_graph', '/locus/{id}/interaction_graph', request_method='GET')
+    config.add_route('locus_complement_details', '/locus/{id}/complement_details', request_method='GET')
+    config.add_route('locus_homolog_details', '/locus/{id}/homolog_details', request_method='GET')
+    config.add_route('locus_fungal_homolog_details', '/locus/{id}/fungal_homolog_details', request_method='GET')
+    
     # TEMP disable
     # config.add_route('locus_expression_details', '/locus/{id}/expression_details', request_method='GET')
     config.add_route('locus_expression_graph', '/locus/{id}/expression_graph', request_method='GET')

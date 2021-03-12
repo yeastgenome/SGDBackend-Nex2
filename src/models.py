@@ -3098,6 +3098,7 @@ class Locusdbentity(Dbentity):
     has_expression = Column(Boolean, nullable=False)
     has_regulation = Column(Boolean, nullable=False)
     has_protein = Column(Boolean, nullable=False)
+    has_homology = Column(Boolean, nullable=False)
     has_sequence_section = Column(Boolean, nullable=False)
     not_in_s288c = Column(Boolean, nullable=False)
 
@@ -5131,7 +5132,7 @@ class Locusdbentity(Dbentity):
             "regulation_tab": self.has_regulation,
             "sequence_tab": self.has_sequence,
             "history_tab": self.has_history,
-            "protein_tab": self.has_protein,
+            "homology_tab": self.has_homology,
             "disease_tab": self.has_disease
         }
 
@@ -5177,6 +5178,7 @@ class Locusdbentity(Dbentity):
             'regulation_tab': ['regulation_details', 'regulation_graph'],
             'sequence_tab': ['neighbor_sequence_details', 'sequence_details'],
             'history_tab': [],
+            'homology_tab': ['homology_details'],
             'disease_tab': ['disease_details', 'disease_graph'],
         }
         base_url = self.get_base_url() + '/'
@@ -7012,12 +7014,25 @@ class Functionalcomplementannotation(Base):
         if reference == None:
             reference = self.reference
 
+        strain = Straindbentity.get_strains_by_taxon_id(self.taxonomy_id)
+
+        strain_background = None
+        if len(strain) == 1:
+            strain_background = strain[0].display_name
+        else:
+            strain_background =	"Other"
+            
+        ## todo: add data to gene_name
+    
         obj = {
             "id": self.annotation_id,
             "obj_url": self.obj_url,
+            "species": map_id_species(self.dbxref_id),
+            "strain_background": strain_background,
             "date_created": self.date_created.strftime("%Y-%m-%d"),
             "direction": self.direction,
             "dbxref_id": self.dbxref_id,
+            "gene_name": '',
             "curator_comment": self.curator_comment,
             "locus": {
                 "display_name": self.dbentity.display_name,
@@ -11989,3 +12004,21 @@ def convert_space_separated_pmids_to_list(str_pmids):
 def get_transcript_so_id():
     so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
     return so.so_id
+
+def map_id_species(id):
+    if id.startswith('HGNC:'):
+        return 'Homo sapiens'
+    elif id.startswith('MGI:'):
+        return 'Mus musculus'
+    elif id.startswith('FB::'):
+        return 'Drosophila melanogaster'
+    elif id.startswith('RGD:'):
+        return 'Rattus norvegicus'
+    elif id.startswith('WB:'):
+        return 'Caenorhabditis elegans'
+    elif id.startswith('SGD:'):
+        return 'Saccharomyces cerevisiae'
+    elif id.startswith('ZFIN:'):
+        return 'Danio rerio'
+    else:
+        return ''
