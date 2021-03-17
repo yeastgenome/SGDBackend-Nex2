@@ -23,22 +23,26 @@ class OneMetadata extends Component {
         <div className='columns medium-12 small-12'><strong>Update data fields below:</strong></div>
 
         <hr />
-        {/* file display name & previous file name & description */}
+        {/* file display name & previous file name */}
         <div className='row'>
-          <div className='columns medium-4 small-4'>
+          <div className='columns medium-6 small-6'>
             <div> <label> display_name </label> </div>
             <input type='text' name='display_name' value={this.props.metadata.display_name} onChange={this.props.onOptionChange} />
           </div>
-          <div className='columns medium-4 small-4'>
+          <div className='columns medium-6 small-6'>
             <div> <label> previous_file_name </label> </div>
             <input type='text' name='previous_file_name' value={this.props.metadata.previous_file_name} onChange={this.props.onOptionChange} />
           </div>
-          <div className='columns medium-4 small-4'>
-            <div> <label> description </label> </div>
-            <input type='text' name='description' value={this.props.metadata.description} onChange={this.props.onOptionChange} />
-          </div>
         </div>
 
+	{/* description */}
+        <div className='row'>
+          <div className='columns medium-12 small-12'>
+            <div> <label> description </label> </div>
+            <textarea placeholder='Enter description' name='description' value={this.props.metadata.description} onChange={this.props.onOptionChange} rows='4' cols='200' />
+          </div>
+        </div>
+	
         {/* file year, date, size, extension & file status */}
         <div className='row'>
           <div className='columns medium-2 small-2'>
