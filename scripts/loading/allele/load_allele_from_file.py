@@ -28,7 +28,8 @@ def load_data(infile):
     so_to_id =  dict([(x.display_name, x.so_id) for x in nex_session.query(So).all()])
 
     gene_to_locus_id = dict([(x.gene_name, x.dbentity_id) for x in nex_session.query(Locusdbentity).all()])
-
+    name_to_locus_id = dict([(x.systematic_name, x.dbentity_id) for x in nex_session.query(Locusdbentity).all()])
+    
     pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
 
     allele_to_id = dict([(x.display_name.upper(), x.dbentity_id) for x in nex_session.query(Dbentity).filter_by(subclass='ALLELE').all()])
@@ -56,12 +57,14 @@ def load_data(infile):
             continue
         reference_id = pmid_to_reference_id.get(int(pieces[0]))
         if reference_id is None:
-            log.info("The PMID: " + pieces[1] + " is not in the database")
+            log.info("The PMID: " + pieces[0] + " is not in the database")
             continue
         locus_id = gene_to_locus_id.get(pieces[1])
         if locus_id is None:
-            log.info("The gene: " + pieces[1] + " is not in the database")
-            continue
+            locus_id = name_to_locus_id.get(pieces[1])
+            if locus_id is None:
+                log.info("The gene: " + pieces[1] + " is not in the database")
+                continue
         allele_name = pieces[2].replace('"', '')
         if allele_name == '':
             log.info("Missing allele name for line: " + line)
