@@ -46,7 +46,7 @@ pytz==2015.7
 redis==2.10.5
 repoze.lru==0.6
 requests==2.22.0
-rsa==3.2.3
+rsa==4.1
 scrapy==1.7.3
 singledispatch==3.4.0.3
 six==1.11.0
