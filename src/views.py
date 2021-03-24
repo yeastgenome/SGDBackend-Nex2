@@ -10,6 +10,7 @@ from primer3 import bindings, designPrimers
 from collections import defaultdict
 from sqlalchemy.orm import joinedload
 from urllib.request import Request, urlopen
+from intermine.webservice import Service
 
 import os
 import re
@@ -1196,7 +1197,74 @@ def locus_expression_graph(request):
     finally:
         if DBSession:
             DBSession.remove()
-            
+
+            	
+@view_config(route_name='locus_complement_details', renderer='json', request_method='GET')
+def locus_complement_details(request):
+    try:
+        id = extract_id_request(request, 'locus')
+        locus = get_locus_by_id(id)
+        if locus:
+            return locus.complements_to_dict()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+
+@view_config(route_name='locus_homolog_details', renderer='json', request_method='GET')
+def locus_homolog_details(request):
+    try:
+        sgdid = request.matchdict['id']
+        allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + sgdid + "/homologs?limit=10000"
+        req = Request(allianceAPI)
+        res = urlopen(req)
+        records = json.loads(res.read().decode('utf-8'))
+        data = []
+        for record in records['results']:
+            homolog = record['homologGene']
+            data.append(homolog)
+        dataSortBySpecies = sorted(data, key=lambda d: d['species']['name'])
+        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")
+    except Exception as e:
+        log.error(e)
+    
+@view_config(route_name='locus_fungal_homolog_details', renderer='json', request_method='GET')
+def locus_fungal_homolog_details(request):
+    try:
+        ## gene name can be gene name, orf name, sgdid
+        gene_name = request.matchdict['id']
+        service = Service("https://yeastmine.yeastgenome.org/yeastmine/service")
+        query = service.new_query("Gene")
+        query.add_view(
+            "secondaryIdentifier",
+            "homologues.homologue.organism.shortName",
+            "homologues.homologue.primaryIdentifier",
+            "homologues.homologue.symbol",
+            "homologues.dataSets.dataSource.name",
+            "homologues.homologue.briefDescription"
+        )
+        query.add_sort_order("Gene.homologues.homologue.organism.shortName", "ASC")
+        query.add_constraint("homologues.homologue.organism.shortName", "ONE OF", ["A. flavus NRRL3357", "A. fumigatus Af293", "A. nidulans FGSC A4", "A. niger ATCC 1015", "C. albicans SC5314", "C. albicans WO-1", "C. dubliniensis CD36", "C. gattii R265", "C. gattii WM276", "C. glabrata CBS 138", "C. immitis H538.4", "C. immitis RS", "C. neoformans var. grubii H99", "C. neoformans var. neoformans JEC21", "C. parapsilosis CDC317", "C. posadasii C735 delta SOWgp", "M. oryzae 70-15", "N. crassa OR74A", "S. cerevisiae", "S. pombe", "T. marneffei ATCC 18224", "U. maydis 521"], code="C")
+        query.add_constraint("organism.shortName", "=", "S. cerevisiae", code="B")
+        query.add_constraint("Gene", "LOOKUP", gene_name, code="A")
+        data = []
+        for row in query.rows():
+            data.append({ 'species': row["homologues.homologue.organism.shortName"],
+                          'gene_id': row["homologues.homologue.primaryIdentifier"],
+                          'gene_name': row["homologues.homologue.symbol"],
+                          'source': row["homologues.dataSets.dataSource.name"],
+                          'description': row["homologues.homologue.briefDescription"] })
+        
+        #dataSortByID = sorted(data, key=lambda d: d['gene_id'])
+        dataSortBySpecies = sorted(data, key=lambda d: d['species'])
+        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")        
+    except Exception as e:
+        log.error(e)        
+        
 @view_config(route_name='locus_literature_details', renderer='json', request_method='GET')
 def locus_literature_details(request):
     try:
