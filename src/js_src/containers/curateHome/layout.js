@@ -29,10 +29,10 @@ class CurateLayout extends Component {
             <li><Link className={(location === '/regulation') ? style.activeLink : null} to='/regulation'><span><i className="fa fa-upload" /> Regulation</span></Link></li>
             <li><Link className={(location === '/disease') ? style.activeLink : null} to='/disease'><span><i className="fa fa-upload" /> Disease</span></Link></li>
             <li><Link className={(location === '/complement') ? style.activeLink : null} to='/complement'><span><i className="fa fa-upload" /> Complement</span></Link></li>
-            <li><span><Link className={(location === '/load_dataset') ? style.activeLink : null} to='/load_dataset'><i className="fa fa-upload" />Dataset Load</Link> | <Link className={(location === '/search_dataset') ? style.activeLink : null} to='/search_dataset'>Search/Update</Link></span></li>
             <li><Link className={(location === '/upload_suppl_files') ? style.activeLink : null} to='/upload_suppl_files'><span><i className="fa fa-upload" /> Upload Suppl Files</span></Link></li>
             <li><span><Link className={(location === '/file_curate') ? style.activeLink : null} to='/file_curate'><i className='fa fa-file-text' />File Curate</Link> | <Link className={(location === '/search_file_metadata') ? style.activeLink : null} to='/search_file_metadata'>Edit File Metadata</Link></span></li>
             <li><span><Link className={(location === '/new_allele') ? style.activeLink : null} to='/new_allele'><i className="fa fa-upload" />Allele NEW</Link> | <Link className={(location === '/search_allele') ? style.activeLink : null} to='/search_allele'>UPDATE</Link></span></li>
+
             <li><span><Link className={(location === '/new_phenotype') ? style.activeLink : null} to='/new_phenotype'><i className='fa fa-sticky-note' />Phenotype NEW</Link> | <Link className={(location === '/search_phenotype') ? style.activeLink : null} to='/search_phenotype'>UPDATE</Link></span></li>
 
             <li><span><Link className={(location === '/litguide_todo') ? style.activeLink : null} to='/litguide_todo'><i className='fa fa-sticky-note' />LitGuide TODO</Link> | <Link className={(location === '/add_litguide') ? style.activeLink : null} to='/add_litguide'>ADD</Link></span></li>
