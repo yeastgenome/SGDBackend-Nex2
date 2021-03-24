@@ -186,7 +186,10 @@ def insert_keyword(curator_session, CREATED_BY, source_id, keyword):
     kw = curator_session.query(Keyword).filter(Keyword.display_name.ilike(keyword)).one_or_none()
     if kw:
         return kw.keyword_id
+    else:
+        return "The keyword: " + keyword + " is not in the database."
 
+    ## DON'T WANT TO ADD NEW KEYWORDS through interfaces at this moment
     keyword_id = None
     returnValue = None
     keyword_id = None

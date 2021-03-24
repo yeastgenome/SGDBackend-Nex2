@@ -17,23 +17,32 @@ class OneMetadata extends Component {
         <div><strong>SGDID: {this.props.metadata.sgdid}</strong></div>
         <div><strong><a href={this.props.metadata.s3_url} target='new'>Download this file from s3</a></strong></div>
         <hr />	
+        <div className='columns medium-6 small-6'>
+          <strong>Search Keywords:</strong> <AutocompleteSection sec_title='' id='keyword_id' value1='display_name' value2='' selectedIdName='Keyword_id' placeholder='Search for keywords' onOptionChange={this.props.onOptionChange} selectedId={this.props.metadata.keyword_id} setNewValue={false} />
+        </div>
+        <div className='columns medium-12 small-12'><strong>Update data fields below:</strong></div>
 
-        {/* file display name & previous file name & description */}
+        <hr />
+        {/* file display name & previous file name */}
         <div className='row'>
-          <div className='columns medium-4 small-4'>
+          <div className='columns medium-6 small-6'>
             <div> <label> display_name </label> </div>
             <input type='text' name='display_name' value={this.props.metadata.display_name} onChange={this.props.onOptionChange} />
           </div>
-          <div className='columns medium-4 small-4'>
+          <div className='columns medium-6 small-6'>
             <div> <label> previous_file_name </label> </div>
             <input type='text' name='previous_file_name' value={this.props.metadata.previous_file_name} onChange={this.props.onOptionChange} />
           </div>
-          <div className='columns medium-4 small-4'>
-            <div> <label> description </label> </div>
-            <input type='text' name='description' value={this.props.metadata.description} onChange={this.props.onOptionChange} />
-          </div>
         </div>
 
+	{/* description */}
+        <div className='row'>
+          <div className='columns medium-12 small-12'>
+            <div> <label> description </label> </div>
+            <textarea placeholder='Enter description' name='description' value={this.props.metadata.description} onChange={this.props.onOptionChange} rows='4' cols='200' />
+          </div>
+        </div>
+	
         {/* file year, date, size, extension & file status */}
         <div className='row'>
           <div className='columns medium-2 small-2'>

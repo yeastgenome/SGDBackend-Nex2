@@ -88,6 +88,10 @@ def main(global_config, **settings):
     config.add_route('locus_disease_graph', '/locus/{id}/disease_graph', request_method='GET')
     config.add_route('locus_interaction_details', '/locus/{id}/interaction_details', request_method='GET')
     config.add_route('locus_interaction_graph', '/locus/{id}/interaction_graph', request_method='GET')
+    config.add_route('locus_complement_details', '/locus/{id}/complement_details', request_method='GET')
+    config.add_route('locus_homolog_details', '/locus/{id}/homolog_details', request_method='GET')
+    config.add_route('locus_fungal_homolog_details', '/locus/{id}/fungal_homolog_details', request_method='GET')
+    
     # TEMP disable
     # config.add_route('locus_expression_details', '/locus/{id}/expression_details', request_method='GET')
     config.add_route('locus_expression_graph', '/locus/{id}/expression_graph', request_method='GET')
@@ -116,7 +120,8 @@ def main(global_config, **settings):
     config.add_route('dataset', '/dataset/{id}', request_method='GET')
     config.add_route('keyword', '/keyword/{id}', request_method='GET')
     config.add_route('keywords', '/keywords', request_method='GET')
-
+    config.add_route('get_keywords', '/get_keywords', request_method='GET')
+    
     config.add_route('ecnumber', '/ecnumber/{id}', request_method='GET')
     config.add_route('ecnumber_locus_details', '/ecnumber/{id}/locus_details', request_method='GET')
 
@@ -218,6 +223,19 @@ def main(global_config, **settings):
     config.add_route('get_papers_by_tag','/get_papers_by_tag/{tag}/{gene}/{year}',request_method='GET')
     config.add_route('literature_guide_update','/literature_guide_update', request_method='POST')
     config.add_route('literature_guide_add','/literature_guide_add', request_method='POST')
+
+    config.add_route('get_obi','/get_obi',request_method='GET')
+    config.add_route('get_all_datasets','/get_all_datasets',request_method='GET')
+    config.add_route('get_dataset_data','/get_dataset_data/{format_name}',request_method='GET')
+    config.add_route('get_datasets','/get_datasets/{query}',request_method='GET')
+    config.add_route('dataset_update','/dataset_update', request_method='POST')
+    config.add_route('datasetsample_update','/datasetsample_update', request_method='POST')
+    config.add_route('datasettrack_update','/datasettrack_update', request_method='POST')
+    config.add_route('dataset_load','/dataset_load', request_method='POST')
+    config.add_route('datasetsample_load','/datasetsample_load', request_method='POST')
+    config.add_route('dataset_delete','/dataset_delete', request_method='POST')
+    config.add_route('datasetsample_delete','/datasetsample_delete', request_method='POST')
+    config.add_route('datasettrack_delete','/datasettrack_delete', request_method='POST')
     
     config.add_route('get_phenotypes','/get_phenotypes/{gene}/{reference}', request_method='GET')
     config.add_route('get_phenotype','/get_phenotype/{annotation_id}/{group_id}', request_method='GET')
@@ -239,7 +257,6 @@ def main(global_config, **settings):
     config.add_route('get_one_file_metadata','/get_one_file_metadata/{sgdid}', request_method='GET')
     config.add_route('file_metadata_update','/file_metadata_update', request_method='POST')
     config.add_route('file_metadata_delete','/file_metadata_delete', request_method='POST')
-    
     config.add_route('upload_suppl_file', '/upload_suppl_file', request_method='POST')
     
     config.add_route('disease_insert_update','/disease', request_method='POST')
