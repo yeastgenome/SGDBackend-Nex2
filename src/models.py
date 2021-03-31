@@ -3327,6 +3327,7 @@ class Locusdbentity(Dbentity):
         return [a.to_dict(locus=self, references=ids_to_references) for a in annotations]
 
     def sequence_details(self):
+        taxonomy_id = self.get_main_strain('taxonomy_id')
         dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
         obj = {
@@ -3336,23 +3337,50 @@ class Locusdbentity(Dbentity):
             "1kb": []
         }
 
+        main_strain_genomic = None
+        main_strain_coding = None
+        main_strain_1KB = None
+        main_strain_protein = None
+        
         for dna in dnas:
             dna_dict = dna.to_dict()
 
             if dna_dict:
                 if dna.dna_type == "GENOMIC":
-                    obj["genomic_dna"].append(dna_dict)
+                    if dna.taxonomy_id == taxonomy_id:
+                        main_strain_genomic = dna_dict
+                    else:
+                        obj["genomic_dna"].append(dna_dict)
                 elif dna.dna_type == "CODING":
-                    obj["coding_dna"].append(dna_dict)
+                    if dna.taxonomy_id == taxonomy_id:
+                        main_strain_coding = dna_dict
+                    else:
+                        obj["coding_dna"].append(dna_dict)
                 elif dna.dna_type == "1KB":
-                    obj["1kb"].append(dna_dict)
+                    if dna.taxonomy_id == taxonomy_id:
+                        main_strain_1KB = dna_dict
+                    else:
+                        obj["1kb"].append(dna_dict)
+
+        if main_strain_genomic is not None:
+            obj["genomic_dna"].insert(0, main_strain_genomic)
+        if main_strain_coding is not None:
+            obj["coding_dna"].insert(0, main_strain_coding)
+        if main_strain_1KB is not None:
+            obj["1kb"].insert(0, main_strain_1KB)
 
         protein_dnas = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
         for protein_dna in protein_dnas:
             protein_dna_dict = protein_dna.to_dict(locus=self)
             if protein_dna_dict:
-                obj["protein"].append(protein_dna_dict)
+                if protein_dna.taxonomy_id == taxonomy_id:
+                    main_strain_protein = protein_dna_dict
+                else:
+                    obj["protein"].append(protein_dna_dict)
 
+        if main_strain_protein is not None:
+            obj["protein"].insert(0, main_strain_protein)
+            
         return obj
 
     def neighbor_sequence_details(self):
