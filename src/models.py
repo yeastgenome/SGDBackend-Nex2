@@ -2335,6 +2335,14 @@ class Referencedbentity(Dbentity):
 
         return obj
 
+    def functional_complement_to_dict(self):
+
+        annots = DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).all()
+        obj = []
+        for annot in annots:
+            obj += annot.to_dict(reference=self)
+        return obj
+        
     def phenotype_to_dict(self):
         phenotypes = DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
 
