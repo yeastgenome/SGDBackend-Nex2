@@ -7043,10 +7043,10 @@ class Functionalcomplementannotation(Base):
     ro = relationship('Ro')
     taxonomy = relationship('Taxonomy')
 
-    def to_dict(self, complement=None, reference=None):
-        if complement == None:
-            complement = self.complement
-
+    # def to_dict(self, complement=None, reference=None):
+    #    if complement == None:
+    #        complement = self.complement
+    def to_dict(self, reference=None): 
         if reference == None:
             reference = self.reference
 
