@@ -2338,13 +2338,9 @@ class Referencedbentity(Dbentity):
     def functional_complement_to_dict(self):
 
         all_annotations = DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).all()
-        obj = []
-        for annotation in all_annotations:
-            for annot in annotation.to_dict():
-                if annot not in obj:
-                    obj.append(annot)
-        return obj
-        
+
+        return [a.to_dict(self.dbentity_id) for a in all_annotations]
+    
     def phenotype_to_dict(self):
         phenotypes = DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
 
@@ -7070,7 +7066,7 @@ class Functionalcomplementannotation(Base):
             "date_created": self.date_created.strftime("%Y-%m-%d"),
             "direction": self.direction,
             "dbxref_id": self.dbxref_id,
-            "gene_name": '',
+            "gene_name": self.dbentity.display_name,
             "curator_comment": self.curator_comment,
             "locus": {
                 "display_name": self.dbentity.display_name,
