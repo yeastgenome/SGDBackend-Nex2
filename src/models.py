@@ -2274,6 +2274,7 @@ class Referencedbentity(Dbentity):
             "go": DBSession.query(Goannotation).filter_by(reference_id=self.dbentity_id).count(),
             "phenotype": DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).count(),
             "disease": DBSession.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).count(),
+            "complement": DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).count(),
             "regulation": DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).count(),
             "ptms":DBSession.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).count()
         }
