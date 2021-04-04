@@ -42,7 +42,8 @@ def main(global_config, **settings):
     config.add_route('reference_regulation_details', '/reference/{id}/regulation_details', request_method='GET')
     config.add_route('reference_list', '/reference_list')
     config.add_route('reference_posttranslational_details', '/reference/{id}/posttranslational_details', request_method='GET')
-
+    config.add_route('reference_functional_complement_details', '/reference/{id}/functional_complement_details', request_method='GET')
+    
     config.add_route('author', '/author/{format_name}', request_method='GET')
 
     config.add_route('chemical', '/chemical/{format_name}', request_method='GET')
