@@ -2274,6 +2274,7 @@ class Referencedbentity(Dbentity):
             "go": DBSession.query(Goannotation).filter_by(reference_id=self.dbentity_id).count(),
             "phenotype": DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).count(),
             "disease": DBSession.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).count(),
+            "complement": DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).count(),
             "regulation": DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).count(),
             "ptms":DBSession.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).count()
         }
@@ -2335,6 +2336,12 @@ class Referencedbentity(Dbentity):
 
         return obj
 
+    def functional_complement_to_dict(self):
+
+        all_annotations = DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).all()
+
+        return [a.to_dict(self.dbentity_id) for a in all_annotations]
+    
     def phenotype_to_dict(self):
         phenotypes = DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
 
@@ -7035,10 +7042,10 @@ class Functionalcomplementannotation(Base):
     ro = relationship('Ro')
     taxonomy = relationship('Taxonomy')
 
-    def to_dict(self, complement=None, reference=None):
-        if complement == None:
-            complement = self.complement
-
+    # def to_dict(self, complement=None, reference=None):
+    #    if complement == None:
+    #        complement = self.complement
+    def to_dict(self, reference=None): 
         if reference == None:
             reference = self.reference
 
@@ -7060,7 +7067,7 @@ class Functionalcomplementannotation(Base):
             "date_created": self.date_created.strftime("%Y-%m-%d"),
             "direction": self.direction,
             "dbxref_id": self.dbxref_id,
-            "gene_name": '',
+            "gene_name": self.dbentity.display_name,
             "curator_comment": self.curator_comment,
             "locus": {
                 "display_name": self.dbentity.display_name,
