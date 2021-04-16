@@ -46,7 +46,7 @@ def translate(codon):
 
     codons = codon_table()
     
-    if codon in codons():
+    if codon in codons:
         return codons[codon]
     else:
         return None
@@ -89,9 +89,12 @@ def check_snp_type(name, strain, index, intron_indices, ref_seq, aligned_seq):
         print ("Warning: KeyError:" + str(index_coding), "=>name, strain, index, intron_indices=", name, strain, index, intron_indices)
         return "Unknown SNP"
 
-    ref_amino_acid = translate(''.join([ref_seq_coding[i] for i in codon]))
-    aligned_amino_acid = translate(''.join([aligned_seq_coding[i] for i in codon]))
-
+    try:
+        ref_amino_acid = translate(''.join([ref_seq_coding[i] for i in codon]))
+        aligned_amino_acid = translate(''.join([aligned_seq_coding[i] for i in codon]))
+    except:
+        print ("BAD translate: ", name, strain, index, intron_indices, ref_seq, aligned_seq)
+               
     if ref_amino_acid is None or aligned_amino_acid is None:
         return 'Untranslatable SNP'
     elif ref_amino_acid == aligned_amino_acid:
@@ -110,7 +113,11 @@ def calculate_variant_data(name, type, strain_to_seq, introns):
         for i, letter in enumerate(reference_alignment):
             #Figure out new state
             new_state = 'No difference'
-            if aligned_sequence[i] != letter:
+            # if len(aligned_sequence) > i and aligned_sequence[i] != letter:
+            if i >= len(aligned_sequence):
+                print ("BAD: ", name, type, strain_to_seq, introns)
+                continue
+            if aligned_sequence[i] != letter: 
                 if letter == '-':
                     new_state = 'Insertion'
                 elif aligned_sequence[i] == '-':
