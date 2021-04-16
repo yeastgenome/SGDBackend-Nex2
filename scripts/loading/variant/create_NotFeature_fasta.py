@@ -48,6 +48,8 @@ def create_seqs(strain):
     contig_id_to_display_name = {}
     defline_to_seq = {}
     for x in nex_session.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC', taxonomy_id=taxonomy_id).order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
+        if x.dbentity_id not in dbentity_id_to_name:
+            continue
         (name, status) = dbentity_id_to_name[x.dbentity_id]
         if status in ['Deleted', 'Merged']:
             continue
