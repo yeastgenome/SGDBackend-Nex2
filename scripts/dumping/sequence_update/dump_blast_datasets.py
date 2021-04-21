@@ -41,9 +41,10 @@ def dump_data():
                                   so_id_to_display_name, notFeatFile, SEQ_FORMAT)
     
     dbentity_id_to_defline = {}
+    dbentity_id_list = []
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
                           so_id_to_display_name, codingFile, 'CODING', SEQ_FORMAT, FILE_TYPE,
-                          dbentity_id_to_defline)
+                          dbentity_id_to_defline, dbentity_id_list)
     
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
                           so_id_to_display_name, genomicFile, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
@@ -51,8 +52,8 @@ def dump_data():
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
                           so_id_to_display_name, oneKBFile, '1KB', SEQ_FORMAT, FILE_TYPE)
 
-    generate_protein_seq_file(nex_session, taxonomy_id, dbentity_id_to_defline, proteinFile,
-                              SEQ_FORMAT)
+    generate_protein_seq_file(nex_session, taxonomy_id, dbentity_id_to_defline, dbentity_id_list,
+                              proteinFile, SEQ_FORMAT)
 
     ### dump out RNA sequences
 

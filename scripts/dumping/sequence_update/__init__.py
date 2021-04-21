@@ -184,6 +184,7 @@ def generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_
             defline = defline + '"' + desc + '"'
         if dbentity_id_to_defline is not None:
             dbentity_id_to_defline[x.dbentity_id] = defline
+        if dbentity_id_list is not None:
             dbentity_id_list.append(x.dbentity_id)
         fw.write(defline + "\n")
         if seq_format == 'fasta':
