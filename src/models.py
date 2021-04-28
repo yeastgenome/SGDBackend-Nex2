@@ -2274,6 +2274,7 @@ class Referencedbentity(Dbentity):
             "go": DBSession.query(Goannotation).filter_by(reference_id=self.dbentity_id).count(),
             "phenotype": DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).count(),
             "disease": DBSession.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).count(),
+            "complement": DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).count(),
             "regulation": DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).count(),
             "ptms":DBSession.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).count()
         }
@@ -2335,6 +2336,12 @@ class Referencedbentity(Dbentity):
 
         return obj
 
+    def functional_complement_to_dict(self):
+
+        all_annotations = DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).all()
+
+        return [a.to_dict(self.dbentity_id) for a in all_annotations]
+    
     def phenotype_to_dict(self):
         phenotypes = DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
 
@@ -3327,6 +3334,7 @@ class Locusdbentity(Dbentity):
         return [a.to_dict(locus=self, references=ids_to_references) for a in annotations]
 
     def sequence_details(self):
+        taxonomy_id = self.get_main_strain('taxonomy_id')
         dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
         obj = {
@@ -3336,23 +3344,50 @@ class Locusdbentity(Dbentity):
             "1kb": []
         }
 
+        main_strain_genomic = None
+        main_strain_coding = None
+        main_strain_1KB = None
+        main_strain_protein = None
+        
         for dna in dnas:
             dna_dict = dna.to_dict()
 
             if dna_dict:
                 if dna.dna_type == "GENOMIC":
-                    obj["genomic_dna"].append(dna_dict)
+                    if dna.taxonomy_id == taxonomy_id:
+                        main_strain_genomic = dna_dict
+                    else:
+                        obj["genomic_dna"].append(dna_dict)
                 elif dna.dna_type == "CODING":
-                    obj["coding_dna"].append(dna_dict)
+                    if dna.taxonomy_id == taxonomy_id:
+                        main_strain_coding = dna_dict
+                    else:
+                        obj["coding_dna"].append(dna_dict)
                 elif dna.dna_type == "1KB":
-                    obj["1kb"].append(dna_dict)
+                    if dna.taxonomy_id == taxonomy_id:
+                        main_strain_1KB = dna_dict
+                    else:
+                        obj["1kb"].append(dna_dict)
+
+        if main_strain_genomic is not None:
+            obj["genomic_dna"].insert(0, main_strain_genomic)
+        if main_strain_coding is not None:
+            obj["coding_dna"].insert(0, main_strain_coding)
+        if main_strain_1KB is not None:
+            obj["1kb"].insert(0, main_strain_1KB)
 
         protein_dnas = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
         for protein_dna in protein_dnas:
             protein_dna_dict = protein_dna.to_dict(locus=self)
             if protein_dna_dict:
-                obj["protein"].append(protein_dna_dict)
+                if protein_dna.taxonomy_id == taxonomy_id:
+                    main_strain_protein = protein_dna_dict
+                else:
+                    obj["protein"].append(protein_dna_dict)
 
+        if main_strain_protein is not None:
+            obj["protein"].insert(0, main_strain_protein)
+            
         return obj
 
     def neighbor_sequence_details(self):
@@ -7007,10 +7042,10 @@ class Functionalcomplementannotation(Base):
     ro = relationship('Ro')
     taxonomy = relationship('Taxonomy')
 
-    def to_dict(self, complement=None, reference=None):
-        if complement == None:
-            complement = self.complement
-
+    # def to_dict(self, complement=None, reference=None):
+    #    if complement == None:
+    #        complement = self.complement
+    def to_dict(self, reference=None): 
         if reference == None:
             reference = self.reference
 
@@ -7032,7 +7067,7 @@ class Functionalcomplementannotation(Base):
             "date_created": self.date_created.strftime("%Y-%m-%d"),
             "direction": self.direction,
             "dbxref_id": self.dbxref_id,
-            "gene_name": '',
+            "gene_name": self.dbentity.display_name,
             "curator_comment": self.curator_comment,
             "locus": {
                 "display_name": self.dbentity.display_name,
