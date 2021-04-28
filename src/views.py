@@ -709,6 +709,23 @@ def reference_go_details(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+@view_config(route_name='reference_functional_complement_details', renderer='json', request_method='GET')
+def reference_functional_complement_details(request):
+    try:
+        id = extract_id_request(request, 'reference')
+        reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
+
+        if reference:
+            return reference.functional_complement_to_dict()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
             
 @view_config(route_name='reference_phenotype_details', renderer='json', request_method='GET')
 def reference_phenotype_details(request):
