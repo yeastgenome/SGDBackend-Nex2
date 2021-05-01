@@ -1766,7 +1766,6 @@ class Dataset(Base):
     dbxref_type = Column(String(40))
     date_public = Column(DateTime)
     parent_dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), index=True)
-    assay_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), nullable=False, index=True)
     channel_count = Column(SmallInteger)
     sample_count = Column(Integer, nullable=False)
     is_in_spell = Column(Boolean, nullable=False)
@@ -1775,7 +1774,6 @@ class Dataset(Base):
     date_created = Column(DateTime, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    assay = relationship('Obi')
     parent_dataset = relationship('Dataset', remote_side=[dataset_id])
     source = relationship('Source')
 
@@ -1975,6 +1973,7 @@ class Datasetsample(Base):
     biosample = Column(String(500))
     strain_name = Column(String(500))
     description = Column(String(500))
+    assay_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), nullable=False, index=True)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     dbxref_url = Column(String(12), nullable=False)
@@ -1982,7 +1981,7 @@ class Datasetsample(Base):
     dataset = relationship('Dataset')
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
-
+    assay = relationship('Obi')
 
 class Datasettrack(Base):
     __tablename__ = 'datasettrack'

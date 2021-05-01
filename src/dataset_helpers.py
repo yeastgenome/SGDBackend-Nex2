@@ -89,7 +89,6 @@ def insert_dataset(curator_session, CREATED_BY, x):
                     dbxref_type = x['dbxref_type'],
                     date_public = x['date_public'],
                     parent_dataset_id = x['parent_dataset_id'],
-                    assay_id = x['assay_id'],
                     channel_count = x['channel_count'],
                     sample_count = x['sample_count'],
                     is_in_spell = x['is_in_spell'],
@@ -207,7 +206,6 @@ def get_one_dataset(request):
         data['dbxref_type'] = x.dbxref_type
         data['date_public'] = str(x.date_public).split(' ')[0]
         data['parent_dataset_id'] = x.parent_dataset_id
-        data['assay_id'] = x.assay_id
         data['channel_count'] = x.channel_count
         data['sample_count'] = x.sample_count
         data['is_in_spell'] = x.is_in_spell
@@ -249,6 +247,7 @@ def get_one_dataset(request):
                              'taxonomy_id': s.taxonomy_id,
                              'sample_order': s.sample_order,
                              'dbxref_id': s.dbxref_id,
+                             'assay_id': s.assay_id,
                              'dbxref_type': s.dbxref_type,
                              'biosample': s.biosample,
                              'strain_name': s.strain_name,
@@ -282,7 +281,6 @@ def read_dataset_data_from_file(file):
         dataset_to_id = dict([(x.display_name, x.dataset_id) for x in DBSession.query(Dataset).all()])
         format_name_to_id = dict([(x.format_name, x.dataset_id) for x in DBSession.query(Dataset).all()])
         file_to_id = dict([(x.display_name, x.dbentity_id) for x in DBSession.query(Filedbentity).all()])
-        obi_name_to_id = dict([(x.format_name, x.obi_id) for x in DBSession.query(Obi).all()])
         source_to_id = dict([(x.display_name, x.source_id) for x in DBSession.query(Source).all()])
         pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in DBSession.query(Referencedbentity).all()])
         keyword_to_id = dict([(x.display_name, x.keyword_id) for x in DBSession.query(Keyword).all()])
@@ -319,8 +317,8 @@ def read_dataset_data_from_file(file):
             if dbxref_id != format_name and len(dbxref_id) > 40:
                 dbxref_id = format_name
 
-            url = row.iat[20]
-            url_type = row.iat[21]
+            url = row.iat[18]
+            url_type = row.iat[19]
 
             display_name = row.iat[1]
             source = row.iat[2]
@@ -333,13 +331,13 @@ def read_dataset_data_from_file(file):
                 error_message = error_message + "<br>source=" + source + " is not in the database."
                 continue
 
-            if str(row.iat[11]) == 'nan' or str(row.iat[12]) == 'nan' or str(row.iat[13]) == 'nan':
+            if str(row.iat[9]) == 'nan' or str(row.iat[10]) == 'nan' or str(row.iat[11]) == 'nan':
                 error_message = error_message + "<br>MISSING sample_count or is_in_spell or is_in_browser data for the following line:<br>" + line
                 continue
 
-            sample_count = int(row.iat[11])
-            is_in_spell = row.iat[12]
-            is_in_browser = row.iat[13]
+            sample_count = int(row.iat[9])
+            is_in_spell = row.iat[10]
+            is_in_browser = row.iat[11]
             
             if is_in_spell and int(is_in_spell) >= 1:
                 is_in_spell = '1'
@@ -354,53 +352,49 @@ def read_dataset_data_from_file(file):
                 # no date provided
                 date_public = str(datetime.now()).split(" ")[0]
             channel_count = None
-            if str(row.iat[10]) != 'nan':
-                channel_count = int(row.iat[10])
+            if str(row.iat[8]) != 'nan':
+                channel_count = int(row.iat[8])
 
             file_id = None
-            if str(row.iat[19]) != 'nan':
-                file_id = file_to_id.get(row.iat[19])
+            if str(row.iat[17]) != 'nan':
+                file_id = file_to_id.get(row.iat[17])
                 if file_id is None:
-                    error_message = error_message + "<br>The file display_name: " + str(row.iat[19]) + " is not in the database"
+                    error_message = error_message + "<br>The file display_name: " + str(row.iat[17]) + " is not in the database"
                     continue
 
-            description = str(row.iat[14])
+            description = str(row.iat[12])
             if description == 'nan':
                 description = ''
             elif len(description) > 4000:
                 error_message = error_message + "<br>The desc is too long. length=" + str(len(description)) + " for " + format_name  
                 continue
 
-            assay_id = obi_name_to_id.get(str(row.iat[8]).split('|')[0])
-            if assay_id is None:
-                error_message = error_message + "<br>The OBI format_name: " + str(row.iat[8]) + " is not in the database."
-                continue
-
             reference_ids = []
-            pmidStr = str(row.iat[18]).replace('|', '')
-            if pmidStr.isdigit():
-                pmids = str(row.iat[18]).replace(" ", "").split("|")
-                for pmid in pmids:
+            pmids = str(row.iat[16]).replace(' ', '').split('|')
+            for pmid in pmids:
+                if pmid == '':
+                    continue
+                pmid = pmid.split('.')[0]
+                if str(pmid).isdigit():
                     reference_id = pmid_to_reference_id.get(int(pmid))
                     if reference_id is None:
                         error_message = error_message + "<br>The PMID: " + str(pmid) + " is not in the database."
                         continue
-                    reference_ids.append(reference_id)
-
-            
-            keywords = str(row.iat[17]).replace('"', '').split('|')
+                    reference_ids.append(reference_id)            
+                    
+            keywords = str(row.iat[15]).replace('"', '').split('|')
             keyword_ids = []
             for keyword in keywords:
+                keyword = keyword.strip()
                 if str(keyword) == 'nan' or keyword == '':
                     continue
-                keyword = keyword.strip()
                 keyword_id = keyword_to_id.get(keyword)
                 if keyword_id is None:
                     error_message = error_message + "<br>The keyword: '" + keyword + "' is not in the database."
                     continue
                 keyword_ids.append(keyword_id)
             
-            coll_institution = str(row.iat[16]).replace('"', '')
+            coll_institution = str(row.iat[14]).replace('"', '')
             if coll_institution == 'nan':
                 coll_institution = ''
             if len(coll_institution) > 100:
@@ -410,7 +404,7 @@ def read_dataset_data_from_file(file):
                     items.pop(0)
                     coll_institution = ', '.join(items)
 
-            lab_name = str(row.iat[15]).replace('"', '')
+            lab_name = str(row.iat[13]).replace('"', '')
             if lab_name == 'nan':
                 lab_name = ''
             coll_display_name = lab_name
@@ -433,7 +427,6 @@ def read_dataset_data_from_file(file):
                       "display_name": str(display_name).replace('"', ''),
                       "obj_url": "/dataset/" + format_name,
                       "sample_count": sample_count,
-                      "assay_id": assay_id,
                       "is_in_spell": is_in_spell,
                       "is_in_browser": is_in_browser,
                       "dbxref_id": dbxref_id,
@@ -498,7 +491,11 @@ def insert_datasets(curator_session, CREATED_BY, data):
                 insert_dataset_url(curator_session, CREATED_BY, x['source_id'], dataset_id, type, url)
 
         # datasetlab
-        if x['lab_name'] and x['lab_location']:
+        if x['lab_name'] or x['lab_location']:
+            if x['lab_name'] == '' or  x['lab_name'] is None:
+                 x['lab_name'] = 'Unknown'
+            if x['lab_location'] == '' or x['lab_location'] is None:
+                x['lab_location'] = 'Unknown'
             insert_datasetlab(curator_session, CREATED_BY, x['source_id'], dataset_id,
                               x['lab_name'], x['lab_location'], x['colleague_id'])
 
@@ -528,7 +525,7 @@ def load_dataset(request):
             return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json') 
         
         # return HTTPBadRequest(body=json.dumps({'error': str(data)}), content_type='text/json')
-    
+
         dataset_added = insert_datasets(curator_session, CREATED_BY, data)
 
         success_message = ''
@@ -552,7 +549,8 @@ def read_dataset_sample_data_from_file(file):
         format_name_to_dataset_id_src = dict([(x.format_name, (x.dataset_id, x.source_id)) for x in DBSession.query(Dataset).all()])
         taxid_to_taxonomy_id = dict([(x.taxid, x.taxonomy_id) for x in DBSession.query(Taxonomy).all()])
         format_name_to_datasetsample_id = dict([(x.format_name, x.datasetsample_id) for x in DBSession.query(Datasetsample).all()])
-
+        obi_name_to_id = dict([(x.format_name, x.obi_id) for x in DBSession.query(Obi).all()])
+        
         format_name2display_name = {}
         dataset2index = {}
     
@@ -583,11 +581,17 @@ def read_dataset_sample_data_from_file(file):
 
             display_name = str(row.iat[1]).replace('"', '')
             
-            sample_order = row.iat[8]
+            sample_order = row.iat[10]
             if str(sample_order) == 'nan':
                 error_message = error_message + "<br>Missing sample order for one of the sample for dataset: " + dataset_format_name 
                 continue
             sample_order = int(sample_order)
+
+            assay_id = obi_name_to_id.get(str(row.iat[8]).split('|')[0])
+            if assay_id is None:
+                error_message = error_message + "<br>The OBI format_name: " + str(row.iat[8]) + " is not in the database."
+                continue
+            
             description = ""
             if str(row.iat[2]) != 'nan':
                 description = row.iat[2]
@@ -597,16 +601,17 @@ def read_dataset_sample_data_from_file(file):
                       "dataset_id": dataset_id,
                       "display_name": display_name,
                       "sample_order": sample_order,
-                      "description": description }        
+                      "description": description,
+                      "assay_id": assay_id }        
             
             if str(row.iat[5]) != 'nan':
                 entry['biosample'] = row.iat[5]
-            if str(row.iat[7]) != 'nan':
-                entry['strain_name'] = row.iat[7]
-            if len(df.columns) == 10 and str(row.iat[9]) != 'nan':
-                taxonomy_id = taxid_to_taxonomy_id.get("TAX:"+row.iat[9])
+            if str(row.iat[9]) != 'nan':
+                entry['strain_name'] = row.iat[9]
+            if len(df.columns) == 12 and str(row.iat[11]) != 'nan':
+                taxonomy_id = taxid_to_taxonomy_id.get("TAX:"+row.iat[11])
                 if taxonomy_id is None:
-                    error_message = error_message + "<br>The taxid = " + row.iat[9] + " for: " + dataset_format_name + " is not in TAXONOMY table."
+                    error_message = error_message + "<br>The taxid = " + row.iat[11] + " for: " + dataset_format_name + " is not in TAXONOMY table."
                 else:
                     entry['taxonomy_id'] = taxonomy_id
             GSM = str(row.iat[3])
@@ -649,6 +654,7 @@ def insert_dataset_samples(curator_session, CREATED_BY, data):
                           sample_order = x['sample_order'],
                           description = x.get('description'),
                           biosample = x.get('biosample'),
+                          assay_id = x['assay_id'],
                           strain_name = x.get('strain_name'),
                           taxonomy_id = x.get('taxonomy_id'),
                           dbxref_type = x.get('dbxref_type'),
@@ -757,16 +763,6 @@ def update_dataset(request):
             d.parent_dataset_id = None
             update = 1
 
-        ## required
-        assay_id = request.params.get('assay_id', None)
-        if assay_id is None:
-            return HTTPBadRequest(body=json.dumps({'error': "assay_id is required."}), content_type='text/json')
-        if str(assay_id).isdigit():
-            assay_id = int(assay_id)
-        if assay_id != d.assay_id:
-            d.assay_id = assay_id
-            update = 1
-
         channel_count = request.params.get('channel_count', None)
         if str(channel_count).isdigit():
             channel_count = int(channel_count)
@@ -849,6 +845,9 @@ def update_dataset(request):
         all_keyword_ids_NEW = {}
         keyword_to_id = {}
         for kw in kws:
+            kw = kw.strip()
+            if kw == '':
+                continue
             k = curator_session.query(Keyword).filter_by(display_name=kw).one_or_none()
             if k is None:
                 return HTTPBadRequest(body=json.dumps({'error': "The keyword: "+kw + " is not in the database."}), content_type='text/json')
@@ -907,22 +906,25 @@ def update_dataset(request):
 
         all_ref_ids_NEW = {}
         for pmid in pmid_list:
-            ref = curator_session.query(Referencedbentity).filter_by(pmid=int(pmid)).one_or_none()
-            if ref is None:
-                return HTTPBadRequest(body=json.dumps({'error': 'pmid = ' + pmid + ' is not in the database.'}), content_type='text/json')
-            reference_id = ref.dbentity_id
-            if reference_id not in all_ref_ids_DB:
-                insert_dataset_reference(curator_session, CREATED_BY, source_id, dataset_id, reference_id)
-                success_message = success_message + "<br>pmid '" + pmid + "' has been added for this dataset."
-            all_ref_ids_NEW[reference_id] = 1
+            if pmid == '':
+                continue
+            if str(pmid).isdigit():
+                ref = curator_session.query(Referencedbentity).filter_by(pmid=int(pmid)).one_or_none()
+                if ref is None:
+                    return HTTPBadRequest(body=json.dumps({'error': 'pmid = ' + pmid + ' is not in the database.'}), content_type='text/json')
+                reference_id = ref.dbentity_id
+                if reference_id not in all_ref_ids_DB:
+                    insert_dataset_reference(curator_session, CREATED_BY, source_id, dataset_id, reference_id)
+                    success_message = success_message + "<br>pmid '" + pmid + "' has been added for this dataset."
+                all_ref_ids_NEW[reference_id] = 1
+            else:
+                return HTTPBadRequest(body=json.dumps({'error': 'pmid = ' + pmid + ' is not valid.'}), content_type='text/json')
                 
         for reference_id in all_ref_ids_DB:
             if reference_id not in all_ref_ids_NEW:
                 x = all_ref_ids_DB[reference_id]
                 success_message = success_message + "<br>pmid '" + pmid + "' has been removed for this dataset."
                 curator_session.delete(x)
-
-        # return HTTPBadRequest(body=json.dumps({'error': "dataset_reference table"}), content_type='text/json')
     
         ## dataset_url
 
@@ -949,6 +951,7 @@ def update_dataset(request):
                 curator_session.delete(x)
 
         # return HTTPBadRequest(body=json.dumps({'error': "dataset_url table"}), content_type='text/json')
+
     
         ## datasetlab
         
@@ -968,8 +971,14 @@ def update_dataset(request):
             if labNew is None or labNew == '':
                 continue
             [lab_name, lab_location, colleague_format_name] = labNew.split('|')
-            lab_name = lab_name.replace('lab_name: ', '')
-            lab_location = lab_location.replace('lab_location: ', '')
+            lab_name = lab_name.replace('lab_name: ', '').replace('Unknown', '')
+            lab_location = lab_location.replace('lab_location: ', '').replace('Unknown', '')
+            if lab_name == '' and lab_location == '':
+                continue
+            if lab_name == '':
+                lab_name = 'Unknown'
+            if lab_location == '':
+                lab_location = 'Unknown'
             colleague_format_name = colleague_format_name.replace('colleague_format_name: ', '')
             coll = curator_session.query(Colleague).filter_by(format_name=colleague_format_name).one_or_none()
             colleague_id = None
@@ -1087,11 +1096,12 @@ def update_datasetsample(request):
         dbxref_url = request.params.get('dbxref_url', '')
         strain_name = request.params.get('strain_name', '')
         biosample = request.params.get('biosample', '')
+        assay_id = request.params.get('assay_id', '')
         sample_order = request.params.get('sample_order', '') 
         description = request.params.get('description', '')
-
-        if format_name == '' or display_name == '' or sample_order == '':
-            return HTTPBadRequest(body=json.dumps({'error': "format_name, display_name, and sample_order are required fields."}), content_type='text/json')
+        
+        if format_name == '' or display_name == '' or sample_order == '' or assay_id == '':
+            return HTTPBadRequest(body=json.dumps({'error': "format_name, display_name, sample_order, and assay_id are required fields."}), content_type='text/json')
         update = 0
         if format_name != d.format_name:
             d.format_name = format_name
@@ -1120,7 +1130,11 @@ def update_datasetsample(request):
         if description != d.description:
             d.description = description
             update = 1
-            
+
+        if int(assay_id) != d.assay_id:
+            d.assay_id = int(assay_id)
+            update = 1
+
         success_message = ''
         if update == 1:
             curator_session.add(d)
