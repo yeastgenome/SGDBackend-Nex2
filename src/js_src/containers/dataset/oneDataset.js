@@ -106,13 +106,9 @@ class OneDataset extends Component {
           </div>
         </div>
 	
-        {/* assay_id & parent_dataset_id */}
+        {/* parent_dataset_id */}
         <div className='row'>
-          <div className='columns medium-6 small-6'>
-            <div> <label> assay_id (OBI Term) </label> </div>
-            <AutocompleteSection sec_title='' id='assay_id' value1='display_name' value2='' selectedIdName='assay_id' placeholder='Enter OBI Term' onOptionChange={this.props.onOptionChange} selectedId={this.props.dataset.assay_id} setNewValue={false} />
-          </div>
-          <div className='columns medium-6 small-6'>
+          <div className='columns medium-12 small-12'>
             <div> <label> parent_dataset_id (parent dataset format name) </label> </div>
             <AutocompleteSection sec_title='' id='parent_dataset_id' value1='display_name' value2='' selectedIdName='parent_dataset_id' placeholder='Enter EDAM Term' onOptionChange={this.props.onOptionChange} selectedId={this.props.dataset.parent_dataset_id} setNewValue={false} />
           </div>

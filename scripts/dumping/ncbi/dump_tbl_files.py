@@ -3,8 +3,6 @@ import logging
 import tarfile
 import os
 import sys
-import importlib
-importlib.reload(sys)  
 from src.models import Taxonomy, Source, Contig, Edam, Path, Filedbentity, FilePath, So, \
                        Dnasequenceannotation, Dnasubsequence, Locusdbentity, \
                        Dbentity, Go, EcoAlias, Goannotation, Gosupportingevidence, \
@@ -142,7 +140,7 @@ def dump_data():
     type_mapping = type_to_show()
     ncRNA_class_mapping = ncRNA_class()
     
-    [annotation_id_to_cds_data, annotation_id_to_frameshift, annotation_id_to_cde_data] = get_cds_data(nex_session, annotation_id_to_strand, type_mapping)
+    [annotation_id_to_cds_data, annotation_id_to_frameshift, annotation_id_to_cde_data, annotation_id_to_uorf_data] = get_cds_data(nex_session, annotation_id_to_strand, type_mapping)
 
     log.info(str(datetime.now()))
     log.info("Creating tbl files...")
@@ -161,7 +159,7 @@ def dump_data():
         type = feature_type
         if type in type_mapping:
             type = type_mapping[type]
-        if "RDN37-" in systematic_name:
+        if gene_name and "RDN37-" in gene_name:
             type = "misc_RNA"
         
         go_section = locus_id_to_go_section.get(locus_id, [])
@@ -177,7 +175,7 @@ def dump_data():
                              annotation_id_to_frameshift, locus_id_to_uniform_names, 
                              locus_id_to_ncbi_protein_name, duplicate_gene_to_protein_id, 
                              locus_id_to_protein_id, go_section, go_to_pmid_list, 
-                             locus_id_to_ecnumbers, type)
+                             locus_id_to_ecnumbers, type, annotation_id_to_uorf_data)
             continue
 
         if feature_type in ['pseudogene', 'blocked reading frame']:
@@ -224,7 +222,7 @@ def dump_data():
             add_LTR(files, sgdid, chrnum, start, stop, desc, type)
             continue
 
-        if feature_type in ['ARS', 'origin of replication', 'silent mating type cassette array', 'mating type region', 'matrix attachment site']:
+        if feature_type in ['ARS', 'origin of replication', 'recombination enhancer', 'silent mating type cassette array', 'mating type region', 'matrix attachment site']:
             
             add_ARS_etc(files, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, type)
         
@@ -405,7 +403,7 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
     product = systematic_name
 
     if feature_type != 'tRNA gene':
-        if systematic_name.startswith('ETS') or systematic_name.startswith('ITS'):
+        if gene_name and (gene_name.startswith('ETS') or gene_name.startswith('ITS')):
             type = 'misc_RNA'
         files[chrnum].write(str(start)+"\t"+str(stop)+"\t" + type + "\n")
     else:
@@ -442,7 +440,7 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
     files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
 
-def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, annotation_id_to_cds_data, annotation_id_to_frameshift, locus_id_to_uniform_names, locus_id_to_ncbi_protein_name, duplicate_gene_to_protein_id, locus_id_to_protein_id, go_section, go_to_pmid_list, locus_id_to_ecnumbers, type):
+def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, annotation_id_to_cds_data, annotation_id_to_frameshift, locus_id_to_uniform_names, locus_id_to_ncbi_protein_name, duplicate_gene_to_protein_id, locus_id_to_protein_id, go_section, go_to_pmid_list, locus_id_to_ecnumbers, type, annotation_id_to_uorf_data):
 
     files[chrnum].write(str(start)+"\t"+str(stop)+"\t" + type + "\n")
 
@@ -508,6 +506,10 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
     if chrnum != 17:
         files[chrnum].write(mRNA_lines)
 
+    if annotation_id in annotation_id_to_uorf_data:
+        for uorf in annotation_id_to_uorf_data[annotation_id]:
+            files[chrnum].write(uorf + "\n")
+        files[chrnum].write(TABS + "locus_tag\t" + systematic_name + "\n")
 
 def format_pmid_list(pmids):
     if pmids == "" or pmids is None:
@@ -589,7 +591,7 @@ def get_cds_data(nex_session, annotation_id_to_strand, type_mapping):
     annotation_id_to_cds_data = {}
     annotation_id_to_frameshift = {}
     annotation_id_to_cde_data = {}
-
+    annotation_id_to_uorf_data = {}
     annotation_id_to_display_name = {}
 
     for x in nex_session.query(Dnasubsequence).all():
@@ -601,14 +603,24 @@ def get_cds_data(nex_session, annotation_id_to_strand, type_mapping):
             annotation_id_to_frameshift[x.annotation_id] = 1
             continue
 
-        if x.display_name in ['intron', 'intein_encoding_region', 'uORF', 'five_prime_UTR_intron', 'telomeric_repeat']:
-            continue
-
-        annotation_id_to_display_name[x.annotation_id] = x.display_name
-
         (start, end) = (x.contig_start_index, x.contig_end_index)
         if annotation_id_to_strand[x.annotation_id] == '-':
             (start, end) = (end, start)
+            
+        if x.display_name == 'uORF':
+            uorfs = []
+            if x.annotation_id in annotation_id_to_uorf_data:
+                uorfs = annotation_id_to_uorf_data[x.annotation_id]
+                uorfs.append(str(start)+"\t"+str(end))
+            else:
+                uorfs.append(str(start)+"\t"+str(end) + "\tuORF")
+            annotation_id_to_uorf_data[x.annotation_id] = uorfs
+            continue
+        
+        if x.display_name in ['intron', 'intein_encoding_region', 'five_prime_UTR_intron', 'telomeric_repeat', 'uORF']:
+            continue
+
+        annotation_id_to_display_name[x.annotation_id] = x.display_name
 
         if x.display_name.startswith('centromere'):
             cde_data = []
@@ -650,7 +662,7 @@ def get_cds_data(nex_session, annotation_id_to_strand, type_mapping):
 
         annotation_id_to_cds_data_sorted[annotation_id] = new_cds_data
 
-    return [annotation_id_to_cds_data_sorted, annotation_id_to_frameshift, annotation_id_to_cde_data]
+    return [annotation_id_to_cds_data_sorted, annotation_id_to_frameshift, annotation_id_to_cde_data, annotation_id_to_uorf_data]
 
 
 def get_go_data(nex_session):
