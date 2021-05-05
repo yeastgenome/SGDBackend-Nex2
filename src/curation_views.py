@@ -3230,9 +3230,6 @@ def regulation_file(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({"error":str(e)}),content_type='text/json')
-    finally:
-        if curator_session:
-            curator_session.remove()
 
 @view_config(route_name='upload_file_curate', renderer='json', request_method='POST')
 def upload_file_curate(request):
