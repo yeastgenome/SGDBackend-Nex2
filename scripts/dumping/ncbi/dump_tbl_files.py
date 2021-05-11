@@ -222,10 +222,16 @@ def dump_data():
             add_LTR(files, sgdid, chrnum, start, stop, desc, type)
             continue
 
-        if feature_type in ['ARS', 'origin of replication', 'recombination enhancer', 'silent mating type cassette array', 'mating type region', 'matrix attachment site']:
+        if feature_type in ['ARS', 'origin of replication', 'silent mating type cassette array', 'mating type region', 'matrix attachment site']:
             
             add_ARS_etc(files, sgdid, chrnum, systematic_name, gene_name, start, stop, desc, type)
+            continue
         
+        if feature_type == 'recombination enhancer':
+
+            desc = "RE (recombination enhancer); " + desc
+            
+            add_regulatory_features(files, sgdid, chrnum, start, stop, desc)
 
     for i in range(18):
         files[i].close()
@@ -233,8 +239,8 @@ def dump_data():
     log.info(str(datetime.now()))
     log.info("Creating asn1 & gbf files...")
     
-    cmd = tbl2asn_script + " -V v -V b -j '[organism=Saccharomyces cerevisiae S288c][strain=S288c][db_xref=taxon:559292][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p " + data_dir + " > " + log_file +  " 2>& 1"
-
+    cmd = tbl2asn_script + " -M n -V v -V b -j '[organism=Saccharomyces cerevisiae S288c][strain=S288c][db_xref=taxon:559292][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p " + data_dir + " > " + log_file +  " 2>& 1"
+    
     os.system(cmd)
 
     os.chdir(data_dir)
@@ -298,6 +304,14 @@ def tar_files(datestamp, format):
 
     return this_tar_file
 
+
+def add_regulatory_features(files, sgdid, chrnum, start, stop, desc):
+
+    desc = desc.replace("RE;", "RE (recombination enhancer);")
+    files[chrnum].write(str(start)+"\t"+str(stop)+"\tregulatory\n") 
+    files[chrnum].write(TABS + "regulatory_class\tother\n")
+    files[chrnum].write(TABS + "note\t" + desc + "\n")
+    files[chrnum].write(TABS + "db_xref\tSGD:" + sgdid + "\n")
 
 def add_LTR(files, sgdid, chrnum, start, stop, desc, type):
 
@@ -507,10 +521,20 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
         files[chrnum].write(mRNA_lines)
 
     if annotation_id in annotation_id_to_uorf_data:
-        for uorf in annotation_id_to_uorf_data[annotation_id]:
-            files[chrnum].write(uorf + "\n")
-        files[chrnum].write(TABS + "locus_tag\t" + systematic_name + "\n")
-
+        uorfs = annotation_id_to_uorf_data[annotation_id]
+        uorf_count = len(uorfs)
+        if gene_name is None or gene_name == '':
+            gene_name = systematic_name
+        num2word = { 2 : 'two', 3 : 'three', 4 : 'four', 5 : 'five', 6: 'six', 7: 'seven' }
+        for uorf in uorfs:
+            files[chrnum].write(uorf + "\tregulatory\n")
+            files[chrnum].write(TABS + "regulatory_class\tother\n")
+            if uorf_count > 1:
+                files[chrnum].write(TABS + "note\tOne of " + num2word[uorf_count] + " upstream open reading frames (uORFs) in 5' untranslated region of " + gene_name + " gene, regulate translation\n")
+            else:
+                files[chrnum].write(TABS + "note\tUpstream open reading frame (uORF) in 5' untranslated region of " + gene_name + " gene, regulate translation\n")
+            
+                    
 def format_pmid_list(pmids):
     if pmids == "" or pmids is None:
         return ""
@@ -611,9 +635,7 @@ def get_cds_data(nex_session, annotation_id_to_strand, type_mapping):
             uorfs = []
             if x.annotation_id in annotation_id_to_uorf_data:
                 uorfs = annotation_id_to_uorf_data[x.annotation_id]
-                uorfs.append(str(start)+"\t"+str(end))
-            else:
-                uorfs.append(str(start)+"\t"+str(end) + "\tuORF")
+            uorfs.append(str(start)+"\t"+str(end))
             annotation_id_to_uorf_data[x.annotation_id] = uorfs
             continue
         
