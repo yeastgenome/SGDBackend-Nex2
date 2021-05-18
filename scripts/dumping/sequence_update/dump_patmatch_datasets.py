@@ -31,7 +31,7 @@ def dump_data():
     
     contig_id_to_chr = dict([(x.contig_id, x.display_name) for x in nex_session.query(Contig).filter(Contig.display_name.like('Chromosome %')).all()])
     
-    generate_locus_file(nex_session)
+    generate_locus_file(nex_session, taxonomy_id, dbentity_id_to_data)
 
     generate_not_feature_seq_file(nex_session, taxonomy_id, dbentity_id_to_data,
                                   so_id_to_display_name, notFeatFile, SEQ_FORMAT)
@@ -55,18 +55,20 @@ def dump_data():
     nex_session.close()
 
     
-def generate_locus_file(nex_session):
+def generate_locus_file(nex_session, taxonomy_id, dbentity_id_to_data):
 
     fw = open(locusFile, "w")
 
-    for x in nex_session.query(Locusdbentity).all():
-        gene_name = x.gene_name
+    for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').all():
+        if x.dbentity_id not in dbentity_id_to_data:
+            continue
+        (systematic_name, gene_name, sgdid, qualifier, desc) = dbentity_id_to_data[x.dbentity_id]
         if gene_name is None:
             gene_name = ''
         headline = ''
-        if x.description is not None:
-            headline = x.description.split(";")[0]
-        fw.write(x.systematic_name + "\t" + gene_name + "\t" + x.sgdid + "\t" + headline + "\n")
+        if desc is not None:
+            headline = desc.split(";")[0]
+        fw.write(systematic_name + "\t" + gene_name + "\t" + sgdid + "\t" + headline + "\n")
 
     fw.close()
 
