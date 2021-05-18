@@ -384,6 +384,8 @@ def add_pseudogenes(files, annotation_id, locus_id, sgdid, chrnum, systematic_na
     if feature_type != 'pseudogene':
         for cds in  annotation_id_to_cds_data[annotation_id]:
             files[chrnum].write(cds + "\n")
+        files[chrnum].write(TABS + "pseudo\n")
+        
     if desc:
         files[chrnum].write(TABS + "note\t" + desc + "\n")
 
@@ -441,7 +443,7 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
 
     if locus_id in locus_id_to_ncbi_protein_name:
         files[chrnum].write(locus_id_to_ncbi_protein_name[locus_id]+"\n")
-    else:
+    elif not product.startswith('YNC'):
         files[chrnum].write(TABS + "product\t" + product + "\n")
 
     if desc:
