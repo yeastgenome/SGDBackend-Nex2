@@ -138,8 +138,6 @@ class LoadDataset extends Component {
         <div>dataset.dbxref_type</div>
         <div>dataset.date_public</div>
         <div>dataset.parent_dataset_id</div>
-        <div>assay_name</div>
-        <div>dataset.assay_id(obi_id)</div>
         <div>taxon_id</div>
         <div>dataset.channel_count</div>
         <div>dataset.sample_count</div>
@@ -165,7 +163,9 @@ class LoadDataset extends Component {
         <div>dbxref_id</div>	
         <div>dbxref_type</div>	
         <div>biosample_name</div>	
-        <div>biosample_id</div>	
+        <div>biosample_id</div>
+        <div>assay_name</div>
+        <div>assay_id</div>
         <div>strain_name</div>	
         <div>sample_order</div>
         <div>taxon_id(optional)</div>

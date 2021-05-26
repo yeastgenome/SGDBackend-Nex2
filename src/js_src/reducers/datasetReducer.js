@@ -8,7 +8,6 @@ const DEFAULT_STATE = {
     dbxref_type: '',
     date_public: '',
     parent_dataset_id: '',
-    assay_id: '',
     channel_count: '',
     sample_count: '',
     is_in_spell: '',
