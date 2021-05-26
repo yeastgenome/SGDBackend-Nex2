@@ -15,7 +15,7 @@ const GET_REGULATIONS = 'get_regulations';
 
 const REGULATION_TYPE =  ['','transcription','protein activity','protein stability','RNA activity','RNA stability'];
 const DIRECTION = [null,'positive','negative'];
-const REGULATOR_TYPE =['','chromatin modifier','transcription factor','protein modifier','RNA binder','RNA modifier'];
+const REGULATOR_TYPE =['','chromatin modifier','transcription factor','protein modifier','RNA-binding protein','RNA modifier'];
 const SKIP = 5;
 const TIMEOUT = 120000;
 

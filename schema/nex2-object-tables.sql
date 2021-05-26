@@ -352,7 +352,6 @@ CREATE TABLE nex.dataset (
 	dbxref_type varchar(40),
     date_public timestamp,
     parent_dataset_id bigint,
-    assay_id bigint NOT NULL,
 	channel_count smallint,
 	sample_count integer NOT NULL,
 	is_in_spell boolean NOT NULL,
@@ -373,7 +372,6 @@ COMMENT ON COLUMN nex.dataset.sample_count IS 'Number of samples in the experime
 COMMENT ON COLUMN nex.dataset.dbxref_type IS 'Type of database cross reference (GEO, ArrayExpress, SRA, Publication).';
 COMMENT ON COLUMN nex.dataset.dbxref_id IS 'GEO Series ID (GSE), ArrayExpress ID, or Sequence Read Archive ID.';
 COMMENT ON COLUMN nex.dataset.display_name IS 'Public display name.';
-COMMENT ON COLUMN nex.dataset.assay_id IS 'FK to OBI.OBI_ID.';
 COMMENT ON COLUMN nex.dataset.format_name IS 'Unique name to create download files.';
 COMMENT ON COLUMN nex.dataset.channel_count IS 'Number of channels (1 or 2) in the experiment.';
 COMMENT ON COLUMN nex.dataset.created_by IS 'Username of the person who entered the record into the database.';
@@ -382,7 +380,6 @@ COMMENT ON COLUMN nex.dataset.dataset_id IS 'Unique identifier (serial number).'
 ALTER TABLE nex.dataset ADD CONSTRAINT dataset_uk UNIQUE (format_name);
 ALTER TABLE nex.dataset ADD CONSTRAINT dataset_dbxref_type_ck CHECK (dbxref_type IN ('GEO','ArrayExpress','SRA', 'Publication'));
 CREATE INDEX dataset_source_fk_index ON nex.dataset (source_id);
-CREATE INDEX dataset_assay_fk_index ON nex.dataset (assay_id);
 CREATE INDEX dataset_parent_fk_index ON nex.dataset (parent_dataset_id);
 
 DROP TABLE IF EXISTS nex.datasetlab CASCADE;
@@ -507,6 +504,7 @@ CREATE TABLE nex.datasetsample (
 	source_id bigint NOT NULL,
 	taxonomy_id bigint,
 	dataset_id bigint NOT NULL,
+	assay_id bigint NOT NULL,
 	sample_order integer NOT NULL,
 	dbxref_id varchar(40),
 	dbxref_type varchar(40),
@@ -520,6 +518,7 @@ CREATE TABLE nex.datasetsample (
 ) ;
 COMMENT ON TABLE nex.datasetsample IS 'Samples or experiments in a dataset.';
 COMMENT ON COLUMN nex.datasetsample.dataset_id IS 'FK to DATASET.DATASET_ID.';
+COMMENT ON COLUMN nex.datasetsample.assay_id IS 'FK to OBI.OBI_ID.';
 COMMENT ON COLUMN nex.datasetsample.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.datasetsample.created_by IS 'Username of the person who entered the record into the database.';
 COMMENT ON COLUMN nex.datasetsample.format_name IS 'Unique name to create download files.';
@@ -538,6 +537,7 @@ ALTER TABLE nex.datasetsample ADD CONSTRAINT datasetsample_dbxref_type_ck CHECK 
 CREATE INDEX datasetsample_dataset_fk_index ON nex.datasetsample (dataset_id);
 CREATE INDEX datasetsample_tax_fk_index ON nex.datasetsample (taxonomy_id);
 CREATE INDEX datasetsample_source_fk_index ON nex.datasetsample (source_id);
+CREATE INDEX datasetsample_assay_fk_index ON nex.dataset (assay_id);
 
 DROP TABLE IF EXISTS nex.datasettrack CASCADE;
 CREATE TABLE nex.datasettrack (

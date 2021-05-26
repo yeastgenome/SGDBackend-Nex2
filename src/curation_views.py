@@ -3073,7 +3073,10 @@ def regulation_file(request):
                 if regulator_type_current in list_of_regulator_types:
                     regulation_existing['regulator_type'] = regulator_type_current
                 else:
-                    list_of_regulations_errors.append('Error in regulator type on row ' + str(index) + ', column ' + column)
+                    # list_of_regulations_errors.append('Error in regulator type on row ' + str(index) + ', column ' + column)
+                    error = "The regulator type " + "'" + regulator_type_current + "' is not in the allowed list. Check 'regulator type' pulldown to see the allowed list."
+                    if error not in list_of_regulations_errors:
+                        list_of_regulations_errors.append(error)
                     continue
                 
                 if SEPARATOR in regulator_type:
@@ -3090,7 +3093,9 @@ def regulation_file(request):
                 if regulation_type_current in list_of_regulation_types:
                     regulation_existing['regulation_type'] = regulation_type_current
                 else:
-                    list_of_regulations_errors.append('Error in regulation type on row ' + str(index) + ', column ' + column)
+                    error = "The regulation type " + "'" + regulation_type_current + "' is not in the allowed list. Check 'regulation type' pulldown to see the allowed list."
+                    if error not in list_of_regulations_errors:
+                        list_of_regulations_errors.append(error)
                     continue
                 
                 if SEPARATOR in regulation_type:
@@ -3230,9 +3235,6 @@ def regulation_file(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({"error":str(e)}),content_type='text/json')
-    finally:
-        if curator_session:
-            curator_session.remove()
 
 @view_config(route_name='upload_file_curate', renderer='json', request_method='POST')
 def upload_file_curate(request):

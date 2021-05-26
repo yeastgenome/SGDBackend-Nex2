@@ -1069,10 +1069,6 @@ BEGIN
        PERFORM nex.insertupdatelog('DATASET'::text, 'PARENT_DATASET_ID'::text, OLD.dataset_id, OLD.parent_dataset_id::text, NEW.parent_dataset_id::text, USER);
     END IF;
 
-    IF (OLD.assay_id != NEW.assay_id) THEN
-       PERFORM nex.insertupdatelog('DATASET'::text, 'ASSAY_ID'::text, OLD.dataset_id, OLD.assay_id::text, NEW.assay_id::text, USER);
-    END IF;
-
     IF (((OLD.channel_count IS NULL) AND (NEW.channel_count IS NOT NULL)) OR ((OLD.channel_count IS NOT NULL) AND (NEW.channel_count IS NULL)) OR (OLD.channel_count != NEW.channel_count)) THEN
        PERFORM nex.insertupdatelog('DATASET'::text, 'CHANNEL_COUNT'::text, OLD.dataset_id, OLD.channel_count::text, NEW.channel_count::text, USER);
     END IF;
@@ -1101,7 +1097,7 @@ BEGIN
 	     OLD.display_name || '[:]' || OLD.obj_url || '[:]' ||
          OLD.source_id || '[:]' || coalesce(OLD.dbxref_id,'') || '[:]' ||
 	     coalesce(OLD.dbxref_type,'') || '[:]' || coalesce(OLD.date_public,'1000-01-01') || '[:]' ||
-	     coalesce(OLD.parent_dataset_id,0) || '[:]' || OLD.assay_id || '[:]' ||
+	     coalesce(OLD.parent_dataset_id,0) || '[:]' || 
          coalesce(OLD.channel_count,0) || '[:]' || OLD.sample_count || '[:]' ||
          OLD.is_in_spell || '[:]' || OLD.is_in_browser || '[:]' ||
          coalesce(OLD.description,'') || '[:]' ||
@@ -1567,6 +1563,10 @@ BEGIN
        PERFORM nex.insertupdatelog('DATASETSAMPLE'::text, 'DATASET_ID'::text, OLD.datasetsample_id, OLD.dataset_id::text, NEW.dataset_id::text, USER);
     END IF;
 
+    IF (OLD.assay_id != NEW.assay_id) THEN
+       PERFORM nex.insertupdatelog('DATASETSAMPLE'::text, 'ASSAY_ID'::text, OLD.datasetsample_id, OLD.assay_id::text, NEW.assay_id::text, USER);
+    END IF;
+
     IF (OLD.sample_order != NEW.sample_order) THEN
        PERFORM nex.insertupdatelog('DATASETSAMPLE'::text, 'SAMPLE_ORDER'::text, OLD.datasetsample_id, OLD.sample_order::text, NEW.sample_order::text, USER);
     END IF;
@@ -1602,7 +1602,7 @@ BEGIN
     v_row := OLD.datasetsample_id || '[:]' || OLD.format_name || '[:]' ||
 	     OLD.display_name || '[:]' || OLD.obj_url || '[:]' ||
              OLD.source_id || '[:]' || coalesce(OLD.taxonomy_id,0) || '[:]' ||
-             OLD.dataset_id || '[:]' || OLD.sample_order || '[:]' ||
+             OLD.dataset_id || '[:]' || OLD.assay_id || '[:]' || OLD.sample_order || '[:]' ||
              coalesce(OLD.dbxref_id,'') || '[:]' || coalesce(OLD.dbxref_type,'') || '[:]' ||
              coalesce(OLD.dbxref_url,'') || '[:]' || coalesce(OLD.biosample,'') || '[:]' || 
              coalesce(OLD.strain_name,'') || '[:]' || coalesce(OLD.description,'') || '[:]' ||
