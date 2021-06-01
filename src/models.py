@@ -1846,7 +1846,7 @@ class Dataset(Base):
 
                 if url.url_type == "GEO":
                     url_obj["category"] = "External"
-
+                    obj['geo_url'] = url.obj_url
                 obj["urls"].append(url_obj)
 
         return obj
