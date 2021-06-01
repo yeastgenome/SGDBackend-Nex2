@@ -434,6 +434,8 @@ def add_RNA_genes(files, annotation_id, locus_id, sgdid, chrnum, systematic_name
         type = feature_type.replace("_gene", "").replace(" gene", "")
         rna_class = ncRNA_class_mapping.get(gene_name)
         if rna_class is None:
+            rna_class = ncRNA_class_mapping.get(systematic_name)
+        if rna_class is None:
             if type == 'ncRNA':
                 rna_class = 'other'
             else:
@@ -588,12 +590,17 @@ def rpt_to_show():
 
 def ncRNA_class():
 
-    return { 'TLC1' : 'telomerase_RNA',
-             'RPR1' : 'RNase_P_RNA',
-             'SCR1' : 'SRP_RNA',
-             'RME2' : 'antisense_RNA',
-             'RME3' : 'antisense_RNA',
-             'NME1' : 'RNase_MRP_RNA' }
+    return { 'TLC1' :     'telomerase_RNA',
+             'RPR1' :     'RNase_P_RNA',
+             'SCR1' :     'SRP_RNA',
+             'RME2' :     'antisense_RNA',
+             'RME3' :     'antisense_RNA',
+             'YNCH0011W': 'antisense_RNA',
+             'YNCM0001W': 'antisense_RNA',
+             'YNCP0002W': 'antisense_RNA',
+             'YNCB0008W': 'antisense_RNA',
+             'YNCB0014W': 'antisense_RNA',
+             'NME1' :     'RNase_MRP_RNA' }
 
 
 def open_file_handles():
