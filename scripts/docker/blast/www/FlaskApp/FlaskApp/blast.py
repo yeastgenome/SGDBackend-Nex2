@@ -433,8 +433,7 @@ def run_blast(request):
 
     (totalHits, showHits, records) = parse_hits(blastoutfile)
 
-    return { "cmd": cmd,
-             "result": "<font size=+1><pre>" + output + "</pre></font>",
+    return { "result": "<font size=+1><pre>" + output + "</pre></font>",
              "hits":   records,
              "totalHits": totalHits,
              "showHits": showHits }
