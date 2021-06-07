@@ -16,14 +16,14 @@ pvalue_cutoff = 0.05
 
 def set_dataset_mapping(conf_file):
 
-    conf_data = get_config(conf)
     dataset_mapping = {}
-    dataset_mapping['databasedef'] = conf_data['databasedef']
+    datasetList4labelNm = {}
     groupLabel2groupNm = {}
-    datagroup = conf_data['datagroup']
+    conf_data = get_config(conf_file)
+    dataset_mapping['databasedef'] = conf_data['databasedef']
+    datagroup = conf_data['datagroup']    
     for label in datagroup:
         dataset_list = datagroup[label].split(',')
-        dataset_mapping['dglist']['label'] = dataset_list
         datasetList4labelNm[label] = dataset_list
     database = conf_data['database']
     for d in database:
@@ -35,9 +35,13 @@ def set_dataset_mapping(conf_file):
             mapping = dataset_mapping['dbList']
             mapping.append(db)
             dataset_mapping['dbList'] = mapping
+        if 'dbType' not in  dataset_mapping:
+             dataset_mapping['dbType'] = {}
         dataset_mapping['dbType'][db] = type
         if db.startswith('label'):
             desc = '...' + desc
+        if 'dbLabel' not in dataset_mapping:
+            dataset_mapping['dbLabel'] = {}
         dataset_mapping['dbLabel'][db] = desc
         if db.startswith('label'):
             label = db.strip()
@@ -83,7 +87,7 @@ def combine_datasets(dataset_list, program, conf_file):
     processed_datasets = ''
     processed_dataset_list = []
     
-    for dataset in sorted (datasetPassedIn.keys()):
+    for dataset in sorted (dataset_passed_in.keys()):
         if program in ['blastp', 'blastx']:
             dataset = dataset + ".pep";
         else:
