@@ -611,7 +611,7 @@ def read_dataset_sample_data_from_file(file):
             if len(df.columns) == 12 and str(row.iat[11]) != 'nan':
                 taxonomy_id = taxid_to_taxonomy_id.get("TAX:"+row.iat[11])
                 if taxonomy_id is None:
-                    error_message = error_message + "<br>The taxid = " + row.iat[11] + " for: " + dataset_format_name + " is not in TAXONOMY table."
+                    error_message = error_message + "<br>The taxid = " + str(row.iat[11]) + " for: " + dataset_format_name + " is not in TAXONOMY table."
                 else:
                     entry['taxonomy_id'] = taxonomy_id
             GSM = str(row.iat[3])
