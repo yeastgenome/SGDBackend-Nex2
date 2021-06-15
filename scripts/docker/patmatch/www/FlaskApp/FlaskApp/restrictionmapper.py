@@ -28,7 +28,7 @@ def get_sequence(name):
 
     name = name.replace('SGD:', '')
 
-    f = open(fastafile)
+    f = open(fastafile, encoding="utf-8")
     
     seq = ""
     defline = ""
@@ -94,7 +94,7 @@ def set_enzyme_file(type):
 
 def do_search(enzymefile):
 
-    f = open(enzymefile)
+    f = open(enzymefile, encoding="utf-8")
 
     error_msg = ""
     for line in f:
@@ -136,7 +136,7 @@ def set_enzyme_types(enzymeHash, enzymeType):
     elif '5' in enzymeType:
         enzymeFile = "rest_enzymes.5"
 
-    f = open(dataDir + enzymeFile)
+    f = open(dataDir + enzymeFile, encoding="utf-8")
     for line in f:
         pieces = line.strip().split(' ')
         enzymeHash[pieces[0]] = enzymeType
@@ -150,7 +150,7 @@ def process_data(seqLen, type):
     recognition_seq = {}
     notCutEnzyme = []
     
-    f = open(outfile) 
+    f = open(outfile, encoding="utf-8") 
     preLine = ''
     enzyme = ''
     

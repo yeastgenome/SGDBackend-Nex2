@@ -33,7 +33,9 @@ def get_config(conf):
 
     if conf is None:
         conf = 'patmatch'
-    f = open(config_dir + conf + '.json')
+    if not conf.endswith('.json'):
+        conf = conf + '.json'
+    f = open(config_dir + conf, encoding="utf-8")
     data = ''
     for line in f:
         data = data + line.strip()
@@ -163,8 +165,8 @@ def process_pattern(pattern, seqtype, strand, insertion, deletion, substitution,
 
 
 def get_sequence(dataset, seqname):
-    
-    f = open(dataDir + dataset + ".seq")
+        
+    f = open(dataset, encoding="utf-8")
     
     found = 0
     seq = ""
@@ -208,7 +210,7 @@ def cleanup_pattern(pattern):
 
 def set_seq_length(seqNm2length, datafile):
 
-    f = open(datafile)
+    f = open(datafile, encoding="utf-8")
     seq = ''
     preSeqNm = ''
     for line in f:
@@ -237,7 +239,7 @@ def process_output(recordOffSetList, seqNm4offSet, output, datafile, maxhits, be
     
     name2data = {}
     if 'orf_' in datafile:
-        f = open(dataDir + "locus.txt")
+        f = open(dataDir + "locus.txt", encoding="utf-8")
         for line in f:
             pieces = line.strip().split('\t')
             seqName = pieces[0]
@@ -252,7 +254,7 @@ def process_output(recordOffSetList, seqNm4offSet, output, datafile, maxhits, be
     seqNm2chr = {}
     seqNm2orfs = {}
     if 'Not' in datafile:
-        f = open(datafile)
+        f = open(datafile, encoding="utf-8")
         for line in f:
             if line.startswith('>'):
                 # >A:2170-2479, Chr I from 2170-2479, Genome Release 64-3-1, between YAL068C and YAL067W-A
