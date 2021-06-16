@@ -76,21 +76,24 @@ def write_seqfile(defline, seq):
 
     return (seqNm, chrCoords, len(seq))
 
-def set_enzyme_file(type):
+def set_enzyme_file(enzymetype):
 
-    if type is None:
+    if enzymetype is None:
         return dataDir + 'rest_enzymes'
-    
-    if type.startswith('3'):
-        return dataDir + 'rest_enzymes.3'
-    elif type.startswith('5'):
-        return dataDir + 'rest_enzymes.5'
-    elif type.startswith('blunt'):
-        return dataDir + 'rest_enzymes.blunt'
-    elif type.startswith('six-base'):
+
+    if "Six-base" in enzymetype:
         return dataDir + 'rest_enzymes.6base'
-    else:
-        return dataDir + 'rest_enzymes'
+
+    if "blunt" in enzymetype:
+        return dataDir + 'rest_enzymes.blunt'
+    
+    if "3" in enzymetype:
+        return dataDir + 'rest_enzymes.3'
+
+    if "5" in enzymetype:
+        return dataDir + 'rest_enzymes.5'
+    
+    return dataDir + 'rest_enzymes'
 
 def do_search(enzymefile):
 
@@ -142,7 +145,7 @@ def set_enzyme_types(enzymeHash, enzymeType):
         enzymeHash[pieces[0]] = enzymeType
     f.close()
     
-def process_data(seqLen, type):
+def process_data(seqLen, enzymetype):
 
     dataHash = {}
     offset = {}
@@ -161,7 +164,7 @@ def process_data(seqLen, type):
             offset[enzyme] = pieces[1]
             overhang[enzyme] = pieces[2]
             recognition_seq[enzyme] = pieces[3]
-            if type.lower() == 'all' or type == '' or type.lower().startswith('enzymes that do not'):
+            if enzymetype.lower() == 'all' or enzymetype == '' or enzymetype.lower().startswith('enzymes that do not'):
                 if preLine.startswith('>>'):
                     pieces = preLine.replace('>>', '').replace(':', '').split(' ')
                     if pieces[0] not in notCutEnzyme:
@@ -177,7 +180,7 @@ def process_data(seqLen, type):
     
     f.close()
 
-    if type.lower() == 'all' or type == '' or type.lower().startswith('enzymes that do not'):
+    if enzymetype.lower() == 'all' or enzymetype == '' or enzymetype.lower().startswith('enzymes that do not'):
         if preLine.startswith('>>'):
             pieces = preLine.replace('>>', '').replace(':', '').split(' ')
             if pieces[0] not in	notCutEnzyme:
@@ -189,13 +192,13 @@ def process_data(seqLen, type):
         fw.write(enzyme + "\n")
     fw.close()
 
-    if type.startswith('enzymes that do not'):
+    if enzymetype.startswith('enzymes that do not'):
          return ({}, notCutEnzyme)
 
-    if type.startswith('cut once') or type.startswith('cut twice'):
+    if "cut" in enzymetype:
          
         cutLimit = 1
-        if type.startswith('cut twice'):
+        if 'twice' in enzymetype:
             cutLimit = 2
         
         newDataHash = {}
@@ -205,12 +208,14 @@ def process_data(seqLen, type):
             cCut = 0
             for coordPair in coords:
                 [beg, end] = coordPair.split(',')
+                beg = int(beg)
+                end = int(end)
                 if beg < end: 
                     wCut = wCut + 1
                 else:
                     cCut = cCut + 1
             if (cCut == cutLimit and wCut <= cutLimit) or (wCut == cutLimit and cCut <= cutLimit):
-                newDataHash[key] = coords
+                newDataHash[key] = dataHash[key]
         dataHash = newDataHash
     
     enzyme_type = {}
@@ -224,7 +229,9 @@ def process_data(seqLen, type):
     fw = open(downloadfile4cutSite, 'w')
     fw.write("Enzyme\toffset (bp)\toverhang (bp)\trecognition sequence\tenzyme type\tnumber of cuts\tordered fragment size\tsorted fragment size\tcut site on watson strand\tcut site on crick strand\n")
 
-    for enzyme in sorted (dataHash):       
+    for enzyme in sorted (dataHash):
+        if ("overhang" in enzymetype or "blunt" in enzymetype) and enzyme_type[enzyme] != enzymetype:
+            continue
         cutW = []
         cutC = []
         cutPositions = dataHash[enzyme].split(':')
@@ -236,13 +243,16 @@ def process_data(seqLen, type):
             end = int(end)
             if beg < end: # watson strand
                 cutSite = beg + int(offset[enzyme]) - 1
-                cutW.append(cutSite)
+                if cutSite not in cutW:
+                    cutW.append(cutSite)
             else:  # crick strand
                 [beg, end] = [end, beg]            
-                enzymeType = enzyme_type[enzyme]
+                # enzymeType = enzyme_type[enzyme]
                 cutSite = beg + int(offset[enzyme]) + int(overhang[enzyme]) - 1
-                cutC.append(cutSite)
-            cutAll.append(cutSite)
+                if cutSite not in cutC:
+                    cutC.append(cutSite)
+            if cutSite not in cutAll:
+                cutAll.append(cutSite)
         cutAll.append(seqLen)
         
         preCutSite = 0
@@ -263,7 +273,7 @@ def process_data(seqLen, type):
         cutNum = len(cutFragments) - 1
 
         fw.write(enzyme + "\t" + str(offset[enzyme]) + "\t" + str(overhang[enzyme]) + "\t" + recognition_seq[enzyme] + "\t" + enzyme_type[enzyme] + "\t" + str(cutNum) + "\t" + fragmentsReal + "\t" + fragments + "\t" + cutSiteW + "\t" + cutSiteC + "\n")
-        
+
         data[enzyme] =  {  "cut_site_on_watson_strand": cutSiteW,
                            "cut_site_on_crick_strand": cutSiteC,
                            "fragment_size": fragments,
@@ -285,7 +295,8 @@ def run_restriction_site_search(request):
 
     seq = f.get('seq') if f.get('seq') else p.get('seq')
     name = f.get('name') if f.get('name') else p.get('name')
-    type = f.get('type') if f.get('type') else p.get('type', 'ALL')
+    enzymetype = f.get('type') if f.get('type') else p.get('type', 'ALL')
+    enzymetype = enzymetype.replace('+', ' ').replace("%27", "'")
 
     defline = None
     if seq:
@@ -295,13 +306,13 @@ def run_restriction_site_search(request):
 
     (seqNm, chrCoords, seqLen) = write_seqfile(defline, seq)
     
-    enzymefile = set_enzyme_file(type)
+    enzymefile = set_enzyme_file(enzymetype)
     
     err = do_search(enzymefile)
 
     if err == '':
         ## key is the enzyme
-        (data, notCutEnzymeList) = process_data(seqLen, type)
+        (data, notCutEnzymeList) = process_data(seqLen, enzymetype)
         (downloadUrl4cutSite, downloadUrl4notCut) = get_downloadURLs()
         
         return { "data": data,
