@@ -1,0 +1,48 @@
+acting on carbon-nitrogen (but not peptide) bonds ; GO:0016810
+acting on glycosyl bonds ; GO:0016798
+ATPase activity ; GO:0016887
+bridging ; GO:0030674
+chromatin binding ; GO:0003682
+cytoskeletal protein binding ; GO:0008092
+DNA binding ; GO:0003677
+DNA-binding transcription factor activity ; GO:0003700
+enzyme binding ; GO:0019899
+enzyme regulator activity ; GO:0030234
+GTPase activity ; GO:0003924
+guanyl-nucleotide exchange factor activity ; GO:0005085
+helicase activity ; GO:0004386
+histone binding ; GO:0042393
+hydrolase activity ; GO:0016787
+ion binding ; GO:0043167
+isomerase activity ; GO:0016853
+kinase activity ; GO:0016301
+ligase activity ; GO:0016874
+lipid binding ; GO:0008289
+lyase activity ; GO:0016829
+methyltransferase activity ; GO:0008168
+molecular function ; GO:0003674
+mRNA binding ; GO:0003729
+nuclease activity ; GO:0004518
+nucleic acid binding transcription factor activity ; GO:0001071
+nucleotidyltransferase activity ; GO:0016779
+oxidoreductase activity ; GO:0016491
+peptidase activity ; GO:0008233
+phosphatase activity ; GO:0016791
+protein binding ; GO:0000988
+protein transporter activity ; GO:0008565
+RNA binding ; GO:0003723
+RNA binding ; GO:0008135
+RNA modification guide activity ; GO:0030555
+rRNA binding ; GO:0019843
+signal transducer activity ; GO:0004871
+structural constituent of ribosome ; GO:0003735
+structural molecule activity ; GO:0005198
+transcription factor binding ; GO:0008134
+transferase activity ; GO:0016740
+transferring acyl groups ; GO:0016746
+transferring alkyl or aryl (other than methyl) groups ; GO:0016765
+transferring glycosyl groups ; GO:0016757
+transmembrane transporter activity ; GO:0022857
+triplet codon-amino acid adaptor activity ; GO:0030533
+ubiquitin-like protein binding ; GO:0032182
+unfolded protein binding ; GO:0051082
