@@ -370,7 +370,7 @@ def process_output(recordOffSetList, seqNm4offSet, output, datafile, maxhits, be
         
         count = hitCount4seqNm.get(seqNm, 0)
         
-        if sgdid == "":
+        if sgdid != "":
             if gene == seqNm:
                 gene = ""
             newData.append({ 'seqname': seqNm,
