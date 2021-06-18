@@ -48,7 +48,21 @@ def record_line(line):
     return "<a href='" + url + "' target='_new'>" + pieces[0] + "|" + pieces[1] + "</a>|" + "|".join(pieces[2:]) 
     
 def link_out(chr, chrnum, beg, end):
-    return "  [ <a href='" + SEQ + chrnum + "&start=" + beg + "&end=" + end + "&submit2=Submit+Form" + "' target='_new'>Retrieve Sequence</a> / <a href='" + GBROWSE + "chr" + chr + "%3A" + beg + ".." + end + "' target='_new'>Genome Browser</a> ]"
+
+    GSR_link = "<a href='" + SEQ + chrnum + "&start=" + beg + "&end=" + end + "&submit2=Submit+Form" + "' target='_new'>Retrieve Sequence</a>"
+
+    beg = int(beg)
+    end = int(end)
+    if beg > end:
+        (beg, end) = (end, beg)
+    start = beg	- 5000
+    if start < 1:
+        start =	1
+    stop = end + 5000
+
+    JBROWSE_link = "<a href='" + GBROWSE + "chr" + chr + "%3A" + str(start) + ".." + str(stop) + "&tracks=DNA%2CAll%20Annotated%20Sequence%20Features&highlight=chr" + chr + "%3A" + str(beg) + ".." + str(end) + "'  target='_new'>Genome Browser</a>"
+
+    return "  [ " + GSR_link + " / " + JBROWSE_link + " ]"
              
 def markupChromosomalCoord(blastOutput):
 
@@ -82,6 +96,7 @@ def markupChromosomalCoord(blastOutput):
                     scoreline = scoreline + link_out(chr, chrnum, beg, end) + "\n" 
                     newoutput = newoutput + recordBeforeScore + "\n" + scoreline + "\n" + recordAfterScore+ "\n"
                 chr = ''
+                chrnum = ''
                 beg = ''
                 end = ''
                 newline = record_line(line)
@@ -89,12 +104,13 @@ def markupChromosomalCoord(blastOutput):
                 recordAfterScore = ''
             elif " Score = " in line:
                 scoreline = line
+            elif "[chromosome=" in line:
+                recordBeforeScore = recordBeforeScore + line + "\n"
+                pieces = line.split("[chromosome=")
+                chr = pieces[-1].replace(']', '')
+                chrnum = rom2num.get(chr)
             elif scoreline == '':
                 recordBeforeScore = recordBeforeScore + line + "\n"
-                if "[chromosome=" in line:
-                    pieces = line.split("[chromosome=")
-                    chr = pieces[-1].replace(']', '')
-                    chrnum = rom2num.get(chr)
             else:
                 recordAfterScore = recordAfterScore + line + "\n"
                 if line.startswith('Sbjct '):
