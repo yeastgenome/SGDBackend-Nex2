@@ -79,6 +79,11 @@ def search(request):
 
     # get query string
     query = request.params.get('q', '').strip()
+    if query.endswith('\\'):
+        query = query.replace('\\', '')
+    elif "\\" in query:
+        query = query.replace('\\', ' ')
+        
     temp_container = query.split(' ')
     int_flag = False
     if(temp_container):

@@ -1,0 +1,509 @@
+3-beta-D-glucan synthase complex ; GO:0000148
+6-mannosyltransferase complex ; GO:0000136
+6-phosphofructokinase complex ; GO:0005945
+90S preribosome ; GO:0030686
+acetolactate synthase complex ; GO:0005948
+actin filament ; GO:0005884
+acyl-CoA ceramide synthase complex ; GO:0061576
+Ada2/Gcn5/Ada3 transcription activator complex ; GO:0005671
+alpha DNA polymerase:primase complex ; GO:0005658
+alpha-subunit complex ; GO:0019773
+alpha-trehalose-phosphate synthase complex (UDP-forming) ; GO:0005946
+anaphase-promoting complex ; GO:0005680
+anthranilate synthase complex ; GO:0005950
+AP-1 adaptor complex ; GO:0030121
+AP-2 adaptor complex ; GO:0030122
+AP-3 adaptor complex ; GO:0030123
+Arp2/3 protein complex ; GO:0005885
+Asi complex ; GO:0097658
+ASTRA complex ; GO:0070209
+astral microtubule ; GO:0000235
+Atg12-Atg5-Atg16 complex ; GO:0034274
+Atg1/ULK1 kinase complex ; GO:1990316
+base subcomplex ; GO:0008540
+beta-subunit complex ; GO:0019774
+Bfa1-Bub2 complex ; GO:1990334
+BLOC-1 complex ; GO:0031083
+box C/D snoRNP complex ; GO:0031428
+box H/ACA snoRNP complex ; GO:0031429
+CAAX-protein geranylgeranyltransferase complex ; GO:0005953
+CAF-1 complex ; GO:0033186
+calcineurin complex ; GO:0005955
+cAMP-dependent protein kinase complex ; GO:0005952
+carbamoyl-phosphate synthase complex ; GO:0005951
+carboxy-terminal domain protein kinase complex ; GO:0032806
+cargo-selective complex ; GO:0030906
+catalytic core F(1) ; GO:0045261
+catalytic core ; GO:0005754
+Cbf1-Met4-Met28 complex ; GO:0089713
+CBF3 complex ; GO:0031518
+Cbp3p-Cbp6 complex ; GO:0061671
+CCAAT-binding factor complex ; GO:0016602
+CCR4-NOT complex ; GO:0030014
+CCR4-NOT core complex ; GO:0030015
+Cdc48p-Npl4p-Vms1p AAA ATPase complex ; GO:0036266
+Cdc50p-Drs2p complex ; GO:1990530
+Cdc73/Paf1 complex ; GO:0016593
+cell cortex ; GO:0005938
+cell ; GO:0005623
+cellular bud ; GO:0005933
+cellular component ; GO:0005575
+cell wall ; GO:0005618
+CENP-A containing nucleosome ; GO:0043505
+central plaque of spindle pole body ; GO:0005823
+central stalk ; GO:0005756
+centromeric region ; GO:0000775
+centromeric region ; GO:0000780
+chaperonin-containing T-complex ; GO:0005832
+checkpoint clamp complex ; GO:0030896
+CHRAC ; GO:0008623
+chromatin ; GO:0000785
+chromatin silencing complex ; GO:0005677
+chromosome ; GO:0005694
+chromosome passenger complex ; GO:0032133
+cilium ; GO:0005929
+clathrin vesicle coat ; GO:0030125
+CoA-synthesizing protein complex ; GO:1990143
+COMA complex ; GO:0000817
+commitment complex ; GO:0000243
+condensed nuclear chromosome kinetochore ; GO:0000778
+condensed nuclear chromosome outer kinetochore ; GO:0000942
+COP9 signalosome ; GO:0008180
+COPII vesicle coat ; GO:0030127
+COPI vesicle coat ; GO:0030126
+core complex ; GO:0005665
+core mediator complex ; GO:0070847
+CORVET complex ; GO:0033263
+coupling factor F(o) ; GO:0000276
+CST complex ; GO:1990879
+CTDK-1 complex ; GO:0070692
+Ctf18 RFC-like complex ; GO:0031390
+Cul3-RING ubiquitin ligase complex ; GO:0031463
+Cul8-RING ubiquitin ligase complex ; GO:0035361
+CURI complex ; GO:0032545
+Cvt complex ; GO:0034270
+cyclin-dependent protein kinase holoenzyme complex ; GO:0000307
+cytoplasm ; GO:0005737
+cytoplasmic chromosome ; GO:0000229
+cytoplasmic dynein complex ; GO:0005868
+cytoplasmic exosome (RNase complex) ; GO:0000177
+cytoplasmic microtubule ; GO:0005881
+cytoplasmic stress granule ; GO:0010494
+cytoplasmic vesicle ; GO:0031410
+cytoskeleton ; GO:0005856
+cytosol ; GO:0005829
+cytosolic large ribosomal subunit ; GO:0022625
+cytosolic ribosome ; GO:0022626
+cytosolic small ribosomal subunit ; GO:0022627
+DASH complex ; GO:0042729
+Dbf4-dependent protein kinase complex ; GO:0031431
+dehydrodolichyl diphosphate synthase complex ; GO:1904423
+delta DNA polymerase complex ; GO:0043625
+DNA helicase A complex ; GO:0033203
+DNA ligase IV complex ; GO:0032807
+DNA replication factor A complex ; GO:0005662
+DNA replication factor C complex ; GO:0005663
+DNA replication preinitiation complex ; GO:0031261
+Doa10p ubiquitin ligase complex ; GO:0000837
+dolichyl-phosphate-mannose-protein mannosyltransferase complex ; GO:0031502
+dolichyl-phosphate-mannose-protein mannosyltransferase Pmt1p-Pmt2p dimer complex ; GO:0097582
+dolichyl-phosphate-mannose-protein mannosyltransferase Pmt1p-Pmt3p dimer complex ; GO:0097583
+dolichyl-phosphate-mannose-protein mannosyltransferase Pmt4p homodimer complex ; GO:0097586
+dolichyl-phosphate-mannose-protein mannosyltransferase Pmt5p-Pmt2p dimer complex ; GO:0097584
+dolichyl-phosphate-mannose-protein mannosyltransferase Pmt5p-Pmt3p dimer complex ; GO:0097585
+Dom34-Hbs1 complex ; GO:1990533
+Dsc E3 ubiquitin ligase complex ; GO:0044695
+DSIF complex ; GO:0032044
+Dsl1/NZR complex ; GO:0070939
+DUBm complex ; GO:0071819
+dynactin complex ; GO:0005869
+EGO complex ; GO:0034448
+eisosome ; GO:0032126
+EKC/KEOPS complex ; GO:0000408
+Elg1 RFC-like complex ; GO:0031391
+Elongator holoenzyme complex ; GO:0033588
+elongin complex ; GO:0070449
+endomembrane system ; GO:0012505
+endoplasmic reticulum ; GO:0005783
+endoplasmic reticulum palmitoyltransferase complex ; GO:0031211
+endoplasmic reticulum targeting ; GO:0005786
+endosome ; GO:0005768
+epsilon DNA polymerase complex ; GO:0008622
+eRF1 methyltransferase complex ; GO:0035657
+ER membrane protein complex ; GO:0072546
+ERMES complex ; GO:0032865
+ESCRT-0 complex ; GO:0033565
+ESCRT I complex ; GO:0000813
+ESCRT II complex ; GO:0000814
+ESCRT III complex ; GO:0000815
+eukaryotic 43S preinitiation complex ; GO:0016282
+eukaryotic 48S preinitiation complex ; GO:0033290
+eukaryotic translation elongation factor 1 complex ; GO:0005853
+eukaryotic translation initiation factor 2B complex ; GO:0005851
+eukaryotic translation initiation factor 2 complex ; GO:0005850
+eukaryotic translation initiation factor 3 complex ; GO:0005852
+eukaryotic translation initiation factor 4F complex ; GO:0016281
+exocyst ; GO:0000145
+exomer complex ; GO:0034044
+exosome (RNase complex) ; GO:0000178
+external encapsulating structure ; GO:0030312
+extracellular region ; GO:0005576
+extracellular space ; GO:0005615
+FACT complex ; GO:0035101
+F-actin capping protein complex ; GO:0008290
+FAL1-SGD1 complex ; GO:0097078
+FANCM-MHF complex ; GO:0071821
+fatty acid synthase complex ; GO:0005835
+filamentous actin ; GO:0031941
+GARP complex ; GO:0000938
+GATOR1 complex ; GO:1990130
+GET complex ; GO:0043529
+GID complex ; GO:0034657
+GINS complex ; GO:0000811
+glucosidase II complex ; GO:0017177
+glutaminase complex ; GO:1903600
+glutamyl-tRNA(Gln) amidotransferase complex ; GO:0030956
+glutathione hydrolase complex ; GO:0061672
+glycine cleavage complex ; GO:0005960
+glycosylphosphatidylinositol-mannosyltransferase I complex ; GO:1990529
+glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT) complex ; GO:0000506
+Golgi apparatus ; GO:0005794
+Golgi transport complex ; GO:0017119
+GPI-anchor transamidase complex ; GO:0042765
+Gtr1-Gtr2 GTPase complex ; GO:1990131
+guanyl-nucleotide exchange factor complex ; GO:0032045
+half bridge of spindle pole body ; GO:0005825
+HDA1 complex ; GO:0070823
+heterotrimeric G-protein complex ; GO:0005834
+HICS complex ; GO:0044697
+high-affinity iron permease complex ; GO:0033573
+HIR complex ; GO:0000417
+histone acetyltransferase complex ; GO:0000123
+histone deacetylase complex ; GO:0000118
+Holliday junction resolvase complex ; GO:0048476
+holoenzyme ; GO:0016591
+HOPS complex ; GO:0030897
+Hrd1p ubiquitin ligase ERAD-L complex ; GO:0000839
+Hrd1p ubiquitin ligase ERAD-M complex ; GO:0000838
+i-AAA complex ; GO:0031942
+INA complex ; GO:1990524
+inner plaque of spindle pole body ; GO:0005822
+Ino80 complex ; GO:0031011
+inositol phosphoceramide synthase complex ; GO:0070916
+intermediate filament ; GO:0005882
+intermediate layer of spindle pole body ; GO:0005821
+intracellular ; GO:0005622
+intracellular ribonucleoprotein complex ; GO:0030529
+Isw1a complex ; GO:0036436
+Isw1b complex ; GO:0036437
+Isw1 complex ; GO:0016587
+Kelch-containing formin regulatory complex ; GO:1990615
+kinesin complex ; GO:0005871
+kinetochore ; GO:0000776
+kinetochore microtubule ; GO:0005828
+Ku70:Ku80 complex ; GO:0043564
+large ribosomal subunit ; GO:0015934
+large subunit precursor ; GO:0030687
+L-cysteine desulfurase complex ; GO:1990221
+lid subcomplex ; GO:0008541
+lipid droplet ; GO:0005811
+Lsm1-7-Pat1 complex ; GO:1990726
+Lst4-Lst7 complex ; GO:1990877
+luminal surveillance complex ; GO:0034099
+lysosome ; GO:0005764
+m-AAA complex ; GO:0005745
+mannosyltransferase complex ; GO:0031501
+mating-type region heterochromatin ; GO:0031934
+MBF transcription complex ; GO:0030907
+MCM complex ; GO:0042555
+MCM core complex ; GO:0097373
+mediator complex ; GO:0016592
+meiotic spindle ; GO:0072687
+membrane ; GO:0016020
+methionyl glutamyl tRNA synthetase complex ; GO:0017102
+MICOS complex ; GO:0061617
+microtubule ; GO:0005874
+microtubule organizing center ; GO:0005815
+microtubule plus-end ; GO:0035371
+mitochondrial degradosome ; GO:0045025
+mitochondrial DNA-directed RNA polymerase complex ; GO:0034245
+mitochondrial envelope ; GO:0005740
+mitochondrial inner membrane peptidase complex ; GO:0042720
+mitochondrial intermembrane space protein transporter complex ; GO:0042719
+mitochondrial isocitrate dehydrogenase complex (NAD+) ; GO:0005962
+mitochondrial large ribosomal subunit ; GO:0005762
+mitochondrial outer membrane translocase complex ; GO:0005742
+mitochondrial oxoglutarate dehydrogenase complex ; GO:0009353
+mitochondrial processing peptidase complex ; GO:0017087
+mitochondrial proton-transporting ATP synthase complex ; GO:0005753
+mitochondrial pyruvate dehydrogenase complex ; GO:0005967
+mitochondrial respiratory chain complex III ; GO:0005750
+mitochondrial respiratory chain complex IV ; GO:0005751
+mitochondrial respiratory chain supercomplex ; GO:0097249
+mitochondrial ribonuclease P complex ; GO:0030678
+mitochondrial ribosome ; GO:0005761
+mitochondrial small ribosomal subunit ; GO:0005763
+mitochondrial sorting and assembly machinery complex ; GO:0001401
+mitochondrion ; GO:0005739
+mitotic checkpoint complex ; GO:0033597
+mitotic spindle ; GO:0072686
+Mon1-Ccz1 complex ; GO:0035658
+monopolin complex ; GO:0033551
+Mpp10 complex ; GO:0034457
+Mre11 complex ; GO:0030870
+mRNA cap binding complex ; GO:0005845
+mRNA cap methyltransferase complex ; GO:0031533
+mRNA cleavage and polyadenylation specificity factor complex ; GO:0005847
+mRNA cleavage factor complex ; GO:0005849
+MUB1-RAD6-UBR2 ubiquitin ligase complex ; GO:1990304
+multi-eIF complex ; GO:0043614
+MutLalpha complex ; GO:0032389
+MutLbeta complex ; GO:0032390
+MutLgamma complex ; GO:0097587
+MutSalpha complex ; GO:0032301
+MutSbeta complex ; GO:0032302
+Myo2p-Vac17p-Vac8p transport complex ; GO:0071563
+myosin II complex ; GO:0016460
+myosin V complex ; GO:0031475
+nascent polypeptide-associated complex ; GO:0005854
+NatA complex ; GO:0031415
+NatB complex ; GO:0031416
+NatC complex ; GO:0031417
+Nbp35-Cfd1 ATPase complex ; GO:1904564
+Ndc80 complex ; GO:0031262
+negative cofactor 2 complex ; GO:0017054
+Nem1-Spo7 phosphatase complex ; GO:0071595
+Noc1p-Noc2p complex ; GO:0030690
+Noc2p-Noc3p complex ; GO:0030691
+Noc4p-Nop14p complex ; GO:0030692
+Nrd1 complex ; GO:0035649
+NuA3a histone acetyltransferase complex ; GO:1990467
+NuA3b histone acetyltransferase complex ; GO:1990468
+NuA3 histone acetyltransferase complex ; GO:0033100
+NuA4 histone acetyltransferase complex ; GO:0035267
+nuclear cap binding complex ; GO:0005846
+nuclear chromatin ; GO:0000790
+nuclear chromosome ; GO:0000228
+nuclear cohesin complex ; GO:0000798
+nuclear condensin complex ; GO:0000799
+nuclear envelope ; GO:0005635
+nuclear exosome (RNase complex) ; GO:0000176
+nuclear heterochromatin ; GO:0005720
+nuclear microtubule ; GO:0005880
+nuclear MIS12/MIND complex ; GO:0000818
+nuclear mitotic cohesin complex ; GO:0034990
+nuclear nucleosome ; GO:0000788
+nuclear origin of replication recognition complex ; GO:0005664
+nuclear pore central transport channel ; GO:0044613
+nuclear pore cytoplasmic filaments ; GO:0044614
+nuclear pore ; GO:0005643
+nuclear pore inner ring ; GO:0044611
+nuclear pore linkers ; GO:0044612
+nuclear pore nuclear basket ; GO:0044615
+nuclear pore outer ring ; GO:0031080
+nuclear pore transmembrane ring ; GO:0070762
+nuclear pre-replicative complex ; GO:0005656
+nuclear RNA export factor complex ; GO:0042272
+nuclear SCF ubiquitin ligase complex ; GO:0043224
+nuclear telomere cap complex ; GO:0000783
+nuclear telomeric heterochromatin ; GO:0005724
+nucleolar chromatin ; GO:0030874
+nucleolar ribonuclease P complex ; GO:0005655
+nucleolus ; GO:0005730
+nucleoplasm ; GO:0005654
+nucleoplasmic THO complex ; GO:0000446
+nucleotide-activated protein kinase complex ; GO:0031588
+nucleotide-excision repair factor 1 complex ; GO:0000110
+nucleotide-excision repair factor 2 complex ; GO:0000111
+nucleotide-excision repair factor 3 complex ; GO:0000112
+nucleotide-excision repair factor 4 complex ; GO:0000113
+nucleus ; GO:0005634
+oligosaccharyltransferase complex ; GO:0008250
+organelle ; GO:0043226
+outer plaque of spindle pole body ; GO:0005824
+PAN complex ; GO:0031251
+PAS complex ; GO:0070772
+P-body ; GO:0000932
+PCNA complex ; GO:0043626
+PeBoW complex ; GO:0070545
+peroxisomal importomer complex ; GO:1990429
+peroxisome ; GO:0005777
+Pex17p-Pex14p docking complex ; GO:1990415
+phenylalanine-tRNA ligase complex ; GO:0009328
+Pho85-Pho80 CDK-cyclin complex ; GO:1990860
+phospholipid-translocating ATPase complex ; GO:1990531
+phosphopantothenoylcysteine decarboxylase complex ; GO:0071513
+phosphopyruvate hydratase complex ; GO:0000015
+Piccolo NuA4 histone acetyltransferase complex ; GO:0032777
+Pip2-Oaf1 complex ; GO:0089716
+plasma membrane ; GO:0005886
+plastid ; GO:0009536
+polarisome ; GO:0000133
+polar microtubule ; GO:0005827
+polysomal ribosome ; GO:0042788
+polysome ; GO:0005844
+post-mRNA release spliceosomal complex ; GO:0071014
+post-spliceosomal complex ; GO:0071020
+prefoldin complex ; GO:0016272
+preribosome ; GO:0030684
+proteasome complex ; GO:0000502
+proteasome core complex ; GO:0005839
+proteasome regulatory particle ; GO:0005838
+proteasome storage granule ; GO:0034515
+proteinaceous extracellular matrix ; GO:0005578
+protein complex ; GO:0043234
+protein farnesyltransferase complex ; GO:0005965
+protein kinase CK2 complex ; GO:0005956
+protein phosphatase 4 complex ; GO:0030289
+protein phosphatase type 1 complex ; GO:0000164
+protein phosphatase type 2A complex ; GO:0000159
+Prp19 complex ; GO:0000974
+Pwp2p-containing subcomplex of 90S preribosome ; GO:0034388
+R2TP complex ; GO:0097255
+Rab-protein geranylgeranyltransferase complex ; GO:0005968
+Rad17 RFC-like complex ; GO:0031389
+Rad6-Rad18 complex ; GO:0097505
+RAVE complex ; GO:0043291
+rDNA heterochromatin ; GO:0033553
+RecQ helicase-Topo III complex ; GO:0031422
+RENT complex ; GO:0030869
+replication fork protection complex ; GO:0031298
+RES complex ; GO:0070274
+retromer complex ; GO:0030904
+Rhp55-Rhp57 complex ; GO:0033062
+ribonuclease H2 complex ; GO:0032299
+ribonuclease MRP complex ; GO:0000172
+ribonuclease P complex ; GO:0030677
+ribonucleoside-diphosphate reductase complex ; GO:0005971
+ribose phosphate diphosphokinase complex ; GO:0002189
+ribosome ; GO:0005840
+RIC1-RGP1 guanyl-nucleotide exchange factor complex ; GO:0034066
+Rix1 complex ; GO:0097344
+RNA N6-methyladenosine methyltransferase complex ; GO:0036396
+RNA polymerase I complex ; GO:0005736
+RNA polymerase I core factor complex ; GO:0070860
+RNA polymerase III complex ; GO:0005666
+RNA polymerase II transcription factor complex ; GO:0090575
+RNA polymerase I transcription factor complex ; GO:0000120
+RNA polymerase I upstream activating factor complex ; GO:0000500
+Rpd3L complex ; GO:0033698
+Rpd3L-Expanded complex ; GO:0070210
+Rpd3S complex ; GO:0032221
+RQC complex ; GO:1990112
+RSC-type complex ; GO:0016586
+Rvs161p-Rvs167p complex ; GO:1990528
+SAGA complex ; GO:0000124
+SAS acetyltransferase complex ; GO:0033255
+SBF transcription complex ; GO:0033309
+SCF ubiquitin ligase complex ; GO:0019005
+Sec61 translocon complex ; GO:0005784
+Sec62/Sec63 complex ; GO:0031207
+Seh1-associated complex ; GO:0035859
+septin complex ; GO:0031105
+serine C-palmitoyltransferase complex ; GO:0017059
+Set1C/COMPASS complex ; GO:0048188
+Set3 complex ; GO:0034967
+shelterin complex ; GO:0070187
+Shu complex ; GO:0097196
+signal peptidase complex ; GO:0005787
+signal recognition particle receptor complex ; GO:0005785
+Sin3-type complex ; GO:0070822
+site of polarized growth ; GO:0030427
+Ski complex ; GO:0055087
+SLIK (SAGA-like) complex ; GO:0046695
+Slx1-Slx4 complex ; GO:0033557
+small nuclear ribonucleoprotein complex ; GO:0030532
+small nucleolar ribonucleoprotein complex ; GO:0005732
+small ribosomal subunit ; GO:0015935
+small subunit precursor ; GO:0030688
+small-subunit processome ; GO:0032040
+Smc5-Smc6 complex ; GO:0030915
+SMC loading complex ; GO:0032116
+SNARE complex ; GO:0031201
+Snt2C complex ; GO:0070211
+spindle ; GO:0005819
+spindle microtubule ; GO:0005876
+spindle midzone ; GO:0051233
+spindle pole body ; GO:0000928
+spindle pole body ; GO:0005816
+spindle pole ; GO:0000922
+spliceosomal complex ; GO:0005681
+SPOTS complex ; GO:0035339
+Ssh1 translocon complex ; GO:0071261
+stator stalk ; GO:0000274
+Ste12p-Dig1p-Dig2p complex ; GO:1990526
+succinate dehydrogenase complex (ubiquinone) ; GO:0005749
+sulfite reductase complex (NADPH) ; GO:0009337
+SUMO activating enzyme complex ; GO:0031510
+SUMO-targeted ubiquitin ligase complex ; GO:0033768
+SWI/SNF complex ; GO:0016514
+Swr1 complex ; GO:0000812
+Tec1p-Ste12p-Dig1p complex ; GO:1990527
+telomerase catalytic core complex ; GO:0000333
+telomerase holoenzyme complex ; GO:0005697
+THO complex part of transcription export complex ; GO:0000445
+thylakoid ; GO:0009579
+TIM22 mitochondrial import inner membrane insertion complex ; GO:0042721
+Tim23 associated import motor ; GO:0001405
+TIM23 mitochondrial import inner membrane translocase complex ; GO:0005744
+TORC1 complex ; GO:0031931
+TORC2 complex ; GO:0031932
+TRAMP complex ; GO:0031499
+transcriptionally active chromatin ; GO:0035327
+transcriptional preinitiation complex ; GO:0097550
+transcriptional repressor complex ; GO:0017053
+transcription elongation factor complex ; GO:0008023
+transcription export complex 2 ; GO:0070390
+transcription export complex ; GO:0000346
+transcription factor complex ; GO:0005667
+transcription factor TFIIA complex ; GO:0005672
+transcription factor TFIID complex ; GO:0005669
+transcription factor TFIIE complex ; GO:0005673
+transcription factor TFIIF complex ; GO:0005674
+transcription factor TFIIH core complex ; GO:0000439
+transcription factor TFIIH holo complex ; GO:0005675
+transcription factor TFIIIB complex ; GO:0000126
+transcription factor TFIIIC complex ; GO:0000127
+transcription factor TFIIK complex ; GO:0070985
+translation release factor complex ; GO:0018444
+TRAPP complex ; GO:0030008
+TRAPPIII protein complex ; GO:1990072
+TRAPPII protein complex ; GO:1990071
+TRAPPI protein complex ; GO:1990070
+TRC complex ; GO:0072380
+tRNA-intron endonuclease complex ; GO:0000214
+tRNA (m1A) methyltransferase complex ; GO:0031515
+tRNA (m2G10) methyltransferase complex ; GO:0043528
+tRNA methyltransferase complex ; GO:0043527
+tubulation complex ; GO:0030905
+tubulin complex ; GO:0045298
+t-UTP complex ; GO:0034455
+type I ; GO:0034271
+type II ; GO:0034272
+U1 snRNP ; GO:0005685
+U2 snRNP ; GO:0005686
+U2-type catalytic step 1 spliceosome ; GO:0071006
+U2-type catalytic step 2 spliceosome ; GO:0071007
+U2-type post-mRNA release spliceosomal complex ; GO:0071008
+U2-type post-spliceosomal complex ; GO:0071021
+U2-type prespliceosome ; GO:0071004
+U2-type spliceosomal complex ; GO:0005684
+U4/U6 snRNP ; GO:0071001
+U4/U6 x U5 tri-snRNP complex ; GO:0046540
+U5 snRNP ; GO:0005682
+U6 snRNP ; GO:0005688
+ubiquitin conjugating enzyme complex ; GO:0031371
+ubiquitin ligase complex ; GO:0000151
+Ubp3-Bre5 deubiquitination complex ; GO:1990861
+UDP-N-acetylglucosamine transferase complex ; GO:0043541
+UTP-C complex ; GO:0034456
+V0 domain ; GO:0000220
+V1 domain ; GO:0000221
+vacuolar proton-transporting V-type ATPase complex ; GO:0016471
+vacuolar transporter chaperone complex ; GO:0033254
+vacuole ; GO:0005773
+VCP-NPL4-UFD1 AAA ATPase complex ; GO:0034098
+vesicle coat ; GO:0030120
+Vma12-Vma22 assembly complex ; GO:1990871
+Vps55/Vps68 complex ; GO:0034424
+zeta DNA polymerase complex ; GO:0016035

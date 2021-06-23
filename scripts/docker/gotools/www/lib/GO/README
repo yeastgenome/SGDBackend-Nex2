@@ -1,0 +1,1 @@
+Some of these files are from the GO::TermFinder perl module, modified to support features of these tools. They must override those provided by GO::TermFinder.

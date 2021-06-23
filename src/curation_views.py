@@ -2918,7 +2918,7 @@ def regulation_file(request):
         happensduring_to_id = models_helper.get_all_go_mapping()
         pubmed_id_to_reference, reference_to_dbentity_id = models_helper.get_references_all()
         list_of_regulator_types = ['chromatin modifier','transcription factor','protein modifier','RNA-binding protein','RNA modifier']
-        list_of_regulation_types = ['transcription','protein activity','protein stability','RNA activity','RNA stability']
+        list_of_regulation_types = ['transcription','protein activity','protein stability','RNA activity','RNA stability', 'translation']
         list_of_directions = ['positive','negative']
 
         for index_row,row in df.iterrows():

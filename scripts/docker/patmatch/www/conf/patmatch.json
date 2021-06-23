@@ -1,0 +1,1429 @@
+{
+	"genome": [
+		{
+			"strain": "S288C",
+			"label":  "S. cerevisiae Reference Strain S288C"
+		},
+		{
+			"strain": "AWRI1631_AWRI_2008_ABSV01000000",
+			"label":  "S. cerevisiae Strain AWRI1631_ABSV01000000 (AWRI)"
+		},
+		{
+			"strain": "AWRI796_AWRI_2010_ADVS01000000",
+			"label":  "S. cerevisiae Strain AWRI796_ADVS01000000 (AWRI)"
+		},
+		{
+			"strain": "BC187_Stanford_2014_JRII00000000",
+			"label":  "S. cerevisiae Strain BC187_JRII00000000 (Stanford)"
+		},
+		{
+			"strain": "BY4741_Stanford_2014_JRIS00000000",
+			"label":  "S. cerevisiae Strain BY4741_JRIS00000000 (Stanford)"
+		},
+		{
+			"strain": "BY4741_Toronto_2012",
+			"label":  "S. cerevisiae Strain BY4741 (Toronto)"
+		},
+		{
+			"strain": "BY4742_Stanford_2014_JRIR00000000",
+			"label":  "S. cerevisiae Strain BY4742_JRIR00000000 (Stanford)"
+		},
+		{
+			"strain": "BY4742_Toronto_2012",
+			"label":  "S. cerevisiae Strain BY4742 (Toronto)"
+		},
+		{
+			"strain": "CBS7960_WashU_2011_AEWL01000000",
+			"label":  "S. cerevisiae Strain CBS7960_AEWL01000000 (WashU)"
+		},
+		{
+			"strain": "CEN.PK113-7D_Delft_2012_AEHG00000000",
+			"label":  "S. cerevisiae Strain CEN.PK113-7D_AEHG00000000 (Delft)"
+		},
+		{
+			"strain": "CEN.PK2-1Ca_SGD_2015_JRIV01000000",
+			"label":  "S. cerevisiae Strain CEN.PK2-1Ca_JRIV01000000 (SGD)"
+		},
+		{
+			"strain": "CLIB215_WashU_2010_AEWP01000000",
+			"label":  "S. cerevisiae Strain CLIB215_AEWP01000000 (WashU)"
+		},
+		{
+			"strain": "CLIB324_WashU_2011_AEWM01000000",
+			"label":  "S. cerevisiae Strain CLIB324_AEWM01000000 (WashU)"
+		},
+		{
+			"strain": "CLIB382_WashU_2011_AFDG01000000",
+			"label":  "S. cerevisiae Strain CLIB382_AFDG01000000 (WashU)"
+		},
+		{
+			"strain": "D273-10B_SGD_2015_JRIY00000000",
+			"label":  "S. cerevisiae Strain D273-10B_JRIY00000000 (SGD)"
+		},
+		{
+			"strain": "DBVPG6044_Stanford_2014_JRIG00000000",
+			"label":  "S. cerevisiae Strain DBVPG6044_JRIG00000000 (Stanford)"
+		},
+		{
+			"strain": "EC1118_Genoscope_2009_PRJEA37863",
+			"label":  "S. cerevisiae Strain EC1118_PRJEA37863 (Genoscope)"
+		},
+		{
+			"strain": "EC9-8_ASinica_2011_AGSJ01000000",
+			"label":  "S. cerevisiae Strain EC9-8_AGSJ01000000 (ASinica)"
+		},
+		{
+			"strain": "FL100_SGD_2015_JRIT00000000",
+			"label":  "S. cerevisiae Strain FL100_JRIT00000000 (SGD)"
+		},
+		{
+			"strain": "FL100_WashU_2011_AEWO01000000",
+			"label":  "S. cerevisiae Strain FL100_AEWO01000000 (WashU)"
+		},
+		{
+			"strain": "FY1679_Stanford_2014_JRIN00000000",
+			"label":  "S. cerevisiae Strain FY1679_JRIN00000000 (Stanford)"
+		},
+		{
+			"strain": "FostersB_AWRI_2010_AEHH01000000",
+			"label":  "S. cerevisiae Strain FostersB_AEHH01000000 (AWRI)"
+		},
+		{
+			"strain": "FostersO_AWRI_2010_AEEZ01000000",
+			"label":  "S. cerevisiae Strain FostersO_AEEZ01000000 (AWRI)"
+		},
+		{
+			"strain": "JAY291_Duke_2009_ACFL01000000",
+			"label":  "S. cerevisiae Strain JAY291_ACFL01000000 (Duke)"
+		},
+		{
+			"strain": "JK9-3d_SGD_2015_JRIZ00000000",
+			"label":  "S. cerevisiae Strain JK9-3d_JRIZ00000000 (SGD)"
+		},
+		{
+			"strain": "K11_Stanford_2014_JRIJ00000000",
+			"label":  "S. cerevisiae Strain K11_JRIJ00000000 (Stanford)"
+		},
+		{
+			"strain": "Kyokai7_NRIB_2011_BABQ01000000",
+			"label":  "S. cerevisiae Strain Kyokai7_BABQ01000000 (NRIB)"
+		},
+		{
+			"strain": "L1528_Stanford_2014_JRIK00000000",
+			"label":  "S. cerevisiae Strain L1528_JRIK00000000 (Stanford)"
+		},
+		{
+			"strain": "LalvinQA23_AWRI_2011_ADVV01000000",
+			"label":  "S. cerevisiae Strain LalvinQA23_ADVV01000000 (AWRI)"
+		},
+		{
+			"strain": "M22_WashU_2008_ABPC01000000",
+			"label":  "S. cerevisiae Strain M22_ABPC01000000 (WashU)"
+		},
+		{
+			"strain": "PW5_WashU_2011_AFDC01000000",
+			"label":  "S. cerevisiae Strain PW5_AFDC01000000 (WashU)"
+		},
+		{
+			"strain": "RM11-1a_Broad_2005_AAEG01000000",
+			"label":  "S. cerevisiae Strain RM11-1a_AAEG01000000 (Broad)"
+		},
+		{
+			"strain": "RM11-1A_SGD_2015_JRIP00000000",
+			"label":  "S. cerevisiae Strain RM11-1A_JRIP00000000 (SGD)"
+		},
+		{
+			"strain": "RedStar_Stanford_2014_JRIL00000000",
+			"label":  "S. cerevisiae Strain RedStar_JRIL00000000 (Stanford)"
+		},
+		{
+			"strain": "SEY6210_SGD_2015_JRIW00000000",
+			"label":  "S. cerevisiae Strain SEY6210_JRIW00000000 (SGD)"
+		},
+		{
+			"strain": "SK1_SGD_2018_NCSL00000000",
+			"label":  "S. cerevisiae Strain SK1_NCSL00000000 (SGD)"
+		},
+		{
+			"strain": "Sigma1278b-10560-6B_SGD_2015_JRIQ00000000",
+			"label":  "S. cerevisiae Strain Sigma1278b-10560-6B_JRIQ00000000 (SGD)"
+		},
+		{
+			"strain": "Sigma1278b_MIT_2009_ACVY01000000",
+			"label":  "S. cerevisiae Strain Sigma1278b_ACVY01000000 (MIT)"
+		},
+		{
+			"strain": "T73_WashU_2011_AFDF01000000",
+			"label":  "S. cerevisiae Strain T73_AFDF01000000 (WashU)"
+		},
+		{
+			"strain": "T7_WashU_2011_AFDE01000000",
+			"label":  "S. cerevisiae Strain T7_AFDE01000000 (WashU)"
+		},
+		{
+			"strain": "UC5_WashU_2011_AFDD01000000",
+			"label":  "S. cerevisiae Strain UC5_AFDD01000000 (WashU)"
+		},
+		{
+			"strain": "UWOPS05-217-3_Stanford_2014_JRIM00000000",
+			"label":  "S. cerevisiae Strain UWOPS05-217-3_JRIM00000000 (Stanford)"
+		},
+		{
+			"strain": "VL3_AWRI_2011_AEJS01000000",
+			"label":  "S. cerevisiae Strain VL3_AEJS01000000 (AWRI)"
+		},
+		{
+			"strain": "Vin13_AWRI_2010_ADXC01000000",
+			"label":  "S. cerevisiae Strain Vin13_ADXC01000000 (AWRI)"
+		},
+		{
+			"strain": "W303_MPG_2012_ALAV00000000",
+			"label":  "S. cerevisiae Strain W303_ALAV00000000 (MPG)"
+		},
+		{
+			"strain": "W303_SGD_2015_JRIU00000000",
+			"label":  "S. cerevisiae Strain W303_JRIU00000000 (SGD)"
+		},
+		{
+			"strain": "X2180-1A_SGD_2015_JRIX00000000",
+			"label":  "S. cerevisiae Strain X2180-1A_JRIX00000000 (SGD)"
+		},
+		{
+			"strain": "Y10_WashU_2011_AEWK01000000",
+			"label":  "S. cerevisiae Strain Y10_AEWK01000000 (WashU)"
+		},
+		{
+			"strain": "Y55_SGD_2015_JRIF00000000",
+			"label":  "S. cerevisiae Strain Y55_JRIF00000000 (SGD)"
+		},
+		{
+			"strain": "YJM269_WashU_2011_AEWN01000000",
+			"label":  "S. cerevisiae Strain YJM269_AEWN01000000 (WashU)"
+		},
+		{
+			"strain": "YJM339_Stanford_2014_JRIE00000000",
+			"label":  "S. cerevisiae Strain YJM339_JRIE00000000 (Stanford)"
+		},
+		{
+			"strain": "YJM789_Stanford_2007_AAFW02000000",
+			"label":  "S. cerevisiae Strain YJM789_AAFW02000000 (Stanford)"
+		},
+		{
+			"strain": "YPH499_Stanford_2014_JRIO00000000",
+			"label":  "S. cerevisiae Strain YPH499_JRIO00000000 (Stanford)"
+		},
+		{
+			"strain": "YPS128_Stanford_2014_JRID00000000",
+			"label":  "S. cerevisiae Strain YPS128_JRID00000000 (Stanford)"
+		},
+		{
+			"strain": "YPS163_Stanford_2014_JRIC00000000",
+			"label":  "S. cerevisiae Strain YPS163_JRIC00000000 (Stanford)"
+		},
+		{
+			"strain": "YPS163_WashU_2008_ABPD01000000",
+			"label":  "S. cerevisiae Strain YPS163_ABPD01000000 (WashU)"
+		},
+		{
+			"strain": "YS9_Stanford_2014_JRIB00000000",
+			"label":  "S. cerevisiae Strain YS9_JRIB00000000 (Stanford)"
+		},
+		{
+			"strain": "ZTW1_Zhejiang_2012_AMDD00000000",
+			"label":  "S. cerevisiae Strain ZTW1_AMDD00000000 (Zhejiang)"
+		}
+	],
+
+	"dataset": {
+		"S288C": [
+			{
+				"dataset_file_name": "orf_dna",
+				"seqtype": "dna",
+				"label":  "ORF-Coding = Coding Sequence of all standard S.c. ORFs (DNA)",
+				"seqcount": "5916"
+			},
+			{
+				"dataset_file_name": "orf_genomic",
+				"seqtype": "dna",
+				"label":  "ORF-Genomic = Genomic Sequence of all standard S.c. ORFs (DNA)",
+				"seqcount": "6713"
+			},
+			{
+				"dataset_file_name": "orf_genomic_1000",
+				"seqtype": "dna",
+				"label":  "ORF-Genomic-1000 = 1000bp of Up & Downstream of all standard S.c. ORFs (DNA)",
+				"seqcount": "5916"
+			},
+			{
+				"dataset_file_name": "NotFeature.dna",
+				"seqtype": "dna",
+				"label":  "NotFeature = Genomic DNA not in ORF, tRNA, LTR, Ty or other features",
+				"seqcount": "6691"
+			},
+			{
+				"dataset_file_name": "yeast_gb.dna",
+				"seqtype": "dna",
+		                "label":  "GenBank = S.cerevisiae GenBank DNA",
+				"seqcount": "24878"
+			},
+			{
+				"dataset_file_name": "genoSc.dna",
+				"seqtype": "dna",
+				"label":  "genoSc = COMPLETE S. cerevisiae Genome (DNA)",
+				"seqcount": "17"
+			},
+			{
+				"dataset_file_name": "orf_pep",
+				"seqtype": "protein",
+				"label":  "ORF-Trans = Translations of all standard S.c. ORFs (Protein)",
+				"seqcount": "5916"
+			},
+			{
+				"dataset_file_name": "yeast_nrpep",
+				"seqtype": "protein",
+				"label":  "NRSC = Non-Redundant S. cerevisiae Protein",
+				"seqcount": "11081"
+			}
+		],
+		"AWRI1631_AWRI_2008_ABSV01000000": [
+			{
+				"dataset_file_name": "AWRI1631_AWRI_2008_ABSV01000000",
+				"seqtype": "dna",
+				"label":  "AWRI1631_AWRI_2008_ABSV01000000-Genome = COMPLETE S. cerevisiae strain AWRI1631 genome (AWRI)",
+				"seqcount": "2484"
+			},
+			{
+				"dataset_file_name": "AWRI1631_AWRI_2008_ABSV01000000_cds",
+				"seqtype": "dna",
+				"label":  "AWRI1631_AWRI_2008_ABSV01000000-Coding = Coding Sequence of all S.c. strain AWRI1631 (AWRI)",
+				"seqcount": "4747"
+			},
+			{
+				"dataset_file_name": "AWRI1631_AWRI_2008_ABSV01000000_pep",
+				"seqtype": "protein",
+				"label":  "AWRI1631_AWRI_2008_ABSV01000000-Trans = Translations of all S.c. strain AWRI1631 ORFs (Protein) (AWRI)",
+				"seqcount": "4747"
+			}
+		],
+		"AWRI796_AWRI_2010_ADVS01000000": [
+			{
+				"dataset_file_name": "AWRI796_AWRI_2010_ADVS01000000",
+				"seqtype": "dna",
+				"label":  "AWRI796_AWRI_2010_ADVS01000000-Genome = COMPLETE S. cerevisiae strain AWRI796 genome (AWRI)",
+				"seqcount": "105"
+			},
+			{
+				"dataset_file_name": "AWRI796_AWRI_2010_ADVS01000000_cds",
+				"seqtype": "dna",
+				"label":  "AWRI796_AWRI_2010_ADVS01000000-Coding = Coding Sequence of all S.c. strain AWRI796 (AWRI)",
+				"seqcount": "6284"
+			},
+			{
+				"dataset_file_name": "AWRI796_AWRI_2010_ADVS01000000_pep",
+				"seqtype": "protein",
+				"label":  "AWRI796_AWRI_2010_ADVS01000000-Trans = Translations of all S.c. strain AWRI796 ORFs (Protein) (AWRI)",
+				"seqcount": "6284"
+			}
+		],
+		"BC187_Stanford_2014_JRII00000000": [
+			{
+				"dataset_file_name": "BC187_Stanford_2014_JRII00000000",
+				"seqtype": "dna",
+				"label":  "BC187_Stanford_2014_JRII00000000-Genome = COMPLETE S. cerevisiae strain BC187 genome (Stanford)",
+				"seqcount": "614"
+			},
+			{
+				"dataset_file_name": "BC187_Stanford_2014_JRII00000000_cds",
+				"seqtype": "dna",
+				"label":  "BC187_Stanford_2014_JRII00000000-Coding = Coding Sequence of all S.c. strain BC187 (Stanford)",
+				"seqcount": "5004"
+			},
+			{
+				"dataset_file_name": "BC187_Stanford_2014_JRII00000000_pep",
+				"seqtype": "protein",
+				"label":  "BC187_Stanford_2014_JRII00000000-Trans = Translations of all S.c. strain BC187 ORFs (Protein) (Stanford)",
+				"seqcount": "5004"
+			}
+		],
+		"BY4741_Stanford_2014_JRIS00000000": [
+			{
+				"dataset_file_name": "BY4741_Stanford_2014_JRIS00000000",
+				"seqtype": "dna",
+				"label":  "BY4741_Stanford_2014_JRIS00000000-Genome = COMPLETE S. cerevisiae strain BY4741 genome (Stanford)",
+				"seqcount": "397"
+			},
+			{
+				"dataset_file_name": "BY4741_Stanford_2014_JRIS00000000_cds",
+				"seqtype": "dna",
+				"label":  "BY4741_Stanford_2014_JRIS00000000-Coding = Coding Sequence of all S.c. strain BY4741 (Stanford)",
+				"seqcount": "5253"
+			},
+			{
+				"dataset_file_name": "BY4741_Stanford_2014_JRIS00000000_pep",
+				"seqtype": "protein",
+				"label":  "BY4741_Stanford_2014_JRIS00000000-Trans = Translations of all S.c. strain BY4741 ORFs (Protein) (Stanford)",
+				"seqcount": "5253"
+			}
+		],
+		"BY4741_Toronto_2012": [
+			{
+				"dataset_file_name": "BY4741_Toronto_2012",
+				"seqtype": "dna",
+				"label":  "BY4741_Toronto_2012-Genome = COMPLETE S. cerevisiae strain BY4741 genome (Toronto)",
+				"seqcount": "18"
+			},
+			{
+				"dataset_file_name": "BY4741_Toronto_2012_cds",
+				"seqtype": "dna",
+				"label":  "BY4741_Toronto_2012-Coding = Coding Sequence of all S.c. strain BY4741 (Toronto)",
+				"seqcount": "6594"
+			},
+			{
+				"dataset_file_name": "BY4741_Toronto_2012_pep",
+				"seqtype": "protein",
+				"label":  "BY4741_Toronto_2012-Trans = Translations of all S.c. strain BY4741 ORFs (Protein) (Toronto)",
+				"seqcount": "6594"
+			}
+		],
+		"BY4742_Stanford_2014_JRIR00000000": [
+			{
+				"dataset_file_name": "BY4742_Stanford_2014_JRIR00000000",
+				"seqtype": "dna",
+				"label":  "BY4742_Stanford_2014_JRIR00000000-Genome = COMPLETE S. cerevisiae strain BY4742 genome (Stanford)",
+				"seqcount": "418"
+			},
+			{
+				"dataset_file_name": "BY4742_Stanford_2014_JRIR00000000_cds",
+				"seqtype": "dna",
+				"label":  "BY4742_Stanford_2014_JRIR00000000-Coding = Coding Sequence of all S.c. strain BY4742 (Stanford)",
+				"seqcount": "5260"
+			},
+			{
+				"dataset_file_name": "BY4742_Stanford_2014_JRIR00000000_pep",
+				"seqtype": "protein",
+				"label":  "BY4742_Stanford_2014_JRIR00000000-Trans = Translations of all S.c. strain BY4742 ORFs (Protein) (Stanford)",
+				"seqcount": "5260"
+			}
+		],
+		"BY4742_Toronto_2012": [
+			{
+				"dataset_file_name": "BY4742_Toronto_2012",
+				"seqtype": "dna",
+				"label":  "BY4742_Toronto_2012-Genome = COMPLETE S. cerevisiae strain BY4742 genome (Toronto)",
+				"seqcount": "18"
+			},
+			{
+				"dataset_file_name": "BY4742_Toronto_2012_cds",
+				"seqtype": "dna",
+				"label":  "BY4742_Toronto_2012-Coding = Coding Sequence of all S.c. strain BY4742 (Toronto)",
+				"seqcount": "6597"
+			},
+			{
+				"dataset_file_name": "BY4742_Toronto_2012_pep",
+				"seqtype": "protein",
+				"label":  "BY4742_Toronto_2012-Trans = Translations of all S.c. strain BY4742 ORFs (Protein) (Toronto)",
+				"seqcount": "6597"
+			}
+		],
+		"CBS7960_WashU_2011_AEWL01000000": [
+			{
+				"dataset_file_name": "CBS7960_WashU_2011_AEWL01000000",
+				"seqtype": "dna",
+				"label":  "CBS7960_WashU_2011_AEWL01000000-Genome = COMPLETE S. cerevisiae strain CBS7960 genome (WashU)",
+				"seqcount": "2367"
+			},
+			{
+				"dataset_file_name": "CBS7960_WashU_2011_AEWL01000000_cds",
+				"seqtype": "dna",
+				"label":  "CBS7960_WashU_2011_AEWL01000000-Coding = Coding Sequence of all S.c. strain CBS7960 (WashU)",
+				"seqcount": "5315"
+			},
+			{
+				"dataset_file_name": "CBS7960_WashU_2011_AEWL01000000_pep",
+				"seqtype": "protein",
+				"label":  "CBS7960_WashU_2011_AEWL01000000-Trans = Translations of all S.c. strain CBS7960 ORFs (Protein) (WashU)",
+				"seqcount": "5315"
+			}
+		],
+		"CEN.PK113-7D_Delft_2012_AEHG00000000": [
+			{
+				"dataset_file_name": "CEN.PK113-7D_Delft_2012_AEHG00000000",
+				"seqtype": "dna",
+				"label":  "CEN.PK113-7D_Delft_2012_AEHG00000000-Genome = COMPLETE S. cerevisiae strain CEN.PK113-7D genome (Delft)",
+				"seqcount": "589"
+			},
+			{
+				"dataset_file_name": "CEN.PK113-7D_Delft_2012_AEHG00000000_cds",
+				"seqtype": "dna",
+				"label":  "CEN.PK113-7D_Delft_2012_AEHG00000000-Coding = Coding Sequence of all S.c. strain CEN.PK113-7D (Delft)",
+				"seqcount": "6261"
+			},
+			{
+				"dataset_file_name": "CEN.PK113-7D_Delft_2012_AEHG00000000_pep",
+				"seqtype": "protein",
+				"label":  "CEN.PK113-7D_Delft_2012_AEHG00000000-Trans = Translations of all S.c. strain CEN.PK113-7D ORFs (Protein) (Delft)",
+				"seqcount": "6261"
+			}
+		],
+		"CEN.PK2-1Ca_SGD_2015_JRIV01000000": [
+			{
+				"dataset_file_name": "CEN.PK2-1Ca_SGD_2015_JRIV01000000",
+				"seqtype": "dna",
+				"label":  "CEN.PK2-1Ca_SGD_2015_JRIV01000000-Genome = COMPLETE S. cerevisiae strain CEN.PK2-1Ca genome (SGD)",
+				"seqcount": "189"
+			},
+			{
+				"dataset_file_name": "CEN.PK2-1Ca_JRIV01000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "CEN.PK2-1Ca_SGD_2015_JRIV01000000-Coding = Coding Sequence of all S.c. strain CEN.PK2-1Ca (SGD)",
+				"seqcount": "5185"
+			},
+			{
+				"dataset_file_name": "CEN.PK2-1Ca_JRIV01000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "CEN.PK2-1Ca_SGD_2015_JRIV01000000-Trans = Translations of all S.c. strain CEN.PK2-1Ca ORFs (Protein) (SGD)",
+				"seqcount": "5180"
+			}
+		],
+		"CLIB215_WashU_2010_AEWP01000000": [
+			{
+				"dataset_file_name": "CLIB215_WashU_2010_AEWP01000000",
+				"seqtype": "dna",
+				"label":  "CLIB215_WashU_2010_AEWP01000000-Genome = COMPLETE S. cerevisiae strain CLIB215 genome (WashU)",
+				"seqcount": "1566"
+			},
+			{
+				"dataset_file_name": "CLIB215_WashU_2010_AEWP01000000_cds",
+				"seqtype": "dna",
+				"label":  "CLIB215_WashU_2010_AEWP01000000-Coding = Coding Sequence of all S.c. strain CLIB215 (WashU)",
+				"seqcount": "5038"
+			},
+			{
+				"dataset_file_name": "CLIB215_WashU_2010_AEWP01000000_pep",
+				"seqtype": "protein",
+				"label":  "CLIB215_WashU_2010_AEWP01000000-Trans = Translations of all S.c. strain CLIB215 ORFs (Protein) (WashU)",
+				"seqcount": "5038"
+			}
+		],
+		"CLIB324_WashU_2011_AEWM01000000": [
+			{
+				"dataset_file_name": "CLIB324_WashU_2011_AEWM01000000",
+				"seqtype": "dna",
+				"label":  "CLIB324_WashU_2011_AEWM01000000-Genome = COMPLETE S. cerevisiae strain CLIB324 genome (WashU)",
+				"seqcount": "3538"
+			},
+			{
+				"dataset_file_name": "CLIB324_WashU_2011_AEWM01000000_cds",
+				"seqtype": "dna",
+				"label":  "CLIB324_WashU_2011_AEWM01000000-Coding = Coding Sequence of all S.c. strain CLIB324 (WashU)",
+				"seqcount": "3730"
+			},
+			{
+				"dataset_file_name": "CLIB324_WashU_2011_AEWM01000000_pep",
+				"seqtype": "protein",
+				"label":  "CLIB324_WashU_2011_AEWM01000000-Trans = Translations of all S.c. strain CLIB324 ORFs (Protein) (WashU)",
+				"seqcount": "3730"
+			}
+		],
+		"CLIB382_WashU_2011_AFDG01000000": [
+			{
+				"dataset_file_name": "CLIB382_WashU_2011_AFDG01000000",
+				"seqtype": "dna",
+				"label":  "CLIB382_WashU_2011_AFDG01000000-Genome = COMPLETE S. cerevisiae strain CLIB382 genome (WashU)",
+				"seqcount": "12493"
+			},
+			{
+				"dataset_file_name": "CLIB382_WashU_2011_AFDG01000000_cds",
+				"seqtype": "dna",
+				"label":  "CLIB382_WashU_2011_AFDG01000000-Coding = Coding Sequence of all S.c. strain CLIB382 (WashU)",
+				"seqcount": "928"
+			},
+			{
+				"dataset_file_name": "CLIB382_WashU_2011_AFDG01000000_pep",
+				"seqtype": "protein",
+				"label":  "CLIB382_WashU_2011_AFDG01000000-Trans = Translations of all S.c. strain CLIB382 ORFs (Protein) (WashU)",
+				"seqcount": "928"
+			}
+		],
+		"D273-10B_SGD_2015_JRIY00000000": [
+			{
+				"dataset_file_name": "D273-10B_SGD_2015_JRIY00000000",
+				"seqtype": "dna",
+				"label":  "D273-10B_SGD_2015_JRIY00000000-Genome = COMPLETE S. cerevisiae strain D273-10B genome (SGD)",
+				"seqcount": "203"
+			},
+			{
+				"dataset_file_name": "D273-10B_JRIY00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "D273-10B_SGD_2015_JRIY00000000-Coding = Coding Sequence of all S.c. strain D273-10B (SGD)",
+				"seqcount": "5101"
+			},
+			{
+				"dataset_file_name": "D273-10B_JRIY00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "D273-10B_SGD_2015_JRIY00000000-Trans = Translations of all S.c. strain D273-10B ORFs (Protein) (SGD)",
+				"seqcount": "5099"
+			}
+		],
+		"DBVPG6044_Stanford_2014_JRIG00000000": [
+			{
+				"dataset_file_name": "DBVPG6044_Stanford_2014_JRIG00000000",
+				"seqtype": "dna",
+				"label":  "DBVPG6044_Stanford_2014_JRIG00000000-Genome = COMPLETE S. cerevisiae strain DBVPG6044 genome (Stanford)",
+				"seqcount": "624"
+			},
+			{
+				"dataset_file_name": "DBVPG6044_Stanford_2014_JRIG00000000_cds",
+				"seqtype": "dna",
+				"label":  "DBVPG6044_Stanford_2014_JRIG00000000-Coding = Coding Sequence of all S.c. strain DBVPG6044 (Stanford)",
+				"seqcount": "5020"
+			},
+			{
+				"dataset_file_name": "DBVPG6044_Stanford_2014_JRIG00000000_pep",
+				"seqtype": "protein",
+				"label":  "DBVPG6044_Stanford_2014_JRIG00000000-Trans = Translations of all S.c. strain DBVPG6044 ORFs (Protein) (Stanford)",
+				"seqcount": "5020"
+			}
+		],
+		"EC1118_Genoscope_2009_PRJEA37863": [
+			{
+				"dataset_file_name": "EC1118_Genoscope_2009_PRJEA37863 ",
+				"seqtype": "dna",
+				"label":  "EC1118_Genoscope_2009_PRJEA37863-Genome = COMPLETE S. cerevisiae strain EC1118 genome (Genoscope)",
+				"seqcount": "31"
+			},
+			{
+				"dataset_file_name": "EC1118_Genoscope_2009_PRJEA37863_cds",
+				"seqtype": "dna",
+				"label":  "EC1118_Genoscope_2009_PRJEA37863-Coding = Coding Sequence of all S.c. strain EC1118 (Genoscope)",
+				"seqcount": "6323"
+			},
+			{
+				"dataset_file_name": "EC1118_Genoscope_2009_PRJEA37863_pep",
+				"seqtype": "protein",
+				"label":  "EC1118_Genoscope_2009_PRJEA37863-Trans = Translations of all S.c. strain EC1118 ORFs (Protein) (Genoscope)",
+				"seqcount": "6323"
+			}
+		],
+		"EC9-8_ASinica_2011_AGSJ01000000": [
+			{
+				"dataset_file_name": "EC9-8_ASinica_2011_AGSJ01000000",
+				"seqtype": "dna",
+				"label":  "EC9-8_ASinica_2011_AGSJ01000000-Genome = COMPLETE S. cerevisiae strain EC9-8 genome (ASinica)",
+				"seqcount": "1088"
+			},
+			{
+				"dataset_file_name": "EC9-8_ASinica_2011_AGSJ01000000_cds",
+				"seqtype": "dna",
+				"label":  "EC9-8_ASinica_2011_AGSJ01000000-Coding = Coding Sequence of all S.c. strain EC9-8 (ASinica)",
+				"seqcount": "5485"
+			},
+			{
+				"dataset_file_name": "EC9-8_ASinica_2011_AGSJ01000000_pep",
+				"seqtype": "protein",
+				"label":  "EC9-8_ASinica_2011_AGSJ01000000-Trans = Translations of all S.c. strain EC9-8 ORFs (Protein) (ASinica)",
+				"seqcount": "5485"
+			}
+		],
+		"FL100_SGD_2015_JRIT00000000": [
+			{
+				"dataset_file_name": "FL100_SGD_2015_JRIT00000000",
+				"seqtype": "dna",
+				"label":  "FL100_SGD_2015_JRIT00000000-Genome = COMPLETE S. cerevisiae strain FL100 genome (SGD)",
+				"seqcount": "174"
+			},
+			{
+				"dataset_file_name": "FL100_JRIT00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "FL100_SGD_2015_JRIT00000000-Coding = Coding Sequence of all S.c. strain FL100 (SGD)",
+				"seqcount": "5209"
+			},
+			{
+				"dataset_file_name": "FL100_JRIT00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "FL100_SGD_2015_JRIT00000000-Trans = Translations of all S.c. strain FL100 ORFs (Protein) (SGD)",
+				"seqcount": "5205"
+			}
+		],
+		"FL100_WashU_2011_AEWO01000000": [
+			{
+				"dataset_file_name": "FL100_WashU_2011_AEWO01000000",
+				"seqtype": "dna",
+				"label":  "FL100_WashU_2011_AEWO01000000-Genome = COMPLETE S. cerevisiae strain FL100 genome (WashU)",
+				"seqcount": "3518"
+			},
+			{
+				"dataset_file_name": "FL100_WashU_2011_AEWO01000000_cds",
+				"seqtype": "dna",
+				"label":  "FL100_WashU_2011_AEWO01000000-Coding = Coding Sequence of all S.c. strain FL100 (WashU)",
+				"seqcount": "3903"
+			},
+			{
+				"dataset_file_name": "FL100_WashU_2011_AEWO01000000_pep",
+				"seqtype": "protein",
+				"label":  "FL100_WashU_2011_AEWO01000000-Trans = Translations of all S.c. strain FL100 ORFs (Protein) (WashU)",
+				"seqcount": "3903"
+			}
+		],
+		"FY1679_Stanford_2014_JRIN00000000": [
+			{
+				"dataset_file_name": "FY1679_Stanford_2014_JRIN00000000",
+				"seqtype": "dna",
+				"label":  "FY1679_Stanford_2014_JRIN00000000-Genome = COMPLETE S. cerevisiae strain FY1679 genome (Stanford)",
+				"seqcount": "388"
+			},
+			{
+				"dataset_file_name": "FY1679_Stanford_2014_JRIN00000000_cds",
+				"seqtype": "dna",
+				"label":  "FY1679_Stanford_2014_JRIN00000000-Coding = Coding Sequence of all S.c. strain FY1679 (Stanford)",
+				"seqcount": "5297"
+			},
+			{
+				"dataset_file_name": "FY1679_Stanford_2014_JRIN00000000_pep",
+				"seqtype": "protein",
+				"label":  "FY1679_Stanford_2014_JRIN00000000-Trans = Translations of all S.c. strain FY1679 ORFs (Protein) (Stanford)",
+				"seqcount": "5297"
+			}
+		],
+		"FostersB_AWRI_2010_AEHH01000000": [
+			{
+				"dataset_file_name": "FostersB_AWRI_2010_AEHH01000000",
+				"seqtype": "dna",
+				"label":  "FostersB_AWRI_2010_AEHH01000000-Genome = COMPLETE S. cerevisiae strain FostersB genome (AWRI)",
+				"seqcount": "142"
+			},
+			{
+				"dataset_file_name": "FostersB_AWRI_2010_AEHH01000000_cds",
+				"seqtype": "dna",
+				"label":  "FostersB_AWRI_2010_AEHH01000000-Coding = Coding Sequence of all S.c. strain FostersB (AWRI)",
+				"seqcount": "6198"
+			},
+			{
+				"dataset_file_name": "FostersB_AWRI_2010_AEHH01000000_pep",
+				"seqtype": "protein",
+				"label":  "FostersB_AWRI_2010_AEHH01000000-Trans = Translations of all S.c. strain FostersB ORFs (Protein) (AWRI)",
+				"seqcount": "6198"
+			}
+		],
+		"FostersO_AWRI_2010_AEEZ01000000": [
+			{
+				"dataset_file_name": "FostersO_AWRI_2010_AEEZ01000000",
+				"seqtype": "dna",
+				"label":  "FostersO_AWRI_2010_AEEZ01000000-Genome = COMPLETE S. cerevisiae strain FostersO genome (AWRI)",
+				"seqcount": "222"
+			},
+			{
+				"dataset_file_name": "FostersO_AWRI_2010_AEEZ01000000_cds",
+				"seqtype": "dna",
+				"label":  "FostersO_AWRI_2010_AEEZ01000000-Coding = Coding Sequence of all S.c. strain FostersO (AWRI)",
+				"seqcount": "6211"
+			},
+			{
+				"dataset_file_name": "FostersO_AWRI_2010_AEEZ01000000_pep",
+				"seqtype": "protein",
+				"label":  "FostersO_AWRI_2010_AEEZ01000000-Trans = Translations of all S.c. strain FostersO ORFs (Protein) (AWRI)",
+				"seqcount": "6211"
+			}
+		],
+		"JAY291_Duke_2009_ACFL01000000": [
+			{
+				"dataset_file_name": "JAY291_Duke_2009_ACFL01000000",
+				"seqtype": "dna",
+				"label":  "JAY291_Duke_2009_ACFL01000000-Genome = COMPLETE S. cerevisiae strain JAY291 genome (Duke)",
+				"seqcount": "453"
+			},
+			{
+				"dataset_file_name": "JAY291_Duke_2009_ACFL01000000_cds",
+				"seqtype": "dna",
+				"label":  "JAY291_Duke_2009_ACFL01000000-Coding = Coding Sequence of all S.c. strain JAY291 (Duke)",
+				"seqcount": "6141"
+			},
+			{
+				"dataset_file_name": "JAY291_Duke_2009_ACFL01000000_pep",
+				"seqtype": "protein",
+				"label":  "JAY291_Duke_2009_ACFL01000000-Trans = Translations of all S.c. strain JAY291 ORFs (Protein) (Duke)",
+				"seqcount": "6141"
+			}
+		],
+		"JK9-3d_SGD_2015_JRIZ00000000": [
+			{
+				"dataset_file_name": "JK9-3d_SGD_2015_JRIZ00000000",
+				"seqtype": "dna",
+				"label":  "JK9-3d_SGD_2015_JRIZ00000000-Genome = COMPLETE S. cerevisiae strain JK9-3d genome (SGD)",
+				"seqcount": "197"
+			},
+			{
+				"dataset_file_name": "JK9-3d_JRIZ00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "JK9-3d_SGD_2015_JRIZ00000000-Coding = Coding Sequence of all S.c. strain JK9-3d (SGD)",
+				"seqcount": "5224"
+			},
+			{
+				"dataset_file_name": "JK9-3d_JRIZ00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "JK9-3d_SGD_2015_JRIZ00000000-Trans = Translations of all S.c. strain JK9-3d ORFs (Protein) (SGD)",
+				"seqcount": "5222"
+			}
+		],
+		"K11_Stanford_2014_JRIJ00000000": [
+			{
+				"dataset_file_name": "K11_Stanford_2014_JRIJ00000000",
+				"seqtype": "dna",
+				"label":  "K11_Stanford_2014_JRIJ00000000-Genome = COMPLETE S. cerevisiae strain K11 genome (Stanford)",
+				"seqcount": "480"
+			},
+			{
+				"dataset_file_name": "K11_Stanford_2014_JRIJ00000000_cds",
+				"seqtype": "dna",
+				"label":  "K11_Stanford_2014_JRIJ00000000-Coding = Coding Sequence of all S.c. strain K11 (Stanford)",
+				"seqcount": "5019"
+			},
+			{
+				"dataset_file_name": "K11_Stanford_2014_JRIJ00000000_pep",
+				"seqtype": "protein",
+				"label":  "K11_Stanford_2014_JRIJ00000000-Trans = Translations of all S.c. strain K11 ORFs (Protein) (Stanford)",
+				"seqcount": "5019"
+			}
+		],
+		"Kyokai7_NRIB_2011_BABQ01000000": [
+			{
+				"dataset_file_name": "Kyokai7_NRIB_2011_BABQ01000000",
+				"seqtype": "dna",
+				"label":  "Kyokai7_NRIB_2011_BABQ01000000-Genome = COMPLETE S. cerevisiae strain Kyokai7 genome (NRIB)",
+				"seqcount": "705"
+			},
+			{
+				"dataset_file_name": "Kyokai7_NRIB_2011_BABQ01000000_cds",
+				"seqtype": "dna",
+				"label":  "Kyokai7_NRIB_2011_BABQ01000000-Coding = Coding Sequence of all S.c. strain Kyokai7 (NRIB)",
+				"seqcount": "6232"
+			},
+			{
+				"dataset_file_name": "Kyokai7_NRIB_2011_BABQ01000000_pep",
+				"seqtype": "protein",
+				"label":  "Kyokai7_NRIB_2011_BABQ01000000-Trans = Translations of all S.c. strain Kyokai7 ORFs (Protein) (NRIB)",
+				"seqcount": "6232"
+			}
+		],
+		"L1528_Stanford_2014_JRIK00000000": [
+			{
+				"dataset_file_name": "L1528_Stanford_2014_JRIK00000000",
+				"seqtype": "dna",
+				"label":  "L1528_Stanford_2014_JRIK00000000-Genome = COMPLETE S. cerevisiae strain L1528 genome (Stanford)",
+				"seqcount": "538"
+			},
+			{
+				"dataset_file_name": "L1528_Stanford_2014_JRIK00000000_cds",
+				"seqtype": "dna",
+				"label":  "L1528_Stanford_2014_JRIK00000000-Coding = Coding Sequence of all S.c. strain L1528 (Stanford)",
+				"seqcount": "5099"
+			},
+			{
+				"dataset_file_name": "L1528_Stanford_2014_JRIK00000000_pep",
+				"seqtype": "protein",
+				"label":  "L1528_Stanford_2014_JRIK00000000-Trans = Translations of all S.c. strain L1528 ORFs (Protein) (Stanford)",
+				"seqcount": "5099"
+			}
+		],
+		"LalvinQA23_AWRI_2011_ADVV01000000": [
+			{
+				"dataset_file_name": "LalvinQA23_AWRI_2011_ADVV01000000",
+				"seqtype": "dna",
+				"label":  "LalvinQA23_AWRI_2011_ADVV01000000-Genome = COMPLETE S. cerevisiae strain LalvinQA23 genome (AWRI)",
+				"seqcount": "185"
+			},
+			{
+				"dataset_file_name": "LalvinQA23_AWRI_2011_ADVV01000000_cds",
+				"seqtype": "dna",
+				"label":  "LalvinQA23_AWRI_2011_ADVV01000000-Coding = Coding Sequence of all S.c. strain LalvinQA23 (AWRI)",
+				"seqcount": "6255"
+			},
+			{
+				"dataset_file_name": "LalvinQA23_AWRI_2011_ADVV01000000_pep",
+				"seqtype": "protein",
+				"label":  "LalvinQA23_AWRI_2011_ADVV01000000-Trans = Translations of all S.c. strain LalvinQA23 ORFs (Protein) (AWRI)",
+				"seqcount": "6255"
+			}
+		],
+		"M22_WashU_2008_ABPC01000000": [
+			{
+				"dataset_file_name": "M22_WashU_2008_ABPC01000000",
+				"seqtype": "dna",
+				"label":  "M22_WashU_2008_ABPC01000000-Genome = COMPLETE S. cerevisiae strain M22 genome (WashU)",
+				"seqcount": "6145"
+			},
+			{
+				"dataset_file_name": "M22_WashU_2008_ABPC01000000_cds",
+				"seqtype": "dna",
+				"label":  "M22_WashU_2008_ABPC01000000-Coding = Coding Sequence of all S.c. strain M22 (WashU)",
+				"seqcount": "2543"
+			},
+			{
+				"dataset_file_name": "M22_WashU_2008_ABPC01000000_pep",
+				"seqtype": "protein",
+				"label":  "M22_WashU_2008_ABPC01000000-Trans = Translations of all S.c. strain M22 ORFs (Protein) (WashU)",
+				"seqcount": "2543"
+			}
+		],
+		"PW5_WashU_2011_AFDC01000000": [
+			{
+				"dataset_file_name": "PW5_WashU_2011_AFDC01000000",
+				"seqtype": "dna",
+				"label":  "PW5_WashU_2011_AFDC01000000-Genome = COMPLETE S. cerevisiae strain PW5 genome (WashU)",
+				"seqcount": "1608"
+			},
+			{
+				"dataset_file_name": "PW5_WashU_2011_AFDC01000000_cds",
+				"seqtype": "dna",
+				"label":  "PW5_WashU_2011_AFDC01000000-Coding = Coding Sequence of all S.c. strain PW5 (WashU)",
+				"seqcount": "5520"
+			},
+			{
+				"dataset_file_name": "PW5_WashU_2011_AFDC01000000_pep",
+				"seqtype": "protein",
+				"label":  "PW5_WashU_2011_AFDC01000000-Trans = Translations of all S.c. strain PW5 ORFs (Protein) (WashU)",
+				"seqcount": "5520"
+			}
+		],
+		"RM11-1a_Broad_2005_AAEG01000000": [
+			{
+				"dataset_file_name": "RM11-1a_Broad_2005_AAEG01000000",
+				"seqtype": "dna",
+				"label":  "RM11-1a_Broad_2005_AAEG01000000-Genome = COMPLETE S. cerevisiae strain RM11-1a genome (Broad)",
+				"seqcount": "115"
+			},
+			{
+				"dataset_file_name": "RM11-1a_Broad_2005_AAEG01000000_cds",
+				"seqtype": "dna",
+				"label":  "RM11-1a_Broad_2005_AAEG01000000-Coding = Coding Sequence of all S.c. strain RM11-1a (Broad)",
+				"seqcount": "6271"
+			},
+			{
+				"dataset_file_name": "RM11-1a_Broad_2005_AAEG01000000_pep",
+				"seqtype": "protein",
+				"label":  "RM11-1a_Broad_2005_AAEG01000000-Trans = Translations of all S.c. strain RM11-1a ORFs (Protein) (Broad)",
+				"seqcount": "6271"
+			}
+		],
+		"RM11-1A_SGD_2015_JRIP00000000": [
+			{
+				"dataset_file_name": "RM11-1A_SGD_2015_JRIP00000000",
+				"seqtype": "dna",
+				"label":  "RM11-1A_SGD_2015_JRIP00000000-Genome = COMPLETE S. cerevisiae strain RM11-1A genome (SGD)",
+				"seqcount": "169"
+			},
+			{
+				"dataset_file_name": "RM11-1A_JRIP00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "RM11-1A_SGD_2015_JRIP00000000-Coding = Coding Sequence of all S.c. strain RM11-1A (SGD)",
+				"seqcount": "4955"
+			},
+			{
+				"dataset_file_name": "RM11-1A_JRIP00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "RM11-1A_SGD_2015_JRIP00000000-Trans = Translations of all S.c. strain RM11-1A ORFs (Protein) (SGD)",
+				"seqcount": "4951"
+			}
+		],
+		"RedStar_Stanford_2014_JRIL00000000": [
+			{
+				"dataset_file_name": "RedStar_Stanford_2014_JRIL00000000",
+				"seqtype": "dna",
+				"label":  "RedStar_Stanford_2014_JRIL00000000-Genome = COMPLETE S. cerevisiae strain RedStar genome (Stanford)",
+				"seqcount": "577"
+			},
+			{
+				"dataset_file_name": "RedStar_Stanford_2014_JRIL00000000_cds",
+				"seqtype": "dna",
+				"label":  "RedStar_Stanford_2014_JRIL00000000-Coding = Coding Sequence of all S.c. strain RedStar (Stanford)",
+				"seqcount": "5206"
+			},
+			{
+				"dataset_file_name": "RedStar_Stanford_2014_JRIL00000000_pep",
+				"seqtype": "protein",
+				"label":  "RedStar_Stanford_2014_JRIL00000000-Trans = Translations of all S.c. strain RedStar ORFs (Protein) (Stanford)",
+				"seqcount": "5206"
+			}
+		],
+		"SEY6210_SGD_2015_JRIW00000000": [
+			{
+				"dataset_file_name": "SEY6210_SGD_2015_JRIW00000000",
+				"seqtype": "dna",
+				"label":  "SEY6210_SGD_2015_JRIW00000000-Genome = COMPLETE S. cerevisiae strain SEY6210 genome (SGD)",
+				"seqcount": "183"
+			},
+			{
+				"dataset_file_name": "SEY6210_JRIW00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "SEY6210_SGD_2015_JRIW00000000-Coding = Coding Sequence of all S.c. strain SEY6210 (SGD)",
+				"seqcount": "5303"
+			},
+			{
+				"dataset_file_name": "SEY6210_JRIW00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "SEY6210_SGD_2015_JRIW00000000-Trans = Translations of all S.c. strain SEY6210 ORFs (Protein) (SGD)",
+				"seqcount": "5295"
+			}
+		],
+		"SK1_SGD_2018_NCSL00000000": [
+			{
+				"dataset_file_name": "SK1_SGD_2018_NCSL00000000",
+				"seqtype": "dna",
+				"label":  "SK1_SGD_2018_NCSL00000000-Genome = COMPLETE S. cerevisiae strain SK1 genome (SGD)",
+				"seqcount": "106"
+			},
+			{
+				"dataset_file_name": "SK1_SGD_2018_NCSL00000000_cds",
+				"seqtype": "dna",
+				"label":  "SK1_SGD_2018_NCSL00000000-Coding = Coding Sequence of all S.c. strain SK1 (SGD)",
+				"seqcount": "5960"
+			},
+			{
+				"dataset_file_name": "SK1_SGD_2018_NCSL00000000_pep",
+				"seqtype": "protein",
+				"label":  "SK1_SGD_2018_NCSL00000000-Trans = Translations of all S.c. strain SK1 ORFs (Protein) (SGD)",
+				"seqcount": "5960"
+			}
+		],
+		"Sigma1278b-10560-6B_SGD_2015_JRIQ00000000": [
+			{
+				"dataset_file_name": "Sigma1278b-10560-6B_SGD_2015_JRIQ00000000",
+				"seqtype": "dna",
+				"label":  "Sigma1278b-10560-6B_SGD_2015_JRIQ00000000-Genome = COMPLETE S. cerevisiae strain Sigma1278b-10560-6B genome (SGD)",
+				"seqcount": "214"
+			},
+			{
+				"dataset_file_name": "Sigma1278b-10560-6B_JRIQ00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "Sigma1278b-10560-6B_SGD_2015_JRIQ00000000-Coding = Coding Sequence of all S.c. strain Sigma1278b-10560-6B (SGD)",
+				"seqcount": "5325"
+			},
+			{
+				"dataset_file_name": "Sigma1278b-10560-6B_JRIQ00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "Sigma1278b-10560-6B_SGD_2015_JRIQ00000000-Trans = Translations of all S.c. strain Sigma1278b-10560-6B ORFs (Protein) (SGD)",
+				"seqcount": "5320"
+			}
+		],
+		"Sigma1278b_MIT_2009_ACVY01000000": [
+			{
+				"dataset_file_name": "Sigma1278b_MIT_2009_ACVY01000000",
+				"seqtype": "dna",
+				"label":  "Sigma1278b_MIT_2009_ACVY01000000-Genome = COMPLETE S. cerevisiae strain Sigma1278b genome (MIT)",
+				"seqcount": "67"
+			},
+			{
+				"dataset_file_name": "Sigma1278b_MIT_2009_ACVY01000000_cds",
+				"seqtype": "dna",
+				"label":  "Sigma1278b_MIT_2009_ACVY01000000-Coding = Coding Sequence of all S.c. strain Sigma1278b (MIT)",
+				"seqcount": "6371"
+			},
+			{
+				"dataset_file_name": "Sigma1278b_MIT_2009_ACVY01000000_pep",
+				"seqtype": "protein",
+				"label":  "Sigma1278b_MIT_2009_ACVY01000000-Trans = Translations of all S.c. strain Sigma1278b ORFs (Protein) (MIT)",
+				"seqcount": "6371"
+			}
+		],
+		"T73_WashU_2011_AFDF01000000": [
+			{
+				"dataset_file_name": "T73_WashU_2011_AFDF01000000",
+				"seqtype": "dna",
+				"label":  "T73_WashU_2011_AFDF01000000-Genome = COMPLETE S. cerevisiae strain T73 genome (WashU)",
+				"seqcount": "5882"
+			},
+			{
+				"dataset_file_name": "T73_WashU_2011_AFDF01000000_cds",
+				"seqtype": "dna",
+				"label":  "T73_WashU_2011_AFDF01000000-Coding = Coding Sequence of all S.c. strain T73 (WashU)",
+				"seqcount": "3314"
+			},
+			{
+				"dataset_file_name": "T73_WashU_2011_AFDF01000000_pep",
+				"seqtype": "protein",
+				"label":  "T73_WashU_2011_AFDF01000000-Trans = Translations of all S.c. strain T73 ORFs (Protein) (WashU)",
+				"seqcount": "3314"
+			}
+		],
+		"T7_WashU_2011_AFDE01000000": [
+			{
+				"dataset_file_name": "T7_WashU_2011_AFDE01000000",
+				"seqtype": "dna",
+				"label":  "T7_WashU_2011_AFDE01000000-Genome = COMPLETE S. cerevisiae strain T7 genome (WashU)",
+				"seqcount": "360"
+			},
+			{
+				"dataset_file_name": "T7_WashU_2011_AFDE01000000_cds",
+				"seqtype": "dna",
+				"label":  "T7_WashU_2011_AFDE01000000-Coding = Coding Sequence of all S.c. strain T7 (WashU)",
+				"seqcount": "6285"
+			},
+			{
+				"dataset_file_name": "T7_WashU_2011_AFDE01000000_pep",
+				"seqtype": "protein",
+				"label":  "T7_WashU_2011_AFDE01000000-Trans = Translations of all S.c. strain T7 ORFs (Protein) (WashU)",
+				"seqcount": "6285"
+			}
+		],
+		"UC5_WashU_2011_AFDD01000000": [
+			{
+				"dataset_file_name": "UC5_WashU_2011_AFDD01000000",
+				"seqtype": "dna",
+				"label":  "UC5_WashU_2011_AFDD01000000-Genome = COMPLETE S. cerevisiae strain UC5 genome (WashU)",
+				"seqcount": "1527"
+			},
+			{
+				"dataset_file_name": "UC5_WashU_2011_AFDD01000000_cds",
+				"seqtype": "dna",
+				"label":  "UC5_WashU_2011_AFDD01000000-Coding = Coding Sequence of all S.c. strain UC5 (WashU)",
+				"seqcount": "5593"
+			},
+			{
+				"dataset_file_name": "UC5_WashU_2011_AFDD01000000_pep",
+				"seqtype": "protein",
+				"label":  "UC5_WashU_2011_AFDD01000000-Trans = Translations of all S.c. strain UC5 ORFs (Protein) (WashU)",
+				"seqcount": "5593"
+			}
+		],
+		"UWOPS05-217-3_Stanford_2014_JRIM00000000": [
+			{
+				"dataset_file_name": "UWOPS05-217-3_Stanford_2014_JRIM00000000",
+				"seqtype": "dna",
+				"label":  "UWOPS05-217-3_Stanford_2014_JRIM00000000-Genome = COMPLETE S. cerevisiae strain UWOPS05-217-3 genome (Stanford)",
+				"seqcount": "1348"
+			},
+			{
+				"dataset_file_name": "UWOPS05-217-3_Stanford_2014_JRIM00000000_cds",
+				"seqtype": "dna",
+				"label":  "UWOPS05-217-3_Stanford_2014_JRIM00000000-Coding = Coding Sequence of all S.c. strain UWOPS05-217-3 (Stanford)",
+				"seqcount": "4514"
+			},
+			{
+				"dataset_file_name": "UWOPS05-217-3_Stanford_2014_JRIM00000000_pep",
+				"seqtype": "protein",
+				"label":  "UWOPS05-217-3_Stanford_2014_JRIM00000000-Trans = Translations of all S.c. strain UWOPS05-217-3 ORFs (Protein) (Stanford)",
+				"seqcount": "4514"
+			}
+		],
+		"VL3_AWRI_2011_AEJS01000000": [
+			{
+				"dataset_file_name": "VL3_AWRI_2011_AEJS01000000",
+				"seqtype": "dna",
+				"label":  "VL3_AWRI_2011_AEJS01000000-Genome = COMPLETE S. cerevisiae strain VL3 genome (AWRI)",
+				"seqcount": "125"
+			},
+			{
+				"dataset_file_name": "VL3_AWRI_2011_AEJS01000000_cds",
+				"seqtype": "dna",
+				"label":  "VL3_AWRI_2011_AEJS01000000-Coding = Coding Sequence of all S.c. strain VL3 (AWRI)",
+				"seqcount": "6291"
+			},
+			{
+				"dataset_file_name": "VL3_AWRI_2011_AEJS01000000_pep",
+				"seqtype": "protein",
+				"label":  "VL3_AWRI_2011_AEJS01000000-Trans = Translations of all S.c. strain VL3 ORFs (Protein) (AWRI)",
+				"seqcount": "6291"
+			}
+		],
+		"Vin13_AWRI_2010_ADXC01000000": [
+			{
+				"dataset_file_name": "Vin13_AWRI_2010_ADXC01000000",
+				"seqtype": "dna",
+				"label":  "Vin13_AWRI_2010_ADXC01000000-Genome = COMPLETE S. cerevisiae strain Vin13 genome (AWRI)",
+				"seqcount": "158"
+			},
+			{
+				"dataset_file_name": "Vin13_AWRI_2010_ADXC01000000_cds",
+				"seqtype": "dna",
+				"label":  "Vin13_AWRI_2010_ADXC01000000-Coding = Coding Sequence of all S.c. strain Vin13 (AWRI)",
+				"seqcount": "6285"
+			},
+			{
+				"dataset_file_name": "Vin13_AWRI_2010_ADXC01000000_pep",
+				"seqtype": "protein",
+				"label":  "Vin13_AWRI_2010_ADXC01000000-Trans = Translations of all S.c. strain Vin13 ORFs (Protein) (AWRI)",
+				"seqcount": "6285"
+			}
+		],
+		"W303_MPG_2012_ALAV00000000": [
+			{
+				"dataset_file_name": "W303_MPG_2012_ALAV00000000",
+				"seqtype": "dna",
+				"label":  "W303_MPG_2012_ALAV00000000-Genome = COMPLETE S. cerevisiae strain W303 genome (MPG)",
+				"seqcount": "358"
+			},
+			{
+				"dataset_file_name": "W303_MPG_2012_ALAV00000000_cds",
+				"seqtype": "dna",
+				"label":  "W303_MPG_2012_ALAV00000000-Coding = Coding Sequence of all S.c. strain W303 (MPG)",
+				"seqcount": "6465"
+			},
+			{
+				"dataset_file_name": "W303_MPG_2012_ALAV00000000_pep",
+				"seqtype": "protein",
+				"label":  "W303_MPG_2012_ALAV00000000-Trans = Translations of all S.c. strain W303 ORFs (Protein) (MPG)",
+				"seqcount": "6465"
+			}
+		],
+		"W303_SGD_2015_JRIU00000000": [
+			{
+				"dataset_file_name": "W303_SGD_2015_JRIU00000000",
+				"seqtype": "dna",
+				"label":  "W303_SGD_2015_JRIU00000000-Genome = COMPLETE S. cerevisiae strain W303 genome (SGD)",
+				"seqcount": "236"
+			},
+			{
+				"dataset_file_name": "W303_JRIU00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "W303_SGD_2015_JRIU00000000-Coding = Coding Sequence of all S.c. strain W303 (SGD)",
+				"seqcount": "5193"
+			},
+			{
+				"dataset_file_name": "W303_JRIU00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "W303_SGD_2015_JRIU00000000-Trans = Translations of all S.c. strain W303 ORFs (Protein) (SGD)",
+				"seqcount": "5189"
+			}
+		],
+		"X2180-1A_SGD_2015_JRIX00000000": [
+			{
+				"dataset_file_name": "X2180-1A_SGD_2015_JRIX00000000",
+				"seqtype": "dna",
+				"label":  "X2180-1A_SGD_2015_JRIX00000000-Genome = COMPLETE S. cerevisiae strain X2180-1A genome (SGD)",
+				"seqcount": "212"
+			},
+			{
+				"dataset_file_name": "X2180-1A_JRIX00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "X2180-1A_SGD_2015_JRIX00000000-Coding = Coding Sequence of all S.c. strain X2180-1A (SGD)",
+				"seqcount": "5283"
+			},
+			{
+				"dataset_file_name": "X2180-1A_JRIX00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "X2180-1A_SGD_2015_JRIX00000000-Trans = Translations of all S.c. strain X2180-1A ORFs (Protein) (SGD)",
+				"seqcount": "5280"
+			}
+		],
+		"Y10_WashU_2011_AEWK01000000": [
+			{
+				"dataset_file_name": "Y10_WashU_2011_AEWK01000000",
+				"seqtype": "dna",
+				"label":  "Y10_WashU_2011_AEWK01000000-Genome = COMPLETE S. cerevisiae strain Y10 genome (WashU)",
+				"seqcount": "4118"
+			},
+			{
+				"dataset_file_name": "Y10_WashU_2011_AEWK01000000_cds",
+				"seqtype": "dna",
+				"label":  "Y10_WashU_2011_AEWK01000000-Coding = Coding Sequence of all S.c. strain Y10 (WashU)",
+				"seqcount": "2639"
+			},
+			{
+				"dataset_file_name": "Y10_WashU_2011_AEWK01000000_pep",
+				"seqtype": "protein",
+				"label":  "Y10_WashU_2011_AEWK01000000-Trans = Translations of all S.c. strain Y10 ORFs (Protein) (WashU)",
+				"seqcount": "2639"
+			}
+		],
+		"Y55_SGD_2015_JRIF00000000": [
+			{
+				"dataset_file_name": "Y55_SGD_2015_JRIF00000000",
+				"seqtype": "dna",
+				"label":  "Y55_SGD_2015_JRIF00000000-Genome = COMPLETE S. cerevisiae strain Y55 genome (SGD)",
+				"seqcount": "198"
+			},
+			{
+				"dataset_file_name": "Y55_JRIF00000000_SGD_cds",
+				"seqtype": "dna",
+				"label":  "Y55_SGD_2015_JRIF00000000-Coding = Coding Sequence of all S.c. strain Y55 (SGD)",
+				"seqcount": "5168"
+			},
+			{
+				"dataset_file_name": "Y55_JRIF00000000_SGD_pep",
+				"seqtype": "protein",
+				"label":  "Y55_SGD_2015_JRIF00000000-Trans = Translations of all S.c. strain Y55 ORFs (Protein) (SGD)",
+				"seqcount": "5159"
+			}
+		],
+		"YJM269_WashU_2011_AEWN01000000": [
+			{
+				"dataset_file_name": "YJM269_WashU_2011_AEWN01000000",
+				"seqtype": "dna",
+				"label":  "YJM269_WashU_2011_AEWN01000000-Genome = COMPLETE S. cerevisiae strain YJM269 genome (WashU)",
+				"seqcount": "1179"
+			},
+			{
+				"dataset_file_name": "YJM269_WashU_2011_AEWN01000000_cds",
+				"seqtype": "dna",
+				"label":  "YJM269_WashU_2011_AEWN01000000-Coding = Coding Sequence of all S.c. strain YJM269 (WashU)",
+				"seqcount": "5376"
+			},
+			{
+				"dataset_file_name": "YJM269_WashU_2011_AEWN01000000_pep",
+				"seqtype": "protein",
+				"label":  "YJM269_WashU_2011_AEWN01000000-Trans = Translations of all S.c. strain YJM269 ORFs (Protein) (WashU)",
+				"seqcount": "5376"
+			}
+		],
+		"YJM339_Stanford_2014_JRIE00000000": [
+			{
+				"dataset_file_name": "YJM339_Stanford_2014_JRIE00000000",
+				"seqtype": "dna",
+				"label":  "YJM339_Stanford_2014_JRIE00000000-Genome = COMPLETE S. cerevisiae strain YJM339 genome (Stanford)",
+				"seqcount": "554"
+			},
+			{
+				"dataset_file_name": "YJM339_Stanford_2014_JRIE00000000_cds",
+				"seqtype": "dna",
+				"label":  "YJM339_Stanford_2014_JRIE00000000-Coding = Coding Sequence of all S.c. strain YJM339 (Stanford)",
+				"seqcount": "5139"
+			},
+			{
+				"dataset_file_name": "YJM339_Stanford_2014_JRIE00000000_pep",
+				"seqtype": "protein",
+				"label":  "YJM339_Stanford_2014_JRIE00000000-Trans = Translations of all S.c. strain YJM339 ORFs (Protein) (Stanford)",
+				"seqcount": "5139"
+			}
+		],
+		"YJM789_Stanford_2007_AAFW02000000": [
+			{
+				"dataset_file_name": "YJM789_Stanford_2007_AAFW02000000",
+				"seqtype": "dna",
+				"label":  "YJM789_Stanford_2007_AAFW02000000-Genome = COMPLETE S. cerevisiae strain YJM789 genome (Stanford)",
+				"seqcount": "258"
+			},
+			{
+				"dataset_file_name": "YJM789_Stanford_2007_AAFW02000000_cds",
+				"seqtype": "dna",
+				"label":  "YJM789_Stanford_2007_AAFW02000000-Coding = Coding Sequence of all S.c. strain YJM789 (Stanford)",
+				"seqcount": "6326"
+			},
+			{
+				"dataset_file_name": "YJM789_Stanford_2007_AAFW02000000_pep",
+				"seqtype": "protein",
+				"label":  "YJM789_Stanford_2007_AAFW02000000-Trans = Translations of all S.c. strain YJM789 ORFs (Protein) (Stanford)",
+				"seqcount": "6326"
+			}
+		],
+		"YPH499_Stanford_2014_JRIO00000000": [
+			{
+				"dataset_file_name": "YPH499_Stanford_2014_JRIO00000000",
+				"seqtype": "dna",
+				"label":  "YPH499_Stanford_2014_JRIO00000000-Genome = COMPLETE S. cerevisiae strain YPH499 genome (Stanford)",
+				"seqcount": "344"
+			},
+			{
+				"dataset_file_name": "YPH499_Stanford_2014_JRIO00000000_cds",
+				"seqtype": "dna",
+				"label":  "YPH499_Stanford_2014_JRIO00000000-Coding = Coding Sequence of all S.c. strain YPH499 (Stanford)",
+				"seqcount": "5295"
+			},
+			{
+				"dataset_file_name": "YPH499_Stanford_2014_JRIO00000000_pep",
+				"seqtype": "protein",
+				"label":  "YPH499_Stanford_2014_JRIO00000000-Trans = Translations of all S.c. strain YPH499 ORFs (Protein) (Stanford)",
+				"seqcount": "5295"
+			}
+		],
+		"YPS128_Stanford_2014_JRID00000000": [
+			{
+				"dataset_file_name": "YPS128_Stanford_2014_JRID00000000",
+				"seqtype": "dna",
+				"label":  "YPS128_Stanford_2014_JRID00000000-Genome = COMPLETE S. cerevisiae strain YPS128 genome (Stanford)",
+				"seqcount": "670"
+			},
+			{
+				"dataset_file_name": "YPS128_Stanford_2014_JRID00000000_cds",
+				"seqtype": "dna",
+				"label":  "YPS128_Stanford_2014_JRID00000000-Coding = Coding Sequence of all S.c. strain YPS128 (Stanford)",
+				"seqcount": "5142"
+			},
+			{
+				"dataset_file_name": "YPS128_Stanford_2014_JRID00000000_pep",
+				"seqtype": "protein",
+				"label":  "YPS128_Stanford_2014_JRID00000000-Trans = Translations of all S.c. strain YPS128 ORFs (Protein) (Stanford)",
+				"seqcount": "5142"
+			}
+		],
+		"YPS163_Stanford_2014_JRIC00000000": [
+			{
+				"dataset_file_name": "YPS163_Stanford_2014_JRIC00000000",
+				"seqtype": "dna",
+				"label":  "YPS163_Stanford_2014_JRIC00000000-Genome = COMPLETE S. cerevisiae strain YPS163 genome (Stanford)",
+				"seqcount": "607"
+			},
+			{
+				"dataset_file_name": "YPS163_Stanford_2014_JRIC00000000_cds",
+				"seqtype": "dna",
+				"label":  "YPS163_Stanford_2014_JRIC00000000-Coding = Coding Sequence of all S.c. strain YPS163 (Stanford)",
+				"seqcount": "5099"
+			},
+			{
+				"dataset_file_name": "YPS163_Stanford_2014_JRIC00000000_pep",
+				"seqtype": "protein",
+				"label":  "YPS163_Stanford_2014_JRIC00000000-Trans = Translations of all S.c. strain YPS163 ORFs (Protein) (Stanford)",
+				"seqcount": "5099"
+			}
+		],
+		"YPS163_WashU_2008_ABPD01000000": [
+			{
+				"dataset_file_name": "YPS163_WashU_2008_ABPD01000000",
+				"seqtype": "dna",
+				"label":  "YPS163_WashU_2008_ABPD01000000-Genome = COMPLETE S. cerevisiae strain YPS163 genome (WashU)",
+				"seqcount": "4725"
+			},
+			{
+				"dataset_file_name": "YPS163_WashU_2008_ABPD01000000_cds",
+				"seqtype": "dna",
+				"label":  "YPS163_WashU_2008_ABPD01000000-Coding = Coding Sequence of all S.c. strain YPS163 (WashU)",
+				"seqcount": "3147"
+			},
+			{
+				"dataset_file_name": "YPS163_WashU_2008_ABPD01000000_pep",
+				"seqtype": "protein",
+				"label":  "YPS163_WashU_2008_ABPD01000000-Trans = Translations of all S.c. strain YPS163 ORFs (Protein) (WashU)",
+				"seqcount": "3147"
+			}
+		],
+		"YS9_Stanford_2014_JRIB00000000": [
+			{
+				"dataset_file_name": "YS9_Stanford_2014_JRIB00000000",
+				"seqtype": "dna",
+				"label":  "YS9_Stanford_2014_JRIB00000000-Genome = COMPLETE S. cerevisiae strain YS9 genome (Stanford)",
+				"seqcount": "851"
+			},
+			{
+				"dataset_file_name": "YS9_Stanford_2014_JRIB00000000_cds",
+				"seqtype": "dna",
+				"label":  "YS9_Stanford_2014_JRIB00000000-Coding = Coding Sequence of all S.c. strain YS9 (Stanford)",
+				"seqcount": "5027"
+			},
+			{
+				"dataset_file_name": "YS9_Stanford_2014_JRIB00000000_pep",
+				"seqtype": "protein",
+				"label":  "YS9_Stanford_2014_JRIB00000000-Trans = Translations of all S.c. strain YS9 ORFs (Protein) (Stanford)",
+				"seqcount": "5027"
+			}
+		],
+		"ZTW1_Zhejiang_2012_AMDD00000000": [
+			{
+				"dataset_file_name": "ZTW1_Zhejiang_2012_AMDD00000000",
+				"seqtype": "dna",
+				"label":  "ZTW1_Zhejiang_2012_AMDD00000000-Genome = COMPLETE S. cerevisiae strain ZTW1 genome (Zhejiang)",
+				"seqcount": "33"
+			},
+			{
+				"dataset_file_name": "ZTW1_Zhejiang_2012_AMDD00000000_cds",
+				"seqtype": "dna",
+				"label":  "ZTW1_Zhejiang_2012_AMDD00000000-Coding = Coding Sequence of all S.c. strain ZTW1 (Zhejiang)",
+				"seqcount": "6306"
+			},
+			{
+				"dataset_file_name": "ZTW1_Zhejiang_2012_AMDD00000000_pep",
+				"seqtype": "protein",
+				"label":  "ZTW1_Zhejiang_2012_AMDD00000000-Trans = Translations of all S.c. strain ZTW1 ORFs (Protein) (Zhejiang)",
+				"seqcount": "6306"
+			}
+		]
+	}
+}

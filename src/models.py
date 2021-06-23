@@ -1819,9 +1819,12 @@ class Dataset(Base):
 
             obj["datasetcolumns"] = []
             for condition in conditions:
+                geo_id = condition.dbxref_id
+                if geo_id is None:
+                    geo_id = ''
                 obj["datasetcolumns"].append({
                     "display_name": condition.display_name,
-                    "geo_id": condition.dbxref_id,
+                    "geo_id": geo_id,
                     "link": condition.dbxref_url
                 })
 
@@ -1846,7 +1849,7 @@ class Dataset(Base):
 
                 if url.url_type == "GEO":
                     url_obj["category"] = "External"
-
+                    obj['geo_url'] = url.obj_url
                 obj["urls"].append(url_obj)
 
         return obj

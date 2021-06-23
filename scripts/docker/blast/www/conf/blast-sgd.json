@@ -1,0 +1,712 @@
+{
+    "datagroup": {
+        "label1": "Sc_nuclear_chr.fsa,Sc_mito_chr.fsa,2-micron_chr.fsa", 
+        "label2": "YeastORF.fsa,YeastORF-Genomic.fsa,YeastORF-Genomic-1K.fsa", 
+        "label3": "YeastRNA-genomic.fsa,YeastRNA-coding.fsa,YeastRNA-genomic-1K.fsa", 
+        "label4": "NotFeature.fsa", 
+        "label5": "YeastVectorDB.fsa", 
+        "label6": "AWRI1631_AWRI_2008_ABSV01000000.fsa,AWRI796_AWRI_2010_ADVS01000000.fsa,BC187_Stanford_2014_JRII00000000.fsa,BY4741_Stanford_2014_JRIS00000000.fsa,BY4741_Toronto_2012.fsa,BY4742_Stanford_2014_JRIR00000000.fsa,BY4742_Toronto_2012.fsa,CBS7960_WashU_2011_AEWL01000000.fsa,CEN.PK113-7D_Delft_2012_AEHG00000000.fsa,CEN.PK2-1Ca_SGD_2015_JRIV01000000.fsa,CLIB215_WashU_2010_AEWP01000000.fsa,CLIB324_WashU_2011_AEWM01000000.fsa,CLIB382_WashU_2011_AFDG01000000.fsa,D273-10B_SGD_2015_JRIY00000000.fsa,DBVPG6044_Stanford_2014_JRIG00000000.fsa,EC1118_Genoscope_2009_PRJEA37863.fsa,EC9-8_ASinica_2011_AGSJ01000000.fsa,FL100_SGD_2015_JRIT00000000.fsa,FL100_WashU_2011_AEWO01000000.fsa,FY1679_Stanford_2014_JRIN00000000.fsa,FostersB_AWRI_2010_AEHH01000000.fsa,FostersO_AWRI_2010_AEEZ01000000.fsa,JAY291_Duke_2009_ACFL01000000.fsa,JK9-3d_SGD_2015_JRIZ00000000.fsa,K11_Stanford_2014_JRIJ00000000.fsa,Kyokai7_NRIB_2011_BABQ01000000.fsa,L1528_Stanford_2014_JRIK00000000.fsa,LalvinQA23_AWRI_2011_ADVV01000000.fsa,M22_WashU_2008_ABPC01000000.fsa,PW5_WashU_2011_AFDC01000000.fsa,RM11-1a_Broad_2005_AAEG01000000.fsa,RM11-1A_SGD_2015_JRIP00000000.fsa,RedStar_Stanford_2014_JRIL00000000.fsa,SEY6210_SGD_2015_JRIW00000000.fsa,SK1_SGD_2018_NCSL00000000.fsa,Sigma1278b-10560-6B_SGD_2015_JRIQ00000000.fsa,Sigma1278b_MIT_2009_ACVY01000000.fsa,T73_WashU_2011_AFDF01000000.fsa,T7_WashU_2011_AFDE01000000.fsa,UC5_WashU_2011_AFDD01000000.fsa,UWOPS05-217-3_Stanford_2014_JRIM00000000.fsa,VL3_AWRI_2011_AEJS01000000.fsa,Vin13_AWRI_2010_ADXC01000000.fsa,W303_MPG_2012_ALAV00000000.fsa,W303_SGD_2015_JRIU00000000.fsa,X2180-1A_SGD_2015_JRIX00000000.fsa,Y10_WashU_2011_AEWK01000000.fsa,Y55_SGD_2015_JRIF00000000.fsa,YJM269_WashU_2011_AEWN01000000.fsa,YJM339_Stanford_2014_JRIE00000000.fsa,YJM789_Stanford_2007_AAFW02000000.fsa,YPH499_Stanford_2014_JRIO00000000.fsa,YPS128_Stanford_2014_JRID00000000.fsa,YPS163_Stanford_2014_JRIC00000000.fsa,YPS163_WashU_2008_ABPD01000000.fsa,YS9_Stanford_2014_JRIB00000000.fsa,ZTW1_Zhejiang_2012_AMDD00000000.fsa", 
+        "label7": "AWRI1631_AWRI_2008_ABSV01000000_cds.fsa,AWRI796_AWRI_2010_ADVS01000000_cds.fsa,BC187_Stanford_2014_JRII00000000_cds.fsa,BY4741_Stanford_2014_JRIS00000000_cds.fsa,BY4741_Toronto_2012_cds.fsa,BY4742_Stanford_2014_JRIR00000000_cds.fsa,BY4742_Toronto_2012_cds.fsa,CBS7960_WashU_2011_AEWL01000000_cds.fsa,CEN.PK113-7D_Delft_2012_AEHG00000000_cds.fsa,CEN.PK2-1Ca_JRIV01000000_SGD_cds.fsa,CLIB215_WashU_2010_AEWP01000000_cds.fsa,CLIB324_WashU_2011_AEWM01000000_cds.fsa,CLIB382_WashU_2011_AFDG01000000_cds.fsa,D273-10B_JRIY00000000_SGD_cds.fsa,DBVPG6044_Stanford_2014_JRIG00000000_cds.fsa,EC1118_Genoscope_2009_PRJEA37863_cds.fsa,EC9-8_ASinica_2011_AGSJ01000000_cds.fsa,FL100_JRIT00000000_SGD_cds.fsa,FL100_WashU_2011_AEWO01000000_cds.fsa,FY1679_Stanford_2014_JRIN00000000_cds.fsa,FostersB_AWRI_2010_AEHH01000000_cds.fsa,FostersO_AWRI_2010_AEEZ01000000_cds.fsa,JAY291_Duke_2009_ACFL01000000_cds.fsa,JK9-3d_JRIZ00000000_SGD_cds.fsa,K11_Stanford_2014_JRIJ00000000_cds.fsa,Kyokai7_NRIB_2011_BABQ01000000_cds.fsa,L1528_Stanford_2014_JRIK00000000_cds.fsa,LalvinQA23_AWRI_2011_ADVV01000000_cds.fsa,M22_WashU_2008_ABPC01000000_cds.fsa,PW5_WashU_2011_AFDC01000000_cds.fsa,RM11-1a_Broad_2005_AAEG01000000_cds.fsa,RM11-1A_JRIP00000000_SGD_cds.fsa,RedStar_Stanford_2014_JRIL00000000_cds.fsa,SEY6210_JRIW00000000_SGD_cds.fsa,SK1_SGD_2018_NCSL00000000_cds.fsa,Sigma1278b-10560-6B_JRIQ00000000_SGD_cds.fsa,Sigma1278b_MIT_2009_ACVY01000000_cds.fsa,T73_WashU_2011_AFDF01000000_cds.fsa,T7_WashU_2011_AFDE01000000_cds.fsa,UC5_WashU_2011_AFDD01000000_cds.fsa,UWOPS05-217-3_Stanford_2014_JRIM00000000_cds.fsa,VL3_AWRI_2011_AEJS01000000_cds.fsa,Vin13_AWRI_2010_ADXC01000000_cds.fsa,W303_MPG_2012_ALAV00000000_cds.fsa,W303_JRIU00000000_SGD_cds.fsa,X2180-1A_JRIX00000000_SGD_cds.fsa,Y10_WashU_2011_AEWK01000000_cds.fsa,Y55_JRIF00000000_SGD_cds.fsa,YJM269_WashU_2011_AEWN01000000_cds.fsa,YJM339_Stanford_2014_JRIE00000000_cds.fsa,YJM789_Stanford_2007_AAFW02000000_cds.fsa,YPH499_Stanford_2014_JRIO00000000_cds.fsa,YPS128_Stanford_2014_JRID00000000_cds.fsa,YPS163_Stanford_2014_JRIC00000000_cds.fsa,YPS163_WashU_2008_ABPD01000000_cds.fsa,YS9_Stanford_2014_JRIB00000000_cds.fsa,ZTW1_Zhejiang_2012_AMDD00000000_cds.fsa"
+    }, 
+    "program": [
+        {
+            "label": "BLASTN - nucleotide query to nucleotide db", 
+            "type": "dna", 
+            "script": "blastn"
+        }, 
+        {
+            "label": "BLASTP - protein query to protein db", 
+            "type": "protein", 
+            "script": "blastp"
+        }, 
+        {
+            "label": "BLASTX - translated (6 frames) nucl. query to protein db", 
+            "type": "protein", 
+            "script": "blastx"
+        }, 
+        {
+            "label": "TBLASTX - transl. (6 frames) nucl. query to transl (6) nt db", 
+            "type": "dna", 
+            "script": "tblastx"
+        }, 
+        {
+            "label": "TBLASTN - protein query to translated (6 frames) nt db", 
+            "type": "dna", 
+            "script": "tblastn"
+        }
+    ], 
+    "databasedef": [
+        "Sc_nuclear_chr.fsa", 
+        "Sc_mito_chr.fsa", 
+        "2-micron_chr.fsa"
+    ], 
+    "matrix": [
+        "BLOSUM62", 
+        "BLOSUM100",
+        "PAM40", 
+        "PAM120", 
+        "PAM250"
+    ], 
+    "database": [
+        {
+            "label": "S288C REFERENCE: GENOMIC SEQUENCE", 
+            "type": "spacer", 
+            "dataset": "label1"
+        }, 
+        {
+            "label": "...Nuclear chromosomes (DNA)", 
+            "type": "dna", 
+            "dataset": "Sc_nuclear_chr.fsa"
+        }, 
+        {
+            "label": "...Mitochondrial chromosome (DNA)", 
+            "type": "dna", 
+            "dataset": "Sc_mito_chr.fsa"
+        }, 
+        {
+            "label": "...2-micron plasmid (DNA)", 
+            "type": "dna", 
+            "dataset": "2-micron_chr.fsa"
+        }, 
+        {
+            "label": "S288C REFERENCE: PROTEIN ENCODING", 
+            "type": "spacer", 
+            "dataset": "label2"
+        }, 
+        {
+            "label": "...Open Reading Frames (DNA or Protein)", 
+            "type": "both", 
+            "dataset": "YeastORF.fsa"
+        }, 
+        {
+            "label": "...Genomic (Coding and Introns) Sequences of defined ORFs (DNA)", 
+            "type": "dna", 
+            "dataset": "YeastORF-Genomic.fsa"
+        }, 
+        {
+            "label": "...Open Reading Frames + 1000 bp Up & Downstream (DNA)", 
+            "type": "dna", 
+            "dataset": "YeastORF-Genomic-1K.fsa"
+        }, 
+        {
+            "label": "S288C REFERENCE: ncRNA", 
+            "type": "spacer", 
+            "dataset": "label3"
+        }, 
+        {
+            "label": "...RNA Coding (DNA)", 
+            "type": "dna", 
+            "dataset": "YeastRNA-coding.fsa"
+        }, 
+        {
+            "label": "...RNA Genomic (coding and introns) (DNA)", 
+            "type": "dna", 
+            "dataset": "YeastRNA-genomic.fsa"
+        }, 
+        {
+            "label": "...RNA Genomic + 1000 bp Up & Downstream (DNA)", 
+            "type": "dna", 
+            "dataset": "YeastRNA-genomic-1K.fsa"
+        }, 
+        {
+            "label": "S288C REFERENCE: NON-GENIC SEQUENCES", 
+            "type": "spacer", 
+            "dataset": "label4"
+        }, 
+        {
+            "label": "...Intergenic Genomic DNA between ORFs, RNA genes, LTRs & Tys (DNA)", 
+            "type": "dna", 
+            "dataset": "NotFeature.fsa"
+        }, 
+        {
+            "label": "VECTOR SEQUENCES", 
+            "type": "spacer", 
+            "dataset": "label5"
+        }, 
+        {
+            "label": "...Yeast Cloning Vector Sequences from VectorDB (DNA)", 
+            "type": "dna", 
+            "dataset": "YeastVectorDB.fsa"
+        }, 
+        {
+            "label": "OTHER S.cerevisiae STRAINS: GENOMIC SEQUENCE", 
+            "type": "spacer", 
+            "dataset": "label6"
+        }, 
+        {
+            "label": "...AWRI1631 (AWRI)", 
+            "type": "dna", 
+            "dataset": "AWRI1631_AWRI_2008_ABSV01000000.fsa"
+        }, 
+        {
+            "label": "...AWRI796 (AWRI)", 
+            "type": "dna", 
+            "dataset": "AWRI796_AWRI_2010_ADVS01000000.fsa"
+        }, 
+        {
+            "label": "...BC187 (Stanford)", 
+            "type": "dna", 
+            "dataset": "BC187_Stanford_2014_JRII00000000.fsa"
+        }, 
+        {
+            "label": "...BY4741 (Stanford)", 
+            "type": "dna", 
+            "dataset": "BY4741_Stanford_2014_JRIS00000000.fsa"
+        }, 
+        {
+            "label": "...BY4741 (Toronto)", 
+            "type": "dna", 
+            "dataset": "BY4741_Toronto_2012.fsa"
+        }, 
+        {
+            "label": "...BY4742 (Stanford)", 
+            "type": "dna", 
+            "dataset": "BY4742_Stanford_2014_JRIR00000000.fsa"
+        }, 
+        {
+            "label": "...BY4742 (Toronto)", 
+            "type": "dna", 
+            "dataset": "BY4742_Toronto_2012.fsa"
+        }, 
+        {
+            "label": "...CBS7960 (WashU)", 
+            "type": "dna", 
+            "dataset": "CBS7960_WashU_2011_AEWL01000000.fsa"
+        }, 
+        {
+            "label": "...CEN.PK113-7D (Delft)", 
+            "type": "dna", 
+            "dataset": "CEN.PK113-7D_Delft_2012_AEHG00000000.fsa"
+        }, 
+        {
+            "label": "...CEN.PK2-1Ca (SGD)", 
+            "type": "dna", 
+            "dataset": "CEN.PK2-1Ca_SGD_2015_JRIV01000000.fsa"
+        }, 
+        {
+            "label": "...CLIB215 (WashU)", 
+            "type": "dna", 
+            "dataset": "CLIB215_WashU_2010_AEWP01000000.fsa"
+        }, 
+        {
+            "label": "...CLIB324 (WashU)", 
+            "type": "dna", 
+            "dataset": "CLIB324_WashU_2011_AEWM01000000.fsa"
+        }, 
+        {
+            "label": "...CLIB382 (WashU)", 
+            "type": "dna", 
+            "dataset": "CLIB382_WashU_2011_AFDG01000000.fsa"
+        }, 
+        {
+            "label": "...D273-10B (SGD)", 
+            "type": "dna", 
+            "dataset": "D273-10B_SGD_2015_JRIY00000000.fsa"
+        }, 
+        {
+            "label": "...DBVPG6044 (Stanford)", 
+            "type": "dna", 
+            "dataset": "DBVPG6044_Stanford_2014_JRIG00000000.fsa"
+        }, 
+        {
+            "label": "...EC1118 (Genoscope)", 
+            "type": "dna", 
+            "dataset": "EC1118_Genoscope_2009_PRJEA37863.fsa"
+        }, 
+        {
+            "label": "...EC9-8 (ASinica)", 
+            "type": "dna", 
+            "dataset": "EC9-8_ASinica_2011_AGSJ01000000.fsa"
+        }, 
+        {
+            "label": "...FL100 (SGD)", 
+            "type": "dna", 
+            "dataset": "FL100_SGD_2015_JRIT00000000.fsa"
+        }, 
+        {
+            "label": "...FL100 (WashU)", 
+            "type": "dna", 
+            "dataset": "FL100_WashU_2011_AEWO01000000.fsa"
+        }, 
+        {
+            "label": "...FY1679 (Stanford)", 
+            "type": "dna", 
+            "dataset": "FY1679_Stanford_2014_JRIN00000000.fsa"
+        }, 
+        {
+            "label": "...FostersB (AWRI)", 
+            "type": "dna", 
+            "dataset": "FostersB_AWRI_2010_AEHH01000000.fsa"
+        }, 
+        {
+            "label": "...FostersO (AWRI)", 
+            "type": "dna", 
+            "dataset": "FostersO_AWRI_2010_AEEZ01000000.fsa"
+        }, 
+        {
+            "label": "...JAY291 (Duke)", 
+            "type": "dna", 
+            "dataset": "JAY291_Duke_2009_ACFL01000000.fsa"
+        }, 
+        {
+            "label": "...JK9-3d (SGD)", 
+            "type": "dna", 
+            "dataset": "JK9-3d_SGD_2015_JRIZ00000000.fsa"
+        }, 
+        {
+            "label": "...K11 (Stanford)", 
+            "type": "dna", 
+            "dataset": "K11_Stanford_2014_JRIJ00000000.fsa"
+        }, 
+        {
+            "label": "...Kyokai7 (NRIB)", 
+            "type": "dna", 
+            "dataset": "Kyokai7_NRIB_2011_BABQ01000000.fsa"
+        }, 
+        {
+            "label": "...L1528 (Stanford)", 
+            "type": "dna", 
+            "dataset": "L1528_Stanford_2014_JRIK00000000.fsa"
+        }, 
+        {
+            "label": "...LalvinQA23 (AWRI)", 
+            "type": "dna", 
+            "dataset": "LalvinQA23_AWRI_2011_ADVV01000000.fsa"
+        }, 
+        {
+            "label": "...M22 (WashU)", 
+            "type": "dna", 
+            "dataset": "M22_WashU_2008_ABPC01000000.fsa"
+        }, 
+        {
+            "label": "...PW5 (WashU)", 
+            "type": "dna", 
+            "dataset": "PW5_WashU_2011_AFDC01000000.fsa"
+        }, 
+        {
+            "label": "...RM11-1a (Broad)", 
+            "type": "dna", 
+            "dataset": "RM11-1a_Broad_2005_AAEG01000000.fsa"
+        }, 
+	{
+	    "label": "...RM11-1A (SGD)",
+	    "type": "dna",
+	    "dataset": "RM11-1A_SGD_2015_JRIP00000000.fsa"
+	},
+        {
+            "label": "...RedStar (Stanford)", 
+            "type": "dna", 
+            "dataset": "RedStar_Stanford_2014_JRIL00000000.fsa"
+        }, 
+        {
+            "label": "...SEY6210 (SGD)", 
+            "type": "dna", 
+            "dataset": "SEY6210_SGD_2015_JRIW00000000.fsa"
+        }, 
+        {
+            "label": "...SK1 (SGD)", 
+            "type": "dna", 
+            "dataset": "SK1_SGD_2018_NCSL00000000.fsa"
+        }, 
+        {
+            "label": "...Sigma1278b-10560-6B (SGD)", 
+            "type": "dna", 
+            "dataset": "Sigma1278b-10560-6B_SGD_2015_JRIQ00000000.fsa"
+        }, 
+        {
+            "label": "...Sigma1278b (MIT)", 
+            "type": "dna", 
+            "dataset": "Sigma1278b_MIT_2009_ACVY01000000.fsa"
+        }, 
+        {
+            "label": "...T73 (WashU)", 
+            "type": "dna", 
+            "dataset": "T73_WashU_2011_AFDF01000000.fsa"
+        }, 
+        {
+            "label": "...T7 (WashU)", 
+            "type": "dna", 
+            "dataset": "T7_WashU_2011_AFDE01000000.fsa"
+        }, 
+        {
+            "label": "...UC5 (WashU)", 
+            "type": "dna", 
+            "dataset": "UC5_WashU_2011_AFDD01000000.fsa"
+        }, 
+        {
+            "label": "...UWOPS05-217-3 (Stanford)", 
+            "type": "dna", 
+            "dataset": "UWOPS05-217-3_Stanford_2014_JRIM00000000.fsa"
+        }, 
+        {
+            "label": "...VL3 (AWRI)", 
+            "type": "dna", 
+            "dataset": "VL3_AWRI_2011_AEJS01000000.fsa"
+        }, 
+        {
+            "label": "...Vin13 (AWRI)", 
+            "type": "dna", 
+            "dataset": "Vin13_AWRI_2010_ADXC01000000.fsa"
+        }, 
+        {
+            "label": "...W303 (MPG)", 
+            "type": "dna", 
+            "dataset": "W303_MPG_2012_ALAV00000000.fsa"
+        }, 
+        {
+            "label": "...W303 (SGD)", 
+            "type": "dna", 
+            "dataset": "W303_SGD_2015_JRIU00000000.fsa"
+        }, 
+        {
+            "label": "...X2180-1A (SGD)", 
+            "type": "dna", 
+            "dataset": "X2180-1A_SGD_2015_JRIX00000000.fsa"
+        }, 
+        {
+            "label": "...Y10 (WashU)", 
+            "type": "dna", 
+            "dataset": "Y10_WashU_2011_AEWK01000000.fsa"
+        }, 
+        {
+            "label": "...Y55 (SGD)", 
+            "type": "dna", 
+            "dataset": "Y55_SGD_2015_JRIF00000000.fsa"
+        }, 
+        {
+            "label": "...YJM269 (WashU)", 
+            "type": "dna", 
+            "dataset": "YJM269_WashU_2011_AEWN01000000.fsa"
+        }, 
+        {
+            "label": "...YJM339 (Stanford)", 
+            "type": "dna", 
+            "dataset": "YJM339_Stanford_2014_JRIE00000000.fsa"
+        }, 
+        {
+            "label": "...YJM789 (Stanford)", 
+            "type": "dna", 
+            "dataset": "YJM789_Stanford_2007_AAFW02000000.fsa"
+        }, 
+        {
+            "label": "...YPH499 (Stanford)", 
+            "type": "dna", 
+            "dataset": "YPH499_Stanford_2014_JRIO00000000.fsa"
+        }, 
+        {
+            "label": "...YPS128 (Stanford)", 
+            "type": "dna", 
+            "dataset": "YPS128_Stanford_2014_JRID00000000.fsa"
+        }, 
+        {
+            "label": "...YPS163 (Stanford)", 
+            "type": "dna", 
+            "dataset": "YPS163_Stanford_2014_JRIC00000000.fsa"
+        }, 
+        {
+            "label": "...YPS163 (WashU)", 
+            "type": "dna", 
+            "dataset": "YPS163_WashU_2008_ABPD01000000.fsa"
+        }, 
+        {
+            "label": "...YS9 (Stanford)", 
+            "type": "dna", 
+            "dataset": "YS9_Stanford_2014_JRIB00000000.fsa"
+        }, 
+        {
+            "label": "...ZTW1 (Zhejiang)", 
+            "type": "dna", 
+            "dataset": "ZTW1_Zhejiang_2012_AMDD00000000.fsa"
+        }, 
+        {
+            "label": "OTHER S.cerevisiae STRAINS: PROTEIN ENCODING (DNA or Protein)", 
+            "type": "spacer", 
+            "dataset": "label7"
+        }, 
+        {
+            "label": "...AWRI1631 (AWRI)", 
+            "type": "both", 
+            "dataset": "AWRI1631_AWRI_2008_ABSV01000000_cds.fsa"
+        }, 
+        {
+            "label": "...AWRI796 (AWRI)", 
+            "type": "both", 
+            "dataset": "AWRI796_AWRI_2010_ADVS01000000_cds.fsa"
+        }, 
+        {
+            "label": "...BC187 (Stanford)", 
+            "type": "both", 
+            "dataset": "BC187_Stanford_2014_JRII00000000_cds.fsa"
+        }, 
+        {
+            "label": "...BY4741 (Stanford)", 
+            "type": "both", 
+            "dataset": "BY4741_Stanford_2014_JRIS00000000_cds.fsa"
+        }, 
+        {
+            "label": "...BY4741 (Toronto)", 
+            "type": "both", 
+            "dataset": "BY4741_Toronto_2012_cds.fsa"
+        }, 
+        {
+            "label": "...BY4742 (Stanford)", 
+            "type": "both", 
+            "dataset": "BY4742_Stanford_2014_JRIR00000000_cds.fsa"
+        }, 
+        {
+            "label": "...BY4742 (Toronto)", 
+            "type": "both", 
+            "dataset": "BY4742_Toronto_2012_cds.fsa"
+        }, 
+        {
+            "label": "...CBS7960 (WashU)", 
+            "type": "both", 
+            "dataset": "CBS7960_WashU_2011_AEWL01000000_cds.fsa"
+        }, 
+        {
+            "label": "...CEN.PK113-7D (Delft)", 
+            "type": "both", 
+            "dataset": "CEN.PK113-7D_Delft_2012_AEHG00000000_cds.fsa"
+        }, 
+        {
+            "label": "...CEN.PK2-1Ca (SGD)", 
+            "type": "both", 
+            "dataset": "CEN.PK2-1Ca_JRIV01000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...CLIB215 (WashU)", 
+            "type": "both", 
+            "dataset": "CLIB215_WashU_2010_AEWP01000000_cds.fsa"
+        }, 
+        {
+            "label": "...CLIB324 (WashU)", 
+            "type": "both", 
+            "dataset": "CLIB324_WashU_2011_AEWM01000000_cds.fsa"
+        }, 
+        {
+            "label": "...CLIB382 (WashU)", 
+            "type": "both", 
+            "dataset": "CLIB382_WashU_2011_AFDG01000000_cds.fsa"
+        }, 
+        {
+            "label": "...D273-10B (SGD)", 
+            "type": "both", 
+            "dataset": "D273-10B_JRIY00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...DBVPG6044 (Stanford)", 
+            "type": "both", 
+            "dataset": "DBVPG6044_Stanford_2014_JRIG00000000_cds.fsa"
+        }, 
+        {
+            "label": "...EC1118 (Genoscope)", 
+            "type": "both", 
+            "dataset": "EC1118_Genoscope_2009_PRJEA37863_cds.fsa"
+        }, 
+        {
+            "label": "...EC9-8 (ASinica)", 
+            "type": "both", 
+            "dataset": "EC9-8_ASinica_2011_AGSJ01000000_cds.fsa"
+        }, 
+        {
+            "label": "...FL100 (SGD)", 
+            "type": "both", 
+            "dataset": "FL100_JRIT00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...FL100 (WashU)", 
+            "type": "both", 
+            "dataset": "FL100_WashU_2011_AEWO01000000_cds.fsa"
+        }, 
+        {
+            "label": "...FY1679 (Stanford)", 
+            "type": "both", 
+            "dataset": "FY1679_Stanford_2014_JRIN00000000_cds.fsa"
+        }, 
+        {
+            "label": "...FostersB (AWRI)", 
+            "type": "both", 
+            "dataset": "FostersB_AWRI_2010_AEHH01000000_cds.fsa"
+        }, 
+        {
+            "label": "...FostersO (AWRI)", 
+            "type": "both", 
+            "dataset": "FostersO_AWRI_2010_AEEZ01000000_cds.fsa"
+        }, 
+        {
+            "label": "...JAY291 (Duke)", 
+            "type": "both", 
+            "dataset": "JAY291_Duke_2009_ACFL01000000_cds.fsa"
+        }, 
+        {
+            "label": "...JK9-3d (SGD)", 
+            "type": "both", 
+            "dataset": "JK9-3d_JRIZ00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...K11 (Stanford)", 
+            "type": "both", 
+            "dataset": "K11_Stanford_2014_JRIJ00000000_cds.fsa"
+        }, 
+        {
+            "label": "...Kyokai7 (NRIB)", 
+            "type": "both", 
+            "dataset": "Kyokai7_NRIB_2011_BABQ01000000_cds.fsa"
+        }, 
+        {
+            "label": "...L1528 (Stanford)", 
+            "type": "both", 
+            "dataset": "L1528_Stanford_2014_JRIK00000000_cds.fsa"
+        }, 
+        {
+            "label": "...LalvinQA23 (AWRI)", 
+            "type": "both", 
+            "dataset": "LalvinQA23_AWRI_2011_ADVV01000000_cds.fsa"
+        }, 
+        {
+            "label": "...M22 (WashU)", 
+            "type": "both", 
+            "dataset": "M22_WashU_2008_ABPC01000000_cds.fsa"
+        }, 
+        {
+            "label": "...PW5 (WashU)", 
+            "type": "both", 
+            "dataset": "PW5_WashU_2011_AFDC01000000_cds.fsa"
+        }, 
+        {
+            "label": "...RM11-1a (Broad)", 
+            "type": "both", 
+            "dataset": "RM11-1a_Broad_2005_AAEG01000000_cds.fsa"
+        }, 
+	{
+	    "label": "...RM11-1A (SGD)",
+	    "type": "both",
+	    "dataset": "RM11-1A_JRIP00000000_SGD_cds.fsa"
+	},
+        {
+            "label": "...RedStar (Stanford)", 
+            "type": "both", 
+            "dataset": "RedStar_Stanford_2014_JRIL00000000_cds.fsa"
+        }, 
+        {
+            "label": "...SEY6210 (SGD)", 
+            "type": "both", 
+            "dataset": "SEY6210_JRIW00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...SK1 (SGD)", 
+            "type": "both", 
+            "dataset": "SK1_SGD_2018_NCSL00000000_cds.fsa"
+        }, 
+        {
+            "label": "...Sigma1278b-10560-6B (SGD)", 
+            "type": "both", 
+            "dataset": "Sigma1278b-10560-6B_JRIQ00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...Sigma1278b (MIT)", 
+            "type": "both", 
+            "dataset": "Sigma1278b_MIT_2009_ACVY01000000_cds.fsa"
+        }, 
+        {
+            "label": "...T73 (WashU)", 
+            "type": "both", 
+            "dataset": "T73_WashU_2011_AFDF01000000_cds.fsa"
+        }, 
+        {
+            "label": "...T7 (WashU)", 
+            "type": "both", 
+            "dataset": "T7_WashU_2011_AFDE01000000_cds.fsa"
+        }, 
+        {
+            "label": "...UC5 (WashU)", 
+            "type": "both", 
+            "dataset": "UC5_WashU_2011_AFDD01000000_cds.fsa"
+        }, 
+        {
+            "label": "...UWOPS05-217-3 (Stanford)", 
+            "type": "both", 
+            "dataset": "UWOPS05-217-3_Stanford_2014_JRIM00000000_cds.fsa"
+        }, 
+        {
+            "label": "...VL3 (AWRI)", 
+            "type": "both", 
+            "dataset": "VL3_AWRI_2011_AEJS01000000_cds.fsa"
+        }, 
+        {
+            "label": "...Vin13 (AWRI)", 
+            "type": "both", 
+            "dataset": "Vin13_AWRI_2010_ADXC01000000_cds.fsa"
+        }, 
+        {
+            "label": "...W303 (MPG)", 
+            "type": "both", 
+            "dataset": "W303_MPG_2012_ALAV00000000_cds.fsa"
+        }, 
+        {
+            "label": "...W303 (SGD)", 
+            "type": "both", 
+            "dataset": "W303_JRIU00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...X2180-1A (SGD)", 
+            "type": "both", 
+            "dataset": "X2180-1A_JRIX00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...Y10 (WashU)", 
+            "type": "both", 
+            "dataset": "Y10_WashU_2011_AEWK01000000_cds.fsa"
+        }, 
+        {
+            "label": "...Y55 (SGD)", 
+            "type": "both", 
+            "dataset": "Y55_JRIF00000000_SGD_cds.fsa"
+        }, 
+        {
+            "label": "...YJM269 (WashU)", 
+            "type": "both", 
+            "dataset": "YJM269_WashU_2011_AEWN01000000_cds.fsa"
+        }, 
+        {
+            "label": "...YJM339 (Stanford)", 
+            "type": "both", 
+            "dataset": "YJM339_Stanford_2014_JRIE00000000_cds.fsa"
+        }, 
+        {
+            "label": "...YJM789 (Stanford)", 
+            "type": "both", 
+            "dataset": "YJM789_Stanford_2007_AAFW02000000_cds.fsa"
+        }, 
+        {
+            "label": "...YPH499 (Stanford)", 
+            "type": "both", 
+            "dataset": "YPH499_Stanford_2014_JRIO00000000_cds.fsa"
+        }, 
+        {
+            "label": "...YPS128 (Stanford)", 
+            "type": "both", 
+            "dataset": "YPS128_Stanford_2014_JRID00000000_cds.fsa"
+        }, 
+        {
+            "label": "...YPS163 (Stanford)", 
+            "type": "both", 
+            "dataset": "YPS163_Stanford_2014_JRIC00000000_cds.fsa"
+        }, 
+        {
+            "label": "...YPS163 (WashU)", 
+            "type": "both", 
+            "dataset": "YPS163_WashU_2008_ABPD01000000_cds.fsa"
+        }, 
+        {
+            "label": "...YS9 (Stanford)", 
+            "type": "both", 
+            "dataset": "YS9_Stanford_2014_JRIB00000000_cds.fsa"
+        }, 
+        {
+            "label": "...ZTW1 (Zhejiang)", 
+            "type": "both", 
+            "dataset": "ZTW1_Zhejiang_2012_AMDD00000000_cds.fsa"
+        }
+    ]
+}

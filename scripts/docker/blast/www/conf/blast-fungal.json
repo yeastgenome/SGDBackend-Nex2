@@ -1,0 +1,1975 @@
+{
+    "datagroup": {
+        "label18": "other_ascomycota,arthrobotrys_oligospora,cerataphis_brasiliensis_yeast-like_symbiont,ceratocystis_fimbriata,cladonia_macilenta,cladonia_metacorallifera,dactylellina_haptotyla,endocarpon_pusillum,eutypa_lata,gyalolechia_flavorubescens,pestalotiopsis_fici,pneumocystis_jirovecii,pneumocystis_murina,saitoella_complicata,taphrina_deformans,tuber_melanosporum", 
+        "label19": "agaricomycetes,agaricus_bisporus,amanita_jacksonii,auricularia_delicata,ceriporiopsis_subvermispora,coniophora_puteana,coprinopsis_cinerea,dichomitus_squalens,fibroporia_radiculosa,fomitiporia_mediterranea,fomitopsis_pinicola,ganoderma_lucidum,gloeophyllum_trabeum,heterobasidion_irregulare,laccaria_bicolor,moniliophthora_perniciosa,moniliophthora_roreri,omphalotus_olearius,phanerochaete_carnosa,phanerochaete_chrysosporium,phellinus_noxius,piriformospora_indica,postia_placenta,punctularia_strigosozonata,rhizoctonia_solani,schizophyllum_commune,serpula_lacrymans,stereum_hirsutum,trametes_versicolor,volvariella_volvacea,wolfiporia_cocos", 
+        "label12": "other_onygenales,ajellomyces_capsulatus,ajellomyces_dermatitidis,ascosphaera_apis,coccidioides_immitis,coccidioides_posadasii,paracoccidioides_brasiliensis,paracoccidioides_sp_lutzii,uncinocarpus_reesii", 
+        "label13": "leotiomycetes,ascocoryne_sarcoides,blumeria_graminis,botrytis_cinerea,glarea_lozoyensis,marssonina_brunnea,pseudogymnoascus_destructans,pseudogymnoascus_pannorum,sclerotinia_borealis,sclerotinia_sclerotiorum", 
+        "label10": "other_eurotiales,byssochlamys_spectabilis,neosartorya_fischeri,talaromyces_marneffei,talaromyces_stipitatus,thermomyces_lanuginosus", 
+        "label11": "arthrodermataceae,arthroderma_benhamiae,arthroderma_gypseum,arthroderma_otae,trichophyton_equinum,trichophyton_rubrum,trichophyton_tonsurans,trichophyton_verrucosum", 
+        "label16": "sordariales,chaetomium_globosum,chaetomium_thermophilum,myceliophthora_thermophila,neurospora_crassa,neurospora_tetrasperma,podospora_anserina,sordaria_macrospora,thielavia_terrestris", 
+        "label17": "other_sordariomycetidae,gaeumannomyces_graminis,grosmannia_clavigera,magnaporthe_oryzae,magnaporthe_poae,ophiostoma_novo-ulmi,togninia_minima", 
+        "label14": "glomerellales,colletotrichum_gloeosporioides,colletotrichum_graminicola,colletotrichum_higginsianum,colletotrichum_orbiculare,verticillium_alfalfae,verticillium_dahliae", 
+        "label15": "hypocreales,aciculosporium_take,beauveria_bassiana,claviceps_paspali,claviceps_purpurea,cordyceps_militaris,epichloe_amarillans,epichloe_festucae,epichloe_glyceriae,epichloe_typhina,fusarium_fujikuroi,fusarium_graminearum,fusarium_oxysporum,fusarium_pseudograminearum,fusarium_verticillioides,hirsutella_thompsonii,metarhizium_acridum,metarhizium_anisopliae,nectria_haematococca,neotyphodium_gansuense,ophiocordyceps_sinensis,periglandula_ipomoeae,tolypocladium_inflatum,trichoderma_atroviride,trichoderma_hamatum,trichoderma_longibrachiatum,trichoderma_reesei,trichoderma_virens", 
+        "label8": "aspergillus,aspergillus_clavatus,aspergillus_flavus,aspergillus_fumigatus,aspergillus_kawachii,aspergillus_nidulans,aspergillus_niger,aspergillus_oryzae,aspergillus_sojae,aspergillus_terreus", 
+        "label9": "penicillium,penicillium_camemberti,penicillium_chrysogenum,penicillium_digitatum,penicillium_oxalicum,penicillium_paxilli,penicillium_roqueforti", 
+        "label1": "saccharomyces,saccharomyces_arboricola,saccharomyces_bayanus,saccharomyces_boulardii,saccharomyces_cerevisiae,saccharomyces_cerevisiae_x_saccharomyces_kudriavzevii,saccharomyces_kudriavzevii,saccharomyces_mikatae,saccharomyces_paradoxus,saccharomyces_pastorianus", 
+        "label2": "candida,candida_albicans,candida_dubliniensis,candida_glabrata,candida_maltosa,candida_orthopsilosis,candida_parapsilosis,candida_tenuis,candida_tropicalis", 
+        "label3": "saccharomycetaceae,ashbya_gossypii,dekkera_bruxellensis,eremothecium_cymbalariae,kazachstania_africana,kazachstania_naganishii,kluyveromyces_aestuarii,kluyveromyces_lactis,kluyveromyces_marxianus,kluyveromyces_wickerhamii,komagataella_pastoris,lachancea_kluyveri,lachancea_thermotolerans,lachancea_waltii,naumovozyma_castellii,naumovozyma_dairenensis,ogataea_parapolymorpha,pachysolen_tannophilus,saccharomycetaceae_sp_ashbya_aceri,tetrapisispora_blattae,tetrapisispora_phaffii,torulaspora_delbrueckii,vanderwaltozyma_polyspora,zygosaccharomyces_bailii,zygosaccharomyces_rouxii", 
+        "label4": "other_saccharomycetales,clavispora_lusitaniae,cyberlindnera_jadinii,debaryomyces_hansenii,lodderomyces_elongisporus,meyerozyma_guilliermondii,millerozyma_farinosa,pichia_kudriavzevii,scheffersomyces_stipitis,spathaspora_arborariae,spathaspora_passalidarum,wickerhamomyces_anomalus,wickerhamomyces_ciferrii,yarrowia_lipolytica", 
+        "label5": "schizosaccharomyces,schizosaccharomyces_cryophilus,schizosaccharomyces_japonicus,schizosaccharomyces_octosporus,schizosaccharomyces_pombe", 
+        "label6": "dothideomycetes,alternaria_arborescens,alternaria_brassicicola,aureobasidium_pullulans,baudoinia_compniacensis,bipolaris_maydis,bipolaris_oryzae,bipolaris_sorokiniana,bipolaris_victoriae,bipolaris_zeicola,hortaea_werneckii,hysterium_pulicare,lecanosticta_acicola,leptosphaeria_maculans,macrophomina_phaseolina,mycosphaerella_laricina,mycosphaerella_pini,mycosphaerella_sp_ston1,neofusicoccum_parvum,parastagonospora_nodorum,passalora_fulva,pseudocercospora_fijiensis,pseudocercospora_pini-densiflorae,pyrenochaeta_sp_um_256,pyrenophora_seminiperda,pyrenophora_teres,pyrenophora_tritici-repentis,rhytidhysteron_rufulum,setosphaeria_turcica,shiraia_sp_slf14,sphaerulina_musiva,sphaerulina_populicola,zymoseptoria_ardabiliae,zymoseptoria_passerinii,zymoseptoria_pseudotritici,zymoseptoria_tritici", 
+        "label7": "chaetothyriales,cladophialophora_carrionii,coniosporium_apollinis,cyphellophora_europaea,exophiala_dermatitidis,herpotrichiellaceae_sp_um238", 
+        "label23": "microsporidia,anncaliia_algerae,edhazardia_aedis,encephalitozoon_cuniculi,encephalitozoon_hellem,encephalitozoon_intestinalis,encephalitozoon_romaleae,enterocytozoon_bieneusi,nematocida_parisii,nematocida_sp_1,nosema_apis,nosema_bombycis,nosema_ceranae,spraguea_lophii,trachipleistophora_hominis,vavraia_culicis,vittaforma_corneae", 
+        "label22": "other_basidiomycota,cronartium_comandrae,cronartium_quercuum,cronartium_ribicola,dacryopinax_sp_djm-731_ss1,endocronartium_harknessii,microbotryum_violaceum,mixia_osmundae,puccinia_graminis,puccinia_psidii,puccinia_striiformis,puccinia_triticina,rhodosporidium_toruloides,rhodotorula_glutinis,wallemia_ichthyophaga,wallemia_sebi", 
+        "label21": "ustilaginomycotina,malassezia_globosa,malassezia_restricta,malassezia_sympodialis,melampsora_larici-populina,pseudozyma_antarctica,pseudozyma_aphidis,pseudozyma_brasiliensis,pseudozyma_flocculosa,pseudozyma_hubeiensis,sporisorium_reilianum,ustilago_hordei,ustilago_maydis", 
+        "label20": "tremellales,cryptococcus_bestiolae,cryptococcus_dejecticola,cryptococcus_flavescens,cryptococcus_gattii,cryptococcus_neoformans,cryptococcus_pinus,kwoniella_heveanensis,kwoniella_mangrovensis,tremella_mesenterica,trichosporon_asahii", 
+        "label24": "other_fungi,allomyces_macrogynus,batrachochytrium_dendrobatidis,fungal_sp_ef0021,homoloaphlyctis_polyrhiza,mortierella_alpina,mucor_circinelloides,rhizophagus_irregularis,rhizopus_delemar,rhizopus_microsporus,rozella_allomycis,spizellomyces_punctatus,umbelopsis_isabellina"
+    }, 
+    "program": [
+        {
+            "label": "BLASTN - nucleotide query to nucleotide db", 
+            "type": "dna", 
+            "script": "blastn"
+        }, 
+        {
+            "label": "BLASTP - protein query to protein db", 
+            "type": "protein", 
+            "script": "blastp"
+        }, 
+        {
+            "label": "BLASTX - translated (6 frames) nucl. query to protein db", 
+            "type": "protein", 
+            "script": "blastx"
+        }, 
+        {
+            "label": "TBLASTN - protein query to translated (6 frames) nt db", 
+            "type": "dna", 
+            "script": "tblastn"
+        }
+    ], 
+    "databasedef": [
+        "aciculosporium_take", 
+        "agaricus_bisporus", 
+        "ajellomyces_capsulatus", 
+        "ajellomyces_dermatitidis", 
+        "allomyces_macrogynus", 
+        "alternaria_arborescens", 
+        "alternaria_brassicicola", 
+        "amanita_jacksonii", 
+        "anncaliia_algerae", 
+        "arthrobotrys_oligospora", 
+        "arthroderma_benhamiae", 
+        "arthroderma_gypseum", 
+        "arthroderma_otae", 
+        "ascocoryne_sarcoides", 
+        "ascosphaera_apis", 
+        "ashbya_gossypii", 
+        "aspergillus_clavatus", 
+        "aspergillus_flavus", 
+        "aspergillus_fumigatus", 
+        "aspergillus_kawachii", 
+        "aspergillus_nidulans", 
+        "aspergillus_niger", 
+        "aspergillus_oryzae", 
+        "aspergillus_sojae", 
+        "aspergillus_terreus", 
+        "aureobasidium_pullulans", 
+        "auricularia_delicata", 
+        "batrachochytrium_dendrobatidis", 
+        "baudoinia_compniacensis", 
+        "beauveria_bassiana", 
+        "bipolaris_maydis", 
+        "bipolaris_oryzae", 
+        "bipolaris_sorokiniana", 
+        "bipolaris_victoriae", 
+        "bipolaris_zeicola", 
+        "blumeria_graminis", 
+        "botrytis_cinerea", 
+        "byssochlamys_spectabilis", 
+        "candida_albicans", 
+        "candida_dubliniensis", 
+        "candida_glabrata", 
+        "candida_maltosa", 
+        "candida_orthopsilosis", 
+        "candida_parapsilosis", 
+        "candida_tenuis", 
+        "candida_tropicalis", 
+        "cerataphis_brasiliensis_yeast-like_symbiont", 
+        "ceratocystis_fimbriata", 
+        "ceriporiopsis_subvermispora", 
+        "chaetomium_globosum", 
+        "chaetomium_thermophilum", 
+        "cladonia_macilenta", 
+        "cladonia_metacorallifera", 
+        "cladophialophora_carrionii", 
+        "claviceps_paspali", 
+        "claviceps_purpurea", 
+        "clavispora_lusitaniae", 
+        "coccidioides_immitis", 
+        "coccidioides_posadasii", 
+        "colletotrichum_gloeosporioides", 
+        "colletotrichum_graminicola", 
+        "colletotrichum_higginsianum", 
+        "colletotrichum_orbiculare", 
+        "coniophora_puteana", 
+        "coniosporium_apollinis", 
+        "coprinopsis_cinerea", 
+        "cordyceps_militaris", 
+        "cronartium_comandrae", 
+        "cronartium_quercuum", 
+        "cronartium_ribicola", 
+        "cryptococcus_bestiolae", 
+        "cryptococcus_dejecticola", 
+        "cryptococcus_flavescens", 
+        "cryptococcus_gattii", 
+        "cryptococcus_neoformans", 
+        "cryptococcus_pinus", 
+        "cyberlindnera_jadinii", 
+        "cyphellophora_europaea", 
+        "dacryopinax_sp_djm-731_ss1", 
+        "dactylellina_haptotyla", 
+        "debaryomyces_hansenii", 
+        "dekkera_bruxellensis", 
+        "dichomitus_squalens", 
+        "edhazardia_aedis", 
+        "encephalitozoon_cuniculi", 
+        "encephalitozoon_hellem", 
+        "encephalitozoon_intestinalis", 
+        "encephalitozoon_romaleae", 
+        "endocarpon_pusillum", 
+        "endocronartium_harknessii", 
+        "enterocytozoon_bieneusi", 
+        "epichloe_amarillans", 
+        "epichloe_festucae", 
+        "epichloe_glyceriae", 
+        "epichloe_typhina", 
+        "eremothecium_cymbalariae", 
+        "eutypa_lata", 
+        "exophiala_dermatitidis", 
+        "fibroporia_radiculosa", 
+        "fomitiporia_mediterranea", 
+        "fomitopsis_pinicola", 
+        "fungal_sp_ef0021", 
+        "fusarium_fujikuroi", 
+        "fusarium_graminearum", 
+        "fusarium_oxysporum", 
+        "fusarium_pseudograminearum", 
+        "fusarium_verticillioides", 
+        "gaeumannomyces_graminis", 
+        "ganoderma_lucidum", 
+        "glarea_lozoyensis", 
+        "gloeophyllum_trabeum", 
+        "grosmannia_clavigera", 
+        "gyalolechia_flavorubescens", 
+        "herpotrichiellaceae_sp_um238", 
+        "heterobasidion_irregulare", 
+        "hirsutella_thompsonii", 
+        "homoloaphlyctis_polyrhiza", 
+        "hortaea_werneckii", 
+        "hysterium_pulicare", 
+        "kazachstania_africana", 
+        "kazachstania_naganishii", 
+        "kluyveromyces_aestuarii", 
+        "kluyveromyces_lactis", 
+        "kluyveromyces_marxianus", 
+        "kluyveromyces_wickerhamii", 
+        "komagataella_pastoris", 
+        "kwoniella_heveanensis", 
+        "kwoniella_mangrovensis", 
+        "laccaria_bicolor", 
+        "lachancea_kluyveri", 
+        "lachancea_thermotolerans", 
+        "lachancea_waltii", 
+        "lecanosticta_acicola", 
+        "leptosphaeria_maculans", 
+        "lodderomyces_elongisporus", 
+        "macrophomina_phaseolina", 
+        "magnaporthe_oryzae", 
+        "magnaporthe_poae", 
+        "malassezia_globosa", 
+        "malassezia_restricta", 
+        "malassezia_sympodialis", 
+        "marssonina_brunnea", 
+        "melampsora_larici-populina", 
+        "metarhizium_acridum", 
+        "metarhizium_anisopliae", 
+        "meyerozyma_guilliermondii", 
+        "microbotryum_violaceum", 
+        "millerozyma_farinosa", 
+        "mixia_osmundae", 
+        "moniliophthora_perniciosa", 
+        "moniliophthora_roreri", 
+        "mortierella_alpina", 
+        "mucor_circinelloides", 
+        "myceliophthora_thermophila", 
+        "mycosphaerella_laricina", 
+        "mycosphaerella_pini", 
+        "mycosphaerella_sp_ston1", 
+        "naumovozyma_castellii", 
+        "naumovozyma_dairenensis", 
+        "nectria_haematococca", 
+        "nematocida_parisii", 
+        "nematocida_sp_1", 
+        "neofusicoccum_parvum", 
+        "neosartorya_fischeri", 
+        "neotyphodium_gansuense", 
+        "neurospora_crassa", 
+        "neurospora_tetrasperma", 
+        "nosema_apis", 
+        "nosema_bombycis", 
+        "nosema_ceranae", 
+        "ogataea_parapolymorpha", 
+        "omphalotus_olearius", 
+        "ophiocordyceps_sinensis", 
+        "ophiostoma_novo-ulmi", 
+        "pachysolen_tannophilus", 
+        "paracoccidioides_brasiliensis", 
+        "paracoccidioides_sp_lutzii", 
+        "parastagonospora_nodorum", 
+        "passalora_fulva", 
+        "penicillium_camemberti", 
+        "penicillium_chrysogenum", 
+        "penicillium_digitatum", 
+        "penicillium_oxalicum", 
+        "penicillium_paxilli", 
+        "penicillium_roqueforti", 
+        "periglandula_ipomoeae", 
+        "pestalotiopsis_fici", 
+        "phanerochaete_carnosa", 
+        "phanerochaete_chrysosporium", 
+        "phellinus_noxius", 
+        "pichia_kudriavzevii", 
+        "piriformospora_indica", 
+        "pneumocystis_jirovecii", 
+        "pneumocystis_murina", 
+        "podospora_anserina", 
+        "postia_placenta", 
+        "pseudocercospora_fijiensis", 
+        "pseudocercospora_pini-densiflorae", 
+        "pseudogymnoascus_destructans", 
+        "pseudogymnoascus_pannorum", 
+        "pseudozyma_antarctica", 
+        "pseudozyma_aphidis", 
+        "pseudozyma_brasiliensis", 
+        "pseudozyma_flocculosa", 
+        "pseudozyma_hubeiensis", 
+        "puccinia_graminis", 
+        "puccinia_psidii", 
+        "puccinia_striiformis", 
+        "puccinia_triticina", 
+        "punctularia_strigosozonata", 
+        "pyrenochaeta_sp_um_256", 
+        "pyrenophora_seminiperda", 
+        "pyrenophora_teres", 
+        "pyrenophora_tritici-repentis", 
+        "rhizoctonia_solani", 
+        "rhizophagus_irregularis", 
+        "rhizopus_delemar", 
+        "rhizopus_microsporus", 
+        "rhodosporidium_toruloides", 
+        "rhodotorula_glutinis", 
+        "rhytidhysteron_rufulum", 
+        "rozella_allomycis", 
+        "saccharomyces_arboricola", 
+        "saccharomyces_bayanus", 
+        "saccharomyces_boulardii", 
+        "saccharomyces_cerevisiae", 
+        "saccharomyces_cerevisiae_x_saccharomyces_kudriavzevii", 
+        "saccharomyces_kudriavzevii", 
+        "saccharomyces_mikatae", 
+        "saccharomyces_paradoxus", 
+        "saccharomyces_pastorianus", 
+        "saccharomycetaceae_sp_ashbya_aceri", 
+        "saitoella_complicata", 
+        "scheffersomyces_stipitis", 
+        "schizophyllum_commune", 
+        "schizosaccharomyces_cryophilus", 
+        "schizosaccharomyces_japonicus", 
+        "schizosaccharomyces_octosporus", 
+        "schizosaccharomyces_pombe", 
+        "sclerotinia_borealis", 
+        "sclerotinia_sclerotiorum", 
+        "serpula_lacrymans", 
+        "setosphaeria_turcica", 
+        "shiraia_sp_slf14", 
+        "sordaria_macrospora", 
+        "spathaspora_arborariae", 
+        "spathaspora_passalidarum", 
+        "sphaerulina_musiva", 
+        "sphaerulina_populicola", 
+        "spizellomyces_punctatus", 
+        "sporisorium_reilianum", 
+        "spraguea_lophii", 
+        "stereum_hirsutum", 
+        "talaromyces_marneffei", 
+        "talaromyces_stipitatus", 
+        "taphrina_deformans", 
+        "tetrapisispora_blattae", 
+        "tetrapisispora_phaffii", 
+        "thermomyces_lanuginosus", 
+        "thielavia_terrestris", 
+        "togninia_minima", 
+        "tolypocladium_inflatum", 
+        "torulaspora_delbrueckii", 
+        "trachipleistophora_hominis", 
+        "trametes_versicolor", 
+        "tremella_mesenterica", 
+        "trichoderma_atroviride", 
+        "trichoderma_hamatum", 
+        "trichoderma_longibrachiatum", 
+        "trichoderma_reesei", 
+        "trichoderma_virens", 
+        "trichophyton_equinum", 
+        "trichophyton_rubrum", 
+        "trichophyton_tonsurans", 
+        "trichophyton_verrucosum", 
+        "trichosporon_asahii", 
+        "tuber_melanosporum", 
+        "umbelopsis_isabellina", 
+        "uncinocarpus_reesii", 
+        "ustilago_hordei", 
+        "ustilago_maydis", 
+        "vanderwaltozyma_polyspora", 
+        "vavraia_culicis", 
+        "verticillium_alfalfae", 
+        "verticillium_dahliae", 
+        "vittaforma_corneae", 
+        "volvariella_volvacea", 
+        "wallemia_ichthyophaga", 
+        "wallemia_sebi", 
+        "wickerhamomyces_anomalus", 
+        "wickerhamomyces_ciferrii", 
+        "wolfiporia_cocos", 
+        "yarrowia_lipolytica", 
+        "zygosaccharomyces_bailii", 
+        "zygosaccharomyces_rouxii", 
+        "zymoseptoria_ardabiliae", 
+        "zymoseptoria_passerinii", 
+        "zymoseptoria_pseudotritici", 
+        "zymoseptoria_tritici"
+    ], 
+    "matrix": [
+        "BLOSUM62", 
+        "BLOSUM100", 
+        "PAM40", 
+        "PAM120", 
+        "PAM250"
+    ], 
+    "database": [
+        {
+            "label": "-------------------Saccharomyces------------------", 
+            "type": "spacer", 
+            "dataset": "label1"
+        }, 
+        {
+            "label": "Saccharomyces arboricola", 
+            "type": "both", 
+            "dataset": "saccharomyces_arboricola"
+        }, 
+        {
+            "label": "Saccharomyces bayanus (DNA only)", 
+            "type": "dna", 
+            "dataset": "saccharomyces_bayanus"
+        }, 
+        {
+            "label": "Saccharomyces boulardii (DNA only)", 
+            "type": "dna", 
+            "dataset": "saccharomyces_boulardii"
+        }, 
+        {
+            "label": "Saccharomyces cerevisiae", 
+            "type": "both", 
+            "dataset": "saccharomyces_cerevisiae"
+        }, 
+        {
+            "label": "Saccharomyces cerevisiae x Saccharomyces kudriavzevii", 
+            "type": "both", 
+            "dataset": "saccharomyces_cerevisiae_x_saccharomyces_kudriavzevii"
+        }, 
+        {
+            "label": "Saccharomyces kudriavzevii", 
+            "type": "both", 
+            "dataset": "saccharomyces_kudriavzevii"
+        }, 
+        {
+            "label": "Saccharomyces mikatae (DNA only)", 
+            "type": "dna", 
+            "dataset": "saccharomyces_mikatae"
+        }, 
+        {
+            "label": "Saccharomyces paradoxus (DNA only)", 
+            "type": "dna", 
+            "dataset": "saccharomyces_paradoxus"
+        }, 
+        {
+            "label": "Saccharomyces pastorianus (DNA only)", 
+            "type": "dna", 
+            "dataset": "saccharomyces_pastorianus"
+        }, 
+        {
+            "label": "-------------------Candida------------------", 
+            "type": "spacer", 
+            "dataset": "label2"
+        }, 
+        {
+            "label": "Candida albicans", 
+            "type": "both", 
+            "dataset": "candida_albicans"
+        }, 
+        {
+            "label": "Candida dubliniensis", 
+            "type": "both", 
+            "dataset": "candida_dubliniensis"
+        }, 
+        {
+            "label": "Candida glabrata", 
+            "type": "both", 
+            "dataset": "candida_glabrata"
+        }, 
+        {
+            "label": "Candida maltosa", 
+            "type": "both", 
+            "dataset": "candida_maltosa"
+        }, 
+        {
+            "label": "Candida orthopsilosis", 
+            "type": "both", 
+            "dataset": "candida_orthopsilosis"
+        }, 
+        {
+            "label": "Candida parapsilosis (DNA only)", 
+            "type": "dna", 
+            "dataset": "candida_parapsilosis"
+        }, 
+        {
+            "label": "Candida tenuis", 
+            "type": "both", 
+            "dataset": "candida_tenuis"
+        }, 
+        {
+            "label": "Candida tropicalis", 
+            "type": "both", 
+            "dataset": "candida_tropicalis"
+        }, 
+        {
+            "label": "-------------------Saccharomycetaceae------------------", 
+            "type": "spacer", 
+            "dataset": "label3"
+        }, 
+        {
+            "label": "Ashbya gossypii", 
+            "type": "both", 
+            "dataset": "ashbya_gossypii"
+        }, 
+        {
+            "label": "Dekkera bruxellensis", 
+            "type": "both", 
+            "dataset": "dekkera_bruxellensis"
+        }, 
+        {
+            "label": "Eremothecium cymbalariae", 
+            "type": "both", 
+            "dataset": "eremothecium_cymbalariae"
+        }, 
+        {
+            "label": "Kazachstania africana", 
+            "type": "both", 
+            "dataset": "kazachstania_africana"
+        }, 
+        {
+            "label": "Kazachstania naganishii", 
+            "type": "both", 
+            "dataset": "kazachstania_naganishii"
+        }, 
+        {
+            "label": "Kluyveromyces aestuarii (DNA only)", 
+            "type": "dna", 
+            "dataset": "kluyveromyces_aestuarii"
+        }, 
+        {
+            "label": "Kluyveromyces lactis", 
+            "type": "both", 
+            "dataset": "kluyveromyces_lactis"
+        }, 
+        {
+            "label": "Kluyveromyces marxianus (DNA only)", 
+            "type": "dna", 
+            "dataset": "kluyveromyces_marxianus"
+        }, 
+        {
+            "label": "Kluyveromyces wickerhamii (DNA only)", 
+            "type": "dna", 
+            "dataset": "kluyveromyces_wickerhamii"
+        }, 
+        {
+            "label": "Komagataella pastoris", 
+            "type": "both", 
+            "dataset": "komagataella_pastoris"
+        }, 
+        {
+            "label": "Lachancea kluyveri", 
+            "type": "both", 
+            "dataset": "lachancea_kluyveri"
+        }, 
+        {
+            "label": "Lachancea thermotolerans", 
+            "type": "both", 
+            "dataset": "lachancea_thermotolerans"
+        }, 
+        {
+            "label": "Lachancea waltii (DNA only)", 
+            "type": "dna", 
+            "dataset": "lachancea_waltii"
+        }, 
+        {
+            "label": "Naumovozyma castellii", 
+            "type": "both", 
+            "dataset": "naumovozyma_castellii"
+        }, 
+        {
+            "label": "Naumovozyma dairenensis", 
+            "type": "both", 
+            "dataset": "naumovozyma_dairenensis"
+        }, 
+        {
+            "label": "Ogataea parapolymorpha", 
+            "type": "both", 
+            "dataset": "ogataea_parapolymorpha"
+        }, 
+        {
+            "label": "Pachysolen tannophilus (DNA only)", 
+            "type": "dna", 
+            "dataset": "pachysolen_tannophilus"
+        }, 
+        {
+            "label": "Saccharomycetaceae sp. 'Ashbya aceri'", 
+            "type": "both", 
+            "dataset": "saccharomycetaceae_sp_ashbya_aceri"
+        }, 
+        {
+            "label": "Tetrapisispora blattae", 
+            "type": "both", 
+            "dataset": "tetrapisispora_blattae"
+        }, 
+        {
+            "label": "Tetrapisispora phaffii", 
+            "type": "both", 
+            "dataset": "tetrapisispora_phaffii"
+        }, 
+        {
+            "label": "Torulaspora delbrueckii", 
+            "type": "both", 
+            "dataset": "torulaspora_delbrueckii"
+        }, 
+        {
+            "label": "Vanderwaltozyma polyspora", 
+            "type": "both", 
+            "dataset": "vanderwaltozyma_polyspora"
+        }, 
+        {
+            "label": "Zygosaccharomyces bailii", 
+            "type": "both", 
+            "dataset": "zygosaccharomyces_bailii"
+        }, 
+        {
+            "label": "Zygosaccharomyces rouxii", 
+            "type": "both", 
+            "dataset": "zygosaccharomyces_rouxii"
+        }, 
+        {
+            "label": "-------------------Other Saccharomycetales (budding yeasts)------------------", 
+            "type": "spacer", 
+            "dataset": "label4"
+        }, 
+        {
+            "label": "Clavispora lusitaniae", 
+            "type": "both", 
+            "dataset": "clavispora_lusitaniae"
+        }, 
+        {
+            "label": "Cyberlindnera jadinii (DNA only)", 
+            "type": "dna", 
+            "dataset": "cyberlindnera_jadinii"
+        }, 
+        {
+            "label": "Debaryomyces hansenii", 
+            "type": "both", 
+            "dataset": "debaryomyces_hansenii"
+        }, 
+        {
+            "label": "Lodderomyces elongisporus", 
+            "type": "both", 
+            "dataset": "lodderomyces_elongisporus"
+        }, 
+        {
+            "label": "Meyerozyma guilliermondii", 
+            "type": "both", 
+            "dataset": "meyerozyma_guilliermondii"
+        }, 
+        {
+            "label": "Millerozyma farinosa", 
+            "type": "both", 
+            "dataset": "millerozyma_farinosa"
+        }, 
+        {
+            "label": "Pichia kudriavzevii (DNA only)", 
+            "type": "dna", 
+            "dataset": "pichia_kudriavzevii"
+        }, 
+        {
+            "label": "Scheffersomyces stipitis", 
+            "type": "both", 
+            "dataset": "scheffersomyces_stipitis"
+        }, 
+        {
+            "label": "Spathaspora arborariae (DNA only)", 
+            "type": "dna", 
+            "dataset": "spathaspora_arborariae"
+        }, 
+        {
+            "label": "Spathaspora passalidarum", 
+            "type": "both", 
+            "dataset": "spathaspora_passalidarum"
+        }, 
+        {
+            "label": "Wickerhamomyces anomalus (DNA only)", 
+            "type": "dna", 
+            "dataset": "wickerhamomyces_anomalus"
+        }, 
+        {
+            "label": "Wickerhamomyces ciferrii", 
+            "type": "both", 
+            "dataset": "wickerhamomyces_ciferrii"
+        }, 
+        {
+            "label": "Yarrowia lipolytica", 
+            "type": "both", 
+            "dataset": "yarrowia_lipolytica"
+        }, 
+        {
+            "label": "-------------------Schizosaccharomyces (fission yeasts)------------------", 
+            "type": "spacer", 
+            "dataset": "label5"
+        }, 
+        {
+            "label": "Schizosaccharomyces cryophilus", 
+            "type": "both", 
+            "dataset": "schizosaccharomyces_cryophilus"
+        }, 
+        {
+            "label": "Schizosaccharomyces japonicus", 
+            "type": "both", 
+            "dataset": "schizosaccharomyces_japonicus"
+        }, 
+        {
+            "label": "Schizosaccharomyces octosporus", 
+            "type": "both", 
+            "dataset": "schizosaccharomyces_octosporus"
+        }, 
+        {
+            "label": "Schizosaccharomyces pombe", 
+            "type": "both", 
+            "dataset": "schizosaccharomyces_pombe"
+        }, 
+        {
+            "label": "-------------------Dothideomycetes (plant fungi)------------------", 
+            "type": "spacer", 
+            "dataset": "label6"
+        }, 
+        {
+            "label": "Alternaria arborescens (DNA only)", 
+            "type": "dna", 
+            "dataset": "alternaria_arborescens"
+        }, 
+        {
+            "label": "Alternaria brassicicola (DNA only)", 
+            "type": "dna", 
+            "dataset": "alternaria_brassicicola"
+        }, 
+        {
+            "label": "Aureobasidium pullulans (DNA only)", 
+            "type": "dna", 
+            "dataset": "aureobasidium_pullulans"
+        }, 
+        {
+            "label": "Baudoinia compniacensis", 
+            "type": "both", 
+            "dataset": "baudoinia_compniacensis"
+        }, 
+        {
+            "label": "Bipolaris maydis", 
+            "type": "both", 
+            "dataset": "bipolaris_maydis"
+        }, 
+        {
+            "label": "Bipolaris oryzae", 
+            "type": "both", 
+            "dataset": "bipolaris_oryzae"
+        }, 
+        {
+            "label": "Bipolaris sorokiniana", 
+            "type": "both", 
+            "dataset": "bipolaris_sorokiniana"
+        }, 
+        {
+            "label": "Bipolaris victoriae", 
+            "type": "both", 
+            "dataset": "bipolaris_victoriae"
+        }, 
+        {
+            "label": "Bipolaris zeicola", 
+            "type": "both", 
+            "dataset": "bipolaris_zeicola"
+        }, 
+        {
+            "label": "Hortaea werneckii (DNA only)", 
+            "type": "dna", 
+            "dataset": "hortaea_werneckii"
+        }, 
+        {
+            "label": "Hysterium pulicare (DNA only)", 
+            "type": "dna", 
+            "dataset": "hysterium_pulicare"
+        }, 
+        {
+            "label": "Lecanosticta acicola (DNA only)", 
+            "type": "dna", 
+            "dataset": "lecanosticta_acicola"
+        }, 
+        {
+            "label": "Leptosphaeria maculans", 
+            "type": "both", 
+            "dataset": "leptosphaeria_maculans"
+        }, 
+        {
+            "label": "Macrophomina phaseolina", 
+            "type": "both", 
+            "dataset": "macrophomina_phaseolina"
+        }, 
+        {
+            "label": "Mycosphaerella laricina (DNA only)", 
+            "type": "dna", 
+            "dataset": "mycosphaerella_laricina"
+        }, 
+        {
+            "label": "Mycosphaerella pini", 
+            "type": "both", 
+            "dataset": "mycosphaerella_pini"
+        }, 
+        {
+            "label": "Mycosphaerella sp. Ston1 (DNA only)", 
+            "type": "dna", 
+            "dataset": "mycosphaerella_sp_ston1"
+        }, 
+        {
+            "label": "Neofusicoccum parvum", 
+            "type": "both", 
+            "dataset": "neofusicoccum_parvum"
+        }, 
+        {
+            "label": "Parastagonospora nodorum", 
+            "type": "both", 
+            "dataset": "parastagonospora_nodorum"
+        }, 
+        {
+            "label": "Passalora fulva (DNA only)", 
+            "type": "dna", 
+            "dataset": "passalora_fulva"
+        }, 
+        {
+            "label": "Pseudocercospora fijiensis", 
+            "type": "both", 
+            "dataset": "pseudocercospora_fijiensis"
+        }, 
+        {
+            "label": "Pseudocercospora pini-densiflorae (DNA only)", 
+            "type": "dna", 
+            "dataset": "pseudocercospora_pini-densiflorae"
+        }, 
+        {
+            "label": "Pyrenochaeta sp. UM 256 (DNA only)", 
+            "type": "dna", 
+            "dataset": "pyrenochaeta_sp_um_256"
+        }, 
+        {
+            "label": "Pyrenophora seminiperda (DNA only)", 
+            "type": "dna", 
+            "dataset": "pyrenophora_seminiperda"
+        }, 
+        {
+            "label": "Pyrenophora teres", 
+            "type": "both", 
+            "dataset": "pyrenophora_teres"
+        }, 
+        {
+            "label": "Pyrenophora tritici-repentis", 
+            "type": "both", 
+            "dataset": "pyrenophora_tritici-repentis"
+        }, 
+        {
+            "label": "Rhytidhysteron rufulum (DNA only)", 
+            "type": "dna", 
+            "dataset": "rhytidhysteron_rufulum"
+        }, 
+        {
+            "label": "Setosphaeria turcica", 
+            "type": "both", 
+            "dataset": "setosphaeria_turcica"
+        }, 
+        {
+            "label": "Shiraia sp. slf14 (DNA only)", 
+            "type": "dna", 
+            "dataset": "shiraia_sp_slf14"
+        }, 
+        {
+            "label": "Sphaerulina musiva", 
+            "type": "both", 
+            "dataset": "sphaerulina_musiva"
+        }, 
+        {
+            "label": "Sphaerulina populicola (DNA only)", 
+            "type": "dna", 
+            "dataset": "sphaerulina_populicola"
+        }, 
+        {
+            "label": "Zymoseptoria ardabiliae (DNA only)", 
+            "type": "dna", 
+            "dataset": "zymoseptoria_ardabiliae"
+        }, 
+        {
+            "label": "Zymoseptoria passerinii (DNA only)", 
+            "type": "dna", 
+            "dataset": "zymoseptoria_passerinii"
+        }, 
+        {
+            "label": "Zymoseptoria pseudotritici (DNA only)", 
+            "type": "dna", 
+            "dataset": "zymoseptoria_pseudotritici"
+        }, 
+        {
+            "label": "Zymoseptoria tritici", 
+            "type": "both", 
+            "dataset": "zymoseptoria_tritici"
+        }, 
+        {
+            "label": "-------------------Chaetothyriales (black yeasts)------------------", 
+            "type": "spacer", 
+            "dataset": "label7"
+        }, 
+        {
+            "label": "Cladophialophora carrionii", 
+            "type": "both", 
+            "dataset": "cladophialophora_carrionii"
+        }, 
+        {
+            "label": "Coniosporium apollinis", 
+            "type": "both", 
+            "dataset": "coniosporium_apollinis"
+        }, 
+        {
+            "label": "Cyphellophora europaea", 
+            "type": "both", 
+            "dataset": "cyphellophora_europaea"
+        }, 
+        {
+            "label": "Exophiala dermatitidis", 
+            "type": "both", 
+            "dataset": "exophiala_dermatitidis"
+        }, 
+        {
+            "label": "Herpotrichiellaceae sp. UM238 (DNA only)", 
+            "type": "dna", 
+            "dataset": "herpotrichiellaceae_sp_um238"
+        }, 
+        {
+            "label": "-------------------Aspergillus------------------", 
+            "type": "spacer", 
+            "dataset": "label8"
+        }, 
+        {
+            "label": "Aspergillus clavatus", 
+            "type": "both", 
+            "dataset": "aspergillus_clavatus"
+        }, 
+        {
+            "label": "Aspergillus flavus", 
+            "type": "both", 
+            "dataset": "aspergillus_flavus"
+        }, 
+        {
+            "label": "Aspergillus fumigatus", 
+            "type": "both", 
+            "dataset": "aspergillus_fumigatus"
+        }, 
+        {
+            "label": "Aspergillus kawachii", 
+            "type": "both", 
+            "dataset": "aspergillus_kawachii"
+        }, 
+        {
+            "label": "Aspergillus nidulans", 
+            "type": "both", 
+            "dataset": "aspergillus_nidulans"
+        }, 
+        {
+            "label": "Aspergillus niger", 
+            "type": "both", 
+            "dataset": "aspergillus_niger"
+        }, 
+        {
+            "label": "Aspergillus oryzae", 
+            "type": "both", 
+            "dataset": "aspergillus_oryzae"
+        }, 
+        {
+            "label": "Aspergillus sojae (DNA only)", 
+            "type": "dna", 
+            "dataset": "aspergillus_sojae"
+        }, 
+        {
+            "label": "Aspergillus terreus", 
+            "type": "both", 
+            "dataset": "aspergillus_terreus"
+        }, 
+        {
+            "label": "-------------------Penicillium------------------", 
+            "type": "spacer", 
+            "dataset": "label9"
+        }, 
+        {
+            "label": "Penicillium camemberti (DNA only)", 
+            "type": "dna", 
+            "dataset": "penicillium_camemberti"
+        }, 
+        {
+            "label": "Penicillium chrysogenum", 
+            "type": "both", 
+            "dataset": "penicillium_chrysogenum"
+        }, 
+        {
+            "label": "Penicillium digitatum", 
+            "type": "both", 
+            "dataset": "penicillium_digitatum"
+        }, 
+        {
+            "label": "Penicillium oxalicum", 
+            "type": "both", 
+            "dataset": "penicillium_oxalicum"
+        }, 
+        {
+            "label": "Penicillium paxilli (DNA only)", 
+            "type": "dna", 
+            "dataset": "penicillium_paxilli"
+        }, 
+        {
+            "label": "Penicillium roqueforti", 
+            "type": "both", 
+            "dataset": "penicillium_roqueforti"
+        }, 
+        {
+            "label": "-------------------Other Eurotiales (green and blue molds)------------------", 
+            "type": "spacer", 
+            "dataset": "label10"
+        }, 
+        {
+            "label": "Byssochlamys spectabilis", 
+            "type": "both", 
+            "dataset": "byssochlamys_spectabilis"
+        }, 
+        {
+            "label": "Neosartorya fischeri", 
+            "type": "both", 
+            "dataset": "neosartorya_fischeri"
+        }, 
+        {
+            "label": "Talaromyces marneffei", 
+            "type": "both", 
+            "dataset": "talaromyces_marneffei"
+        }, 
+        {
+            "label": "Talaromyces stipitatus", 
+            "type": "both", 
+            "dataset": "talaromyces_stipitatus"
+        }, 
+        {
+            "label": "Thermomyces lanuginosus (DNA only)", 
+            "type": "dna", 
+            "dataset": "thermomyces_lanuginosus"
+        }, 
+        {
+            "label": "-------------------Arthrodermataceae (dermatophytes)------------------", 
+            "type": "spacer", 
+            "dataset": "label11"
+        }, 
+        {
+            "label": "Arthroderma benhamiae", 
+            "type": "both", 
+            "dataset": "arthroderma_benhamiae"
+        }, 
+        {
+            "label": "Arthroderma gypseum", 
+            "type": "both", 
+            "dataset": "arthroderma_gypseum"
+        }, 
+        {
+            "label": "Arthroderma otae", 
+            "type": "both", 
+            "dataset": "arthroderma_otae"
+        }, 
+        {
+            "label": "Trichophyton equinum", 
+            "type": "both", 
+            "dataset": "trichophyton_equinum"
+        }, 
+        {
+            "label": "Trichophyton rubrum", 
+            "type": "both", 
+            "dataset": "trichophyton_rubrum"
+        }, 
+        {
+            "label": "Trichophyton tonsurans", 
+            "type": "both", 
+            "dataset": "trichophyton_tonsurans"
+        }, 
+        {
+            "label": "Trichophyton verrucosum (Protein only)", 
+            "type": "protein", 
+            "dataset": "trichophyton_verrucosum"
+        }, 
+        {
+            "label": "-------------------Other Onygenales (Coccidioides and related)------------------", 
+            "type": "spacer", 
+            "dataset": "label12"
+        }, 
+        {
+            "label": "Ajellomyces capsulatus", 
+            "type": "both", 
+            "dataset": "ajellomyces_capsulatus"
+        }, 
+        {
+            "label": "Ajellomyces dermatitidis", 
+            "type": "both", 
+            "dataset": "ajellomyces_dermatitidis"
+        }, 
+        {
+            "label": "Ascosphaera apis (DNA only)", 
+            "type": "dna", 
+            "dataset": "ascosphaera_apis"
+        }, 
+        {
+            "label": "Coccidioides immitis", 
+            "type": "both", 
+            "dataset": "coccidioides_immitis"
+        }, 
+        {
+            "label": "Coccidioides posadasii", 
+            "type": "both", 
+            "dataset": "coccidioides_posadasii"
+        }, 
+        {
+            "label": "Paracoccidioides brasiliensis", 
+            "type": "both", 
+            "dataset": "paracoccidioides_brasiliensis"
+        }, 
+        {
+            "label": "Paracoccidioides sp. 'lutzii'", 
+            "type": "both", 
+            "dataset": "paracoccidioides_sp_lutzii"
+        }, 
+        {
+            "label": "Uncinocarpus reesii", 
+            "type": "both", 
+            "dataset": "uncinocarpus_reesii"
+        }, 
+        {
+            "label": "-------------------Leotiomycetes (non-lichenized fungi)------------------", 
+            "type": "spacer", 
+            "dataset": "label13"
+        }, 
+        {
+            "label": "Ascocoryne sarcoides (DNA only)", 
+            "type": "dna", 
+            "dataset": "ascocoryne_sarcoides"
+        }, 
+        {
+            "label": "Blumeria graminis", 
+            "type": "both", 
+            "dataset": "blumeria_graminis"
+        }, 
+        {
+            "label": "Botrytis cinerea", 
+            "type": "both", 
+            "dataset": "botrytis_cinerea"
+        }, 
+        {
+            "label": "Glarea lozoyensis", 
+            "type": "both", 
+            "dataset": "glarea_lozoyensis"
+        }, 
+        {
+            "label": "Marssonina brunnea", 
+            "type": "both", 
+            "dataset": "marssonina_brunnea"
+        }, 
+        {
+            "label": "Pseudogymnoascus destructans", 
+            "type": "both", 
+            "dataset": "pseudogymnoascus_destructans"
+        }, 
+        {
+            "label": "Pseudogymnoascus pannorum (DNA only)", 
+            "type": "dna", 
+            "dataset": "pseudogymnoascus_pannorum"
+        }, 
+        {
+            "label": "Sclerotinia borealis", 
+            "type": "both", 
+            "dataset": "sclerotinia_borealis"
+        }, 
+        {
+            "label": "Sclerotinia sclerotiorum", 
+            "type": "both", 
+            "dataset": "sclerotinia_sclerotiorum"
+        }, 
+        {
+            "label": "-------------------Glomerellales (endophytic fungi)------------------", 
+            "type": "spacer", 
+            "dataset": "label14"
+        }, 
+        {
+            "label": "Colletotrichum gloeosporioides", 
+            "type": "both", 
+            "dataset": "colletotrichum_gloeosporioides"
+        }, 
+        {
+            "label": "Colletotrichum graminicola", 
+            "type": "both", 
+            "dataset": "colletotrichum_graminicola"
+        }, 
+        {
+            "label": "Colletotrichum higginsianum (Protein only)", 
+            "type": "protein", 
+            "dataset": "colletotrichum_higginsianum"
+        }, 
+        {
+            "label": "Colletotrichum orbiculare", 
+            "type": "both", 
+            "dataset": "colletotrichum_orbiculare"
+        }, 
+        {
+            "label": "Verticillium alfalfae", 
+            "type": "both", 
+            "dataset": "verticillium_alfalfae"
+        }, 
+        {
+            "label": "Verticillium dahliae", 
+            "type": "both", 
+            "dataset": "verticillium_dahliae"
+        }, 
+        {
+            "label": "-------------------Hypocreales (Fusarium and related)------------------", 
+            "type": "spacer", 
+            "dataset": "label15"
+        }, 
+        {
+            "label": "Aciculosporium take (DNA only)", 
+            "type": "dna", 
+            "dataset": "aciculosporium_take"
+        }, 
+        {
+            "label": "Beauveria bassiana", 
+            "type": "both", 
+            "dataset": "beauveria_bassiana"
+        }, 
+        {
+            "label": "Claviceps paspali (DNA only)", 
+            "type": "dna", 
+            "dataset": "claviceps_paspali"
+        }, 
+        {
+            "label": "Claviceps purpurea", 
+            "type": "both", 
+            "dataset": "claviceps_purpurea"
+        }, 
+        {
+            "label": "Cordyceps militaris", 
+            "type": "both", 
+            "dataset": "cordyceps_militaris"
+        }, 
+        {
+            "label": "Epichloe amarillans (DNA only)", 
+            "type": "dna", 
+            "dataset": "epichloe_amarillans"
+        }, 
+        {
+            "label": "Epichloe festucae (DNA only)", 
+            "type": "dna", 
+            "dataset": "epichloe_festucae"
+        }, 
+        {
+            "label": "Epichloe glyceriae (DNA only)", 
+            "type": "dna", 
+            "dataset": "epichloe_glyceriae"
+        }, 
+        {
+            "label": "Epichloe typhina (DNA only)", 
+            "type": "dna", 
+            "dataset": "epichloe_typhina"
+        }, 
+        {
+            "label": "Fusarium fujikuroi (DNA only)", 
+            "type": "dna", 
+            "dataset": "fusarium_fujikuroi"
+        }, 
+        {
+            "label": "Fusarium graminearum", 
+            "type": "both", 
+            "dataset": "fusarium_graminearum"
+        }, 
+        {
+            "label": "Fusarium oxysporum", 
+            "type": "both", 
+            "dataset": "fusarium_oxysporum"
+        }, 
+        {
+            "label": "Fusarium pseudograminearum", 
+            "type": "both", 
+            "dataset": "fusarium_pseudograminearum"
+        }, 
+        {
+            "label": "Fusarium verticillioides", 
+            "type": "both", 
+            "dataset": "fusarium_verticillioides"
+        }, 
+        {
+            "label": "Hirsutella thompsonii (DNA only)", 
+            "type": "dna", 
+            "dataset": "hirsutella_thompsonii"
+        }, 
+        {
+            "label": "Metarhizium acridum", 
+            "type": "both", 
+            "dataset": "metarhizium_acridum"
+        }, 
+        {
+            "label": "Metarhizium anisopliae", 
+            "type": "both", 
+            "dataset": "metarhizium_anisopliae"
+        }, 
+        {
+            "label": "Nectria haematococca", 
+            "type": "both", 
+            "dataset": "nectria_haematococca"
+        }, 
+        {
+            "label": "Neotyphodium gansuense (DNA only)", 
+            "type": "dna", 
+            "dataset": "neotyphodium_gansuense"
+        }, 
+        {
+            "label": "Ophiocordyceps sinensis", 
+            "type": "both", 
+            "dataset": "ophiocordyceps_sinensis"
+        }, 
+        {
+            "label": "Periglandula ipomoeae (DNA only)", 
+            "type": "dna", 
+            "dataset": "periglandula_ipomoeae"
+        }, 
+        {
+            "label": "Tolypocladium inflatum (DNA only)", 
+            "type": "dna", 
+            "dataset": "tolypocladium_inflatum"
+        }, 
+        {
+            "label": "Trichoderma atroviride", 
+            "type": "both", 
+            "dataset": "trichoderma_atroviride"
+        }, 
+        {
+            "label": "Trichoderma hamatum (DNA only)", 
+            "type": "dna", 
+            "dataset": "trichoderma_hamatum"
+        }, 
+        {
+            "label": "Trichoderma longibrachiatum (DNA only)", 
+            "type": "dna", 
+            "dataset": "trichoderma_longibrachiatum"
+        }, 
+        {
+            "label": "Trichoderma reesei", 
+            "type": "both", 
+            "dataset": "trichoderma_reesei"
+        }, 
+        {
+            "label": "Trichoderma virens", 
+            "type": "both", 
+            "dataset": "trichoderma_virens"
+        }, 
+        {
+            "label": "-------------------Sordariales (Neurospora and related)------------------", 
+            "type": "spacer", 
+            "dataset": "label16"
+        }, 
+        {
+            "label": "Chaetomium globosum", 
+            "type": "both", 
+            "dataset": "chaetomium_globosum"
+        }, 
+        {
+            "label": "Chaetomium thermophilum", 
+            "type": "both", 
+            "dataset": "chaetomium_thermophilum"
+        }, 
+        {
+            "label": "Myceliophthora thermophila", 
+            "type": "both", 
+            "dataset": "myceliophthora_thermophila"
+        }, 
+        {
+            "label": "Neurospora crassa", 
+            "type": "both", 
+            "dataset": "neurospora_crassa"
+        }, 
+        {
+            "label": "Neurospora tetrasperma", 
+            "type": "both", 
+            "dataset": "neurospora_tetrasperma"
+        }, 
+        {
+            "label": "Podospora anserina", 
+            "type": "both", 
+            "dataset": "podospora_anserina"
+        }, 
+        {
+            "label": "Sordaria macrospora", 
+            "type": "both", 
+            "dataset": "sordaria_macrospora"
+        }, 
+        {
+            "label": "Thielavia terrestris", 
+            "type": "both", 
+            "dataset": "thielavia_terrestris"
+        }, 
+        {
+            "label": "-------------------Other Sordariomycetidae (unitunicate perithecial fungi)------------------", 
+            "type": "spacer", 
+            "dataset": "label17"
+        }, 
+        {
+            "label": "Gaeumannomyces graminis", 
+            "type": "both", 
+            "dataset": "gaeumannomyces_graminis"
+        }, 
+        {
+            "label": "Grosmannia clavigera", 
+            "type": "both", 
+            "dataset": "grosmannia_clavigera"
+        }, 
+        {
+            "label": "Magnaporthe oryzae", 
+            "type": "both", 
+            "dataset": "magnaporthe_oryzae"
+        }, 
+        {
+            "label": "Magnaporthe poae (DNA only)", 
+            "type": "dna", 
+            "dataset": "magnaporthe_poae"
+        }, 
+        {
+            "label": "Ophiostoma novo-ulmi (DNA only)", 
+            "type": "dna", 
+            "dataset": "ophiostoma_novo-ulmi"
+        }, 
+        {
+            "label": "Togninia minima", 
+            "type": "both", 
+            "dataset": "togninia_minima"
+        }, 
+        {
+            "label": "-------------------Other Ascomycota------------------", 
+            "type": "spacer", 
+            "dataset": "label18"
+        }, 
+        {
+            "label": "Arthrobotrys oligospora", 
+            "type": "both", 
+            "dataset": "arthrobotrys_oligospora"
+        }, 
+        {
+            "label": "Cerataphis brasiliensis yeast-like symbiont (DNA only)", 
+            "type": "dna", 
+            "dataset": "cerataphis_brasiliensis_yeast-like_symbiont"
+        }, 
+        {
+            "label": "Ceratocystis fimbriata (DNA only)", 
+            "type": "dna", 
+            "dataset": "ceratocystis_fimbriata"
+        }, 
+        {
+            "label": "Cladonia macilenta (DNA only)", 
+            "type": "dna", 
+            "dataset": "cladonia_macilenta"
+        }, 
+        {
+            "label": "Cladonia metacorallifera (DNA only)", 
+            "type": "dna", 
+            "dataset": "cladonia_metacorallifera"
+        }, 
+        {
+            "label": "Dactylellina haptotyla", 
+            "type": "both", 
+            "dataset": "dactylellina_haptotyla"
+        }, 
+        {
+            "label": "Endocarpon pusillum", 
+            "type": "both", 
+            "dataset": "endocarpon_pusillum"
+        }, 
+        {
+            "label": "Eutypa lata", 
+            "type": "both", 
+            "dataset": "eutypa_lata"
+        }, 
+        {
+            "label": "Gyalolechia flavorubescens (DNA only)", 
+            "type": "dna", 
+            "dataset": "gyalolechia_flavorubescens"
+        }, 
+        {
+            "label": "Pestalotiopsis fici", 
+            "type": "both", 
+            "dataset": "pestalotiopsis_fici"
+        }, 
+        {
+            "label": "Pneumocystis jirovecii", 
+            "type": "both", 
+            "dataset": "pneumocystis_jirovecii"
+        }, 
+        {
+            "label": "Pneumocystis murina", 
+            "type": "both", 
+            "dataset": "pneumocystis_murina"
+        }, 
+        {
+            "label": "Saitoella complicata (DNA only)", 
+            "type": "dna", 
+            "dataset": "saitoella_complicata"
+        }, 
+        {
+            "label": "Taphrina deformans", 
+            "type": "both", 
+            "dataset": "taphrina_deformans"
+        }, 
+        {
+            "label": "Tuber melanosporum", 
+            "type": "both", 
+            "dataset": "tuber_melanosporum"
+        }, 
+        {
+            "label": "-------------------Agaricomycetes (gill mushrooms and related)------------------", 
+            "type": "spacer", 
+            "dataset": "label19"
+        }, 
+        {
+            "label": "Agaricus bisporus", 
+            "type": "both", 
+            "dataset": "agaricus_bisporus"
+        }, 
+        {
+            "label": "Amanita jacksonii (DNA only)", 
+            "type": "dna", 
+            "dataset": "amanita_jacksonii"
+        }, 
+        {
+            "label": "Auricularia delicata", 
+            "type": "both", 
+            "dataset": "auricularia_delicata"
+        }, 
+        {
+            "label": "Ceriporiopsis subvermispora", 
+            "type": "both", 
+            "dataset": "ceriporiopsis_subvermispora"
+        }, 
+        {
+            "label": "Coniophora puteana", 
+            "type": "both", 
+            "dataset": "coniophora_puteana"
+        }, 
+        {
+            "label": "Coprinopsis cinerea", 
+            "type": "both", 
+            "dataset": "coprinopsis_cinerea"
+        }, 
+        {
+            "label": "Dichomitus squalens", 
+            "type": "both", 
+            "dataset": "dichomitus_squalens"
+        }, 
+        {
+            "label": "Fibroporia radiculosa", 
+            "type": "both", 
+            "dataset": "fibroporia_radiculosa"
+        }, 
+        {
+            "label": "Fomitiporia mediterranea", 
+            "type": "both", 
+            "dataset": "fomitiporia_mediterranea"
+        }, 
+        {
+            "label": "Fomitopsis pinicola", 
+            "type": "both", 
+            "dataset": "fomitopsis_pinicola"
+        }, 
+        {
+            "label": "Ganoderma lucidum (DNA only)", 
+            "type": "dna", 
+            "dataset": "ganoderma_lucidum"
+        }, 
+        {
+            "label": "Gloeophyllum trabeum", 
+            "type": "both", 
+            "dataset": "gloeophyllum_trabeum"
+        }, 
+        {
+            "label": "Heterobasidion irregulare", 
+            "type": "both", 
+            "dataset": "heterobasidion_irregulare"
+        }, 
+        {
+            "label": "Laccaria bicolor", 
+            "type": "both", 
+            "dataset": "laccaria_bicolor"
+        }, 
+        {
+            "label": "Moniliophthora perniciosa", 
+            "type": "both", 
+            "dataset": "moniliophthora_perniciosa"
+        }, 
+        {
+            "label": "Moniliophthora roreri", 
+            "type": "both", 
+            "dataset": "moniliophthora_roreri"
+        }, 
+        {
+            "label": "Omphalotus olearius (DNA only)", 
+            "type": "dna", 
+            "dataset": "omphalotus_olearius"
+        }, 
+        {
+            "label": "Phanerochaete carnosa", 
+            "type": "both", 
+            "dataset": "phanerochaete_carnosa"
+        }, 
+        {
+            "label": "Phanerochaete chrysosporium(DNA only)", 
+            "type": "dna", 
+            "dataset": "phanerochaete_chrysosporium"
+        }, 
+        {
+            "label": "Phellinus noxius (DNA only)", 
+            "type": "dna", 
+            "dataset": "phellinus_noxius"
+        }, 
+        {
+            "label": "Piriformospora indica", 
+            "type": "both", 
+            "dataset": "piriformospora_indica"
+        }, 
+        {
+            "label": "Postia placenta", 
+            "type": "both", 
+            "dataset": "postia_placenta"
+        }, 
+        {
+            "label": "Punctularia strigosozonata", 
+            "type": "both", 
+            "dataset": "punctularia_strigosozonata"
+        }, 
+        {
+            "label": "Rhizoctonia solani", 
+            "type": "both", 
+            "dataset": "rhizoctonia_solani"
+        }, 
+        {
+            "label": "Schizophyllum commune", 
+            "type": "both", 
+            "dataset": "schizophyllum_commune"
+        }, 
+        {
+            "label": "Serpula lacrymans", 
+            "type": "both", 
+            "dataset": "serpula_lacrymans"
+        }, 
+        {
+            "label": "Stereum hirsutum", 
+            "type": "both", 
+            "dataset": "stereum_hirsutum"
+        }, 
+        {
+            "label": "Trametes versicolor", 
+            "type": "both", 
+            "dataset": "trametes_versicolor"
+        }, 
+        {
+            "label": "Volvariella volvacea (DNA only)", 
+            "type": "dna", 
+            "dataset": "volvariella_volvacea"
+        }, 
+        {
+            "label": "Wolfiporia cocos (DNA only)", 
+            "type": "dna", 
+            "dataset": "wolfiporia_cocos"
+        }, 
+        {
+            "label": "-------------------Tremellales (jelly fungi)------------------", 
+            "type": "spacer", 
+            "dataset": "label20"
+        }, 
+        {
+            "label": "Cryptococcus bestiolae (DNA only)", 
+            "type": "dna", 
+            "dataset": "cryptococcus_bestiolae"
+        }, 
+        {
+            "label": "Cryptococcus dejecticola (DNA only)", 
+            "type": "dna", 
+            "dataset": "cryptococcus_dejecticola"
+        }, 
+        {
+            "label": "Cryptococcus flavescens (DNA only)", 
+            "type": "dna", 
+            "dataset": "cryptococcus_flavescens"
+        }, 
+        {
+            "label": "Cryptococcus gattii", 
+            "type": "both", 
+            "dataset": "cryptococcus_gattii"
+        }, 
+        {
+            "label": "Cryptococcus neoformans", 
+            "type": "both", 
+            "dataset": "cryptococcus_neoformans"
+        }, 
+        {
+            "label": "Cryptococcus pinus (DNA only)", 
+            "type": "dna", 
+            "dataset": "cryptococcus_pinus"
+        }, 
+        {
+            "label": "Kwoniella heveanensis (DNA only)", 
+            "type": "dna", 
+            "dataset": "kwoniella_heveanensis"
+        }, 
+        {
+            "label": "Kwoniella mangrovensis (DNA only)", 
+            "type": "dna", 
+            "dataset": "kwoniella_mangrovensis"
+        }, 
+        {
+            "label": "Tremella mesenterica", 
+            "type": "both", 
+            "dataset": "tremella_mesenterica"
+        }, 
+        {
+            "label": "Trichosporon asahii", 
+            "type": "both", 
+            "dataset": "trichosporon_asahii"
+        }, 
+        {
+            "label": "-------------------Ustilaginomycotina (true smut fungi)------------------", 
+            "type": "spacer", 
+            "dataset": "label21"
+        }, 
+        {
+            "label": "Malassezia globosa", 
+            "type": "both", 
+            "dataset": "malassezia_globosa"
+        }, 
+        {
+            "label": "Malassezia restricta (DNA only)", 
+            "type": "dna", 
+            "dataset": "malassezia_restricta"
+        }, 
+        {
+            "label": "Malassezia sympodialis", 
+            "type": "both", 
+            "dataset": "malassezia_sympodialis"
+        }, 
+        {
+            "label": "Melampsora larici-populina", 
+            "type": "both", 
+            "dataset": "melampsora_larici-populina"
+        }, 
+        {
+            "label": "Pseudozyma antarctica", 
+            "type": "both", 
+            "dataset": "pseudozyma_antarctica"
+        }, 
+        {
+            "label": "Pseudozyma aphidis", 
+            "type": "both", 
+            "dataset": "pseudozyma_aphidis"
+        }, 
+        {
+            "label": "Pseudozyma brasiliensis", 
+            "type": "both", 
+            "dataset": "pseudozyma_brasiliensis"
+        }, 
+        {
+            "label": "Pseudozyma flocculosa", 
+            "type": "both", 
+            "dataset": "pseudozyma_flocculosa"
+        }, 
+        {
+            "label": "Pseudozyma hubeiensis", 
+            "type": "both", 
+            "dataset": "pseudozyma_hubeiensis"
+        }, 
+        {
+            "label": "Sporisorium reilianum", 
+            "type": "both", 
+            "dataset": "sporisorium_reilianum"
+        }, 
+        {
+            "label": "Ustilago hordei", 
+            "type": "both", 
+            "dataset": "ustilago_hordei"
+        }, 
+        {
+            "label": "Ustilago maydis", 
+            "type": "both", 
+            "dataset": "ustilago_maydis"
+        }, 
+        {
+            "label": "-------------------Other Basidiomycota------------------", 
+            "type": "spacer", 
+            "dataset": "label22"
+        }, 
+        {
+            "label": "Cronartium comandrae (DNA only)", 
+            "type": "dna", 
+            "dataset": "cronartium_comandrae"
+        }, 
+        {
+            "label": "Cronartium quercuum (DNA only)", 
+            "type": "dna", 
+            "dataset": "cronartium_quercuum"
+        }, 
+        {
+            "label": "Cronartium ribicola (DNA only)", 
+            "type": "dna", 
+            "dataset": "cronartium_ribicola"
+        }, 
+        {
+            "label": "Dacryopinax sp. DJM-731 SS1", 
+            "type": "both", 
+            "dataset": "dacryopinax_sp_djm-731_ss1"
+        }, 
+        {
+            "label": "Endocronartium harknessii (DNA only)", 
+            "type": "dna", 
+            "dataset": "endocronartium_harknessii"
+        }, 
+        {
+            "label": "Microbotryum violaceum (DNA only)", 
+            "type": "dna", 
+            "dataset": "microbotryum_violaceum"
+        }, 
+        {
+            "label": "Mixia osmundae", 
+            "type": "both", 
+            "dataset": "mixia_osmundae"
+        }, 
+        {
+            "label": "Puccinia graminis", 
+            "type": "both", 
+            "dataset": "puccinia_graminis"
+        }, 
+        {
+            "label": "Puccinia psidii (DNA only)", 
+            "type": "dna", 
+            "dataset": "puccinia_psidii"
+        }, 
+        {
+            "label": "Puccinia striiformis (DNA only)", 
+            "type": "dna", 
+            "dataset": "puccinia_striiformis"
+        }, 
+        {
+            "label": "Puccinia triticina (DNA only)", 
+            "type": "dna", 
+            "dataset": "puccinia_triticina"
+        }, 
+        {
+            "label": "Rhodosporidium toruloides", 
+            "type": "both", 
+            "dataset": "rhodosporidium_toruloides"
+        }, 
+        {
+            "label": "Rhodotorula glutinis", 
+            "type": "both", 
+            "dataset": "rhodotorula_glutinis"
+        }, 
+        {
+            "label": "Wallemia ichthyophaga", 
+            "type": "both", 
+            "dataset": "wallemia_ichthyophaga"
+        }, 
+        {
+            "label": "Wallemia sebi", 
+            "type": "both", 
+            "dataset": "wallemia_sebi"
+        }, 
+        {
+            "label": "-------------------Microsporidia------------------", 
+            "type": "spacer", 
+            "dataset": "label23"
+        }, 
+        {
+            "label": "Anncaliia algerae (DNA only)", 
+            "type": "dna", 
+            "dataset": "anncaliia_algerae"
+        }, 
+        {
+            "label": "Edhazardia aedis", 
+            "type": "both", 
+            "dataset": "edhazardia_aedis"
+        }, 
+        {
+            "label": "Encephalitozoon cuniculi", 
+            "type": "both", 
+            "dataset": "encephalitozoon_cuniculi"
+        }, 
+        {
+            "label": "Encephalitozoon hellem", 
+            "type": "both", 
+            "dataset": "encephalitozoon_hellem"
+        }, 
+        {
+            "label": "Encephalitozoon intestinalis", 
+            "type": "both", 
+            "dataset": "encephalitozoon_intestinalis"
+        }, 
+        {
+            "label": "Encephalitozoon romaleae", 
+            "type": "both", 
+            "dataset": "encephalitozoon_romaleae"
+        }, 
+        {
+            "label": "Enterocytozoon bieneusi", 
+            "type": "both", 
+            "dataset": "enterocytozoon_bieneusi"
+        }, 
+        {
+            "label": "Nematocida parisii", 
+            "type": "both", 
+            "dataset": "nematocida_parisii"
+        }, 
+        {
+            "label": "Nematocida sp. 1", 
+            "type": "both", 
+            "dataset": "nematocida_sp_1"
+        }, 
+        {
+            "label": "Nosema apis", 
+            "type": "both", 
+            "dataset": "nosema_apis"
+        }, 
+        {
+            "label": "Nosema bombycis", 
+            "type": "both", 
+            "dataset": "nosema_bombycis"
+        }, 
+        {
+            "label": "Nosema ceranae", 
+            "type": "both", 
+            "dataset": "nosema_ceranae"
+        }, 
+        {
+            "label": "Spraguea lophii", 
+            "type": "both", 
+            "dataset": "spraguea_lophii"
+        }, 
+        {
+            "label": "Trachipleistophora hominis", 
+            "type": "both", 
+            "dataset": "trachipleistophora_hominis"
+        }, 
+        {
+            "label": "Vavraia culicis", 
+            "type": "both", 
+            "dataset": "vavraia_culicis"
+        }, 
+        {
+            "label": "Vittaforma corneae", 
+            "type": "both", 
+            "dataset": "vittaforma_corneae"
+        }, 
+        {
+            "label": "-------------------Other Fungi------------------", 
+            "type": "spacer", 
+            "dataset": "label24"
+        }, 
+        {
+            "label": "Allomyces macrogynus (DNA only)", 
+            "type": "dna", 
+            "dataset": "allomyces_macrogynus"
+        }, 
+        {
+            "label": "Batrachochytrium dendrobatidis", 
+            "type": "both", 
+            "dataset": "batrachochytrium_dendrobatidis"
+        }, 
+        {
+            "label": "fungal sp. EF0021 (DNA only)", 
+            "type": "dna", 
+            "dataset": "fungal_sp_ef0021"
+        }, 
+        {
+            "label": "Homoloaphlyctis polyrhiza (DNA only)", 
+            "type": "dna", 
+            "dataset": "homoloaphlyctis_polyrhiza"
+        }, 
+        {
+            "label": "Mortierella alpina (DNA only)", 
+            "type": "dna", 
+            "dataset": "mortierella_alpina"
+        }, 
+        {
+            "label": "Mucor circinelloides", 
+            "type": "both", 
+            "dataset": "mucor_circinelloides"
+        }, 
+        {
+            "label": "Rhizophagus irregularis", 
+            "type": "both", 
+            "dataset": "rhizophagus_irregularis"
+        }, 
+        {
+            "label": "Rhizopus delemar", 
+            "type": "both", 
+            "dataset": "rhizopus_delemar"
+        }, 
+        {
+            "label": "Rhizopus microsporus (DNA only)", 
+            "type": "dna", 
+            "dataset": "rhizopus_microsporus"
+        }, 
+        {
+            "label": "Rozella allomycis (DNA only)", 
+            "type": "dna", 
+            "dataset": "rozella_allomycis"
+        }, 
+        {
+            "label": "Spizellomyces punctatus (DNA only)", 
+            "type": "dna", 
+            "dataset": "spizellomyces_punctatus"
+        }, 
+        {
+            "label": "Umbelopsis isabellina (DNA only)", 
+            "type": "dna", 
+            "dataset": "umbelopsis_isabellina"
+        }
+    ]
+}

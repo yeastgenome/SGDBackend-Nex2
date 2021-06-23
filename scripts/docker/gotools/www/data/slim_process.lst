@@ -1,0 +1,155 @@
+aging ; GO:0007568
+amino acid transport ; GO:0006865
+anatomical structure development ; GO:0048856
+anatomical structure formation involved in morphogenesis ; GO:0048646
+biological process ; GO:0008150
+biosynthetic process ; GO:0009058
+carbohydrate metabolic process ; GO:0005975
+carbohydrate transport ; GO:0008643
+catabolic process ; GO:0009056
+cell adhesion ; GO:0007155
+cell budding ; GO:0007114
+cell-cell signaling ; GO:0007267
+cell cycle ; GO:0007049
+cell death ; GO:0008219
+cell differentiation ; GO:0030154
+cell division ; GO:0051301
+cell junction organization ; GO:0034330
+cell morphogenesis ; GO:0000902
+cell motility ; GO:0048870
+cell population proliferation ; GO:0008283
+cellular amino acid metabolic process ; GO:0006520
+cellular component assembly ; GO:0022607
+cellular ion homeostasis ; GO:0006873
+cellular nitrogen compound metabolic process ; GO:0034641
+cellular protein modification process ; GO:0006464
+cellular respiration ; GO:0045333
+cellular response to DNA damage stimulus ; GO:0006974
+cell wall organization or biogenesis ; GO:0071554
+chromatin organization ; GO:0006325
+chromosome organization ; GO:0051276
+chromosome segregation ; GO:0007059
+circulatory system process ; GO:0003013
+cofactor metabolic process ; GO:0051186
+conjugation ; GO:0000746
+cytokinesis ; GO:0000910
+cytoplasmic translation ; GO:0002181
+cytoskeleton-dependent intracellular transport ; GO:0030705
+cytoskeleton organization ; GO:0007010
+developmental maturation ; GO:0021700
+DNA metabolic process ; GO:0006259
+DNA recombination ; GO:0006310
+DNA repair ; GO:0006281
+DNA replication ; GO:0006260
+ DNA-templated ; GO:0006351
+ elongation ; GO:0006354
+embryo development ; GO:0009790
+endocytosis ; GO:0006897
+endosomal transport ; GO:0016197
+exocytosis ; GO:0006887
+extracellular matrix organization ; GO:0030198
+generation of precursor metabolites and energy ; GO:0006091
+Golgi vesicle transport ; GO:0048193
+growth ; GO:0040007
+histone modification ; GO:0016570
+homeostatic process ; GO:0042592
+immune system process ; GO:0002376
+ initiation ; GO:0006352
+invasive growth in response to glucose limitation ; GO:0001403
+ion transport ; GO:0006811
+lipid metabolic process ; GO:0006629
+lipid transport ; GO:0006869
+locomotion ; GO:0040011
+meiotic cell cycle ; GO:0051321
+membrane fusion ; GO:0061025
+membrane invagination ; GO:0010324
+membrane organization ; GO:0061024
+mitochondrial translation ; GO:0032543
+mitochondrion organization ; GO:0007005
+mitotic cell cycle ; GO:0000278
+mitotic nuclear division ; GO:0007067
+monocarboxylic acid metabolic process ; GO:0032787
+mRNA processing ; GO:0006397
+nervous system process ; GO:0050877
+nitrogen cycle metabolic process ; GO:0071941
+nuclear transport ; GO:0051169
+nucleobase-containing compound catabolic process ; GO:0034655
+nucleobase-containing compound transport ; GO:0015931
+nucleobase-containing small molecule metabolic process ; GO:0055086
+nucleocytoplasmic transport ; GO:0006913
+nucleus organization ; GO:0006997
+oligosaccharide metabolic process ; GO:0009311
+organelle assembly ; GO:0070925
+organelle fission ; GO:0048285
+organelle fusion ; GO:0048284
+organelle inheritance ; GO:0048308
+peptidyl-amino acid modification ; GO:0018193
+peroxisome organization ; GO:0007031
+photosynthesis ; GO:0015979
+pigmentation ; GO:0043473
+plasma membrane organization ; GO:0007009
+protein acylation ; GO:0043543
+protein alkylation ; GO:0008213
+protein complex assembly ; GO:0006461
+protein complex biogenesis ; GO:0070271
+protein-containing complex assembly ; GO:0065003
+protein dephosphorylation ; GO:0006470
+protein folding ; GO:0006457
+protein glycosylation ; GO:0006486
+protein lipidation ; GO:0006497
+protein maturation ; GO:0051604
+protein modification by small protein conjugation or removal ; GO:0070647
+protein phosphorylation ; GO:0006468
+protein targeting ; GO:0006605
+proteolysis involved in cellular protein catabolic process ; GO:0051603
+pseudohyphal growth ; GO:0007124
+regulation of cell cycle ; GO:0051726
+regulation of DNA metabolic process ; GO:0051052
+regulation of organelle organization ; GO:0033043
+regulation of protein modification process ; GO:0031399
+regulation of translation ; GO:0006417
+regulation of transport ; GO:0051049
+reproduction ; GO:0000003
+response to chemical ; GO:0042221
+response to heat ; GO:0009408
+response to osmotic stress ; GO:0006970
+response to oxidative stress ; GO:0006979
+response to starvation ; GO:0042594
+response to stress ; GO:0006950
+ribonucleoprotein complex assembly ; GO:0022618
+ribosomal large subunit biogenesis ; GO:0042273
+ribosomal small subunit biogenesis ; GO:0042274
+ribosomal subunit export from nucleus ; GO:0000054
+ribosome assembly ; GO:0042255
+ribosome biogenesis ; GO:0042254
+RNA catabolic process ; GO:0006401
+RNA modification ; GO:0009451
+RNA splicing ; GO:0008380
+rRNA processing ; GO:0006364
+secondary metabolic process ; GO:0019748
+signaling ; GO:0023052
+signal transduction ; GO:0007165
+small molecule metabolic process ; GO:0044281
+snoRNA processing ; GO:0043144
+sporulation ; GO:0043934
+sulfur compound metabolic process ; GO:0006790
+symbiont process ; GO:0044403
+telomere organization ; GO:0032200
+ termination ; GO:0006353
+transcription by RNA polymerase I ; GO:0006360
+transcription by RNA polymerase II ; GO:0006366
+transcription by RNA polymerase III ; GO:0006383
+translational elongation ; GO:0006414
+translational initiation ; GO:0006413
+translation ; GO:0006412
+transmembrane transport ; GO:0055085
+transport ; GO:0006810
+transposition ; GO:0032196
+tRNA aminoacylation for protein translation ; GO:0006418
+tRNA metabolic process ; GO:0006399
+tRNA processing ; GO:0008033
+vacuolar transport ; GO:0007034
+vacuole organization ; GO:0007033
+vesicle-mediated transport ; GO:0016192
+vesicle organization ; GO:0016050
+vitamin metabolic process ; GO:0006766
