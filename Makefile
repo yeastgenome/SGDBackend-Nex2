@@ -1,5 +1,7 @@
 .PHONY: test lib config
 
+SHELL := /bin/bash
+
 build:
 	npm install
 	npm run build
@@ -13,9 +15,13 @@ prod-build:
 run:
 	source dev_variables.sh && pserve development.ini --reload
 
+NOSEOPTS ?=
+
 tests:
+	source test_variables.sh && nosetests -s $(NOSEOPTS)
+
+npm-tests:
 	npm test
-	source test_variables.sh && nosetests -s
 
 qa-index-redis:
 	source dev_variables.sh && NEX2_URI=$$QA_NEX2_URI && cap qa deploy:redis
