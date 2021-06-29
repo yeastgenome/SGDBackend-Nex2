@@ -195,7 +195,6 @@ class DatasetFactory(factory.alchemy.SQLAlchemyModelFactory):
     dbxref_type = "GEO"
     date_public = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
     parent_dataset_id = 1
-    assay_id = 1
     channel_count = 2
     sample_count = 10
     is_in_spell = False

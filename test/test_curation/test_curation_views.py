@@ -53,10 +53,10 @@ class CurationViewsTest(unittest.TestCase):
     mock_search.side_effect = reference_side_effect
     request = testing.DummyRequest()
     request.context = testing.DummyResource()
-    request.matchdict['id'] = "1"
+    request.matchdict['id'] = "S001234"
     response = reference_tags(request)
     result = [{'comment': 'curators comments', 'genes': 'GENE1', 'name': None}]
-    self.assertEqual(response,result)
+    self.assertEqual(response, result)
 
 
   ##get_recent_annotations

@@ -478,6 +478,7 @@ def sign_out(request):
 def reference_tags(request):
     try:
         id = extract_id_request(request, 'reference', 'id', True)
+        print(id)
         if id:
             reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
         else:

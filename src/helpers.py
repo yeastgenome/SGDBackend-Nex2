@@ -51,6 +51,8 @@ else:
 
 # safe return returns None if not found instead of 404 exception
 def extract_id_request(request, prefix, param_name='id', safe_return=False):
+    print("request = {}".format(request))
+    print("request matchdict = {}".format(request.matchdict))
     id = str(request.matchdict[param_name])
 
     db_id = disambiguation_table.get(("/" + prefix + "/" + id).upper())
@@ -59,6 +61,8 @@ def extract_id_request(request, prefix, param_name='id', safe_return=False):
         reference = DBSession.query(Dbentity).filter_by(subclass='REFERENCE', sgdid=id).one_or_none()
         if reference:
             db_id = reference.dbentity_id
+    
+    print("db id = {}".format(db_id))
             
     if db_id is None and safe_return:
         return None
