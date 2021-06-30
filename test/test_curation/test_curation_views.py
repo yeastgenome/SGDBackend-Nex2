@@ -17,7 +17,7 @@ class CurationViewsTest(unittest.TestCase):
 
   @mock.patch('src.curation_views.extract_id_request', return_value="S000001855")
   @mock.patch('src.models.DBSession.query')
-  def test_get_locus_curate_should_return_valid_locus(self,mock_search,mock_redis):
+  def test_get_locus_curate_should_return_valid_locus(self, mock_search, mock_redis):
     mock_search.side_effect = locus_side_effect
     locus_object = factory.LocusdbentityFactory()
     request = testing.DummyRequest()

@@ -4849,7 +4849,9 @@ class Locusdbentity(Dbentity):
         return [a.to_dict(self.dbentity_id) for a in paralog_relations]
     
     def complements_to_dict(self):
-        complement_relations = DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        mocked_query = DBSession.query(Functionalcomplementannotation)
+        print("Mocked query = {}".format(mocked_query))
+        complement_relations = mocked_query.filter_by(dbentity_id=self.dbentity_id).all()
         return [a.to_dict(self.dbentity_id) for a in complement_relations]
 
     def protein_overview_to_dict(self):
