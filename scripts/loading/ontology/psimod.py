@@ -228,7 +228,7 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    url_path = 'http://psidev.cvs.sourceforge.net/viewvc/psidev/psi/mod/data/'
+    url_path = 'https://raw.githubusercontent.com/HUPO-PSI/psi-mod-CV/master/'
     obo_file = 'PSI-MOD.obo'
     urllib.request.urlretrieve(url_path + obo_file, obo_file)
     
