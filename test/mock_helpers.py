@@ -1,4 +1,4 @@
-from src.models import AlleleGeninteraction, Dnasequenceannotation, Functionalcomplementannotation, Proteinabundanceannotation, Referencedbentity
+from src.models import AlleleGeninteraction, Alleledbentity, Complexdbentity, CurationReference, Dnasequenceannotation, Functionalcomplementannotation, Literatureannotation, Locusdbentity, Pathwaydbentity, Proteinabundanceannotation, Referencedbentity
 from . import fixtures as factory
 from mock import Mock
 
@@ -1029,6 +1029,16 @@ def chemical_side_effect(*args, **kwargs):
         ref.book = factory.BookFactory()
         ref.journal = factory.JournalFactory()
         return MockQuery(ref)
+    elif len(args) == 1 and args[0] == Pathwaydbentity:
+        pathway = factory.PathwaydbentityFactory()
+        return MockQuery(pathway)
+    elif len(args) == 1:
+        cheb = factory.ChebiAliaFactory()
+        return MockQuery(cheb)
+    else:
+        print("COULDN'T FIND ANYTHING CHEMICAL SIDE EFFECT")
+        print("args = {}, type is {}".format(args[0], type(args[0])))
+        return None
 
 
 def author_side_effect(*args, **kwargs):
@@ -1493,6 +1503,41 @@ def reference_side_effect(*args, **kwargs):
                 allelegen.soruce = factory.SourceFactory()
                 allelegen.interaction = factory.GeninteractionannotationFactory()
                 return MockQuery(allelegen)
+            elif len(args) == 1 and args[0] == Functionalcomplementannotation:
+                func = factory.FunctionalcomplementannotationFactory()
+                return MockQuery(func)
+            elif len(args) == 2 and args[0] == CurationReference and args[1] == Complexdbentity:
+                mock = Mock()
+                mock.CurationReference = factory.CurationReferenceFactory()
+                mock.ComplexdbentityFactory = factory.ComplexdbentityFactory()
+                return MockQuery([mock])
+            elif len(args) == 2 and args[0] == CurationReference and args[1] == Pathwaydbentity:
+                mock = Mock()
+                mock.CurationReference = factory.CurationReferenceFactory()
+                mock.Pathwaydbentity = factory.PathwaydbentityFactory()
+                return MockQuery([mock])
+            elif len(args) == 2 and args[0] == CurationReference and args[1] == Alleledbentity:
+                mock = Mock()
+                mock.CurationReference = factory.CurationReferenceFactory()
+                mock.Alleledbentity = factory.AlleledbentityFactory()
+                return MockQuery([mock])
+            elif len(args) == 2 and args[0] == Literatureannotation and args[1] == Complexdbentity:
+                mock = Mock()
+                mock.Literatureannotation = factory.LiteratureannotationFactory()
+                mock.Complexdbentity = factory.ComplexdbentityFactory()
+                return MockQuery([mock])
+            elif len(args) == 2 and args[0] == Literatureannotation and args[1] == Pathwaydbentity:
+                lit = factory.LiteratureannotationFactory()
+                pathway = factory.ComplexdbentityFactory()
+                mock = Mock()
+                mock.Literatureannotation = lit
+                mock.Complexdbentity = pathway
+                return MockQuery([mock])
+            elif len(args) == 2 and args[0] == Literatureannotation and args[1] == Alleledbentity:
+                mock = Mock()
+                mock.Literatureannotation = factory.LiteratureannotationFactory()
+                mock.Complexdbentity = factory.AlleledbentityFactory()
+                return MockQuery([mock])
             else:
                 print("the problem is the condition!!!!")
                 print(args)

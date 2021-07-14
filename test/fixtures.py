@@ -323,6 +323,7 @@ class ReferencedbentityFactory(factory.alchemy.SQLAlchemyModelFactory):
     display_name = "My entity"
     obj_url = "http://example.org/entity"
     source_id = 1
+    locus_id = 1
     bud_id = None
     sgdid = "S000001"
     dbentity_status = "Active"

@@ -1699,6 +1699,7 @@ class CurationReference(Base):
     reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     curation_tag = Column(String(40), nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
@@ -2055,6 +2056,8 @@ class Referencedbentity(Dbentity):
     doi = Column(String(100))
     journal_id = Column(ForeignKey('nex.journal.journal_id', ondelete='SET NULL'), index=True)
     book_id = Column(ForeignKey('nex.book.book_id', ondelete='SET NULL'), index=True)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+
 
     book = relationship('Book')
     journal = relationship('Journal')
@@ -2516,6 +2519,7 @@ class Referencedbentity(Dbentity):
                       'comment': None
                     })
                 
+        print("tags = {}".format(tags))
         ###################################################
         tag2dbentityNames = {}
         tag2comments = {}
@@ -2539,6 +2543,7 @@ class Referencedbentity(Dbentity):
         tag_list = []    
         for tag in tag2dbentityNames:
             dbentity_names = tag2dbentityNames[tag]
+            print("dbendity_names = {}".format(dbentity_names))
             comments = tag2comments[tag]
             dbentity_str = SEPARATOR.join(dbentity_names)
             comment_str = "; ".join(comments)

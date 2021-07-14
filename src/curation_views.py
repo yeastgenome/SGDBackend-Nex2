@@ -479,11 +479,20 @@ def reference_tags(request):
     try:
         id = extract_id_request(request, 'reference', 'id', True)
         print(id)
+        reference = None
         if id:
+            print("If ID start")
             reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
+            print("reference = {}".format(reference))
         else:
+            print("Else start")
             reference = DBSession.query(Referencedbentity).filter_by(sgdid=request.matchdict['id']).one_or_none()
-        return reference.get_tags()
+            print("reference = {}".format(reference))
+        print("About to get tags")
+        tags = reference.get_tags()
+        print("tags = {}".format(tags))
+        return tags
+
     except Exception as e:
         log.error(e)
     finally:
