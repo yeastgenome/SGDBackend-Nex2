@@ -59,7 +59,7 @@ def extract_id_request(request, prefix, param_name='id', safe_return=False):
         reference = DBSession.query(Dbentity).filter_by(subclass='REFERENCE', sgdid=id).one_or_none()
         if reference:
             db_id = reference.dbentity_id
-
+            
     if db_id is None and safe_return:
         return None
     elif db_id is None:

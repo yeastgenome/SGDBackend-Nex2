@@ -2056,7 +2056,6 @@ class Referencedbentity(Dbentity):
     journal_id = Column(ForeignKey('nex.journal.journal_id', ondelete='SET NULL'), index=True)
     book_id = Column(ForeignKey('nex.book.book_id', ondelete='SET NULL'), index=True)
 
-
     book = relationship('Book')
     journal = relationship('Journal')
 

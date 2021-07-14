@@ -478,14 +478,11 @@ def sign_out(request):
 def reference_tags(request):
     try:
         id = extract_id_request(request, 'reference', 'id', True)
-        reference = None
         if id:
             reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
         else:
             reference = DBSession.query(Referencedbentity).filter_by(sgdid=request.matchdict['id']).one_or_none()
-        tags = reference.get_tags()
-        return tags
-
+        return reference.get_tags()
     except Exception as e:
         log.error(e)
     finally:
