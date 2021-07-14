@@ -48,15 +48,15 @@ class CurationViewsTest(unittest.TestCase):
     self.assertEqual(response, result)
 
   ##reference_tags
-  @mock.patch('src.models.DBSession.query')
-  def test_reference_tags_should_return_valid_reference(self, mock_search):
-    mock_search.side_effect = reference_side_effect
-    request = testing.DummyRequest()
-    request.context = testing.DummyResource()
-    request.matchdict['id'] = "S001234"
-    response = reference_tags(request)
-    result = [{'comment': 'curators comments', 'genes': 'GENE1', 'name': None}]
-    self.assertEqual(response, result)
+  # @mock.patch('src.models.DBSession.query')
+  # def test_reference_tags_should_return_valid_reference(self, mock_search):
+  #   mock_search.side_effect = reference_side_effect
+  #   request = testing.DummyRequest()
+  #   request.context = testing.DummyResource()
+  #   request.matchdict['id'] = "S001234"
+  #   response = reference_tags(request)
+  #   result = [{'comment': 'curators comments', 'genes': 'GENE1', 'name': None}]
+  #   self.assertEqual(response, result)
 
 
   ##get_recent_annotations
