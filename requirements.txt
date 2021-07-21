@@ -1,4 +1,4 @@
-amqp==5.0.6
+amqp==2.6.1
 apply==1.5
 anyjson==0.3.3
 Babel==2.9.1
