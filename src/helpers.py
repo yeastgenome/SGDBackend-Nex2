@@ -128,7 +128,7 @@ def allowed_file(filename):
 
 
 def secure_save_file(file, filename):
-    filename = werkzeug.secure_filename(filename)
+    filename = werkzeug.utils.secure_filename(filename)
     temp_file_path = os.path.join(tempfile.gettempdir(), filename)
 
     file.seek(0)

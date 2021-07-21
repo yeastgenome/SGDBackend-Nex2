@@ -43,7 +43,7 @@ class HelpersTest(unittest.TestCase):
         self.assertTrue(allowed_file(self.valid_filename))
         self.assertFalse(allowed_file(self.invalid_extension_filename))
 
-    @mock.patch('werkzeug.secure_filename', return_value='temp_test_1.txt')
+    @mock.patch('werkzeug.utils.secure_filename', return_value='temp_test_1.txt')
     @mock.patch('tempfile.gettempdir', return_value='/tmp')
     def test_write_temp_file_with_secure_name(self, mock_tmpdir, mock_secure_filename):
         filename = self.valid_filename
