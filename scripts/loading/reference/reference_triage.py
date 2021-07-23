@@ -29,7 +29,8 @@ def load_references(log_file):
     pmid_to_reference_id =  dict([(x.pmid, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
     pmid_to_curation_id =  dict([(x.pmid, x.curation_id) for x in nex_session.query(Referencetriage).all()])
     pmid_to_refdeleted_id = dict([(x.pmid, x.referencedeleted_id) for x in nex_session.query(Referencedeleted).all()])
-
+    doi_to_reference_id =  dict([(x.doi, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
+    
     gene_list = []
     all_loci = nex_session.query(Locusdbentity).all()
     for x in all_loci:
@@ -97,6 +98,10 @@ def load_references(log_file):
                     break
             if doi:
                 doi_url = "/".join(['http://dx.doi.org', doi])
+
+        if doi_url in doi_to_reference_id:
+            continue
+            
         title = record.get('TI', '')
         authors = record.get('AU', [])
         pubdate = record.get('DP', '')  # 'PubDate': '2012 Mar 20'  
