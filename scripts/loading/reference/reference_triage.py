@@ -99,7 +99,7 @@ def load_references(log_file):
             if doi:
                 doi_url = "/".join(['http://dx.doi.org', doi])
 
-        if doi_url and doi_url in doi_to_reference_id:
+        if doi and doi in doi_to_reference_id:
             continue
             
         title = record.get('TI', '')
