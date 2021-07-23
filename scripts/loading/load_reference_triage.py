@@ -17,7 +17,7 @@ __author__ = 'sweng66'
 
 TERMS = ['yeast', 'cerevisiae']
 URL = 'http://www.ncbi.nlm.nih.gov/pubmed/'
-DAY = 21
+DAY = 14
 RETMAX = 10000
 MAX = 500
 
@@ -83,18 +83,18 @@ def load_references():
         i = i + 1
         if i > MAX:
             records = get_pubmed_record(','.join(pmids))
-            handle_one_record(db_session, records, gene_list, alias_to_name)
+            handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id)
             i = 0
 
     log.info("Done!")
 
     if i > 0:
         records = get_pubmed_record(','.join(pmids))
-        handle_one_record(db_session, records, gene_list, alias_to_name)
+        handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id)
 
     log.info("Done!")
 
-def handle_one_record(db_session, records, gene_list, alias_to_name):
+def handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id):
 
     i = 1
     for rec in records:
@@ -110,6 +110,8 @@ def handle_one_record(db_session, records, gene_list, alias_to_name):
                 if id.endswith('[doi]'):
                     doi = id.replace(' [doi]', '')
                     break
+            if doi and doi in doi_to_reference_id:
+                continue
             if doi:
                 doi_url = "/".join(['http://dx.doi.org', doi])
 
