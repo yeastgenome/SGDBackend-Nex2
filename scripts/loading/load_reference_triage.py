@@ -17,7 +17,7 @@ __author__ = 'sweng66'
 
 TERMS = ['yeast', 'cerevisiae']
 URL = 'http://www.ncbi.nlm.nih.gov/pubmed/'
-DAY = 21
+DAY = 14
 RETMAX = 10000
 MAX = 500
 
@@ -36,7 +36,8 @@ def load_references():
     pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in db_session.query(Referencedbentity).all()])
     pmid_to_curation_id = dict([(x.pmid, x.curation_id) for x in db_session.query(Referencetriage).all()])
     pmid_to_refdeleted_id = dict([(x.pmid, x.referencedeleted_id) for x in db_session.query(Referencedeleted).all()])
-
+    doi_to_reference_id = dict([(x.doi, x.dbentity_id) for x in db_session.query(Referencedbentity).all()])
+    
     # get gene names to highlight
     gene_list = []
     all_loci = db_session.query(Locusdbentity).all()
@@ -82,18 +83,18 @@ def load_references():
         i = i + 1
         if i > MAX:
             records = get_pubmed_record(','.join(pmids))
-            handle_one_record(db_session, records, gene_list, alias_to_name)
+            handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id)
             i = 0
 
     log.info("Done!")
 
     if i > 0:
         records = get_pubmed_record(','.join(pmids))
-        handle_one_record(db_session, records, gene_list, alias_to_name)
+        handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id)
 
     log.info("Done!")
 
-def handle_one_record(db_session, records, gene_list, alias_to_name):
+def handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id):
 
     i = 1
     for rec in records:
@@ -109,8 +110,14 @@ def handle_one_record(db_session, records, gene_list, alias_to_name):
                 if id.endswith('[doi]'):
                     doi = id.replace(' [doi]', '')
                     break
+            if doi and doi in doi_to_reference_id:
+                continue
             if doi:
                 doi_url = "/".join(['http://dx.doi.org', doi])
+
+        if doi_url and doi_url in doi_to_reference_id:
+            continue
+        
         title = record.get('TI', '')
         authors = record.get('AU', [])
         pubdate = record.get('DP', '')  # 'PubDate': '2012 Mar 20'  

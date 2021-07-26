@@ -43,6 +43,14 @@ def add_paper(pmid, created_by="OTTO", method_obtained="Curator triage"):
     
     print(record)
 
+    
+    doi, doi_url = get_doi(record)
+    if doi:
+        ref = DBSession.query(Referencedbentity).filter_by(doi=doi).one_or_none()
+        if ref:
+            raise ValueError('The DOI for this pubmed is already in the database.')
+        
+        
     ncbi = DBSession.query(Source).filter_by(format_name='NCBI').one_or_none()
     source_id = ncbi.source_id
     ## insert into DBENTITY/REFERENCEDBENTITY/REFERENCEDOCUMENT

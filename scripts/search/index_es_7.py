@@ -1,4 +1,4 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, ComplexGo, Tools, Alleledbentity, AlleleAlias
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, ComplexGo, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -867,11 +867,31 @@ def index_alleles():
     bulk_data = []
 
     for a in alleles:
-
-        allele_type = so_id_to_term.get(a.so_id)
         
-        synonyms = DBSession.query(AlleleAlias.display_name).filter_by(
-            allele_id=a.dbentity_id).all()
+        synonyms = DBSession.query(AlleleAlias.display_name).filter_by(allele_id=a.dbentity_id).all()
+
+        allele_types = set([])
+        allele_types.add(so_id_to_term.get(a.so_id))
+        
+        references = set([])
+        refs = DBSession.query(AlleleReference).filter_by(allele_id=a.dbentity_id).all()
+        for ref in refs:
+            references.add(ref.reference.display_name)
+        alleleAliases = DBSession.query(AlleleAlias).filter_by(allele_id=a.dbentity_id).all()
+        for x in alleleAliases:
+            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            for y in allelealiasRefs:
+                if y.reference.display_name not in references:
+                    references.add(y.reference.display_name)
+            
+        phenotypes = set([])
+        allele_loci = set([])
+        annots = DBSession.query(Phenotypeannotation).filter_by(allele_id=a.dbentity_id).all()
+        for x in annots:
+            if x.phenotype.display_name not in phenotypes:
+                phenotypes.add(x.phenotype.display_name)
+            if x.dbentity.display_name not in allele_loci:
+                allele_loci.add(x.dbentity.display_name)
 
         obj = {
             "name": a.display_name,
@@ -880,7 +900,10 @@ def index_alleles():
             "description": a.description,
             "category": "Allele",
             "synonyms": [s[0] for s in synonyms],
-            "allele_type": allele_type
+            "allele_types": list(allele_types),
+            "references": list(references),
+            "phenotypes": sorted(list(phenotypes)),
+            "allele_loci": sorted(list(allele_loci))
         }
 
         bulk_data.append({
