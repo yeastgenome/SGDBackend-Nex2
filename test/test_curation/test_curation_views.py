@@ -1,3 +1,5 @@
+import json
+from types import TracebackType
 from pyramid import testing
 import unittest
 import mock
@@ -121,8 +123,8 @@ class CurationViewsTest(unittest.TestCase):
     request.context = testing.DummyResource()
     request.matchdict['id'] = "184870"
     response = ptm_by_gene(request)
-    result = [b'{"ptms": [{"site_index": 1, "site_residue": "residue", "locus": {"id": 1, "display_name": "display name", "format_name": "format name", "link": "/reference/S000185012"}, "reference": {"display_name": "My entity", "link": "http://example.org/entity", "pubmed_id": 1, "sgdid": "S000001"}, "properties": [], "source": {"display_name": "Addgene"}, "aliases": [], "type": "display_name", "id": 1, "modifier": {"format_name": ""}, "psimod_id": 1, "taxonomy": {"taxonomy_id": "", "format_name": "", "display_name": ""}}]}']
-    self.assertEqual(response._app_iter__get(),result)
+    result = {"ptms": [{"site_index": 1, "site_residue": "residue", "locus": {"id": 1, "display_name": "display name", "format_name": "format name", "link": "/reference/S000185012"}, "reference": {"display_name": "My entity", "link": "http://example.org/entity", "pubmed_id": 1, "sgdid": "S000001"}, "properties": [], "source": {"display_name": "Addgene"}, "aliases": [], "type": "display_name", "id": 1, "modifier": {"format_name": ""}, "psimod_id": 1, "taxonomy": {"taxonomy_id": "", "format_name": "", "display_name": ""}}]}
+    self.assertEqual(json.dumps(json.loads(response._app_iter__get()[0].decode("utf-8")), sort_keys=True), json.dumps(result, sort_keys=True))
   
   ##get_strains
   @mock.patch('src.models.DBSession.query')
@@ -143,5 +145,5 @@ class CurationViewsTest(unittest.TestCase):
     request = testing.DummyRequest()
     request.context = testing.DummyResource()
     response = get_psimod(request)
-    result = [b'{"psimods": [{"psimod_id": 1, "format_name": "format_name", "display_name": "display_name", "inuse": true}, {"psimod_id": 1, "format_name": "format_name", "display_name": "display_name", "inuse": false}]}']
-    self.assertEqual(response._app_iter__get(), result)
+    result = {"psimods": [{"psimod_id": 1, "format_name": "format_name", "display_name": "display_name", "inuse": True}, {"psimod_id": 1, "format_name": "format_name", "display_name": "display_name", "inuse": False}]}
+    self.assertEqual(json.dumps(json.loads(response._app_iter__get()[0].decode("utf-8")), sort_keys=True), json.dumps(result, sort_keys=True))

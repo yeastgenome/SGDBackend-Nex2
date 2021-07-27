@@ -1,5 +1,4 @@
 import unittest
-from moto import mock_s3
 import io
 import os
 import tempfile
