@@ -1,6 +1,6 @@
 import datetime
 import factory
-from src.models import DBSession, Source, Colleague, ColleagueUrl, ColleagueRelation, ColleagueKeyword, Complexdbentity, Complexbindingannotation, Keyword, Dbuser, Dbentity, Edam, \
+from src.models import AlleleGeninteraction, Alleledbentity, DBSession, Functionalcomplementannotation, Genomerelease, Source, Colleague, ColleagueUrl, ColleagueRelation, ColleagueKeyword, Complexdbentity, Complexbindingannotation, Keyword, Dbuser, Dbentity, Edam, \
     Referencedbentity, Journal, Book, FileKeyword, Filedbentity, FilePath, Referencedocument, Chebi, ChebiUrl, Phenotypeannotation, \
     PhenotypeannotationCond, Locusdbentity, Locussummary, Taxonomy, Phenotype, Apo, Allele, Reporter, Obi, Reservedname, Straindbentity, StrainUrl, \
     Strainsummary, StrainsummaryReference, Dataset, DatasetReference, DatasetKeyword, Referencetype, ReferenceRelation, ReferenceUrl, Referenceauthor, \
@@ -195,7 +195,6 @@ class DatasetFactory(factory.alchemy.SQLAlchemyModelFactory):
     dbxref_type = "GEO"
     date_public = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
     parent_dataset_id = 1
-    assay_id = 1
     channel_count = 2
     sample_count = 10
     is_in_spell = False
@@ -743,6 +742,78 @@ class LocusdbentityFactory(factory.alchemy.SQLAlchemyModelFactory):
     date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
     created_by = "TOTO"
 
+class FunctionalcomplementannotationFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Functionalcomplementannotation
+        sqlalchemy_session = DBSession
+    
+    annotation_id = 1
+    dbentity_id = 1
+    source_id = 1
+    taxonomy_id = 1
+    reference_id = 1
+    ro_id = 1
+    eco_id = 1
+    dbxref_id = "SGD:100000"
+    obj_url = "http://example.org/complement"
+    direction = "forward"
+    curator_comment = "Hello"
+    date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    created_by = "TOTO"
+
+class DnasequenceannotationFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Dnasequenceannotation
+        sqlalchemy_session = DBSession
+
+    annotation_id = 1
+    dbentity_id = 1
+    source_id = 1
+    taxonomy_id = 1
+    reference_id = 1
+    bud_id = 1
+    so_id = 1
+    dna_type = "GENOMIC"
+    contig_id = 1
+    seq_version = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    coord_version = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    genomerelease_id = 1
+    start_index = 1
+    end_index = 1
+    strand = "+"
+    file_header = "file header"
+    download_filename = "download"
+    file_id = 1
+    residues = "ATGC"
+    date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    created_by = "Toto"
+
+
+class AlleleGeninteractionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = AlleleGeninteraction
+        sqlalchemy_session = DBSession
+    
+    allele_geninteraction_id = 1
+    allele1_id = 1
+    allele2_id = 1
+    interaction_id = 1
+    sga_score = 2
+    pvalue = 1
+    source_id = 1
+    date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    created_by = "Toto"
+
+
+class AlleledbentityFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Alleledbentity
+        sqlalchemy_session = DBSession
+    
+    dbentity_id = 1
+    so_id = 1
+    description = "described"
+
 class PhenotypeFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = Phenotype
@@ -1070,6 +1141,26 @@ class GeninteractionannotationFactory(factory.alchemy.SQLAlchemyModelFactory):
     description = "description"
     date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
     created_by = "TOTO"
+
+class GenomereleaseFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Genomerelease
+        sqlalchemy_session = DBSession
+
+    genomerelease_id = 1
+    format_name = "format name"
+    display_name = "display name"
+    obj_url = "/obj_url"
+    source_id = 1
+    file_id = 1
+    sequence_release = 12
+    annotation_release = 12
+    curation_release = 12
+    release_date = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    description = "a description"
+    date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
+    created_by = "TOTO"
+
 
 class GoUrlFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -1925,7 +2016,6 @@ class CurationReferenceFactory(factory.alchemy.SQLAlchemyModelFactory):
     curation_id = 1
     reference_id = 1
     source_id = 1
-    locus_id = 1
     curation_tag = 'tags tags'
     date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
     created_by = 'OTTO'

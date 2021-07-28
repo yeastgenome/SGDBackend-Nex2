@@ -408,6 +408,28 @@ mapping = {
                     }
                 }
             },
+            "allele_loci": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "allele_types": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "chemical": {
                 "type": "keyword"
             },

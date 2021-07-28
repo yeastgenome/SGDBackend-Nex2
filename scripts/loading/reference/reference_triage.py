@@ -3,17 +3,15 @@ from io import StringIO
 from Bio import Entrez, Medline 
 from urllib.request import urlopen
 import sys
+import os
 import importlib
 importlib.reload(sys)  # Reload does the trick! 
-sys.setdefaultencoding('UTF8')
-sys.path.insert(0, '../../../src/')
-from models import Referencedbentity, Referencetriage, Referencedeleted, \
+from src.models import Referencedbentity, Referencetriage, Referencedeleted, \
                    Locusdbentity, LocusAlias
-sys.path.insert(0, '../')
-from database_session import get_dev_session
-from config import CREATED_BY
-from .pubmed import get_pmid_list, get_pubmed_record, set_cite
-from util import extract_gene_names
+from scripts.loading.database_session import get_session
+
+from scripts.loading.reference.pubmed import get_pmid_list, get_pubmed_record, set_cite
+from scripts.loading.util import extract_gene_names
 
 __author__ = 'sweng66'
 
@@ -22,14 +20,17 @@ URL = 'http://www.ncbi.nlm.nih.gov/pubmed/'
 DAY = 14
 RETMAX = 10000
 
+CREATED_BY = os.environ['DEFAULT_USER']
+
 def load_references(log_file):
  
-    nex_session = get_dev_session()
+    nex_session = get_session()
 
     pmid_to_reference_id =  dict([(x.pmid, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
     pmid_to_curation_id =  dict([(x.pmid, x.curation_id) for x in nex_session.query(Referencetriage).all()])
     pmid_to_refdeleted_id = dict([(x.pmid, x.referencedeleted_id) for x in nex_session.query(Referencedeleted).all()])
-
+    doi_to_reference_id =  dict([(x.doi, x.dbentity_id) for x in nex_session.query(Referencedbentity).all()])
+    
     gene_list = []
     all_loci = nex_session.query(Locusdbentity).all()
     for x in all_loci:
@@ -97,6 +98,10 @@ def load_references(log_file):
                     break
             if doi:
                 doi_url = "/".join(['http://dx.doi.org', doi])
+
+        if doi and doi in doi_to_reference_id:
+            continue
+            
         title = record.get('TI', '')
         authors = record.get('AU', [])
         pubdate = record.get('DP', '')  # 'PubDate': '2012 Mar 20'  
@@ -132,25 +137,24 @@ def insert_reference(nex_session, fw, pmid, citation, doi_url, abstract, gene_li
                             citation = citation,
                             fulltext_url = doi_url,
                             abstract = abstract,
-                            abstract_genes = gene_list,
-                            created_by = CREATED_BY)
+                            abstract_genes = gene_list)
+                            
     elif doi_url:
         x = Referencetriage(pmid = pmid,
                             citation = citation,
                             fulltext_url = doi_url,
-                            abstract_genes = gene_list,
-                            created_by = CREATED_BY)
+                            abstract_genes = gene_list)
     elif abstract:
         x = Referencetriage(pmid = pmid,
                             citation = citation,
                             abstract = abstract,
-                            abstract_genes = gene_list,
-                            created_by = CREATED_BY)
+                            abstract_genes = gene_list)
+        
     else:
         x = Referencetriage(pmid = pmid,
                             citation = citation,
-                            abstract_genes = gene_list,
-                            created_by = CREATED_BY)
+                            abstract_genes = gene_list)
+        
     nex_session.add(x)
     nex_session.commit()
 
@@ -159,7 +163,7 @@ def insert_reference(nex_session, fw, pmid, citation, doi_url, abstract, gene_li
 
 if __name__ == '__main__':
 
-    log_file = "logs/reference_triage.log"
+    log_file = "scripts/loading/reference/logs/reference_triage.log"
     
     load_references(log_file)
 

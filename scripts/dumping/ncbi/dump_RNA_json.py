@@ -195,14 +195,18 @@ def upload_file_to_latest_archive(data_file, gzip_file):
     s3 = session.resource('s3')
 
     ## to latest:
+    filename = data_file.split('/')[-1]
     s3.meta.client.upload_file(
-        data_file, S3_BUCKET, "/latest/" + data_file, ExtraArgs={'ACL': 'public-read'})
+        data_file, S3_BUCKET, "latest/" + filename, ExtraArgs={'ACL': 'public-read'})
+    
     ## to current directoty under sgd-archive.yeastgenome.org bucket
     s3.meta.client.upload_file(
-        data_file, S3_BUCKET2, s3_archive_dir + data_file, ExtraArgs={'ACL': 'public-read'})
+        data_file, S3_BUCKET2, s3_archive_dir + filename, ExtraArgs={'ACL': 'public-read'})
+
     ## to archive directory under sgd-archive.yeastgenome.org bucket
+    gzip_filename = gzip_file.split('/')[-1]
     s3.meta.client.upload_file(gzip_file, S3_BUCKET2, s3_archive_dir +
-                               "archive/" + gzip_file, ExtraArgs={'ACL': 'public-read'})
+                               "archive/" + gzip_filename, ExtraArgs={'ACL': 'public-read'})
 
 
 def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to_id, edam_to_id):
