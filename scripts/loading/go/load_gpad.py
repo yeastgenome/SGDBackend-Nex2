@@ -281,7 +281,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
                 fw.write("NEW GOANNOTATION: key=" + str(key) + "\n")
 
                 created_by = x['created_by']
-                if created_by == '<NULL>' or created_by is None:
+                if created_by == '<NULL>' or created_by is None or created == 'NULL':
                     created_by = CREATED_BY
 
                 thisAnnot = Goannotation(dbentity_id = dbentity_id, 
@@ -304,7 +304,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
             # nex_session.commit()
             
             created_by = x['created_by']
-            if created_by == '<NULL>' or created_by is None:
+            if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
                 created_by = CREATED_BY
             
             key_to_annotation_id[key] = annotation_id
@@ -351,6 +351,9 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
 
 
 def update_goextension(nex_session, annotation_id, goextension, annotation_id_to_extensions, date_created, created_by, annotation_type, annotation_update_log, fw):
+
+    if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
+        created_by = CREATED_BY
 
     key_to_extension = {}
     if annotation_id in annotation_id_to_extensions:
@@ -425,6 +428,9 @@ def update_goextension(nex_session, annotation_id, goextension, annotation_id_to
     
 def update_gosupportevidence(nex_session, annotation_id, gosupport, annotation_id_to_support_evidences, date_created, created_by, annotation_type, annotation_update_log, fw):
 
+    if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
+        created_by = CREATED_BY
+        
     key_to_support = {}
     if annotation_id in annotation_id_to_support_evidences:
         key_to_support = annotation_id_to_support_evidences[annotation_id]
