@@ -35,20 +35,33 @@ def update_data():
         html = x.html
 
         has_bad_goid = 0
-        for bad_goid in bad_goid_to_good_id:
-            if "<go:" + bad_goid + ">" in text:
-                has_bad_goid = 1
-                good_goid = bad_goid_to_good_id[bad_goid]
-                text = text.replace("<go:" + bad_goid + ">", "<go:" + good_goid + ">")
-                html = html.replace('<a href="/go/' + bad_goid + '">', '<a href="/go/' + good_goid + '">')
+        for goid in bad_goid_to_good_id:
+            for bad_goid in [goid, compose_goid(goid)]:
+                good_goid = bad_goid_to_good_id[goid]
+                if "<go:" + bad_goid + ">" in text:
+                    has_bad_goid = 1
+                    text = text.replace("<go:" + bad_goid + ">", "<go:" + good_goid + ">")
+                if '<a href="/go/' + bad_goid + '">' in html:
+                    has_bad_goid = 1
+                    html = html.replace('<a href="/go/' + bad_goid + '">', '<a href="/go/' + good_goid + '">')
             
         has_obsolete_goid = 0
-        for goid in obsolete_goids:
-            if "<go:" + goid + ">" in text:
-                has_obsolete_goid = 1
-                text = text.replace("<go:" + goid + ">", '')
-            if '<a href="/go/' + goid + '">' in html:
-                html = html.replace('<a href="/go/' + goid + '">', '')
+        for bad_goid in obsolete_goids:
+            for	goid in [bad_goid, compose_goid(bad_goid)]:
+
+                ## special case
+                if '<go: 0050662>' in text:
+                    has_obsolete_goid = 1
+                    text = text.replace('<go: 0050662>', '')
+                if '"/go/50662"' in html:
+                    html = html.replace('<a href="/go/50662">', '')
+                ## done handling special case
+                
+                if "<go:" + goid + ">" in text:
+                    has_obsolete_goid = 1
+                    text = text.replace("<go:" + goid + ">", '')
+                if '<a href="/go/' + goid + '">' in html:
+                    html = html.replace('<a href="/go/' + goid + '">', '')
 
         if has_bad_goid == 0 and has_obsolete_goid == 0:
             continue
@@ -81,74 +94,51 @@ def update_data():
         print (i)
         nex_session.commit()
                                     
+def compose_goid(goid):
+
+    stop = 7 - len(goid)
+    for i in range(stop):
+        goid = '0' + goid
+    return goid
+
 def obsolete_list():
 
-    return [ '60',
-             '185',
-             '200',
-             '1129',
-             '1190',
-             '1191',
-             '1300',
-             '1302',
-             '1308',
-             '1320',
-             '5623',
-             '5724',
-             '6987',
-             '7068',
-             '7126',
-             '8565',
-             '30817',
-             '30818',
-             '50662',
-             '52100' ]
+    return [ '197', '1190', '1308', '5623', '5724', '6987', '7068', '8565', '30817', '42992', '50662', '71511']
 
 def old_to_new():
 
-    return { '40':        '34755',
-             '42':        '34067',
-             '501':       '128',
+    return { '42':        '34067',
+             '778':       '776',
              '784':       '781',
-             '788':       '786',
+             '790':       '785',
              '799':       '796',
-             '944':       '19843',
              '982':       '981',
              '1077':      '1228',
              '1078':      '1227',
-             '1103':      '61629',
              '1135':      '3712',
              '4003':      '3678',
-             '4004':      '3724',
-             '4012':      '140326',
-             '5086':      '5085',
              '5087':      '5085',
              '5088':      '5085',
-             '5089':      '5085',
-             '5090':      '5085',
-             '5720':      '792',
              '6343':      '31507',
+             '6344':      '70829',
              '6461':      '65003',
-             '6827':      '34755',
              '6830':      '71578',
              '6831':      '71578',
              '7050':      '51726',
              '7067':      '278',
-             '8026':      '4386',
+             '7126':      '51321',
              '8105':      '8104',
              '8599':      '19888',
-             '10107':     '1990573',
-             '15088':     '5375',
-             '15266':     '8320',
-             '15684':     '6826',
+             '15238':     '42910',
+             '15405':     '42626',
+             '15639':     '15093',
              '16023':     '31410',
-             '17137':     '31267',
+             '30472':     '7052',
+             '30529':     '1990904',
              '31572':     '7095',
-             '32947':     '60090',
              '42623':     '16887',
              '42787':     '6511',
-             '43142':     '17116',
-             '43234':     '32991' }  
+             '43142':     '17116' }  
         
 if __name__ == '__main__':
 
