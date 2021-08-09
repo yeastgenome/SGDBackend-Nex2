@@ -281,7 +281,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
                 fw.write("NEW GOANNOTATION: key=" + str(key) + "\n")
 
                 created_by = x['created_by']
-                if created_by == '<NULL>' or created_by is None or created == 'NULL':
+                if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
                     created_by = CREATED_BY
 
                 thisAnnot = Goannotation(dbentity_id = dbentity_id, 
