@@ -77,7 +77,7 @@ def go_complex_terms():
               'GO:0099128': 'mitochondrial iron-sulfur cluster assembly complex',
               'GO:0042564': 'NLS-dependent protein nuclear import complex',
               'GO:0043601': 'nuclear replisome',
-              'GO:0106143': 'tRNA m7G46 methyltransferase complex',
+              'GO:0106143': 'tRNA (m7G46) methyltransferase complex',
               'GO:0071986': 'Ragulator complex',
               'GO:0030685': 'nucleolar preribosome',
               'GO:0062128': 'MutSgamma complex',
