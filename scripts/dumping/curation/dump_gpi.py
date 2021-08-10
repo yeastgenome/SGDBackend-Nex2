@@ -2,7 +2,7 @@ from src.helpers import upload_file
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, Locusdbentity, LocusAlias, So, Dnasequenceannotation, Locussummary, Goannotation, \
                        Source, Complexdbentity, Complexbindingannotation, Interactor, Taxonomy, Edam, Filedbentity,\
-                       Path
+                       Path, FilePath
 from urllib.request import urlretrieve
 from urllib.request import urlopen
 import transaction
