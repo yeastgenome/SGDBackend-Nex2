@@ -1,4 +1,4 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, ComplexGo, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference, LocusAllele
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, ComplexGo, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference, LocusAllele, Literatureannotation
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -698,23 +698,78 @@ def index_disease_terms():
 
 
 def index_references():
-    _ref_loci = IndexESHelper.get_dbentity_locus_note()
+    # _ref_loci = IndexESHelper.get_dbentity_locus_note()
     _references = DBSession.query(Referencedbentity).all()
     _abstracts = IndexESHelper.get_ref_abstracts()
     _authors = IndexESHelper.get_ref_authors()
     _aliases = IndexESHelper.get_ref_aliases()
 
+    all = DBSession.query(Literatureannotation).all()
+    ref2loci = {}
+    ref2complexes = {}
+    ref2alleles = {}
+    ref2pathways = {}
+    for x in all:
+        if x.dbentity is None:
+            continue
+        if x.dbentity.subclass == 'LOCUS':
+            loci = []
+            if x.reference_id in ref2loci:
+                loci = ref2loci[x.reference_id]
+            if x.dbentity.display_name not in loci:
+                loci.append(x.dbentity.display_name)
+            ref2loci[x.reference_id] = loci
+        elif x.dbentity.subclass == 'COMPLEX':
+            complexes = []
+            if x.reference_id in ref2complexes:
+                complexes = ref2complexes[x.reference_id]
+            if x.dbentity.display_name not in complexes:
+                complexes.append(x.dbentity.display_name)
+            ref2complexes[x.reference_id] = complexes
+        elif x.dbentity.subclass == 'ALLELE':
+            alleles = []
+            if x.reference_id in ref2alleles:
+                alleles = ref2alleles[x.reference_id]
+            if x.dbentity.display_name not in alleles:
+                alleles.append(x.dbentity.display_name)
+            ref2alleles[x.reference_id] = alleles
+        elif x.dbentity.subclass == 'PATHWAY':
+            pathways = []
+            if x.reference_id in ref2pathways:
+                pathways = ref2pathways[x.reference_id]
+            if x.dbentity.display_name not in pathways:
+                pathways.append(x.dbentity.display_name)
+            ref2pathways[x.reference_id] = pathways
+            
     bulk_data = []
     print(("Indexing " + str(len(_references)) + " references"))
 
     for reference in _references:
         reference_loci = []
-        if len(_ref_loci) > 0:
-            temp_loci = _ref_loci.get(reference.dbentity_id)
-            if temp_loci is not None:
-                reference_loci = list(
-                    set([x.display_name for x in IndexESHelper.flattern_list(temp_loci)]))
+        reference_complexes = []
+        reference_alleles = []
+        reference_pathways = []
+        # if len(_ref_loci) > 0:
+        #    temp_loci = _ref_loci.get(reference.dbentity_id)
+        #    if temp_loci is not None:
+        #        reference_loci = list(
+        #            set([x.display_name for x in IndexESHelper.flattern_list(temp_loci)]))
+        temp_loci = ref2loci.get(reference.dbentity_id)
+        if temp_loci is not None:
+            reference_loci = temp_loci
+            
+        temp_complexes = ref2complexes.get(reference.dbentity_id)
+        if temp_complexes is not None:
+            reference_complexes = temp_complexes
 
+        temp_alleles = ref2alleles.get(reference.dbentity_id)
+        if temp_alleles is not None:
+            reference_alleles= temp_alleles
+            
+        temp_pathways = ref2pathways.get(reference.dbentity_id)
+        if temp_pathways is not None:
+            reference_pathways = temp_pathways
+                    
         abstract = _abstracts.get(reference.dbentity_id)
         if abstract is not None:
             abstract = abstract[0]
@@ -752,6 +807,9 @@ def index_references():
             "journal": journal,
             "year": str(reference.year),
             "reference_loci": reference_loci,
+            "associated_alleles": reference_alleles,
+            "associated_complexes": reference_complexes,
+            "associated_pathways": reference_pathways,
             "secondary_sgdid": sec_sgdid,
             "category": "reference",
             "keys": list(keys)

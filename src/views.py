@@ -133,7 +133,10 @@ def search(request):
 
         "disease": [("disease_locus", "disease_loci")],
         "reference": [("author", "author"), ("journal", "journal"),
-                      ("year", "year"), ("reference_locus", "reference_loci")],
+                      ("year", "year"), ("reference_locus", "reference_loci"),
+                      ("associated_alleles", "associated_alleles"),
+                      ("associated_complexes", "associated_complexes"),
+                      ("associated_pathways", "associated_pathways")],
         "contig": [("strain", "strain")],
         "allele": [("references", "references"),
                    ("allele_types", "allele_types"),
@@ -184,6 +187,9 @@ def search(request):
         "author",
         "journal",
         "reference_loci",
+        "associated_alleles",
+        "associated_complexes",
+        "associated_pathways",
         "aliases",
         "data",
         "topic",
@@ -204,8 +210,10 @@ def search(request):
 
     json_response_fields = [
         'name', 'href', 'description', 'category', 'bioentity_id',
-        'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'aliases', 'year',
-        'keyword', 'format', 'status', 'file_size', 'readme_url', 'topic', 'data', 'is_quick_flag'
+        'phenotype_loci', 'gene_ontology_loci', 'reference_loci',
+        'associated_alleles', 'associated_complexes', 'associated_pathways',
+        'aliases', 'year', 'keyword', 'format', 'status', 'file_size',
+        'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
 
     ## added for allele search
