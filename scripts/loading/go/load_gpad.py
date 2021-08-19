@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 import urllib.request, urllib.parse, urllib.error
 import gzip
 import shutil
@@ -35,6 +36,10 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
     source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     go_id_to_aspect =  dict([(x.go_id, x.go_namespace) for x in nex_session.query(Go).all()])
+    
+    deleted_merged_dbentity_ids = []
+    for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').filter(or_(Dbentity.dbentity_status=='Deleted', Dbentity.dbentity_status=='Merged')).all():
+        deleted_merged_dbentity_ids.append(x.dbentity_id)
 
     log.info("GPAD Loading Report for "+ annotation_type + " annotations\n") 
     
@@ -125,7 +130,8 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
                                                           annotation_type, key_to_annotation, 
                                                           annotation_id_to_extensions, 
                                                           annotation_id_to_support_evidences, 
-                                                          taxonomy_id, go_id_to_aspect, fw)
+                                                          taxonomy_id, go_id_to_aspect,
+                                                          deleted_merged_dbentity_ids, fw)
     
     log.info(str(datetime.now()))
     log.info("Deleting obsolete Go annotation entries...")
@@ -170,7 +176,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
     log.info("Done!\n\n")
 
 
-def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, fw):
+def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, deleted_merged_dbentity_ids, fw):
 
     annotation_update_log = {}
     for count_name in ['annotation_updated', 'annotation_added', 'annotation_deleted',
@@ -196,6 +202,8 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
     annotation_id_to_support = {}
     for x in data + noctua_data:
         if x['annotation_type'] not in allowed_types:
+            continue
+        if x['dbentity_id'] in deleted_merged_dbentity_ids:
             continue
         source_id = source_to_id.get(x['source'])
         if x['source'] == 'EnsemblPlants' or x['source'] == 'AgBase':
