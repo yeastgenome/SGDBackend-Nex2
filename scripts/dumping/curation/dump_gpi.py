@@ -1,8 +1,8 @@
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
-from src.models import Dbentity, Locusdbentity, LocusAlias, So, Dnasequenceannotation, Locussummary, Goannotation, \
-                       Source, Complexdbentity, Complexbindingannotation, Interactor, Taxonomy, Edam, Filedbentity,\
-                       Path
+from src.models import Dbentity, Locusdbentity, LocusAlias, Locussummary, \
+                       Goannotation, Source, FilePath, Path, Complexdbentity,\
+                       Taxonomy, Edam, Filedbentity, So, Dnasequenceannotation
 from urllib.request import urlretrieve
 from urllib.request import urlopen
 import transaction
@@ -29,7 +29,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 gpi_file = "scripts/dumping/curation/data/gpi.sgd"
 
-TAXON = 'NCBITaxon:559292'
+TAXON = 'taxon:559292'
 
 TAXID = 'TAX:559292'
 
@@ -48,16 +48,12 @@ def dump_data():
 
     source = nex_session.query(Source).filter_by(display_name='SGD').one_or_none()
     source_id = source.source_id
-    taxonomy = nex_session.query(Taxonomy).filter_by(taxid=TAXID).one_or_none()
-    taxonomy_id = taxonomy.taxonomy_id
-    so_id_to_soid = dict([(x.so_id, x.soid) for x in nex_session.query(So).all()])
-    dbentity_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
-    dbentity_id_to_locus = dict([(x.dbentity_id, (x.systematic_name, x.gene_name)) for x in nex_session.query(Locusdbentity).all()])
-    dbentity_id_to_function = dict([(x.locus_id, x.text) for x in nex_session.query(Locussummary).filter_by(summary_type='Function').all()])
-    complex_id_to_complex_accession = dict([(x.dbentity_id, x.complex_accession) for x in nex_session.query(Complexdbentity).all()])
+    dbentity_id_to_function = dict([(x.locus_id, x.text.replace("\n", ' ').strip()) for x in nex_session.query(Locussummary).filter_by(summary_type='Function').all()])
     source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
-    
+    taxonomy = nex_session.query(Taxonomy).filter_by(taxid=TAXID).one_or_none()
+    taxonomy_id = taxonomy.taxonomy_id
+    so_id_to_type = dict([(x.so_id, x.display_name) for x in nex_session.query(So).all()])
     dbentity_id_to_alias_names = {}
     dbentity_id_to_ncbi_protein_name = {}
     dbentity_id_to_uniprot = {}
@@ -83,98 +79,94 @@ def dump_data():
     dbentity_id_to_date_assigned = {}
     for x in nex_session.query(Goannotation).filter_by(source_id=source_id, annotation_type='manually curated').all():
         dbentity_id_to_date_assigned[x.dbentity_id] = str(x.date_assigned).split(' ')[0].replace('-', '')
-        
-    ## complex_id_to_complex_accession  
-    interactor_id_to_complexes = {}
-    for x in nex_session.query(Complexbindingannotation).all():
-        ## interactor_id
-        complexes = []
-        if x.interactor_id in interactor_id_to_complexes:
-            complexes = interactor_id_to_complexes[x.interactor_id]
-        complex_accession = complex_id_to_complex_accession[x.complex_id]
-        if complex_accession not in complexes:
-            complexes.append(complex_accession)
-        interactor_id_to_complexes[x.interactor_id] = complexes
-        ## binding_interactor_id
-        complexes = []
-        if x.binding_interactor_id in interactor_id_to_complexes:
-            complexes =	interactor_id_to_complexes[x.binding_interactor_id]
-        complex_accession = complex_id_to_complex_accession[x.complex_id]
-        if complex_accession not in complexes:
-            complexes.append(complex_accession)
-        interactor_id_to_complexes[x.binding_interactor_id] = complexes
-                                   
-    dbentity_id_to_complexes = {}
-    for x in nex_session.query(Interactor).all():
-        if x.locus_id is None:
-            continue
-        complexes = []
-        if x.locus_id in dbentity_id_to_complexes:
-            complexes = dbentity_id_to_complexes[x.locus_id]
-        for complex_accession in interactor_id_to_complexes.get(x.interactor_id, []):
-            if complex_accession not in complexes:
-                complexes.append(complex_accession)
-        dbentity_id_to_complexes[x.locus_id] = complexes
-        
+
+    dbentity_id_to_so_id = {}
+    i = 0
     for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id=taxonomy_id, dna_type='GENOMIC').all():
-        if x.dbentity_id not in dbentity_id_to_date_assigned:
-            continue
-
-        # col1: database ID
-        col1 = "SGD:" + dbentity_id_to_sgdid.get(x.dbentity_id)
+        dbentity_id_to_so_id[x.dbentity_id] = x.so_id
         
-        # col2: gene name
-        (systematic_name, gene_name) = dbentity_id_to_locus.get(x.dbentity_id)
-        col2 = gene_name
-        if gene_name is None:
-            col2 = systematic_name
+    ## dumping genes
+    
+    type_to_col6 = type_mapping()
+    
+    for x in nex_session.query(Locusdbentity).filter_by(has_go=True).all():
         
-        # col3: gene product
-        col3 = ''
+        # col1: DB
+        col1 = 'SGD'
+        
+        # col2: database ID
+        col2 = x.sgdid
+        
+        # col3: gene name
+        col3 = x.display_name
+                
+        # col4: gene product
+        col4 = ''
         if x.dbentity_id in dbentity_id_to_ncbi_protein_name:
-            col3 = dbentity_id_to_ncbi_protein_name[x.dbentity_id]
+            col4 = dbentity_id_to_ncbi_protein_name[x.dbentity_id]
 
-        # col4: gene name/aliases/ORFname
+        # col5: gene name/aliases/ORFname
         aliases = dbentity_id_to_alias_names.get(x.dbentity_id, [])
-        if gene_name is not None:
-            aliases = [gene_name] + aliases
-        aliases = aliases + [systematic_name]
-        col4 = '|'.join(aliases)
-        
-        # col5: soid
-        col5 = so_id_to_soid.get(x.so_id)
-        
-        # col6: taxon
-        col6 = TAXON
+        if x.gene_name is not None:
+            aliases = [x.gene_name] + aliases
+        aliases = aliases + [x.systematic_name]
+        col5 = '|'.join(aliases)
 
-        # col7: Encoded_By
-        col7 = ''
+        # col6: object type
+        so_id = dbentity_id_to_so_id.get(x.dbentity_id)
+        ## NISS genes
+        if so_id is None:
+            for y in nex_session.query(Dnasequenceannotation).filter_by(dbentity_id=x.dbentity_id, dna_type='GENOMIC').all():
+                so_id = y.so_id 
+                break
+            
+        if so_id:
+            type = so_id_to_type.get(so_id)
+            if type is None:
+                continue
+            col6 = type_to_col6.get(type)
+            if col6 is None:
+                continue
+        else:
+            col6 = 'gene'
+        
+        # col7: taxon
+        col7 = TAXON
 
         # col8: Parent protein
         col8 = ''
 
-        # col9: Protein_Containing_Complex_Members
-        col9 = ''
-        if x.dbentity_id in dbentity_id_to_complexes:
-            col9 = '|'.join(dbentity_id_to_complexes[x.dbentity_id])
-
-        # col10: DB_Xrefs
+        # col9: DB_Xrefs
         dbxrefs = dbentity_id_to_refseq_ids.get(x.dbentity_id, [])
         if x.dbentity_id in dbentity_id_to_uniprot:
             dbxrefs = [dbentity_id_to_uniprot[x.dbentity_id]] + dbxrefs
-        col10 = ''
+        col9 = ''
         if len(dbxrefs) > 0:
-            col10 = '|'.join(dbxrefs)
+            col9 = '|'.join(dbxrefs)
 
-        # col11: Gene_Product_Properties
-        col11 = "db_subset=Swiss-Prot|go_annotation_complete=" + dbentity_id_to_date_assigned[x.dbentity_id]
+        # col10: Gene_Product_Properties
+        col10 = "db_subset=Swiss-Prot|go_annotation_complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
         if x.dbentity_id in dbentity_id_to_function:
-            col11 = col11 + "|go_annotation_summary=" + dbentity_id_to_function[x.dbentity_id]
+            col10 = col10 + "|go_annotation_summary=" + dbentity_id_to_function[x.dbentity_id]
         if x.dbentity_id in dbentity_id_to_uniprot:
-            col11 = col11 + "|uniprot_proteome=" + dbentity_id_to_uniprot[x.dbentity_id]
+            col10 = col10 + "|uniprot_proteome=" + dbentity_id_to_uniprot[x.dbentity_id]
         
-        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t" + col8 + "\t" + col9 + "\t" + col10 + "\t" + col11 + "\n")
+        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t" + col8 + "\t" + col9 + "\t" + col10 + "\n")
         
+    ## dumping complexes
+
+    for x in nex_session.query(Complexdbentity).all():
+
+        col1 = 'SGD'
+        col2 = x.sgdid
+        col3 = x.complex_accession
+        col4 = x.display_name
+        col5 = x.systematic_name + '|' + x.intact_id + '|' + x.display_name 
+        col6 = 'protein_complex'
+        col7 = TAXON
+    
+        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t\t\t\n") 
+
     fw.close()
    
     log.info("Uploading GPI file to S3...")
@@ -186,10 +178,22 @@ def dump_data():
     log.info(str(datetime.now()))
     log.info("Done!")
 
-    
+def type_mapping():
+
+    return { 'ORF': 'protein',
+             'transposable element gene': 'protein',
+             'blocked reading frame': 'gene',
+             'ncRNA gene': 'ncRNA',
+             'snoRNA gene': 'snoRNA',
+             'snRNA gene': 'snRNA',
+             'tRNA gene': 'tRNA',
+             'rRNA gene': 'rRNA',
+             'telomerase RNA gene': 'telomerase_RNA',
+             'disabled reading frame': 'gene' }
+             
 def write_header(fw, datestamp):
 
-    fw.write("!gpi-version: 2.0\n")
+    fw.write("!gpi-version: 1.2\n")
     fw.write("!date-generated: " + datestamp + "\n")
     fw.write("!generated-by: Saccharomyces Genome Database (SGD)\n")
     fw.write("!URL: https://www.yeastgenome.org/\n")
@@ -297,7 +301,7 @@ def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to
     nex_session.add(x)
     nex_session.commit()
 
-    log.info("Done uploading " + gpad_file)
+    log.info("Done uploading " + gpi_file)
 
     
 if __name__ == '__main__':

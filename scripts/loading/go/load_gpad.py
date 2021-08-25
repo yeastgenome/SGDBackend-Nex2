@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 import urllib.request, urllib.parse, urllib.error
 import gzip
 import shutil
@@ -35,6 +36,10 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
     source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     go_id_to_aspect =  dict([(x.go_id, x.go_namespace) for x in nex_session.query(Go).all()])
+    
+    deleted_merged_dbentity_ids = []
+    for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').filter(or_(Dbentity.dbentity_status=='Deleted', Dbentity.dbentity_status=='Merged')).all():
+        deleted_merged_dbentity_ids.append(x.dbentity_id)
 
     log.info("GPAD Loading Report for "+ annotation_type + " annotations\n") 
     
@@ -125,7 +130,8 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
                                                           annotation_type, key_to_annotation, 
                                                           annotation_id_to_extensions, 
                                                           annotation_id_to_support_evidences, 
-                                                          taxonomy_id, go_id_to_aspect, fw)
+                                                          taxonomy_id, go_id_to_aspect,
+                                                          deleted_merged_dbentity_ids, fw)
     
     log.info(str(datetime.now()))
     log.info("Deleting obsolete Go annotation entries...")
@@ -170,7 +176,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
     log.info("Done!\n\n")
 
 
-def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, fw):
+def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, deleted_merged_dbentity_ids, fw):
 
     annotation_update_log = {}
     for count_name in ['annotation_updated', 'annotation_added', 'annotation_deleted',
@@ -196,6 +202,8 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
     annotation_id_to_support = {}
     for x in data + noctua_data:
         if x['annotation_type'] not in allowed_types:
+            continue
+        if x['dbentity_id'] in deleted_merged_dbentity_ids:
             continue
         source_id = source_to_id.get(x['source'])
         if x['source'] == 'EnsemblPlants' or x['source'] == 'AgBase':
@@ -281,7 +289,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
                 fw.write("NEW GOANNOTATION: key=" + str(key) + "\n")
 
                 created_by = x['created_by']
-                if created_by == '<NULL>' or created_by is None:
+                if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
                     created_by = CREATED_BY
 
                 thisAnnot = Goannotation(dbentity_id = dbentity_id, 
@@ -304,7 +312,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
             # nex_session.commit()
             
             created_by = x['created_by']
-            if created_by == '<NULL>' or created_by is None:
+            if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
                 created_by = CREATED_BY
             
             key_to_annotation_id[key] = annotation_id
@@ -351,6 +359,9 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
 
 
 def update_goextension(nex_session, annotation_id, goextension, annotation_id_to_extensions, date_created, created_by, annotation_type, annotation_update_log, fw):
+
+    if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
+        created_by = CREATED_BY
 
     key_to_extension = {}
     if annotation_id in annotation_id_to_extensions:
@@ -425,6 +436,9 @@ def update_goextension(nex_session, annotation_id, goextension, annotation_id_to
     
 def update_gosupportevidence(nex_session, annotation_id, gosupport, annotation_id_to_support_evidences, date_created, created_by, annotation_type, annotation_update_log, fw):
 
+    if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
+        created_by = CREATED_BY
+        
     key_to_support = {}
     if annotation_id in annotation_id_to_support_evidences:
         key_to_support = annotation_id_to_support_evidences[annotation_id]
