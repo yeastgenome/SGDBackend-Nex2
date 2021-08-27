@@ -11,7 +11,7 @@ import complementReducer from './complementReducer';
 import phenotypeReducer from './phenotypeReducer';
 import alleleReducer from './alleleReducer';
 import authorResponseReducer from './authorResponseReducer';
-import litguideReducer from './litguideReducer';
+import litguideReducer from './litGuideReducer';
 import fileMetadataReducer from './fileMetadataReducer';
 import datasetReducer from './datasetReducer';
 
