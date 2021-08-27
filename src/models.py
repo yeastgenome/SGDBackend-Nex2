@@ -1,7 +1,10 @@
 from sqlalchemy import Column, BigInteger, UniqueConstraint, Float, Boolean, SmallInteger, Integer, DateTime, ForeignKey, Index, Numeric, String, Text, text, FetchedValue, func, or_, and_, distinct, inspect
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from zope.sqlalchemy import ZopeTransactionExtension
+
+# from zope.sqlalchemy import ZopeTransactionExtension
+from zope.sqlalchemy import register
+
 from elasticsearch import Elasticsearch
 import os
 import io
@@ -27,7 +30,10 @@ from scripts.loading.util import link_gene_complex_names
 
 from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
 
-DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
+# DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
+DBSession = scoped_session(sessionmaker(autoflush=False))
+register(DBSession)
+
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
 ALLIANCE_API_BASE_URL = "https://www.alliancegenome.org/api/gene/"
