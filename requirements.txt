@@ -35,7 +35,7 @@ pyasn1-modules==0.2.8
 pycparser==2.20
 py3dns==3.2.1
 pyOpenSSL==20.0.1
-pyramid==2.0
+pyramid==1.10.4
 python-dateutil==2.8.2	
 pyramid-jinja2==2.8
 pyramid-redis-sessions==1.0.1
