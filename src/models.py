@@ -789,9 +789,12 @@ class Chebi(Base):
         return obj
     
     def phenotype_to_dict(self):
-        conditions = DBSession.query(PhenotypeannotationCond.annotation_id).filter_by(condition_name=self.display_name).all()
+        conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_name=self.display_name).all()
 
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.annotation_id.in_(conditions)).all()
+        annotation_ids = []
+        for x in conditions:
+            annotation_ids.append(x.annotation_id)
+        phenotype_annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.annotation_id.in_(annotation_ids)).all()
 
         obj = []
 
@@ -802,9 +805,12 @@ class Chebi(Base):
 
     def go_to_dict(self):
 
-        extensions = DBSession.query(Goextension.annotation_id).filter_by(dbxref_id=self.chebiid).all()
+        extensions = DBSession.query(Goextension).filter_by(dbxref_id=self.chebiid).all()
+        annotation_ids = []
+        for x in extensions:
+            annotation_ids.append(x.annotation_id)
 
-        go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(extensions)).all()
+        go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(annotation_ids)).all()
 
         obj = []
 
@@ -835,11 +841,15 @@ class Chebi(Base):
 
     def complex_to_dict(self):
 
-        interactors = DBSession.query(Interactor.interactor_id).filter_by(format_name=self.chebiid).all()
+        interactors = DBSession.query(Interactor).filter_by(format_name=self.chebiid).all()
 
-        annotations = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.interactor_id.in_(interactors)).all()
+        interactor_ids = []
+        for x in interactors:
+            interactor_ids.append(x.interactor_id)
+            
+        annotations = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.interactor_id.in_(interactor_ids)).all()
 
-        annotations2 = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.binding_interactor_id.in_(interactors)).all()
+        annotations2 = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.binding_interactor_id.in_(interactor_ids)).all()
 
         complexes = []
         found = {}
@@ -858,7 +868,11 @@ class Chebi(Base):
 
     def pathway_to_dict(self):
 
-        biocycIDs = DBSession.query(ChebiAlia.display_name).filter_by(chebi_id=self.chebi_id, alias_type='YeastPathway ID').all()
+        rows = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id, alias_type='YeastPathway ID').all()
+
+        biocycIDs = []
+        for x in rows:
+            biocycIDs.append(x.display_name)
         
         pathwayRows = DBSession.query(Pathwaydbentity).filter(Pathwaydbentity.biocyc_id.in_(biocycIDs)).all()
         
@@ -882,7 +896,7 @@ class Chebi(Base):
 
     def get_pharmGKB_url(self):
 
-        rows = DBSession.query(ChebiAlia.display_name).filter_by(chebi_id=self.chebi_id, alias_type='PharmGKB ID').all()
+        rows = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id, alias_type='PharmGKB ID').all()
         if len(rows) > 0:
             return "https://www.pharmgkb.org/chemical/" + rows[0].display_name
         return ""
@@ -904,9 +918,13 @@ class Chebi(Base):
         network_nodes_ids[self.format_name] = True
 
         ## go 
-        extensions = DBSession.query(Goextension.annotation_id).filter_by(dbxref_id=self.chebiid).all()
+        extensions = DBSession.query(Goextension).filter_by(dbxref_id=self.chebiid).all()
 
-        go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(extensions)).all()
+        annotation_ids = []
+        for x in extensions:
+            annotation_ids.append(x.annotation_id)
+            
+        go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(annotation_ids)).all()
         
         for g in go_annotations:
             extensions = DBSession.query(Goextension).filter_by(annotation_id=g.annotation_id).all()
@@ -953,9 +971,13 @@ class Chebi(Base):
             
         ## phenotype
 
-        conditions = DBSession.query(PhenotypeannotationCond.annotation_id).filter_by(condition_class = 'chemical', condition_name=self.display_name).all()
+        conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_class = 'chemical', condition_name=self.display_name).all()
 
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.annotation_id.in_(conditions)).all()            
+        annotation_ids = []
+        for x in conditions:
+            annotation_ids.append(x.annotation_id)
+            
+        phenotype_annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.annotation_id.in_(annotation_ids)).all()            
 
         phenotype_to_id = {}
         for p in phenotype_annotations:
@@ -1010,11 +1032,15 @@ class Chebi(Base):
                         
         ## complex
 
-        interactors = DBSession.query(Interactor.interactor_id).filter_by(format_name=self.chebiid).all()
+        interactors = DBSession.query(Interactor).filter_by(format_name=self.chebiid).all()
 
-        annotations = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.interactor_id.in_(interactors)).all()
+        interactor_ids = []
+        for x in interactors:
+            interactor_ids.append(x.interactor_id)
+            
+        annotations = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.interactor_id.in_(interactor_ids)).all()
 
-        annotations2 = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.binding_interactor_id.in_(interactors)).all()
+        annotations2 = DBSession.query(Complexbindingannotation).filter(Complexbindingannotation.binding_interactor_id.in_(interactor_ids)).all()
         
         found = {}
         for annotation in annotations + annotations2:
@@ -1264,10 +1290,12 @@ class Colleague(Base):
         _dict['lab_page'] = ''
         _dict['research_page'] = ''
 
-        keyword_ids = DBSession.query(ColleagueKeyword.keyword_id).filter(ColleagueKeyword.colleague_id == self.colleague_id).all()
+        keyword_ids = []
+        for x in DBSession.query(ColleagueKeyword).filter(ColleagueKeyword.colleague_id == self.colleague_id).all():
+            keyword_ids.append(x.keyword_id)
+        
         if len(keyword_ids) > 0:
-            ids_query = [k[0] for k in keyword_ids]
-            keywords = DBSession.query(Keyword).filter(Keyword.keyword_id.in_(ids_query)).all()
+            keywords = DBSession.query(Keyword).filter(Keyword.keyword_id.in_(keyword_ids)).all()
             _dict['keywords'] = [k.display_name for k in keywords]
         else:
             _dict['keywords'] = []
@@ -9951,8 +9979,12 @@ class Alleledbentity(Dbentity):
 
     def get_interaction_references(self, unique_references):
 
-        interaction_ids = DBSession.query(AlleleGeninteraction.interaction_id).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all()
-        
+        interactions = DBSession.query(AlleleGeninteraction).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all()
+
+        interaction_ids = []
+        for x in interactions:
+            interaction_ids.append(x.interaction_id)
+            
         references = []
         for x in DBSession.query(Geninteractionannotation).filter(Geninteractionannotation.annotation_id.in_(interaction_ids)).all():
             if x.reference.to_dict_citation() not in references:
@@ -10004,8 +10036,12 @@ class Alleledbentity(Dbentity):
 
     def interaction_to_dict(self):
 
-        interaction_ids = DBSession.query(AlleleGeninteraction.interaction_id).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all()
-        
+        interactions = DBSession.query(AlleleGeninteraction).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all()
+
+        interaction_ids = []
+        for x in interactions:
+            interaction_ids.append(x.interaction_id)
+            
         annotations = DBSession.query(Geninteractionannotation).filter(Geninteractionannotation.annotation_id.in_(interaction_ids)).all()
                     
         obj = []
