@@ -308,8 +308,10 @@ class ModelsHelper(object):
         return None
 
     def get_id_list_by_path_id(self, path_id):
-        file_path_ids = DBSession.query(FilePath.file_id).filter(FilePath.path_id == path_id).all()
-        if file_path_ids is not None:
+        file_path_ids = []
+        for x in DBSession.query(FilePath).filter(FilePath.path_id == path_id).all():
+            file_path_ids.append(x.file_id)
+        if len(file_path_ids) > 0:
             return file_path_ids
         return None
 

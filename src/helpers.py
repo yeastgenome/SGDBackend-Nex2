@@ -671,9 +671,9 @@ def summary_file_is_valid(file_upload):
                 if gene_id:
                     file_gene_ids.append(gene_id.strip())
                 
-    valid_genes = DBSession.query(Locusdbentity.format_name).filter(
-        Locusdbentity.format_name.in_(file_gene_ids)).all()
-    valid_genes = [str(d[0]) for d in valid_genes]
+    valid_genes = []
+    for x in DBSession.query(Locusdbentity).filter(Locusdbentity.format_name.in_(file_gene_ids)).all():
+        valid_genes.append(x.format_name)
     invalid_genes = [d for d in file_gene_ids if d not in valid_genes]
     if (len(item) != len(header_literal)):
         obj['message'] = 'Row or header has incorrect number of columns'
@@ -1064,11 +1064,10 @@ def get_existing_meta_data(display_name=None, curator_session=None):
 
 
 def get_source_id(source=None):
-    result = None
+    source_id = None
     if source:
-        result = DBSession.query(Source.source_id).filter(
-            Source.display_name == source).one_or_none()[0]
-
+        src = DBSession.query(Source).filter(Source.display_name == source).one_or_none()
+        source_id = src.source_id
 
 def get_file_details(display_name):
     if display_name:
