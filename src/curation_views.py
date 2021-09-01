@@ -2,7 +2,8 @@ import pandas as pd
 from oauth2client import client, crypt
 from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
 from pyramid.view import view_config
-from pyramid.session import check_csrf_token
+# from pyramid.session import check_csrf_token
+from pyramid.csrf import check_csrf_token
 from sqlalchemy import create_engine, and_, or_
 from sqlalchemy.exc import IntegrityError, DataError, InternalError
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -23,7 +24,7 @@ import cgi
 import string
 import psycopg2
 
-from .helpers import allowed_file, extract_id_request, secure_save_file,\
+from src.helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
     get_or_create_filepath, extract_topic, extract_format,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
@@ -31,10 +32,10 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     send_newsletter_email, get_file_delimiter, unicode_to_string,\
     file_curate_update_readme, upload_new_file, get_file_curate_dropdown_data,\
     get_file_details
-from .curation_helpers import ban_from_cache, process_pmid_list,\
+from src.curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid, get_list_of_ptms
-from .loading.promote_reference_triage import add_paper
-from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
+from src.loading.promote_reference_triage import add_paper
+from src.models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname,\
      ReservednameTriage, Straindbentity, Literatureannotation,\
      Referencetriage, Referencedeleted, Locusdbentity,\
@@ -52,21 +53,21 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile, Edam, Filedbentity,\
      Path, Dataset, Obi, Keyword
-from .tsv_parser import parse_tsv_annotations
-from .models_helpers import ModelsHelper
-from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
+from src.tsv_parser import parse_tsv_annotations
+from src.models_helpers import ModelsHelper
+from src.phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
-from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
+from src.allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
       add_allele_data, update_allele_data, delete_allele_data
-from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata, delete_metadata
-from .supplemental_file_helpers import add_metadata_upload_file
-from .dataset_helpers import get_list_of_dataset, get_one_dataset, update_dataset, update_datasetsample,\
+from src.metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata, delete_metadata
+from src.supplemental_file_helpers import add_metadata_upload_file
+from src.dataset_helpers import get_list_of_dataset, get_one_dataset, update_dataset, update_datasetsample,\
       update_datasettrack, load_dataset, load_datasetsample, delete_dataset, delete_datasetsample,\
       delete_datasettrack
-from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
-from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
-from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
-from .complement_helpers import insert_update_complement_annotations, delete_complement_annotation, get_complements_by_filters, upload_complement_file
+from src.author_response_helpers import insert_author_response, get_author_responses, update_author_response
+from src.litguide_helpers import get_list_of_papers, update_litguide, add_litguide
+from src.disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
+from src.complement_helpers import insert_update_complement_annotations, delete_complement_annotation, get_complements_by_filters, upload_complement_file
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger('curation')
@@ -1993,9 +1994,10 @@ def upload_suppl_file(request):
 @view_config(route_name='get_curation_tag', renderer='json', request_method='GET')
 def get_curation_tag(request):
     try:
-        all_tags = DBSession.query(CurationReference.curation_tag).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all()
-        data = [x[0] for x in all_tags]
-        return HTTPOk(body=json.dumps(data),content_type='text/json')
+        all_tags = []
+        for x in DBSession.query(CurationReference).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all():
+            all_tags.append(x.curation_tag)
+        return HTTPOk(body=json.dumps(all_tags),content_type='text/json')
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
@@ -2006,9 +2008,10 @@ def get_curation_tag(request):
 @view_config(route_name='get_literature_topic', renderer='json', request_method='GET')
 def get_literature_topic(request):
     try:
-        all_topics = DBSession.query(Literatureannotation.topic).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all()
-        data = [x[0] for x in all_topics]
-        return HTTPOk(body=json.dumps(data),content_type='text/json')
+        all_topics = []
+        for x in DBSession.query(Literatureannotation).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all():
+            all_topics.append(x.topic)
+        return HTTPOk(body=json.dumps(all_topics),content_type='text/json')
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
@@ -2036,7 +2039,9 @@ def get_psimod(request):
     try:
         psimods = models_helper.get_all_psimods()
         if psimods:
-            distinct_psimod_ids = DBSession.query(Posttranslationannotation.psimod_id).distinct()
+            distinct_psimod_ids = []
+            for x in DBSession.query(Posttranslationannotation).distinct():
+                distinct_psimod_ids.append(x.psimod_id)
             psimods_in_use = psimods.filter(Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             psimods_not_in_use = psimods.filter(~Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             

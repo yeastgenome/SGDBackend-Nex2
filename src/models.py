@@ -210,7 +210,7 @@ class Apo(Base):
             children_phenotype_ids = []
             for x in DBSession.query(Phenotype).filter(Phenotype.observable_id.in_([c.child_id for c in children_relation])).all():
             	children_phenotype_ids.append(x.phenotype_id)
-            children_annotation_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([i[0] for i in children_phenotype_ids])).group_by(Phenotypeannotation.dbentity_id).count()
+            children_annotation_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_(children_phenotype_ids)).group_by(Phenotypeannotation.dbentity_id).count()
         else:
             children_annotation_count = 0
         return {
@@ -4767,8 +4767,9 @@ class Locusdbentity(Dbentity):
 
         # URLs (resources)
         so_ids = []
-        for x in DBSession.query(Dnasequenceannotation).filter(Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).group_by(Dnasequenceannotation.so_id).all():
-            so_ids.append(x.so_id)
+        for x in DBSession.query(Dnasequenceannotation).filter(Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).all():
+            if x.so_id not in so_ids:
+                so_ids.append(x.so_id)
         locus_type = []
         for x in DBSession.query(So).filter(So.so_id.in_(so_ids)).all():
             locus_type.append(x.display_name)
