@@ -3301,7 +3301,6 @@ def file_curate_menus(request):
     return get_file_curate_dropdown_data()
 
 @view_config(route_name="triage_count", renderer='json', request_method='GET')
-@authenticate
 def triage_count(request):
     try:
         colleagueCount = DBSession.query(Colleaguetriage).count()
@@ -3316,7 +3315,6 @@ def triage_count(request):
 
 
 @view_config(route_name='get_reference_annotations',request_method='GET',renderer='json')
-@authenticate
 def get_reference_annotations(request):
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
