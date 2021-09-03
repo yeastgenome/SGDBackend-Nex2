@@ -340,13 +340,17 @@ def read_dataset_data_from_file(file):
             is_in_browser = row.iat[11]
             
             if is_in_spell and int(is_in_spell) >= 1:
-                is_in_spell = '1'
+                # is_in_spell = '1'
+                is_in_spell = True
             else:
-                is_in_spell = '0'
+                # is_in_spell = '0'
+                is_in_spell = False
             if is_in_browser and int(is_in_browser) >= 1:
-                is_in_browser = '1'
+                # is_in_browser = '1'
+                is_in_browser = True
             else:
-                is_in_browser = '0'
+                # is_in_browser = '0'
+                is_in_browser = False
             date_public = row.iat[5]
             if str(date_public) == 'nan':
                 # no date provided
