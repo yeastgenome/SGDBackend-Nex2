@@ -803,7 +803,6 @@ def new_colleague(request):
 
 
 @view_config(route_name='reserved_name_index', renderer='json')
-@authenticate
 def reserved_name_index(request):
     try:
         res_triages = DBSession.query(ReservednameTriage).all()
@@ -819,7 +818,6 @@ def reserved_name_index(request):
             DBSession.remove()
 
 @view_config(route_name='reserved_name_curate_show', renderer='json')
-@authenticate
 def reserved_name_curate_show(request):
     try:
         req_id = request.matchdict['id'].upper()
