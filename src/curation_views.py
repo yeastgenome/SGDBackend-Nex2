@@ -3265,7 +3265,6 @@ def upload_file_curate(request):
 
 
 @view_config(route_name="get_file", renderer='json', request_method='GET')
-@authenticate
 def get_file(request):
     ''' Get file data '''
   
