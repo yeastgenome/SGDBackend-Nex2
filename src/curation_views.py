@@ -1924,13 +1924,11 @@ def file_metadata_delete(request):
     return delete_metadata(request)
 
 @view_config(route_name='get_dataset_data', renderer='json', request_method='GET')
-@authenticate
 def get_dataset_data(request):
 
     return get_one_dataset(request)
 
 @view_config(route_name='get_datasets', renderer='json', request_method='GET')
-@authenticate
 def get_datasets(request):
 
     return get_list_of_dataset(request)
