@@ -1735,7 +1735,7 @@ def get_reporter(request):
 @view_config(route_name='get_chebi', renderer='json', request_method='GET')
 def get_chebi(request):
     try:
-        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete='0').order_by(Chebi.display_name).all()
+        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete=False).order_by(Chebi.display_name).all()
         data = []
         for c in all_chemical:
             data.append({"chebi_id": c.chebi_id,
@@ -1752,7 +1752,6 @@ def get_chebi(request):
 @view_config(route_name='get_eco', renderer='json', request_method='GET')
 def get_eco(request):
     try:
-        # all_eco = DBSession.query(Eco).filter_by(is_obsolete='0').order_by(Eco.display_name).all()
         all_eco = DBSession.query(Eco).order_by(Eco.display_name).all()
         data = []
         for e in all_eco:

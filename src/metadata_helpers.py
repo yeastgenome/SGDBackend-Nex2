@@ -200,7 +200,7 @@ def insert_keyword(curator_session, CREATED_BY, source_id, keyword):
                     display_name = keyword,
                     obj_url = obj_url,
                     source_id = source_id,
-                    is_obsolete = '0',
+                    is_obsolete = False,
                     created_by = CREATED_BY)
         curator_session.add(x)
         transaction.commit()
