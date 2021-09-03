@@ -21,9 +21,9 @@ DESC = 'Supplemental Materials'
 PATH = '/supplemental_data'
 FILE_EXTENSION = 'zip'
 DBENTITY_STATUS = 'Active'
-IS_PUBLIC = '1',
-IS_IN_SPELL = '0'
-IS_IN_BROWSER = '0'
+IS_PUBLIC = True
+IS_IN_SPELL = False
+IS_IN_BROWSER = False
 
 
 def insert_reference_file(curator_session, CREATED_BY, source_id, file_id, reference_id):
