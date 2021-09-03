@@ -2282,7 +2282,6 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 @view_config(route_name='get_all_go_for_regulations',renderer='json',request_method='GET')
-@authenticate
 def get_all_go_for_regulations(request):
     try:
         go_in_db = models_helper.get_all_go()
@@ -2295,7 +2294,6 @@ def get_all_go_for_regulations(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_eco_for_regulations', renderer='json', request_method='GET')
-@authenticate
 def get_all_eco_for_regulations(request):
     try:
         eco_in_db = models_helper.get_all_eco()
@@ -2318,7 +2316,6 @@ def get_papers_by_tag(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_eco', renderer='json', request_method='GET')
-@authenticate
 def get_all_eco(request):
     try:
         eco_in_db = models_helper.get_all_eco()
@@ -2331,7 +2328,6 @@ def get_all_eco(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_do', renderer='json', request_method='GET')
-@authenticate
 def get_all_do(request):
     try:
         do_in_db = models_helper.get_all_do()
@@ -2344,7 +2340,6 @@ def get_all_do(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_ro', renderer='json', request_method='GET')
-@authenticate
 def get_all_ro(request):
     try:
         ro_in_db = models_helper.get_all_ro()
