@@ -2630,21 +2630,26 @@ class Referencedbentity(Dbentity):
                         
                         ## check for complex ID
                         if gene_dbentity_id is None:
-                            row= curator_session.query(Dbentity).filter_by(format_name=upper_g_id, subclass='COMPLEX').one_or_none()
-                            gene_dbentity_id = row.dbentity_id
+                            row = curator_session.query(Dbentity).filter_by(format_name=upper_g_id, subclass='COMPLEX').one_or_none()
+                            if row:
+                                gene_dbentity_id = row.dbentity_id
 
                         ## check for pathway ID
                         if gene_dbentity_id is None:
                             row = curator_session.query(Pathwaydbentity).filter_by(biocyc_id=upper_g_id).one_or_none()
-                            gene_dbentity_id = row.dbentity_id
+                            if row:
+                                gene_dbentity_id = row.dbentity_id
 
                         ## check for allele name
                         if gene_dbentity_id is None:
                             row = curator_session.query(Alleledbentity).filter(Alleledbentity.display_name.ilike(upper_g_id)).one_or_none()
-                            gene_dbentity_id = row.dbentity_id
+                            if row:
+                                gene_dbentity_id = row.dbentity_id
                             
                         # ignore duplicates
                         if gene_dbentity_id in tag_dbentity_ids:
+                            continue
+                        if gene_dbentity_id is None:
                             continue
                         tag_dbentity_ids.append(gene_dbentity_id)
                         
