@@ -2624,7 +2624,8 @@ class Referencedbentity(Dbentity):
 
                         ## check for gene name/systematc name
                         row = curator_session.query(Locusdbentity).filter(or_(Locusdbentity.display_name == upper_g_id, Locusdbentity.format_name == g_id)).one_or_none()
-                        gene_dbentity_id = row.dbentity_id
+                        if row:
+                            gene_dbentity_id = row.dbentity_id
                         
                         ## check for complex ID
                         if gene_dbentity_id is None:
