@@ -2622,6 +2622,7 @@ class Referencedbentity(Dbentity):
                             continue
                         upper_g_id = g_id.upper()
 
+                        gene_dbentity_id = None
                         ## check for gene name/systematc name
                         row = curator_session.query(Locusdbentity).filter(or_(Locusdbentity.display_name == upper_g_id, Locusdbentity.format_name == g_id)).one_or_none()
                         if row:
