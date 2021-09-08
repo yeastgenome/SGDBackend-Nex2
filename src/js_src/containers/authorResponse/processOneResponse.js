@@ -14,12 +14,12 @@ class ProcessOneResponse extends Component {
 
   constructor(props) {
     super(props);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.onChange = this.onChange.bind(this);
-    this.onChange4tag = this.onChange4tag.bind(this);
-    this.onChange4datasets = this.onChange4datasets.bind(this);
-    this.onChange4genelist = this.onChange4genelist.bind(this);
-    this.onChange4action = this.onChange4action.bind(this);
+    this.onSubmit = this.handleSubmit.bind(this);
+    this.onChange = this.handleChange.bind(this);
+    this.onChange4tag = this.handleChange4tag.bind(this);
+    this.onChange4datasets = this.handleChange4datasets.bind(this);
+    this.onChange4genelist = this.handleChange4genelist.bind(this);
+    this.onChange4action = this.handleChange4action.bind(this);
     this.state = {
       data: {},
       curation_id: null,
@@ -47,7 +47,7 @@ class ProcessOneResponse extends Component {
     .catch(err => this.props.dispatch(setError(err.error)));
   }
 
-  onSubmit(e) {
+  handleSubmit(e) {
     e.preventDefault();
     let formData = new FormData();
     for(let key in this.props.authorResponse){
@@ -66,35 +66,35 @@ class ProcessOneResponse extends Component {
     });
   }
 
-  onChange4tag() {
+  handleChange4tag() {
     this.setState(prevState=>({ 
       has_fast_track_tag: !prevState.has_fast_track_tag 
     }));
     this.onChange();
   }
 
-  onChange4datasets() {
+  handleChange4datasets() {
     this.setState(prevState=>({
       curator_checked_datasets: !prevState.curator_checked_datasets 
     }));
     this.onChange();
   }
 
-  onChange4genelist() {
+  handleChange4genelist() {
     this.setState(prevState=>({
       curator_checked_genelist: !prevState.curator_checked_genelist 
     }));
     this.onChange();
   }
 
-  onChange4action() {
+  handleChange4action() {
     this.setState(prevState=>({
       no_action_required: !prevState.no_action_required 
     }));
     this.onChange();
   }
 
-  onChange() {
+  handleChange() {
     let currData = {};
     let data = new FormData(this.refs.form);
     for (let key of data.entries()) {

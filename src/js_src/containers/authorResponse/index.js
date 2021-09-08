@@ -11,13 +11,13 @@ class AuthorResponse extends Component {
 
   constructor(props) {
     super(props);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.onChange = this.onChange.bind(this);
-    this.onReset = this.onReset.bind(this);
+    this.onSubmit = this.handleSubmit.bind(this);
+    this.onChange = this.handleChange.bind(this);
+    this.onReset = this.handleReset.bind(this);
     this.state = { isComplete: false, data: {} };	
   }
  
-  onSubmit(e) {
+  handleSubmit(e) {
     e.preventDefault();
     let formData = new FormData();
     for(let key in this.props.authorResponse){
@@ -36,7 +36,7 @@ class AuthorResponse extends Component {
     });
   }
 
-  onReset() {
+  handleReset() {
     let currData = {
       pmid: '',
       email: '',
@@ -51,7 +51,7 @@ class AuthorResponse extends Component {
     this.props.dispatch(setData(currData));
   }
 
-  onChange() {
+  handleChange() {
     let currData = {};
     let data = new FormData(this.refs.form);
     for (let key of data.entries()) {
