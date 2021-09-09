@@ -4591,6 +4591,7 @@ class Locusdbentity(Dbentity):
             "protein_overview": self.protein_overview_to_dict(),
             "go_overview": self.go_overview_to_dict(),
             "pathways": [],
+            "alleles": [],
             "phenotype_overview": self.phenotype_overview_to_dict(),
             "interaction_overview": self.interaction_overview_to_dict(),
             "paragraph": {
@@ -4684,6 +4685,16 @@ class Locusdbentity(Dbentity):
 
             obj["aliases"].append(alias_obj)
 
+        ## alleles
+        alleles = []
+        for x in DBSession.query(LocusAllele).filter_by(locus_id=self.dbentity_id).all():
+            allele = x.allele
+            alleles.append({ "display_name": allele.display_name,
+                             "link_url": allele.obj_url })
+        if len(alleles) > 0:
+            alleles = sorted(alleles, key=lambda r: r['display_name'])
+            obj["alleles"] = alleles 
+        
         # URLs (resources)
         sos = DBSession.query(Dnasequenceannotation.so_id).filter(
             Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).group_by(
