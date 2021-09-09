@@ -190,7 +190,7 @@ def insert_update_disease_annotations(request):
                                 evidence_type = 'with',
                                 created_by=CREATED_BY)
                 curator_session.add(dse)
-                update_ldb = {'has_disease': 'true'}
+                update_ldb = {'has_disease': True}
                 curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == dbentity_id).update(update_ldb)
                 transaction.commit()
                 isSuccess = True
@@ -312,7 +312,7 @@ def delete_disease_annotation(request):
             try:
                 curator_session.delete(disease_in_db)
                 if (total_diseases_in_db == 1): #last annotation being deleted
-                    update_ldb = {'has_disease': 'false'}
+                    update_ldb = {'has_disease': False}
                     curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == gene_dbentity_id.dbentity_id).update(update_ldb)
                 transaction.commit()
                 isSuccess = True
@@ -541,7 +541,7 @@ def upload_disease_file(request):
                                 created_by=CREATED_BY
                             )
                         curator_session.add(daf_evidence_row)
-                        update_ldb = {'has_disease': 'true'}
+                        update_ldb = {'has_disease': True}
                         curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == disease['dbentity_id']).update(update_ldb)
                         transaction.commit()
                         curator_session.flush()
