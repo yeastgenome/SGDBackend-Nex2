@@ -189,6 +189,11 @@ def insert_referencedbentity(pmid, source_id, record, created_by):
     pmcid = record.get('pmc')
     pmc_url = pmc_root + pmcid + '/' if pmcid else ''
 
+    if int(pmid) == 33895134:
+        year = 2021
+    else:
+        year = int(year)
+        
     publication_status = status
     fulltext_status = pdf_status
     if pubstatus == 'aheadofprint':
@@ -203,7 +208,7 @@ def insert_referencedbentity(pmid, source_id, record, created_by):
                           publication_status = publication_status,
                           fulltext_status = fulltext_status,
                           citation = citation,
-                          year = int(year),
+                          year = year,
                           pmid = int(pmid),
                           pmcid = pmcid,
                           date_published = pubdate,
