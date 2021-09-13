@@ -23,6 +23,10 @@ def add_paper(pmid, created_by="OTTO"):
 
     record = get_pubmed_record(str(pmid))
 
+    if not record:
+        # raise ValueError('This pubmed is not found in NCBI. PMID=', pmid)
+        return (None, None)
+    
     ncbi = DBSession.query(Source).filter_by(format_name='NCBI').one_or_none()
     source_id = ncbi.source_id
 
@@ -439,7 +443,12 @@ def get_pubmed_record(pmid):
 
     handle = Entrez.efetch(db="pubmed", id=pmid, rettype='xml')
     record = Entrez.read(handle)
-    paper = record['PubmedArticle'][0]
+    paper = None
+    if 'PubmedArticle' in record and len(record['PubmedArticle']) > 0:
+        paper = record['PubmedArticle'][0]
+    if paper is None:
+        print ("BAD paper - PMID:", pmid)
+        return
     entry = {}
     entry['pmid'] = int(paper['MedlineCitation']['PMID'])
     article = paper['MedlineCitation']['Article']
