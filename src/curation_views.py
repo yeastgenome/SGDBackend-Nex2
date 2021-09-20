@@ -1182,7 +1182,7 @@ def add_new_colleague_triage(request):
             is_contact = False,
             is_beta_tester = False,
             display_email = False,
-            is_in_triage = True,
+            is_in_triage = False,
             is_pi = False,
             created_by = username
         )
