@@ -1142,9 +1142,9 @@ def get_username_from_db_uri():
 #     config.add_route('add_new_colleague_triage', '/colleagues', request_method='POST')
 @view_config(route_name='add_new_colleague_triage', renderer='json', request_method='POST')
 def add_new_colleague_triage(request):
-    username = request.session['username']
-    curator_session = get_curator_session(username)
-    # curator_session = DBSession    
+    # username = request.session['username']
+    # curator_session = get_curator_session(username)
+    curator_session = DBSession    
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
     params = request.json_body
@@ -1184,7 +1184,7 @@ def add_new_colleague_triage(request):
             display_email = False,
             is_in_triage = False,
             is_pi = False,
-            created_by = username
+            created_by = 'OTTO'
         )
         curator_session.add(new_colleague)
         curator_session.flush()
