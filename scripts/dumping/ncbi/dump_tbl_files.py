@@ -746,7 +746,14 @@ def get_go_data(nex_session):
         else:
             pmid = "PMID:" + str(pmid)
 
+        if x.eco_id not in eco_id_to_eco:
+            continue
+        
         eco = eco_id_to_eco[x.eco_id]
+
+        if x.go_id not in go_id_to_go:
+            continue
+        
         go = go_id_to_go[x.go_id]
 
         if eco == 'ND' or eco not in code_mapping:
