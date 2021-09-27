@@ -15,8 +15,8 @@ import transaction
 import logging
 from datetime import datetime, timedelta
 from itertools import groupby
-import boto
-from boto.s3.key import Key
+# import boto
+# from boto.s3.key import Key
 import hashlib
 import urllib.request, urllib.parse, urllib.error
 from urllib.request import Request, urlopen
@@ -25,8 +25,8 @@ from urllib.error import URLError, HTTPError
 from src.curation_helpers import ban_from_cache, get_author_etc, link_gene_names, get_curator_session, clear_list_empty_values
 from scripts.loading.util import link_gene_complex_names
 
-from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
-
+# from src.aws_helpers import simple_s3_upload, get_checksum, calculate_checksum_s3_file
+from src.boto3_upload import upload_one_file_to_s3
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
@@ -38,8 +38,6 @@ SEPARATOR = ' '
 TAXON_ID = 274901
 
 S3_BUCKET = os.environ['S3_BUCKET']
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
 
 # get list of URLs to visit from comma-separated ENV variable cache_urls 'url1, url2'
 cache_urls = None
@@ -2994,6 +2992,18 @@ class Filedbentity(Dbentity):
 
         To upload bigger files, use multi-part upload
         """
+
+        try:
+            s3_path = self.sgdid + '/' + filename
+            s3_url = upload_one_file_to_s3(file, s3_path) 
+            self.s3_url = s3_url
+            # print ("s3_url:", s3_url)
+        except Exception as e:
+            logging.error(e, exc_info=True)
+        
+        return
+
+        ## we can get rid of the following code when everything is working good
 
         try:
             # get s3_url and upload

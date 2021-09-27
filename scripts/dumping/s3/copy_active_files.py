@@ -17,7 +17,7 @@ def copy_files():
     copy_gpad(nex_session)
     copy_gpi(nex_session)
     copy_noctua_gpad(nex_session) 
-
+    
 def copy_noctua_gpad(nex_session):
 
     dstDir = "curation/literature/"
