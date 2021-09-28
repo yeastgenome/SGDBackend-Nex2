@@ -4640,7 +4640,9 @@ class Locusdbentity(Dbentity):
         
         if obj["paragraph"] is not None:
             obj["paragraph"]["text"] = self.format_paragraph(obj["paragraph"]["text"], references_obj)
-        
+
+        return obj
+            
         # aliases/external IDs
         aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
         for alias in aliases:
@@ -4668,8 +4670,6 @@ class Locusdbentity(Dbentity):
                 reference_alias_dict.append(reference_dict)
                 if(reference_dict not in obj["references"]):
                     obj["references"].append(reference_dict)
-
-                continue
             
                 order = len(list(obj["reference_mapping"].keys()))
                 if r.reference_id not in obj["reference_mapping"]:
