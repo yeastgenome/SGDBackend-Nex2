@@ -4608,6 +4608,8 @@ class Locusdbentity(Dbentity):
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
+        return obj
+    
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
 
