@@ -7596,10 +7596,10 @@ class Goannotation(Base):
             "evidence_codes": []
         }
 
-        return obj
-    
         alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
 
+        return obj
+    
         experiment_name = alias[0].display_name
         for alia in alias:
             if len(experiment_name) > len(alia.display_name):
