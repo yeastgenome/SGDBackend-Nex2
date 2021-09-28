@@ -4656,8 +4656,6 @@ class Locusdbentity(Dbentity):
                 category = "NCBI protein name"
             else:
                 category = alias.alias_type
-
-            continue
         
             references_alias = DBSession.query(LocusAliasReferences).filter_by(alias_id=alias.alias_id).all()
 
@@ -4668,10 +4666,13 @@ class Locusdbentity(Dbentity):
                 if(reference_dict not in obj["references"]):
                     obj["references"].append(reference_dict)
 
+                continue
+                    
                 order = len(list(obj["reference_mapping"].keys()))
                 if r.reference_id not in obj["reference_mapping"]:
                     obj["reference_mapping"][r.reference_id] = order + 1
 
+                    
             alias_obj = {
                 "id": alias.alias_id,
                 "display_name": alias.display_name,
