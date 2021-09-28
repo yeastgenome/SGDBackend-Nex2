@@ -5033,16 +5033,15 @@ class Locusdbentity(Dbentity):
             go_slim_dict = go_slim.to_dict()
             if go_slim_dict:
                 obj["go_slim"].append(go_slim_dict)
-
-        return obj
-
-    
+                
         go = {
             "cellular component": {},
             "molecular function": {},
             "biological process": {}
         }
 
+        return obj
+    
         go_annotations_mc = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="manually curated").all()
         for annotation in go_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
