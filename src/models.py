@@ -4591,7 +4591,8 @@ class Locusdbentity(Dbentity):
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
             "pathways": [],
-            "alleles": []
+            "alleles": [],
+            "phenotype_overview": self.phenotype_overview_to_dict()
         }
         # "go_overview": self.go_overview_to_dict(),
         #    "phenotype_overview": self.phenotype_overview_to_dict(),
