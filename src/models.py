@@ -5040,8 +5040,6 @@ class Locusdbentity(Dbentity):
             "biological process": {}
         }
 
-        return obj
-    
         go_annotations_mc = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="manually curated").all()
         for annotation in go_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
@@ -5059,6 +5057,10 @@ class Locusdbentity(Dbentity):
             else:
                 go[namespace][term] = json
 
+        return obj
+
+
+    
         for namespace in list(go.keys()):
             terms = sorted(list(go[namespace].keys()), key=lambda k : k.lower())
             if namespace == "cellular component":
