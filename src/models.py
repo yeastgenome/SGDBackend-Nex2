@@ -4715,8 +4715,6 @@ class Locusdbentity(Dbentity):
             "display_name": "JBrowse"
         })
 
-        return obj
-    
         locus_notes = DBSession.query(Locusnote).filter_by(locus_id=self.dbentity_id).all()
         obj["history"] = [h.to_dict() for h in locus_notes]
 
@@ -4725,6 +4723,8 @@ class Locusdbentity(Dbentity):
         obj["pathways"] = [a.to_dict() for a in pathwayannotations]
 
         obj["complexes"] = self.complex_details()
+
+        return obj
         
         # reserved name
         reservedname = DBSession.query(Reservedname).filter_by(locus_id=self.dbentity_id).one_or_none()
