@@ -4587,9 +4587,6 @@ class Locusdbentity(Dbentity):
             "description": self.description,
             "name_description": self.name_description
         }
-
-        return obj
-
     
         #    "paralogs": self.paralogs_to_dict(),
         #    "complements": self.complements_to_dict(),
