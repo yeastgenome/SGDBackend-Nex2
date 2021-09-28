@@ -4668,7 +4668,9 @@ class Locusdbentity(Dbentity):
                 reference_alias_dict.append(reference_dict)
                 if(reference_dict not in obj["references"]):
                     obj["references"].append(reference_dict)
-            
+
+                continue
+                    
                 order = len(list(obj["reference_mapping"].keys()))
                 if r.reference_id not in obj["reference_mapping"]:
                     obj["reference_mapping"][r.reference_id] = order + 1
