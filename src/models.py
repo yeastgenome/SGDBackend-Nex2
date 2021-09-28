@@ -4640,7 +4640,9 @@ class Locusdbentity(Dbentity):
         
         if obj["paragraph"] is not None:
             obj["paragraph"]["text"] = self.format_paragraph(obj["paragraph"]["text"], references_obj)
-            
+
+        return obj
+    
         # aliases/external IDs
         aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
         for alias in aliases:
@@ -4651,8 +4653,6 @@ class Locusdbentity(Dbentity):
                     "display_name": alias.display_name,
                     "link": internal_url
                 })
-
-            continue
             
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
