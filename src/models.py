@@ -4592,18 +4592,16 @@ class Locusdbentity(Dbentity):
             "protein_overview": self.protein_overview_to_dict(),
             "pathways": [],
             "alleles": [],
-            "phenotype_overview": self.phenotype_overview_to_dict()
+            "phenotype_overview": self.phenotype_overview_to_dict(),
+            "interaction_overview": self.interaction_overview_to_dict(),
+            "paragraph": {
+                "date_edited": None
+            },
+            "literature_overview": self.literature_overview_to_dict(),
+            "disease_overview": self.disease_overview_to_dict(),
+            "ecnumbers": []    
         }
         # "go_overview": self.go_overview_to_dict(),
-        #    "phenotype_overview": self.phenotype_overview_to_dict(),
-        #    "interaction_overview": self.interaction_overview_to_dict(),
-        #    "paragraph": {
-        #        "date_edited": None
-        #    },
-        #    "literature_overview": self.literature_overview_to_dict(),
-        #    "disease_overview": self.disease_overview_to_dict(),
-        #    "ecnumbers": []
-        # }
     
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
