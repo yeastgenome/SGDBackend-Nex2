@@ -4601,19 +4601,15 @@ class Locusdbentity(Dbentity):
             "disease_overview": self.disease_overview_to_dict(),
             "ecnumbers": []
         }
-
         
-        return obj
-
-
-    
-    
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
         
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
 
+        return obj
+    
         # summaries and paragraphs
         summaries = DBSession.query(Locussummary.summary_id, Locussummary.html, Locussummary.date_created,Locussummary.summary_order,Locussummary.summary_type).filter_by(locus_id=self.dbentity_id).all()
         summary_types = {}
