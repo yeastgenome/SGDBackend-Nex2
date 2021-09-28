@@ -19,7 +19,7 @@ from email.mime.multipart import MIMEMultipart
 import re
 from sqlalchemy import and_, inspect
 
-from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
+from src.models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
     ReferenceFile, Disease, CuratorActivity, Source, LocusAlias
 from src.curation_helpers import ban_from_cache, get_curator_session
