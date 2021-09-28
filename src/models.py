@@ -7623,7 +7623,10 @@ class Goannotation(Base):
             go = self.go
 
         alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
-        experiment_name = alias[0].display_name
+
+        experiment_name = None
+        if len(alias) > 0:
+            experiment_name = alias[0].display_name
 
         for alia in alias:
             if len(experiment_name) > len(alia.display_name):
