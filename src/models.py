@@ -4570,6 +4570,7 @@ class Locusdbentity(Dbentity):
         return obj
 
     def to_dict(self):
+        
         obj = {
             "id": self.dbentity_id,
             "display_name": self.display_name,
@@ -4584,33 +4585,29 @@ class Locusdbentity(Dbentity):
             "qualifier": self.qualifier,
             "bioent_status": self.dbentity_status,
             "description": self.description,
-            "name_description": self.name_description,
-            "paralogs": self.paralogs_to_dict(),
-            "complements": self.complements_to_dict(),
-            "urls": [],
-            "protein_overview": self.protein_overview_to_dict(),
-            "go_overview": self.go_overview_to_dict(),
-            "pathways": [],
-            "alleles": [],
-            "phenotype_overview": self.phenotype_overview_to_dict(),
-            "interaction_overview": self.interaction_overview_to_dict(),
-            "paragraph": {
-                "date_edited": None
-            },
-            "literature_overview": self.literature_overview_to_dict(),
-            "disease_overview": self.disease_overview_to_dict(),
-            "ecnumbers": []
+            "name_description": self.name_description
         }
 
-        return obj
+        #    "paralogs": self.paralogs_to_dict(),
+        #    "complements": self.complements_to_dict(),
+        #    "urls": [],
+        #    "protein_overview": self.protein_overview_to_dict(),
+        #    "go_overview": self.go_overview_to_dict(),
+        #    "pathways": [],
+        #    "alleles": [],
+        #    "phenotype_overview": self.phenotype_overview_to_dict(),
+        #    "interaction_overview": self.interaction_overview_to_dict(),
+        #    "paragraph": {
+        #        "date_edited": None
+        #    },
+        #    "literature_overview": self.literature_overview_to_dict(),
+        #    "disease_overview": self.disease_overview_to_dict(),
+        #    "ecnumbers": []
+        # }
     
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
-        return obj
-
-    
-        
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
 
