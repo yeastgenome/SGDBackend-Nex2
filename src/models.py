@@ -4651,7 +4651,9 @@ class Locusdbentity(Dbentity):
                     "display_name": alias.display_name,
                     "link": internal_url
                 })
-                
+
+            continue
+            
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
                 category = "Alias"
@@ -4659,8 +4661,6 @@ class Locusdbentity(Dbentity):
                 category = "NCBI protein name"
             else:
                 category = alias.alias_type
-
-            continue
         
             references_alias = DBSession.query(LocusAliasReferences).filter_by(alias_id=alias.alias_id).all()
 
