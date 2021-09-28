@@ -4590,10 +4590,10 @@ class Locusdbentity(Dbentity):
             "complements": self.complements_to_dict(),
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
-            "go_overview": self.go_overview_to_dict(),
-            "pathways": [],
-            "alleles": [],
         }
+        #    "go_overview": self.go_overview_to_dict(),
+        #    "pathways": [],
+        #    "alleles": [],
         #    "phenotype_overview": self.phenotype_overview_to_dict(),
         #    "interaction_overview": self.interaction_overview_to_dict(),
         #    "paragraph": {
