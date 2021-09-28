@@ -4648,10 +4648,6 @@ class Locusdbentity(Dbentity):
                     "display_name": alias.display_name,
                     "link": internal_url
                 })
-
-
-            continue
-
                 
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
@@ -4661,6 +4657,8 @@ class Locusdbentity(Dbentity):
             else:
                 category = alias.alias_type
 
+            continue
+        
             references_alias = DBSession.query(LocusAliasReferences).filter_by(alias_id=alias.alias_id).all()
 
             reference_alias_dict = []
