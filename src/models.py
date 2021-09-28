@@ -4608,8 +4608,6 @@ class Locusdbentity(Dbentity):
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
-    
-    
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
 
@@ -4642,6 +4640,8 @@ class Locusdbentity(Dbentity):
         
         if obj["paragraph"] is not None:
             obj["paragraph"]["text"] = self.format_paragraph(obj["paragraph"]["text"], references_obj)
+
+        return obj
             
         # aliases/external IDs
         aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
