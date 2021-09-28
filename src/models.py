@@ -4666,8 +4666,6 @@ class Locusdbentity(Dbentity):
                 if(reference_dict not in obj["references"]):
                     obj["references"].append(reference_dict)
                 
-                
-                
                 order = len(list(obj["reference_mapping"].keys()))
                 if r.reference_id not in obj["reference_mapping"]:
                     obj["reference_mapping"][r.reference_id] = order + 1
@@ -4688,9 +4686,6 @@ class Locusdbentity(Dbentity):
 
             obj["aliases"].append(alias_obj)
 
-        return obj
-
-    
         ## alleles
         alleles = []
         for x in DBSession.query(LocusAllele).filter_by(locus_id=self.dbentity_id).all():
@@ -4700,7 +4695,10 @@ class Locusdbentity(Dbentity):
         if len(alleles) > 0:
             alleles = sorted(alleles, key=lambda r: r['display_name'])
             obj["alleles"] = alleles 
-        
+
+        return obj
+
+    
         # URLs (resources)
         sos = DBSession.query(Dnasequenceannotation.so_id).filter(
             Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).group_by(
