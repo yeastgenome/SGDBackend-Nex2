@@ -4602,6 +4602,12 @@ class Locusdbentity(Dbentity):
             "ecnumbers": []
         }
 
+        
+        return obj
+
+
+    
+    
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
         
