@@ -4589,7 +4589,7 @@ class Locusdbentity(Dbentity):
             "paralogs": self.paralogs_to_dict(),
             "complements": self.complements_to_dict(),
             "urls": [],
-            "protein_overview": self.protein_overview_to_dict(),
+            "protein_overview": self.protein_overview_to_dict()
         }
         #    "go_overview": self.go_overview_to_dict(),
         #    "pathways": [],
@@ -4642,6 +4642,8 @@ class Locusdbentity(Dbentity):
 
 
         return obj
+
+    
     
         # aliases/external IDs
         aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
