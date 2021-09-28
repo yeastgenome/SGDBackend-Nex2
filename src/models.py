@@ -4590,6 +4590,7 @@ class Locusdbentity(Dbentity):
             "complements": self.complements_to_dict(),
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
+            "go_overview": self.go_overview_to_dict(),
             "pathways": [],
             "alleles": [],
             "phenotype_overview": self.phenotype_overview_to_dict(),
@@ -4601,7 +4602,6 @@ class Locusdbentity(Dbentity):
             "disease_overview": self.disease_overview_to_dict(),
             "ecnumbers": []    
         }
-        # "go_overview": self.go_overview_to_dict(),
     
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
@@ -5077,6 +5077,10 @@ class Locusdbentity(Dbentity):
             "biological process": {}
         }
 
+        return obj
+
+
+    
         go_annotations_htp = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="high-throughput").all()
         for annotation in go_annotations_htp:
             json = annotation.to_dict_lsp()
