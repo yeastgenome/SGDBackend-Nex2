@@ -4702,10 +4702,6 @@ class Locusdbentity(Dbentity):
                     Dnasequenceannotation.so_id).all()
         locus_type = DBSession.query(So.display_name).filter(So.so_id.in_([so[0] for so in sos])).all()
         obj["locus_type"] = ",".join([l[0] for l in locus_type])
-
-        return obj
-
-    
         urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
         obj["urls"] = [u.to_dict() for u in urls]
         obj["urls"].append({
@@ -4718,6 +4714,9 @@ class Locusdbentity(Dbentity):
             "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
             "display_name": "JBrowse"
         })
+
+        return obj
+    
         locus_notes = DBSession.query(Locusnote).filter_by(locus_id=self.dbentity_id).all()
         obj["history"] = [h.to_dict() for h in locus_notes]
 
