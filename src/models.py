@@ -5045,6 +5045,8 @@ class Locusdbentity(Dbentity):
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
                 obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
 
+            continue
+        
             json = annotation.to_dict_lsp()
 
             namespace = json["namespace"]
