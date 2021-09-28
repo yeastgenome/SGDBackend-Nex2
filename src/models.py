@@ -5044,8 +5044,6 @@ class Locusdbentity(Dbentity):
         for annotation in go_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
                 obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
-
-            continue
         
             json = annotation.to_dict_lsp()
 
@@ -5058,10 +5056,6 @@ class Locusdbentity(Dbentity):
                         go[namespace][term]["evidence_codes"].append(ec)
             else:
                 go[namespace][term] = json
-
-        return obj
-
-
     
         for namespace in list(go.keys()):
             terms = sorted(list(go[namespace].keys()), key=lambda k : k.lower())
@@ -7602,6 +7596,8 @@ class Goannotation(Base):
             "evidence_codes": []
         }
 
+        return obj
+    
         alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
 
         experiment_name = alias[0].display_name
