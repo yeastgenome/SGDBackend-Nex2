@@ -4649,6 +4649,10 @@ class Locusdbentity(Dbentity):
                     "link": internal_url
                 })
 
+
+            continue
+
+                
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
                 category = "Alias"
