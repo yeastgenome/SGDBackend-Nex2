@@ -5034,6 +5034,9 @@ class Locusdbentity(Dbentity):
             if go_slim_dict:
                 obj["go_slim"].append(go_slim_dict)
 
+        return obj
+
+    
         go = {
             "cellular component": {},
             "molecular function": {},
@@ -5077,10 +5080,6 @@ class Locusdbentity(Dbentity):
             "biological process": {}
         }
 
-        return obj
-
-
-    
         go_annotations_htp = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="high-throughput").all()
         for annotation in go_annotations_htp:
             json = annotation.to_dict_lsp()
