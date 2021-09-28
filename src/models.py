@@ -4585,11 +4585,10 @@ class Locusdbentity(Dbentity):
             "qualifier": self.qualifier,
             "bioent_status": self.dbentity_status,
             "description": self.description,
-            "name_description": self.name_description
+            "name_description": self.name_description,
+            "paralogs": self.paralogs_to_dict(),
+            "complements": self.complements_to_dict(),
         }
-    
-        #    "paralogs": self.paralogs_to_dict(),
-        #    "complements": self.complements_to_dict(),
         #    "urls": [],
         #    "protein_overview": self.protein_overview_to_dict(),
         #    "go_overview": self.go_overview_to_dict(),
@@ -4640,6 +4639,7 @@ class Locusdbentity(Dbentity):
         
         if obj["paragraph"] is not None:
             obj["paragraph"]["text"] = self.format_paragraph(obj["paragraph"]["text"], references_obj)
+
 
         return obj
     
