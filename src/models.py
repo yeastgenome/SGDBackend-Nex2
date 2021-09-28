@@ -4695,9 +4695,6 @@ class Locusdbentity(Dbentity):
         if len(alleles) > 0:
             alleles = sorted(alleles, key=lambda r: r['display_name'])
             obj["alleles"] = alleles 
-
-        return obj
-
     
         # URLs (resources)
         sos = DBSession.query(Dnasequenceannotation.so_id).filter(
@@ -4705,6 +4702,10 @@ class Locusdbentity(Dbentity):
                     Dnasequenceannotation.so_id).all()
         locus_type = DBSession.query(So.display_name).filter(So.so_id.in_([so[0] for so in sos])).all()
         obj["locus_type"] = ",".join([l[0] for l in locus_type])
+
+        return obj
+
+    
         urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
         obj["urls"] = [u.to_dict() for u in urls]
         obj["urls"].append({
