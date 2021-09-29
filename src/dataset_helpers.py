@@ -15,7 +15,7 @@ from src.models import DBSession, Dataset, Datasetsample, Datasettrack, Datasetl
                        Taxonomy
 from src.curation_helpers import get_curator_session
 from src.metadata_helpers import insert_file_keyword, insert_dataset_keyword
-from src.helpers import file_upload_to_dict
+# from src.helpers import file_upload_to_dict
 
 log = logging.getLogger('curation')
 

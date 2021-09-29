@@ -23,7 +23,7 @@ import cgi
 import string
 import psycopg2
 
-from .helpers import allowed_file, extract_id_request, secure_save_file,\
+from src.helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
     get_or_create_filepath, extract_topic, extract_format,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
@@ -31,10 +31,10 @@ from .helpers import allowed_file, extract_id_request, secure_save_file,\
     send_newsletter_email, get_file_delimiter, unicode_to_string,\
     file_curate_update_readme, upload_new_file, get_file_curate_dropdown_data,\
     get_file_details
-from .curation_helpers import ban_from_cache, process_pmid_list,\
+from src.curation_helpers import ban_from_cache, process_pmid_list,\
     get_curator_session, get_pusher_client, validate_orcid, get_list_of_ptms
-from .loading.promote_reference_triage import add_paper
-from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
+from src.loading.promote_reference_triage import add_paper
+from src.models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      Colleaguetriage, LocusnoteReference, Referencedbentity, Reservedname,\
      ReservednameTriage, Straindbentity, Literatureannotation,\
      Referencetriage, Referencedeleted, Locusdbentity,\
@@ -52,21 +52,21 @@ from .models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile, Edam, Filedbentity,\
      Path, Dataset, Obi, Keyword
-from .tsv_parser import parse_tsv_annotations
-from .models_helpers import ModelsHelper
-from .phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
+from src.tsv_parser import parse_tsv_annotations
+from src.models_helpers import ModelsHelper
+from src.phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
       delete_phenotype_annotations, get_list_of_phenotypes, get_one_phenotype
-from .allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
+from src.allele_helpers import get_all_allele_types, get_one_allele, get_list_of_alleles,\
       add_allele_data, update_allele_data, delete_allele_data
-from .metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata, delete_metadata
-from .supplemental_file_helpers import add_metadata_upload_file
-from .dataset_helpers import get_list_of_dataset, get_one_dataset, update_dataset, update_datasetsample,\
+from src.metadata_helpers import get_list_of_file_metadata, get_metadata_for_one_file, update_metadata, delete_metadata
+from src.supplemental_file_helpers import add_metadata_upload_file
+from src.dataset_helpers import get_list_of_dataset, get_one_dataset, update_dataset, update_datasetsample,\
       update_datasettrack, load_dataset, load_datasetsample, delete_dataset, delete_datasetsample,\
       delete_datasettrack
-from .author_response_helpers import insert_author_response, get_author_responses, update_author_response
-from .litguide_helpers import get_list_of_papers, update_litguide, add_litguide
-from .disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
-from .complement_helpers import insert_update_complement_annotations, delete_complement_annotation, get_complements_by_filters, upload_complement_file
+from src.author_response_helpers import insert_author_response, get_author_responses, update_author_response
+from src.litguide_helpers import get_list_of_papers, update_litguide, add_litguide
+from src.disease_helpers import insert_update_disease_annotations, delete_disease_annotation, get_diseases_by_filters, upload_disease_file
+from src.complement_helpers import insert_update_complement_annotations, delete_complement_annotation, get_complements_by_filters, upload_complement_file
 
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 log = logging.getLogger('curation')
@@ -1204,77 +1204,6 @@ def add_new_colleague_triage(request):
         if curator_session:
             curator_session.close()
             
-# @view_config(route_name='upload', request_method='POST', renderer='json')
-# @authenticate
-# def upload_file(request):
-#     keys = ['file', 'old_filepath', 'new_filepath', 'previous_file_name', 'display_name', 'status', 'topic_id', 'format_id', 'extension', 'file_date', 'readme_name', 'pmids', 'keyword_ids']
-#     optional_keys = ['is_public', 'for_spell', 'for_browser']
-    
-#     for k in keys:
-#         if request.POST.get(k) is None:
-#             return HTTPBadRequest(body=json.dumps({'error': 'Field \'' + k + '\' is missing'}))
-
-#     file = request.POST['file'].file
-#     filename = request.POST['file'].filename
-
-#     if not file:
-#         log.info('No file was sent.')
-#         return HTTPBadRequest(body=json.dumps({'error': 'No file was sent.'}))
-
-#     if not allowed_file(filename):
-#         log.info('Upload error: File ' + request.POST.get('display_name') + ' has an invalid extension.')
-#         return HTTPBadRequest(body=json.dumps({'error': 'File extension is invalid'}))
-    
-#     try:
-#         references = extract_references(request)
-#         keywords = extract_keywords(request)
-#         topic = extract_topic(request)
-#         format = extract_format(request)
-#         filepath = get_or_create_filepath(request)
-#     except HTTPBadRequest as bad_request:
-#         return HTTPBadRequest(body=json.dumps({'error': str(bad_request.detail)}))
-
-#     if file_already_uploaded(request):
-#         return HTTPBadRequest(body=json.dumps({'error': 'Upload error: File ' + request.POST.get('display_name') + ' already exists.'}))
-
-#     fdb = Filedbentity(
-#         # Filedbentity params
-#         md5sum=None,
-#         previous_file_name=request.POST.get('previous_file_name'),
-#         topic_id=topic.edam_id,
-#         format_id=format.edam_id,
-#         file_date=datetime.datetime.strptime(request.POST.get('file_date'), '%Y-%m-%d %H:%M:%S'),
-#         is_public=request.POST.get('is_public', 0),
-#         is_in_spell=request.POST.get('for_spell', 0),
-#         is_in_browser=request.POST.get('for_browser', 0),
-#         filepath_id=filepath.filepath_id,
-#         file_extension=request.POST.get('extension'),        
-
-#         # DBentity params
-#         format_name=request.POST.get('display_name'),
-#         display_name=request.POST.get('display_name'),
-#         s3_url=None,
-#         source_id=339,
-#         dbentity_status=request.POST.get('status')
-#     )
-
-#     DBSession.add(fdb)
-#     DBSession.flush()
-#     DBSession.refresh(fdb)
-
-#     link_references_to_file(references, fdb.dbentity_id)
-#     link_keywords_to_file(keywords, fdb.dbentity_id)
-    
-#     # fdb object gets expired after transaction commit
-#     fdb_sgdid = fdb.sgdid
-#     fdb_file_extension = fdb.file_extension
-    
-#     transaction.commit() # this commit must be synchronous because the upload_to_s3 task expects the row in the DB
-#     log.info('File ' + request.POST.get('display_name') + ' was successfully uploaded.')
-#     return Response({'success': True})
-
-
-
 @view_config(route_name='colleague_with_subscription', renderer='json', request_method='GET')
 def colleague_with_subscription(request):
     try:

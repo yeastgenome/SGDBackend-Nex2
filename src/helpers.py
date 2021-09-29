@@ -858,9 +858,6 @@ def file_curate_update_readme(obj, session=None):
     if readme_file:
         readme_file.upload_file_to_s3(obj['file'], obj['file_name'])
 
-        
-'''
-
 def upload_new_file(req_obj, session=None):
     try:
         if req_obj:
@@ -1024,8 +1021,6 @@ def upload_new_file(req_obj, session=None):
     except Exception as e:
         transaction.abort()
         raise(e)
-
-'''
 
 def add_file_meta_db(db_file, obj, readme_id=None, curator_session=None):
     try:
