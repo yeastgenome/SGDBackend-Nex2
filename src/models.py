@@ -5022,11 +5022,15 @@ class Locusdbentity(Dbentity):
         }
 
         go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        go_slim_list = []
         for go_slim in go_slims:
             go_slim_dict = go_slim.to_dict()
-            if go_slim_dict:
-                obj["go_slim"].append(go_slim_dict)
-                
+            if go_slim_dict not in go_slim_list:
+                go_slim_list.append(go_slim_dict)
+
+        ## sort goslim terms here
+        obj['go_slim'] = sorted(go_slim_list, key=lambda p: p['display_name'])
+        
         go = {
             "cellular component": {},
             "molecular function": {},
@@ -7816,13 +7820,13 @@ class Goslim(Base):
     source = relationship('Source')
 
     def to_dict(self):
-        if self.slim_name == "Yeast GO-Slim":
-            return {
-                "link": self.obj_url,
-                "display_name": self.display_name.replace("_", " ")
-            }
-        else:
-            return None
+        # if self.slim_name == "Yeast GO-Slim":
+        return {
+            "link": self.obj_url,
+            "display_name": self.display_name.replace("_", " ")
+        }
+        # else:
+        #    return None
 
     def to_snapshot_dict(self):
         direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
