@@ -5018,18 +5018,46 @@ class Locusdbentity(Dbentity):
             "htp_cellular_component_terms": [],
             "computational_annotation_count": 0,
             "go_slim": [],
+            "go_slim_sorted": [],
             "date_last_reviewed": None
         }
 
         go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        process_go_slim_list = []
+        function_go_slim_list = []
+        component_go_slim_list = []
+        complex_go_slim_list = []
         go_slim_list = []
         for go_slim in go_slims:
             go_slim_dict = go_slim.to_dict()
             if go_slim_dict not in go_slim_list:
                 go_slim_list.append(go_slim_dict)
-
+            if 'complex' in go_slim_dict['slim_name'].lower():
+                if go_slim_dict not in complex_go_slim_list:
+                    complex_go_slim_list.append(go_slim_dict)
+                else:
+                    go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                    if go is None:
+                        continue
+                    if 'component' in go.go_namespace:
+                        if go_slim_dict not in component_go_slim_list:
+                            component_go_slim_list.append(go_slim_dict)
+                    elif 'function' in go.go_namespace:
+                        if go_slim_dict not in function_go_slim_list:
+                            function_go_slim_list.append(go_slim_dict)
+                    elif go_slim_dict not in process_go_slim_list:
+                        process_go_slim_list.append(go_slim_dict)
+                          
         ## sort goslim terms here
         obj['go_slim'] = sorted(go_slim_list, key=lambda p: p['display_name'])
+        process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
+        function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
+        component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
+        complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
+        obj['go_slim_sorted'] = { 'process': process_go_slim_sorted_list,
+                                  'function': function_go_slim_sorted_list,
+                                  'component': component_go_slim_sorted_list,
+                                  'complex': complex_go_slim_sorted_list }
         
         go = {
             "cellular component": {},
@@ -7822,6 +7850,8 @@ class Goslim(Base):
     def to_dict(self):
         # if self.slim_name == "Yeast GO-Slim":
         return {
+            "slim_name": self.slim_name,
+            "go_id": self.go_id,
             "link": self.obj_url,
             "display_name": self.display_name.replace("_", " ")
         }
