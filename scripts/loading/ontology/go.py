@@ -158,17 +158,17 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
                     child_id = go_id
                     insert_relation(nex_session, source_to_id[src], parent_id, 
                                     child_id, ro_id, relation_just_added, fw)
-            for (parent_goid, roid) in x['other_parents']:
-                parent = goid_to_go.get(parent_goid)
-                if parent is not None:
-                    parent_id = parent.go_id
-                    child_id = go_id
-                    this_ro_id = roid_to_ro_id.get(roid)
-                    if this_ro_id is None:
-                        log.info("The ROID:" + str(roid) + " is not found in the database")
-                        continue
-                    insert_relation(nex_session, source_to_id[src], parent_id,
-                                    child_id, this_ro_id, relation_just_added, fw)
+            # for (parent_goid, roid) in x['other_parents']:
+            #    parent = goid_to_go.get(parent_goid)
+            #    if parent is not None:
+            #        parent_id = parent.go_id
+            #        child_id = go_id
+            #         this_ro_id = roid_to_ro_id.get(roid)
+            #        if this_ro_id is None:
+            #            log.info("The ROID:" + str(roid) + " is not found in the database")
+            #            continue
+            #        insert_relation(nex_session, source_to_id[src], parent_id,
+            #                        child_id, this_ro_id, relation_just_added, fw)
                     
             ## add ALIASES
             for (alias, alias_type) in x['aliases']:
@@ -187,7 +187,7 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
         update_relations(nex_session, go_id, curr_parents, x['parents'], 
                          x['other_parents'], roid_to_ro_id, 
                          source_to_id[src], goid_to_go, ro_id, relation_just_added, fw)
-                    
+        
         ## update ALIASES
         # print x['id'], "ALIAS", go_id_to_alias.get(go_id), x['aliases']
 
@@ -253,18 +253,18 @@ def update_relations(nex_session, child_id, curr_parent_ids, new_parents, other_
                 insert_relation(nex_session, source_id, parent_id, child_id,
                                 ro_id, relation_just_added, fw)
 
-    for (parent_goid, roid) in other_parents:
-        parent = goid_to_go.get(parent_goid)
-        if parent is not None:
-            parent_id = parent.go_id
-            this_ro_id = roid_to_ro_id.get(roid)
-            if this_ro_id is None:
-                log.info("The ROID:" + str(roid) + " is not found in the database")
-                continue
-            new_parent_ids.append((parent_id, this_ro_id))
-            if (parent_id, this_ro_id) not in curr_parent_ids:
-                insert_relation(nex_session, source_id, parent_id, child_id, 
-                                this_ro_id, relation_just_added, fw)
+    # for (parent_goid, roid) in other_parents:
+    #    parent = goid_to_go.get(parent_goid)
+    #    if parent is not None:
+    #        parent_id = parent.go_id
+    #        this_ro_id = roid_to_ro_id.get(roid)
+    #        if this_ro_id is None:
+    #            log.info("The ROID:" + str(roid) + " is not found in the database")
+    #            continue
+    #        new_parent_ids.append((parent_id, this_ro_id))
+    #        if (parent_id, this_ro_id) not in curr_parent_ids:
+    #            insert_relation(nex_session, source_id, parent_id, child_id, 
+    #                            this_ro_id, relation_just_added, fw)
 
     for (parent_id, ro_id) in curr_parent_ids:
         if (parent_id, ro_id) not in new_parent_ids:
