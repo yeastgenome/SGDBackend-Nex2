@@ -5035,18 +5035,18 @@ class Locusdbentity(Dbentity):
             if 'complex' in go_slim_dict['slim_name'].lower():
                 if go_slim_dict not in complex_go_slim_list:
                     complex_go_slim_list.append(go_slim_dict)
-                else:
-                    go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
-                    if go is None:
-                        continue
-                    if 'component' in go.go_namespace:
-                        if go_slim_dict not in component_go_slim_list:
-                            component_go_slim_list.append(go_slim_dict)
-                    elif 'function' in go.go_namespace:
-                        if go_slim_dict not in function_go_slim_list:
-                            function_go_slim_list.append(go_slim_dict)
-                    elif go_slim_dict not in process_go_slim_list:
-                        process_go_slim_list.append(go_slim_dict)
+            else:
+                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                if go is None:
+                    continue
+                if 'component' in go.go_namespace:
+                    if go_slim_dict not in component_go_slim_list:
+                        component_go_slim_list.append(go_slim_dict)
+                elif 'function' in go.go_namespace:
+                    if go_slim_dict not in function_go_slim_list:
+                        function_go_slim_list.append(go_slim_dict)
+                elif go_slim_dict not in process_go_slim_list:
+                    process_go_slim_list.append(go_slim_dict)
                           
         ## sort goslim terms here
         obj['go_slim'] = sorted(go_slim_list, key=lambda p: p['display_name'])
