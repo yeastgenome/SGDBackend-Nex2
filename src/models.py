@@ -7850,9 +7850,6 @@ class Goslim(Base):
             if go is None:
                 return None
             else:
-                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
-                if go is None:
-                    continue
                 if 'component' in go.go_namespace:
                     slim_type = 'C'
                 elif 'function' in go.go_namespace:
