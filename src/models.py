@@ -5032,21 +5032,17 @@ class Locusdbentity(Dbentity):
             go_slim_dict = go_slim.to_dict()
             if go_slim_dict not in go_slim_list:
                 go_slim_list.append(go_slim_dict)
-            if 'complex' in go_slim_dict['slim_name'].lower():
+            if go_slim_dict['slim_type'] == 'complex':
                 if go_slim_dict not in complex_go_slim_list:
                     complex_go_slim_list.append(go_slim_dict)
-            else:
-                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
-                if go is None:
-                    continue
-                if 'component' in go.go_namespace:
-                    if go_slim_dict not in component_go_slim_list:
-                        component_go_slim_list.append(go_slim_dict)
-                elif 'function' in go.go_namespace:
-                    if go_slim_dict not in function_go_slim_list:
-                        function_go_slim_list.append(go_slim_dict)
-                elif go_slim_dict not in process_go_slim_list:
-                    process_go_slim_list.append(go_slim_dict)
+            elif go_slim_dict['slim_type'] == 'C':
+                if go_slim_dict not in component_go_slim_list:
+                    component_go_slim_list.append(go_slim_dict)
+            elif go_slim_dict['slim_type'] == 'F':
+                if go_slim_dict not in function_go_slim_list:
+                    function_go_slim_list.append(go_slim_dict)
+            elif go_slim_dict not in process_go_slim_list:
+                process_go_slim_list.append(go_slim_dict)
                           
         ## sort goslim terms here
         obj['go_slim'] = sorted(go_slim_list, key=lambda p: p['display_name'])
@@ -7846,9 +7842,25 @@ class Goslim(Base):
 
     def to_dict(self):
         # if self.slim_name == "Yeast GO-Slim":
+        slim_type = None
+        if 'complex' in self.slim_name.lower():
+            slim_type = 'complex'
+        else:
+            go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+            if go is None:
+                return None
+            else:
+                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                if go is None:
+                    continue
+                if 'component' in go.go_namespace:
+                    slim_type = 'C'
+                elif 'function' in go.go_namespace:
+                    slim_type = 'F'
+                else:
+                    slim_type = 'P'
         return {
-            "slim_name": self.slim_name,
-            "go_id": self.go_id,
+            "slim_type": slim_type,
             "link": self.obj_url,
             "display_name": self.display_name.replace("_", " ")
         }
