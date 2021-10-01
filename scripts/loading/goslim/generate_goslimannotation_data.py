@@ -5,14 +5,16 @@ from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
 
-# goSlim = 'yeast'
-goSlim = 'generic'
-# goSlim = 'complex'
+defaultGoSlim = 'yeast'
+# defaultGoSlim = 'generic'
+# defaultGoSlim = 'complex'
 
-goSlimFile = 'scripts/loading/goslim/data/' + goSlim + 'GoSlimAnnot.txt'
+goSlimDir = 'scripts/loading/goslim/data/'
 
-def generate_data():
+def generate_data(goSlim):
 
+    goSlimFile = goSlimDir + goSlim + 'GoSlimAnnot.txt'
+    
     nex_session = get_session()
 
     dbentity_id_to_name =  dict([(x.dbentity_id, x.systematic_name) for x in nex_session.query(Locusdbentity).all()])
@@ -76,4 +78,8 @@ def get_child_ids(nex_session, parent_id, all_go_ids):
 
 if __name__ == '__main__':
 
-    generate_data()
+    goSlim = defaultGoSlim
+    if len(sys.argv) >= 2:
+        goSlim = sys.argv[1]
+        
+    generate_data(goSlim)
