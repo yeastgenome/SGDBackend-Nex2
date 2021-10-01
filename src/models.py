@@ -5018,7 +5018,7 @@ class Locusdbentity(Dbentity):
             "htp_cellular_component_terms": [],
             "computational_annotation_count": 0,
             "go_slim": [],
-            "go_slim_sorted": [],
+            "go_slim_grouped": [],
             "date_last_reviewed": None
         }
 
@@ -5054,10 +5054,7 @@ class Locusdbentity(Dbentity):
         function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
         component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
         complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
-        obj['go_slim_sorted'] = { 'process': process_go_slim_sorted_list,
-                                  'function': function_go_slim_sorted_list,
-                                  'component': component_go_slim_sorted_list,
-                                  'complex': complex_go_slim_sorted_list }
+        obj['go_slim_grouped'] = process_go_slim_sorted_list + function_go_slim_sorted_list + component_go_slim_sorted_list + complex_go_slim_sorted_list
         
         go = {
             "cellular component": {},
