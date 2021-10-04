@@ -634,7 +634,7 @@ mapping = {
             },
             "allele_name": {
                 "type": "text",
-                "analyzer": "reference_search"
+		"analyzer": "alias_search"
 
             },
             "chemical_name": {
