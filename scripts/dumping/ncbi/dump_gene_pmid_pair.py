@@ -4,15 +4,9 @@ import logging
 import os
 import sys
 import json
-import boto
-from boto.s3.key import Key
-import boto3
-import transaction
-# import gzip
-# import shutil
 from src.models import Referencedbentity, Locusdbentity, Literatureannotation
 from scripts.loading.database_session import get_session
-from src.helpers import upload_file
+from src.boto3_upload import upload_one_file_to_s3
 
 __author__ = 'sweng66'
 
@@ -20,8 +14,6 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
 S3_BUCKET = os.environ['S3_BUCKET']
 S3_BUCKET2 = os.environ['ARCHIVE_S3_BUCKET']
 
@@ -79,17 +71,8 @@ def dump_data():
 def upload_file_to_latest(datafile):
 
     file = open(datafile, "rb")
-    
     filename = "latest/" + datafile.split('/')[-1]
-    
-    s3_path = filename
-    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = s3_path
-    k.set_contents_from_file(file, rewind=True)
-    k.make_public()
-    transaction.commit()
+    upload_one_file_to_s3(file, filename)
         
 if __name__ == '__main__':
 
