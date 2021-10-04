@@ -15,7 +15,7 @@ s3 = session.resource('s3')
 def upload_one_file_to_s3(file, filename):
 
     s3 = boto3.client('s3')
-    s3.upload_fileobj(file, S3_BUCKET, filename, ExtraArgs={'ACL': 'public-read'})
+    s3.upload_fileobj(file.seek(0), S3_BUCKET, filename, ExtraArgs={'ACL': 'public-read'})
     return "https://" + S3_BUCKET + ".s3.amazonaws.com/" + filename
 
 def boto3_copy_file(srcBucket, srcFile, dstBucket, dstFile):
