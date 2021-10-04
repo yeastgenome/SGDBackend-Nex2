@@ -433,6 +433,9 @@ mapping = {
             "chemical": {
                 "type": "keyword"
             },
+            "allele": {
+                "type": "keyword"
+            },
             "mutant_type": {
                 "type": "keyword"
             },
