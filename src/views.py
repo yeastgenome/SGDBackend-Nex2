@@ -191,6 +191,7 @@ def search(request):
         "associated_complexes",
         "associated_pathways",
         "aliases",
+        "allele_name",
         "data",
         "topic",
         "format",
