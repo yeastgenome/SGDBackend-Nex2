@@ -83,7 +83,9 @@ def search(request):
         query = query.replace('\\', '')
     elif "\\" in query:
         query = query.replace('\\', ' ')
-        
+
+    query = query.upper()
+    
     temp_container = query.split(' ')
     int_flag = False
     if(temp_container):
