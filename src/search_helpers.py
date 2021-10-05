@@ -294,7 +294,6 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                             "aliases^6",
                             "phenotype_loci",
                             "gene_ontology_loci",
-                            "allele_loci",
                             "keys"
                         ]
                     }
@@ -339,7 +338,6 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                                 "name_description",
                                 "phenotype_loci",
                                 "gene_ontology_loci",
-                                "allele_loci",
                                 "keys",
                                 "locus_summary"
                             ]
@@ -369,7 +367,6 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                                 "name_description",
                                 "phenotype_loci",
                                 "gene_ontology_loci",
-                                "allele_loci",
                                 "keys",
                                 "locus_summary"
                             ]
