@@ -204,6 +204,7 @@ def search(request):
         "raw_display_name",
         "ref_citation",
         "chemical_name",
+        "allele_name",
         "resource_name",
         "locus_summary"
     ]  # year not inserted, have to change to str in mapping
