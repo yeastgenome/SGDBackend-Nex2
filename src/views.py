@@ -84,8 +84,6 @@ def search(request):
     elif "\\" in query:
         query = query.replace('\\', ' ')
 
-    query = query.upper()
-    
     temp_container = query.split(' ')
     int_flag = False
     if(temp_container):
@@ -372,9 +370,11 @@ def search(request):
                 }
 
     else:
+
+        query = query.upper()
         
-        # if query.endswith('-'):
-        #    query = query[0:-1]
+        if category == 'allele' and query.endswith('-'):
+            query = query[0:-1]
             
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
