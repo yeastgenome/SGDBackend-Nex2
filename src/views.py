@@ -373,13 +373,12 @@ def search(request):
 
         query = query.upper()
         
-        # if category == 'allele' and query.endswith('-'):
-        #    query = query[0:-1]
+        if category == 'allele' and query.endswith('-'):
+            query = query[0:-1]
             
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
-        query = query[0:-1]
         search_body = build_es_search_body_request(query,
                                                 category,
                                                 es_query,
