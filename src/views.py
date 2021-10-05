@@ -205,14 +205,13 @@ def search(request):
         "raw_display_name",
         "ref_citation",
         "chemical_name",
-        "allele_name",
         "resource_name",
         "locus_summary"
     ]  # year not inserted, have to change to str in mapping
 
     json_response_fields = [
         'name', 'href', 'description', 'category', 'bioentity_id',
-        'phenotype_loci', 'gene_ontology_loci', 'reference_loci', 'allele_loci',
+        'phenotype_loci', 'gene_ontology_loci', 'reference_loci',
         'associated_alleles', 'associated_complexes', 'associated_pathways',
         'aliases', 'year', 'keyword', 'format', 'status', 'file_size',
         'readme_url', 'topic', 'data', 'is_quick_flag'
