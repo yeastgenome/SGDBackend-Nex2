@@ -264,6 +264,8 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
 
         if (query[0] in ('"', "'") and query[-1] in ('"', "'")):
             query = query[1:-1]
+        if query[-1] == '-' and query[3:-1].isdigit():
+            query = query[0:-1]
         bool_must = es_query["bool"]["must"][0]["bool"]["should"]
         if alias_flag:
             if terms:
@@ -292,6 +294,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                             "aliases^6",
                             "phenotype_loci",
                             "gene_ontology_loci",
+                            "allele_loci",
                             "keys"
                         ]
                     }
@@ -336,6 +339,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                                 "name_description",
                                 "phenotype_loci",
                                 "gene_ontology_loci",
+                                "allele_loci",
                                 "keys",
                                 "locus_summary"
                             ]
@@ -365,6 +369,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                                 "name_description",
                                 "phenotype_loci",
                                 "gene_ontology_loci",
+                                "allele_loci",
                                 "keys",
                                 "locus_summary"
                             ]
