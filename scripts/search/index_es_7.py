@@ -933,8 +933,8 @@ def index_alleles():
         
         references = set([])
         for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=a.dbentity_id).all():
-	    if x.reference.display_name not in references:
-               references.add(x.reference.display_name)
+            if x.reference.display_name not in references:
+                references.add(x.reference.display_name)
             
         phenotypes = set([])
         allele_loci = set([])
