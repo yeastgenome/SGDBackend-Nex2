@@ -373,8 +373,9 @@ def search(request):
 
         query = query.upper()
         
-        if category == 'allele' and query.endswith('-'):
+        if query.endswith('-') and query[3:-1].isdigit():
             query = query[0:-1]
+            is_quick_flag = False
             
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
