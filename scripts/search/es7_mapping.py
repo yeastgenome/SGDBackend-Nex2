@@ -632,6 +632,11 @@ mapping = {
                 "analyzer": "reference_search"
 
             },
+            "allele_name": {
+                "type": "text",
+                "analyzer": "reference_search"
+
+            },
             "chemical_name": {
                 "type": "text",
                 "analyzer": "chebi_search"
