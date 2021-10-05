@@ -190,7 +190,6 @@ def search(request):
         "associated_alleles",
         "associated_complexes",
         "associated_pathways",
-        "allele_loci",
         "aliases",
         "data",
         "topic",
