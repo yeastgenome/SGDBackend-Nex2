@@ -372,8 +372,9 @@ def search(request):
                 }
 
     else:
-        if query.endswith('-'):
-            query = query[0:-1]
+        
+        # if query.endswith('-'):
+        #    query = query[0:-1]
             
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
