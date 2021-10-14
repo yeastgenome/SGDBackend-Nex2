@@ -4570,6 +4570,7 @@ class Locusdbentity(Dbentity):
         return obj
 
     def to_dict(self):
+        
         obj = {
             "id": self.dbentity_id,
             "display_name": self.display_name,
@@ -4599,15 +4600,15 @@ class Locusdbentity(Dbentity):
             },
             "literature_overview": self.literature_overview_to_dict(),
             "disease_overview": self.disease_overview_to_dict(),
-            "ecnumbers": []
+            "ecnumbers": []    
         }
-
+    
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
-        
+
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
-
+            
         # summaries and paragraphs
         summaries = DBSession.query(Locussummary.summary_id, Locussummary.html, Locussummary.date_created,Locussummary.summary_order,Locussummary.summary_type).filter_by(locus_id=self.dbentity_id).all()
         summary_types = {}
@@ -4634,10 +4635,10 @@ class Locusdbentity(Dbentity):
         obj["qualities"] = references_obj["qualities"]
         obj["references"] = references_obj["references"]
         obj["reference_mapping"] = references_obj["reference_mapping"]
-
+        
         if obj["paragraph"] is not None:
             obj["paragraph"]["text"] = self.format_paragraph(obj["paragraph"]["text"], references_obj)
-
+    
         # aliases/external IDs
         aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
         for alias in aliases:
@@ -4648,7 +4649,7 @@ class Locusdbentity(Dbentity):
                     "display_name": alias.display_name,
                     "link": internal_url
                 })
-
+            
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
                 category = "Alias"
@@ -4656,7 +4657,7 @@ class Locusdbentity(Dbentity):
                 category = "NCBI protein name"
             else:
                 category = alias.alias_type
-
+        
             references_alias = DBSession.query(LocusAliasReferences).filter_by(alias_id=alias.alias_id).all()
 
             reference_alias_dict = []
@@ -4665,11 +4666,12 @@ class Locusdbentity(Dbentity):
                 reference_alias_dict.append(reference_dict)
                 if(reference_dict not in obj["references"]):
                     obj["references"].append(reference_dict)
-
+    
                 order = len(list(obj["reference_mapping"].keys()))
                 if r.reference_id not in obj["reference_mapping"]:
                     obj["reference_mapping"][r.reference_id] = order + 1
 
+                    
             alias_obj = {
                 "id": alias.alias_id,
                 "display_name": alias.display_name,
@@ -4684,7 +4686,7 @@ class Locusdbentity(Dbentity):
                 alias_obj["protein"] = True
 
             obj["aliases"].append(alias_obj)
-
+            
         ## alleles
         alleles = []
         for x in DBSession.query(LocusAllele).filter_by(locus_id=self.dbentity_id).all():
@@ -4694,7 +4696,7 @@ class Locusdbentity(Dbentity):
         if len(alleles) > 0:
             alleles = sorted(alleles, key=lambda r: r['display_name'])
             obj["alleles"] = alleles 
-        
+    
         # URLs (resources)
         sos = DBSession.query(Dnasequenceannotation.so_id).filter(
             Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).group_by(
@@ -4713,6 +4715,7 @@ class Locusdbentity(Dbentity):
             "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
             "display_name": "JBrowse"
         })
+
         locus_notes = DBSession.query(Locusnote).filter_by(locus_id=self.dbentity_id).all()
         obj["history"] = [h.to_dict() for h in locus_notes]
 
@@ -5015,15 +5018,44 @@ class Locusdbentity(Dbentity):
             "htp_cellular_component_terms": [],
             "computational_annotation_count": 0,
             "go_slim": [],
+            "go_slim_grouped": [],
             "date_last_reviewed": None
         }
 
         go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        process_go_slim_list = []
+        function_go_slim_list = []
+        component_go_slim_list = []
+        complex_go_slim_list = []
+        go_slim_list = []
         for go_slim in go_slims:
             go_slim_dict = go_slim.to_dict()
-            if go_slim_dict:
-                obj["go_slim"].append(go_slim_dict)
-
+            if go_slim_dict not in go_slim_list:
+                go_slim_list.append(go_slim_dict)
+            if 'complex' in go_slim_dict['slim_name'].lower():
+                if go_slim_dict not in complex_go_slim_list:
+                    complex_go_slim_list.append(go_slim_dict)
+            else:
+                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                if go is None:
+                    continue
+                if 'component' in go.go_namespace:
+                    if go_slim_dict not in component_go_slim_list:
+                        component_go_slim_list.append(go_slim_dict)
+                elif 'function' in go.go_namespace:
+                    if go_slim_dict not in function_go_slim_list:
+                        function_go_slim_list.append(go_slim_dict)
+                elif go_slim_dict not in process_go_slim_list:
+                    process_go_slim_list.append(go_slim_dict)
+                          
+        ## sort goslim terms here
+        obj['go_slim'] = sorted(go_slim_list, key=lambda p: p['display_name'])
+        process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
+        function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
+        component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
+        complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
+        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + component_go_slim_sorted_list + complex_go_slim_sorted_list
+        
         go = {
             "cellular component": {},
             "molecular function": {},
@@ -5034,7 +5066,7 @@ class Locusdbentity(Dbentity):
         for annotation in go_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
                 obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
-
+        
             json = annotation.to_dict_lsp()
 
             namespace = json["namespace"]
@@ -5046,7 +5078,7 @@ class Locusdbentity(Dbentity):
                         go[namespace][term]["evidence_codes"].append(ec)
             else:
                 go[namespace][term] = json
-
+    
         for namespace in list(go.keys()):
             terms = sorted(list(go[namespace].keys()), key=lambda k : k.lower())
             if namespace == "cellular component":
@@ -7587,8 +7619,11 @@ class Goannotation(Base):
         }
 
         alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
+        
+        experiment_name = None
+        if len(alias) > 0:
+            experiment_name = alias[0].display_name
 
-        experiment_name = alias[0].display_name
         for alia in alias:
             if len(experiment_name) > len(alia.display_name):
                 experiment_name = alia.display_name
@@ -7617,7 +7652,10 @@ class Goannotation(Base):
             go = self.go
 
         alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
-        experiment_name = alias[0].display_name
+
+        experiment_name = None
+        if len(alias) > 0:
+            experiment_name = alias[0].display_name
 
         for alia in alias:
             if len(experiment_name) > len(alia.display_name):
@@ -7807,13 +7845,15 @@ class Goslim(Base):
     source = relationship('Source')
 
     def to_dict(self):
-        if self.slim_name == "Yeast GO-Slim":
-            return {
-                "link": self.obj_url,
-                "display_name": self.display_name.replace("_", " ")
-            }
-        else:
-            return None
+        # if self.slim_name == "Yeast GO-Slim":
+        return {
+            "slim_name": self.slim_name,
+            "go_id": self.go_id,
+            "link": self.obj_url,
+            "display_name": self.display_name.replace("_", " ")
+        }
+        # else:
+        #    return None
 
     def to_snapshot_dict(self):
         direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
