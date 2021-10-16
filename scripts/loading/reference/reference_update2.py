@@ -20,9 +20,8 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 CREATED_BY = os.environ['DEFAULT_USER']
 
-MAX = 5000
-MAX_4_CONNECTION = 5000
-SLEEP_TIME = 5
+MAX = 10
+SLEEP_TIME = 1
 TOP = 105000
 PUBLISHED_STATUS = 'Published'
 EPUB_STATUS = 'Epub ahead of print'
@@ -99,7 +98,7 @@ def update_reference_data(log_file):
     fw.write("Getting Pubmed records...\n")
 
     # log.info(datetime.now())
-    log.info("Updating data for top " + str(TOP) + " papers in the database...")
+    log.info("Updating data for the rest of papers in the database...")
     log.info("Getting Pubmed records and updating the database...")
 
     update_log = {}
@@ -113,22 +112,17 @@ def update_reference_data(log_file):
     updated_pmids = []
     dbentity_ids_with_author_changed = []
     pmids_all.sort()
+    bad_pmids = []
     for pmid in pmids_all:
         
-        if pmid is None or pmid in [26842620, 27823544, 11483584, 30930955]:
-            continue
-
         i = i + 1
-        j = j + 1
-
-        if i > TOP:
-            break
+    
+        if i <= TOP:
+            continue
         
-        if j >= MAX_4_CONNECTION:
-            ###########################
-            nex_session.close()
-            nex_session = get_session()
-            ###########################
+        j = j + 1
+        
+        if j >= MAX:
             log.info("Reference updated: " + str(i))
             j = 0
                     
@@ -136,7 +130,8 @@ def update_reference_data(log_file):
             try:
                 records = get_pubmed_record_from_xml(','.join(pmids))
             except Exception as e:
-                log.info("Error retrieving the pubmed records for " + ','.join(pmids))
+                bad_pmids = bad_pmids + pmids
+                # log.info("Error retrieving the pubmed records for " + ','.join(pmids))
                 pmids = []
                 continue
             try:
@@ -165,7 +160,8 @@ def update_reference_data(log_file):
         try:
             records = get_pubmed_record_from_xml(','.join(pmids))
         except Exception as e:
-            log.info("Error retrieving the pubmed records for " + ','.join(pmids))
+            bad_pmids = bad_pmids + pmids
+            # log.info("Error retrieving the pubmed records for " + ','.join(pmids))
             pmids = []
         if len(pmids) > 0:
             try:
@@ -185,7 +181,32 @@ def update_reference_data(log_file):
                                       dbentity_ids_with_author_changed)
             except:
                 log.info("Error in updating data for " + ','.join(pmids))
-                
+
+    for pmid in bad_pmids:
+        record = None
+        try:
+            record = get_pubmed_record_from_xml(pmid)
+        except Exception as e:
+            log.info("Error retrieving the pubmed record for " + pmid)
+            continue
+        try:
+            abstracts = get_abstracts(pmid)
+            update_database_batch(nex_session, fw, record,
+                                  pmid_to_reference,
+                                  journal_id_to_abbrev,
+                                  reference_id_to_authors,
+                                  abstracts,
+                                  reference_id_to_abstract,
+                                  reference_id_to_urls,
+                                  reference_id_to_pubtypes,
+                                  key_to_type,
+                                  source_to_id,
+                                  update_log,
+                                  updated_pmids,
+                                  dbentity_ids_with_author_changed)
+        except:
+            log.info("Error in updating data for " + pmid)
+
     nex_session.commit()
 
     log.info("Reference updated: " + str(i))
@@ -676,7 +697,7 @@ def update_reference(nex_session, fw, pmid, record, journal_id_to_abbrev, source
 
 if __name__ == '__main__':
 
-    log_file = "scripts/loading/reference/logs/reference_update.log"
+    log_file = "scripts/loading/reference/logs/reference_update2.log"
     
     update_reference_data(log_file)
 
