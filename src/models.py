@@ -3747,25 +3747,30 @@ class Locusdbentity(Dbentity):
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         apo_ids_large_scale = DBSession.query(Apo.apo_id).filter_by(namespace_group="large-scale survey").all()
 
-        phenotype_ids = DBSession.query(Phenotypeannotation.reference_id, Phenotypeannotation.experiment_id).filter(Phenotypeannotation.dbentity_id == self.dbentity_id).all()
+        # phenotype_ids = DBSession.query(Phenotypeannotation.reference_id, Phenotypeannotation.experiment_id).filter(Phenotypeannotation.dbentity_id == self.dbentity_id).all()
 
-        primary_ids = set(primary_ids)
+        # primary_ids = set(primary_ids)
 
-        valid_phenotype_ids = []
-        for phenotype_id_experiment in phenotype_ids:
-            if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in apo_ids:
-                valid_phenotype_ids.append(phenotype_id_experiment[0])
+        # valid_phenotype_ids = []
+        #for phenotype_id_experiment in phenotype_ids:
+        #    if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in apo_ids:
+        #        valid_phenotype_ids.append(phenotype_id_experiment[0])
 
-        valid_phenotype_ids_lsc = []
-        for phenotype_id_experiment in phenotype_ids:
-            if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in  apo_ids_large_scale:
-                valid_phenotype_ids_lsc.append(phenotype_id_experiment[0])
-        phenotype_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+        #valid_phenotype_ids_lsc = []
+        #for phenotype_id_experiment in phenotype_ids:
+        #    if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in  apo_ids_large_scale:
+        #        valid_phenotype_ids_lsc.append(phenotype_id_experiment[0])
+
+        valid_phenotype_ref_ids = DBSession.query(Phenotypeannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).filter(Phenotypeannotation.experiment_id.in_(apo_ids)).all()
+
+        valid_phenotype_ref_ids_lsc = DBSession.query(Phenotypeannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).filter(Phenotypeannotation.experiment_id.in_(apo_ids_large_scale)).all()
+        
+        phenotype_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
         for lit in phenotype_lit:
             obj["phenotype"].append(lit.to_dict_citation())
 
-        phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+        phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
         for lit in phenotype_lit_lsc:
             obj["htp"].append(lit.to_dict_citation())
 
