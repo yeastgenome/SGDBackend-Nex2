@@ -3682,7 +3682,8 @@ class Locusdbentity(Dbentity):
             "regulation": [],
             "phenotype": [],
             "go": [],
-            'htp': []
+            'htp': [],
+            'disease': []
         }
 
         literature_annotations = DBSession.query(Literatureannotation.reference_id, Literatureannotation.topic).filter(Literatureannotation.dbentity_id == self.dbentity_id).all()
@@ -3774,8 +3775,7 @@ class Locusdbentity(Dbentity):
 
         for lit in go_lit:
             obj["go"].append(lit.to_dict_citation())
-
-
+            
         go_ids_htp = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
         go_ids_htp = set(go_ids_htp) - set(Referencedbentity.get_go_blacklist_ids())
         go_lit_htp = DBSession.query(Referencedbentity).filter(
@@ -3786,6 +3786,14 @@ class Locusdbentity(Dbentity):
         for lit in go_lit_htp:
             obj["htp"].append(lit.to_dict_citation())
 
+        disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
+        disease_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(disease_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in disease_lit:
+            obj["disease"].append(lit.to_dict_citation())
+        
         return obj
 
     def go_graph(self):
