@@ -4943,6 +4943,12 @@ class Locusdbentity(Dbentity):
             "primary_count": 0,
             "additional_count": 0,
             "review_count": 0,
+            "go_count": 0,
+            "phenotype_count": 0,
+            "disease_count": 0,
+            "interaction_count": 0,
+            "regulation_count": 0,
+            "htp_count": 0,
             "total_count": 0
         }
 
@@ -4962,14 +4968,24 @@ class Locusdbentity(Dbentity):
 
         regulation_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).all()
 
+        disease_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
+        
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         phenotype_ids = DBSession.query(Phenotypeannotation.reference_id).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids))).all()
 
         go_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type != "high-throughput")).all()
         go_ids = set(go_ids) - set(Referencedbentity.get_go_blacklist_ids())
 
-        obj["total_count"] = len(set(literature_ids + interaction_ids + regulation_ids + phenotype_ids + list(go_ids)))
-
+        htp_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
+        
+        obj["go_count"] = len(set(list(go_ids)))
+        obj["phenotype_count"] = len(set(phenotype_ids))
+        obj["interaction_count"] = len(set(interaction_ids))
+        obj["regulation_count"] = len(set(regulation_ids))
+        obj["disease_count"] = len(set(disease_ids))
+        obj["htp_count"] = len(set(htp_ids))
+        obj["total_count"] = len(set(literature_ids + interaction_ids + disease_ids + regulation_ids + phenotype_ids + list(go_ids)))
+        
         return obj
 
     def interaction_overview_to_dict(self):
