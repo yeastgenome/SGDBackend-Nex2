@@ -3744,6 +3744,14 @@ class Locusdbentity(Dbentity):
         for lit in regulation_lit_htp:
             obj["htp"].append(lit.to_dict_citation())
 
+        disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
+        disease_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(disease_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in disease_lit:
+            obj["disease"].append(lit.to_dict_citation())
+            
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         apo_ids_large_scale = DBSession.query(Apo.apo_id).filter_by(namespace_group="large-scale survey").all()
 
@@ -3790,14 +3798,6 @@ class Locusdbentity(Dbentity):
 
         for lit in go_lit_htp:
             obj["htp"].append(lit.to_dict_citation())
-
-        disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
-        disease_lit = DBSession.query(Referencedbentity).filter(
-            Referencedbentity.dbentity_id.in_(disease_ref_ids)).order_by(
-                Referencedbentity.year.desc(),
-                Referencedbentity.display_name.asc()).all()
-        for lit in disease_lit:
-            obj["disease"].append(lit.to_dict_citation())
         
         return obj
 
