@@ -4952,23 +4952,6 @@ class Locusdbentity(Dbentity):
             "total_count": 0
         }
 
-        data = self.literature_to_dict()
-        obj["primary_count"] = len(data['primary'])
-        obj["additional_count"] = len(data['additional'])
-        obj["review_count"] = len(data['review'])
-        obj["go_count"] = len(data['go'])
-        obj["phenotype_count"] = len(data['phenotype'])
-        obj["disease_count"] = len(data['disease'])
-        obj["interaction_count"] = len(data['interaction'])
-        obj["regulation_count"] = len(data['regulation'])
-        obj["htp_count"] = len(data['htp'])
-        obj["total_count"] = len(set(data['primary'] + data['additional'] + data['review'] + data['go'] + data['phenotype'] + data['disease'] + data['interaction'] + data['regulation'] + data['htp']))
-        
-        return obj
-
-
-    
-        ## if above code works, the following can be deleted
         literature_counts = DBSession.query(Literatureannotation.topic, func.count(Literatureannotation.annotation_id)).filter_by(dbentity_id=self.dbentity_id).group_by(Literatureannotation.topic).all()
 
         for lit_count in literature_counts:
@@ -4983,17 +4966,24 @@ class Locusdbentity(Dbentity):
 
         interaction_ids = DBSession.query(Geninteractionannotation.reference_id).filter(or_(Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).all() + DBSession.query(Physinteractionannotation.reference_id).filter(or_(Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).all()
 
-        regulation_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).all()
+        regulation_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).filter(Regulationannotation.annotation_type == "manually curated").all()
 
+        regulation_htp_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).filter(Regulationannotation.annotation_type == "high-throughput").all()
+        
         disease_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
         
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         phenotype_ids = DBSession.query(Phenotypeannotation.reference_id).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids))).all()
 
+        apo_ids_large_scale = DBSession.query(Apo.apo_id).filter_by(namespace_group="large-scale survey").all()
+        phenotype_htp_ids = DBSession.query(Phenotypeannotation.reference_id).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids_large_scale))).all()
+        
         go_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type != "high-throughput")).all()
         go_ids = set(go_ids) - set(Referencedbentity.get_go_blacklist_ids())
 
-        htp_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
+        go_htp_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
+
+        htp_ids = set(regulation_htp_ids + phenotype_htp_ids + go_htp_ids)
         
         obj["go_count"] = len(set(list(go_ids)))
         obj["phenotype_count"] = len(set(phenotype_ids))
@@ -5001,7 +4991,7 @@ class Locusdbentity(Dbentity):
         obj["regulation_count"] = len(set(regulation_ids))
         obj["disease_count"] = len(set(disease_ids))
         obj["htp_count"] = len(set(htp_ids))
-        obj["total_count"] = len(set(literature_ids + interaction_ids + disease_ids + regulation_ids + phenotype_ids + list(go_ids)))
+        obj["total_count"] = len(set(literature_ids + interaction_ids + disease_ids + regulation_ids + phenotype_ids + htp_ids + list(go_ids)))
         
         return obj
 
