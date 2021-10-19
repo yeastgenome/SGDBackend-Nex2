@@ -685,7 +685,7 @@ def update_reference(nex_session, fw, pmid, record, journal_id_to_abbrev, source
         x.page = page
         update_log['page'] = update_log['page'] + 1
         has_update = 1
-    if doi and doi != x.doi:
+    if (doi and doi != x.doi) or (doi is None and x.doi is not None):
         x.doi = doi
         update_log['doi'] = update_log['doi'] + 1
         has_update = 1
