@@ -3682,7 +3682,7 @@ class Locusdbentity(Dbentity):
             "regulation": [],
             "phenotype": [],
             "go": [],
-            "disease": ['HELLO'],
+            "disease": [],
             "htp": []
         }
 
@@ -3744,6 +3744,7 @@ class Locusdbentity(Dbentity):
         for lit in regulation_lit_htp:
             obj["htp"].append(lit.to_dict_citation())
 
+        obj["disease"] = []
         disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
         disease_lit = DBSession.query(Referencedbentity).filter(
             Referencedbentity.dbentity_id.in_(disease_ref_ids)).order_by(
