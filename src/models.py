@@ -3681,8 +3681,8 @@ class Locusdbentity(Dbentity):
             "primary": [],
             "regulation": [],
             "phenotype": [],
+            "disease": [],
             "go": [],
-            "do": [],
             "htp": []
         }
 
@@ -3750,7 +3750,7 @@ class Locusdbentity(Dbentity):
                 Referencedbentity.year.desc(),
                 Referencedbentity.display_name.asc()).all()
         for lit in disease_lit:
-            obj["do"].append(lit.to_dict_citation())
+            obj["disease"].append(lit.to_dict_citation())
             
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         apo_ids_large_scale = DBSession.query(Apo.apo_id).filter_by(namespace_group="large-scale survey").all()
