@@ -4983,7 +4983,7 @@ class Locusdbentity(Dbentity):
 
         go_htp_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
 
-        htp_ids = set(regulation_htp_ids + phenotype_htp_ids + go_htp_ids)
+        htp_ids = regulation_htp_ids + phenotype_htp_ids + go_htp_ids
         
         obj["go_count"] = len(set(list(go_ids)))
         obj["phenotype_count"] = len(set(phenotype_ids))
