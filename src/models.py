@@ -4952,6 +4952,23 @@ class Locusdbentity(Dbentity):
             "total_count": 0
         }
 
+        data = self.literature_to_dict()
+        obj["primary_count"] = len(data['primary'])
+        obj["additional_count"] = len(data['additional'])
+        obj["review_count"] = len(data['review'])
+        obj["go_count"] = len(data['go'])
+        obj["phenotype_count"] = len(data['phenotype'])
+        obj["disease_count"] = len(data['disease'])
+        obj["interaction_count"] = len(data['interaction'])
+        obj["regulation_count"] = len(data['regulation'])
+        obj["htp_count"] = len(data['htp'])
+        obj["total_count"] = len(set(data['primary'] + data['additional'] + data['review'] + data['go'] + data['phenotype'] + data['disease'] + data['interaction'] + data['regulation'] + data['htp']))
+        
+        return obj
+
+
+    
+        ## if above code works, the following can be deleted
         literature_counts = DBSession.query(Literatureannotation.topic, func.count(Literatureannotation.annotation_id)).filter_by(dbentity_id=self.dbentity_id).group_by(Literatureannotation.topic).all()
 
         for lit_count in literature_counts:
