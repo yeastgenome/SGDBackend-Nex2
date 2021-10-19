@@ -3683,7 +3683,7 @@ class Locusdbentity(Dbentity):
             "phenotype": [],
             "disease": [],
             "go": [],
-            "htp": []
+            "htppp": []
         }
 
         literature_annotations = DBSession.query(Literatureannotation.reference_id, Literatureannotation.topic).filter(Literatureannotation.dbentity_id == self.dbentity_id).all()
