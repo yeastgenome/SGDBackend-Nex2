@@ -74,7 +74,7 @@ def write_data(goSlimType, goslim_id_to_go_id, go_id_to_term_aspect, found_gene_
             if dbentity_id not in gene_to_root_component:
                 gene_to_root_component[dbentity_id] = line
         elif display_name == 'biological_process':
-            if dbentity_id not in gene_to_root_component:
+            if dbentity_id not in gene_to_root_process:
                 gene_to_root_process[dbentity_id] = line
         else:
             (go_term, aspect) = go_id_to_term_aspect[go_id]
