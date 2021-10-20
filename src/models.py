@@ -3681,8 +3681,9 @@ class Locusdbentity(Dbentity):
             "primary": [],
             "regulation": [],
             "phenotype": [],
+            "disease": [],
             "go": [],
-            'htp': []
+            "htp": []
         }
 
         literature_annotations = DBSession.query(Literatureannotation.reference_id, Literatureannotation.topic).filter(Literatureannotation.dbentity_id == self.dbentity_id).all()
@@ -3743,28 +3744,43 @@ class Locusdbentity(Dbentity):
         for lit in regulation_lit_htp:
             obj["htp"].append(lit.to_dict_citation())
 
+        disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
+        disease_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(disease_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in disease_lit:
+            obj["disease"].append(lit.to_dict_citation())
+            
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         apo_ids_large_scale = DBSession.query(Apo.apo_id).filter_by(namespace_group="large-scale survey").all()
 
-        phenotype_ids = DBSession.query(Phenotypeannotation.reference_id, Phenotypeannotation.experiment_id).filter(Phenotypeannotation.dbentity_id == self.dbentity_id).all()
+        ######
+        # phenotype_ids = DBSession.query(Phenotypeannotation.reference_id, Phenotypeannotation.experiment_id).filter(Phenotypeannotation.dbentity_id == self.dbentity_id).all()
 
-        primary_ids = set(primary_ids)
+        # primary_ids = set(primary_ids)
 
-        valid_phenotype_ids = []
-        for phenotype_id_experiment in phenotype_ids:
-            if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in apo_ids:
-                valid_phenotype_ids.append(phenotype_id_experiment[0])
+        # valid_phenotype_ref_ids = []
+        #for phenotype_id_experiment in phenotype_ids:
+        #    if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in apo_ids:
+        #        valid_phenotype_ref_ids.append(phenotype_id_experiment[0])
 
-        valid_phenotype_ids_lsc = []
-        for phenotype_id_experiment in phenotype_ids:
-            if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in  apo_ids_large_scale:
-                valid_phenotype_ids_lsc.append(phenotype_id_experiment[0])
-        phenotype_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+        #valid_phenotype_ref_ids_lsc = []
+        #for phenotype_id_experiment in phenotype_ids:
+        #    if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in  apo_ids_large_scale:
+        #        valid_phenotype_ref_ids_lsc.append(phenotype_id_experiment[0])
+        #####
+        
+        valid_phenotype_ref_ids = DBSession.query(Phenotypeannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).filter(Phenotypeannotation.experiment_id.in_(apo_ids)).all()
+
+        valid_phenotype_ref_ids_lsc = DBSession.query(Phenotypeannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).filter(Phenotypeannotation.experiment_id.in_(apo_ids_large_scale)).all()
+        
+        phenotype_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
         for lit in phenotype_lit:
             obj["phenotype"].append(lit.to_dict_citation())
 
-        phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+        phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
         for lit in phenotype_lit_lsc:
             obj["htp"].append(lit.to_dict_citation())
 
@@ -3774,8 +3790,7 @@ class Locusdbentity(Dbentity):
 
         for lit in go_lit:
             obj["go"].append(lit.to_dict_citation())
-
-
+            
         go_ids_htp = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
         go_ids_htp = set(go_ids_htp) - set(Referencedbentity.get_go_blacklist_ids())
         go_lit_htp = DBSession.query(Referencedbentity).filter(
@@ -3785,7 +3800,7 @@ class Locusdbentity(Dbentity):
 
         for lit in go_lit_htp:
             obj["htp"].append(lit.to_dict_citation())
-
+        
         return obj
 
     def go_graph(self):
@@ -4928,6 +4943,12 @@ class Locusdbentity(Dbentity):
             "primary_count": 0,
             "additional_count": 0,
             "review_count": 0,
+            "go_count": 0,
+            "phenotype_count": 0,
+            "disease_count": 0,
+            "interaction_count": 0,
+            "regulation_count": 0,
+            "htp_count": 0,
             "total_count": 0
         }
 
@@ -4945,16 +4966,33 @@ class Locusdbentity(Dbentity):
 
         interaction_ids = DBSession.query(Geninteractionannotation.reference_id).filter(or_(Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).all() + DBSession.query(Physinteractionannotation.reference_id).filter(or_(Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).all()
 
-        regulation_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).all()
+        regulation_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).filter(Regulationannotation.annotation_type == "manually curated").all()
 
+        regulation_htp_ids = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).filter(Regulationannotation.annotation_type == "high-throughput").all()
+        
+        disease_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
+        
         apo_ids = DBSession.query(Apo.apo_id).filter_by(namespace_group="classical genetics").all()
         phenotype_ids = DBSession.query(Phenotypeannotation.reference_id).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids))).all()
 
+        apo_ids_large_scale = DBSession.query(Apo.apo_id).filter_by(namespace_group="large-scale survey").all()
+        phenotype_htp_ids = DBSession.query(Phenotypeannotation.reference_id).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids_large_scale))).all()
+        
         go_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type != "high-throughput")).all()
         go_ids = set(go_ids) - set(Referencedbentity.get_go_blacklist_ids())
 
-        obj["total_count"] = len(set(literature_ids + interaction_ids + regulation_ids + phenotype_ids + list(go_ids)))
+        go_htp_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
 
+        htp_ids = regulation_htp_ids + phenotype_htp_ids + go_htp_ids
+        
+        obj["go_count"] = len(set(list(go_ids)))
+        obj["phenotype_count"] = len(set(phenotype_ids))
+        obj["interaction_count"] = len(set(interaction_ids))
+        obj["regulation_count"] = len(set(regulation_ids))
+        obj["disease_count"] = len(set(disease_ids))
+        obj["htp_count"] = len(set(htp_ids))
+        obj["total_count"] = len(set(literature_ids + interaction_ids + disease_ids + regulation_ids + phenotype_ids + htp_ids + list(go_ids)))
+        
         return obj
 
     def interaction_overview_to_dict(self):
