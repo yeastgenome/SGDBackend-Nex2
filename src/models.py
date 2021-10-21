@@ -3742,7 +3742,8 @@ class Locusdbentity(Dbentity):
         regulation_lit_htp = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(regulation_ids_htp)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
         for lit in regulation_lit_htp:
-            obj["htp"].append(lit.to_dict_citation())
+            if lit.to_dict_citation() not in obj["htp"]:
+                obj["htp"].append(lit.to_dict_citation())
 
         disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
         disease_lit = DBSession.query(Referencedbentity).filter(
@@ -3782,7 +3783,8 @@ class Locusdbentity(Dbentity):
 
         phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
         for lit in phenotype_lit_lsc:
-            obj["htp"].append(lit.to_dict_citation())
+            if lit.to_dict_citation() not in obj["htp"]:
+                obj["htp"].append(lit.to_dict_citation())
 
         go_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type != "high-throughput")).all()
         go_ids = set(go_ids) - set(Referencedbentity.get_go_blacklist_ids())
@@ -3799,7 +3801,8 @@ class Locusdbentity(Dbentity):
                 Referencedbentity.display_name.asc()).all()
 
         for lit in go_lit_htp:
-            obj["htp"].append(lit.to_dict_citation())
+            if lit.to_dict_citation() not in obj["htp"]:
+                obj["htp"].append(lit.to_dict_citation())
         
         return obj
 
