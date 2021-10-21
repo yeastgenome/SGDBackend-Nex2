@@ -952,7 +952,7 @@ def index_alleles():
             "name": a.display_name,
             "allele_name": a.display_name,
             "href": "/allele/" + a.format_name,
-            "description": a.description,
+            "allele_description": a.description,
             "category": "Allele",
             "synonyms": [s[0] for s in synonyms],
             "allele_types": list(allele_types),
