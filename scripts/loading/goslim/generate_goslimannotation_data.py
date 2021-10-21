@@ -1,4 +1,4 @@
-from sqlalchemy import func, distinct
+from sqlalchemy import func, distinct, or_
 import sys
 from src.models import Go, Goannotation, GoRelation, Goslim, Locusdbentity
 from scripts.loading.database_session import get_session
@@ -21,7 +21,7 @@ def generate_data(goSlim):
     go_id_to_go = dict([(x.go_id, (x.goid, x.display_name)) for x in nex_session.query(Go).all()])
     
     go_id_to_dbentity_ids = {}
-    for x in nex_session.query(Goannotation).filter_by(annotation_type='manually curated').all():
+    for x in nex_session.query(Goannotation).filter(or_(Goannotation.annotation_type == 'manually curated', Goannotation.annotation_type== 'high-throughput')).all():
         dbentity_ids = []
         if x.go_id in go_id_to_dbentity_ids:
             dbentity_ids = go_id_to_dbentity_ids[x.go_id]
