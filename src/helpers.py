@@ -19,11 +19,11 @@ from email.mime.multipart import MIMEMultipart
 import re
 from sqlalchemy import and_, inspect
 
-from .models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
+from src.models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
     ReferenceFile, Disease, CuratorActivity, Source, LocusAlias
 from src.curation_helpers import ban_from_cache, get_curator_session
-from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
+# from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
 
 
 import logging
@@ -297,6 +297,7 @@ def upload_file(username, file, **kwargs):
     full_file_path = kwargs.get('full_file_path', None)
     md5sum = kwargs.get('md5sum', None)
     is_web_file = kwargs.get('is_web_file', False)
+    # file_size = kwargs.get('file_size', None)
     # get file size
     file.seek(0, os.SEEK_END)
     file_size = file.tell()
@@ -760,10 +761,9 @@ def update_readme_files_with_urls(readme_name, update_all=False):
         logging.error("Exception occurred", exc_info=True)
         transaction.abort()
 
-
+'''     
 def update_urls_helper(readme_file):
-    """ Update files with s3_urls helper"""
-
+  
     temp = []
     file_list = DBSession.query(Filedbentity).filter(
         Filedbentity.readme_file_id == readme_file.dbentity_id).all()
@@ -786,6 +786,7 @@ def update_urls_helper(readme_file):
             readme_dbentity_file.s3_url = re.sub(
                 r'\?.+', '', updated_readme['s3_url']).strip()
 
+'''
 
 def get_sources(session=None):
     ''' Get sources from dbentity model '''
@@ -856,7 +857,6 @@ def file_curate_update_readme(obj, session=None):
         Filedbentity).filter(Filedbentity.display_name == obj['display_name']).one_or_none()
     if readme_file:
         readme_file.upload_file_to_s3(obj['file'], obj['file_name'])
-
 
 def upload_new_file(req_obj, session=None):
     try:
@@ -1021,7 +1021,6 @@ def upload_new_file(req_obj, session=None):
     except Exception as e:
         transaction.abort()
         raise(e)
-
 
 def add_file_meta_db(db_file, obj, readme_id=None, curator_session=None):
     try:

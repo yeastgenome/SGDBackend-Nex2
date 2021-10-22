@@ -9,7 +9,7 @@ import json
 from src.models import DBSession, Dbentity, Filedbentity, Referencedbentity, FilePath, \
                        Path, ReferenceFile, Source, Edam
 from src.aws_helpers import get_checksum
-from src.aws_helpers import upload_file_to_s3
+from src.boto3_upload import upload_one_file_to_s3
 from src.curation_helpers import get_curator_session
 
 # PREVIEW_URL = os.environ['PREVIEW_URL']
@@ -88,7 +88,7 @@ def upload_one_file(request, curator_session, CREATED_BY, source_id, file, filen
         fd = curator_session.query(Filedbentity).filter_by(dbentity_id=file_id).one_or_none()
                 
         #### upload file to s3
-        s3_url = upload_file_to_s3(file, fd.sgdid + "/" + filename)
+        s3_url = upload_one_file_to_s3(file, fd.sgdid + "/" + filename)
         fd.s3_url = s3_url
         curator_session.add(fd)
         transaction.commit()
