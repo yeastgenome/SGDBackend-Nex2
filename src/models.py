@@ -3739,11 +3739,12 @@ class Locusdbentity(Dbentity):
             obj["regulation"].append(lit.to_dict_citation())
 
         regulation_ids_htp = DBSession.query(Regulationannotation.reference_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id),Regulationannotation.annotation_type == "high-throughput").all()
-        regulation_lit_htp = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(regulation_ids_htp)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
-        for lit in regulation_lit_htp:
-            if lit.to_dict_citation() not in obj["htp"]:
-                obj["htp"].append(lit.to_dict_citation())
+        # regulation_lit_htp = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(regulation_ids_htp)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+
+        # for lit in regulation_lit_htp:
+        #    if lit.to_dict_citation() not in obj["htp"]:
+        #        obj["htp"].append(lit.to_dict_citation())
 
         disease_ref_ids = DBSession.query(Diseaseannotation.reference_id).filter_by(dbentity_id = self.dbentity_id).all()
         disease_lit = DBSession.query(Referencedbentity).filter(
@@ -3781,10 +3782,10 @@ class Locusdbentity(Dbentity):
         for lit in phenotype_lit:
             obj["phenotype"].append(lit.to_dict_citation())
 
-        phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
-        for lit in phenotype_lit_lsc:
-            if lit.to_dict_citation() not in obj["htp"]:
-                obj["htp"].append(lit.to_dict_citation())
+        # phenotype_lit_lsc = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids_lsc)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+        # for lit in phenotype_lit_lsc:
+        #    if lit.to_dict_citation() not in obj["htp"]:
+        #        obj["htp"].append(lit.to_dict_citation())
 
         go_ids = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type != "high-throughput")).all()
         go_ids = set(go_ids) - set(Referencedbentity.get_go_blacklist_ids())
@@ -3795,12 +3796,19 @@ class Locusdbentity(Dbentity):
             
         go_ids_htp = DBSession.query(Goannotation.reference_id).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all()
         go_ids_htp = set(go_ids_htp) - set(Referencedbentity.get_go_blacklist_ids())
-        go_lit_htp = DBSession.query(Referencedbentity).filter(
-            Referencedbentity.dbentity_id.in_(go_ids_htp)).order_by(
+        # go_lit_htp = DBSession.query(Referencedbentity).filter(
+        #    Referencedbentity.dbentity_id.in_(go_ids_htp)).order_by(
+        #        Referencedbentity.year.desc(),
+        #        Referencedbentity.display_name.asc()).all()
+
+        
+        htp_ids = regulation_ids_htp + valid_phenotype_ref_ids_lsc + list(go_ids_htp)
+        all_lit_htp = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(htp_ids)).order_by(
                 Referencedbentity.year.desc(),
                 Referencedbentity.display_name.asc()).all()
-
-        for lit in go_lit_htp:
+        
+        for lit in all_lit_htp:
             if lit.to_dict_citation() not in obj["htp"]:
                 obj["htp"].append(lit.to_dict_citation())
         
@@ -10474,7 +10482,14 @@ class Complexdbentity(Dbentity):
         crossRefs2 = sorted(crossRefs, key=lambda c: c['display_name'])
         data["cross_references"] = sorted(crossRefs2, key=lambda c: c['alias_type'])
 
-        ## go                                                                                                                                                                                        
+        unique_references = []
+        data['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
+        data['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
+        data['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
+        data['unique_references'] = unique_references
+
+        ## go
+        
         network_nodes =[]
         network_edges =[]
 
@@ -10770,6 +10785,16 @@ class Complexdbentity(Dbentity):
         data['network_graph'] = { "edges": network_edges, "nodes": network_nodes }
 
         return data
+
+    def get_literatureannotation_references(self, topic, unique_references):
+        references = []
+        for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
+            if x.reference.to_dict_citation() not in references:
+                references.append(x.reference.to_dict_citation())
+            if x.reference.dbentity_id not in unique_references:
+                unique_references.append(x.reference.dbentity_id)
+
+        return references
 
 
 class ComplexAlias(Base):
