@@ -10475,10 +10475,10 @@ class Complexdbentity(Dbentity):
         data["cross_references"] = sorted(crossRefs2, key=lambda c: c['alias_type'])
 
         unique_references = []
-        obj['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
-        obj['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
-        obj['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
-        obj['unique_references'] = unique_references
+        data['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
+        data['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
+        data['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
+        data['unique_references'] = unique_references
 
         ## go
         
