@@ -3802,7 +3802,7 @@ class Locusdbentity(Dbentity):
         #        Referencedbentity.display_name.asc()).all()
 
         
-        htp_ids = regulation_ids_htp + valid_phenotype_ref_ids_lsc + go_ids_htp
+        htp_ids = regulation_ids_htp + valid_phenotype_ref_ids_lsc + list(go_ids_htp)
         all_lit_htp = DBSession.query(Referencedbentity).filter(
             Referencedbentity.dbentity_id.in_(htp_ids)).order_by(
                 Referencedbentity.year.desc(),
