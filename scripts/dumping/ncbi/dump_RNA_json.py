@@ -4,10 +4,7 @@ import tarfile
 import os
 import sys
 import json
-import boto
-from boto.s3.key import Key
 import boto3
-import transaction
 import gzip
 import shutil
 from src.models import Taxonomy, Source, Edam, Path, Filedbentity, FilePath, So, Dbentity,\
@@ -22,8 +19,6 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
 S3_BUCKET = os.environ['S3_BUCKET']
 S3_BUCKET2 = os.environ['ARCHIVE_S3_BUCKET']
 
@@ -188,10 +183,7 @@ def dump_data():
 
 def upload_file_to_latest_archive(data_file, gzip_file):
 
-    session = boto3.Session(
-        aws_access_key_id=S3_ACCESS_KEY,
-        aws_secret_access_key=S3_SECRET_KEY
-    )
+    session = boto3.Session()
     s3 = session.resource('s3')
 
     ## to latest:

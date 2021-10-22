@@ -4,9 +4,6 @@ import os
 import sys
 import importlib
 importlib.reload(sys)  # Reload does the trick!
-import boto
-from boto.s3.key import Key
-import transaction
 import gzip
 import shutil
 from src.models import Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, \
@@ -20,10 +17,6 @@ __author__ = 'sweng66'
 logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_BUCKET = os.environ['S3_BUCKET']
 
 CREATED_BY = os.environ['DEFAULT_USER']
  
@@ -317,19 +310,6 @@ def do_escape(text):
     text = text.rstrip()
     return text
 
-
-def upload_gff_to_s3(file, filename):
-
-    s3_path = filename
-    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = s3_path
-    k.set_contents_from_file(file, rewind=True)
-    k.make_public()
-    transaction.commit()
-
-
 def gzip_gff_file(gff_file, datestamp):
 
     # gff_file  = saccharomyces_cerevisiae.gff
@@ -347,7 +327,7 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
     local_file = open(gzip_file, mode='rb')
     
     ### upload a current GFF file to S3 with a static URL for Go Community ###
-    upload_gff_to_s3(local_file, "latest/saccharomyces_cerevisiae.gff.gz")
+    # upload_gff_to_s3(local_file, "latest/saccharomyces_cerevisiae.gff.gz")
     ##########################################################################
 
     import hashlib
