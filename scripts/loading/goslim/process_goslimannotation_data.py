@@ -67,13 +67,13 @@ def write_data(goSlimType, goslim_id_to_go_id, go_id_to_term_aspect, found_gene_
         else:
             if (dbentity_id, go_id) in found_gene_go_pair:
                 continue
-        if display_name == 'molecular_function':
+        if display_name in ['molecular_function', 'molecular function']:
             if dbentity_id not in gene_to_root_function:
                 gene_to_root_function[dbentity_id] = line
-        elif display_name == 'cellular_component':
+        elif display_name in ['cellular_component', 'cellular component']:
             if dbentity_id not in gene_to_root_component:
                 gene_to_root_component[dbentity_id] = line
-        elif display_name == 'biological_process':
+        elif display_name in ['biological_process', 'biological process']:
             if dbentity_id not in gene_to_root_process:
                 gene_to_root_process[dbentity_id] = line
         else:
