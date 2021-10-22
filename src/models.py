@@ -10474,7 +10474,14 @@ class Complexdbentity(Dbentity):
         crossRefs2 = sorted(crossRefs, key=lambda c: c['display_name'])
         data["cross_references"] = sorted(crossRefs2, key=lambda c: c['alias_type'])
 
-        ## go                                                                                                                                                                                        
+        unique_references = []
+        obj['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
+        obj['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
+        obj['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
+        obj['unique_references'] = unique_references
+
+        ## go
+        
         network_nodes =[]
         network_edges =[]
 
@@ -10770,6 +10777,16 @@ class Complexdbentity(Dbentity):
         data['network_graph'] = { "edges": network_edges, "nodes": network_nodes }
 
         return data
+
+    def get_literatureannotation_references(self, topic, unique_references):
+        references = []
+        for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
+            if x.reference.to_dict_citation() not in references:
+                references.append(x.reference.to_dict_citation())
+            if x.reference.dbentity_id not in unique_references:
+                unique_references.append(x.reference.dbentity_id)
+
+        return references
 
 
 class ComplexAlias(Base):
