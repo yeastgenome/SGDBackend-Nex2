@@ -1,4 +1,5 @@
 from src.helpers import upload_file
+from src.boto3_upload import upload_one_file_to_s3
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
     Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
@@ -6,10 +7,6 @@ from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
     Filedbentity, ReferenceAlias, Dnasequenceannotation, So
 from urllib.request import urlretrieve
 from urllib.request import urlopen
-
-import transaction
-from boto.s3.key import Key
-import boto
 from datetime import datetime
 import logging
 import os
@@ -24,10 +21,6 @@ __author__ = 'sweng66'
 logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_BUCKET = os.environ['S3_BUCKET']
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
@@ -235,7 +228,9 @@ def dump_data(noctua_gpad_file):
         row[QUALIFIER] = go_qualifier
         row[ASPECT] = namespace_to_code[go_aspect]
 
-        eco_code = id_to_eco[x.eco_id]
+        eco_code = id_to_eco.get(x.eco_id)
+        if eco_code is None:
+            continue
         if eco_code == 'IMR':
             eco_code = "IKR"
         row[EVIDENCE] = eco_code
@@ -312,7 +307,7 @@ def dump_data(noctua_gpad_file):
     ##### download sgd gaf from go central and upload it to S3
     download_sgd_gaf_from_go_central()
     local_file = open(gaf_from_go, mode='rb')
-    upload_gaf_to_s3(local_file, "latest/" + gaf_from_go)
+    upload_one_file_to_s3(local_file, "latest/" + gaf_from_go)
     ## done
 
     log.info(str(datetime.now()))
@@ -334,18 +329,6 @@ def download_sgd_gaf_from_go_central():
     sgd_gaf_url = "http://current.geneontology.org/annotations/sgd.gaf.gz"
     urlretrieve(sgd_gaf_url, gaf_from_go)
     
-def upload_gaf_to_s3(file, filename):
-
-    s3_path = filename
-    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = s3_path
-    k.set_contents_from_file(file, rewind=True)
-    k.make_public()
-    transaction.commit()
-
-
 def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_id, edam_to_id, datestamp):
 
     # gene_association.sgd.20171204.gaf.gz
@@ -361,8 +344,8 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
     local_file = open(gzip_file, mode='rb')
 
     ### upload a current GAF file to S3 with a static URL for Go Community ###
-    if is_public == '1':
-        upload_gaf_to_s3(local_file, "latest/gene_association.sgd.gaf.gz")
+    # if is_public == '1':
+    #    upload_gaf_to_s3(local_file, "latest/gene_association.sgd.gaf.gz")
     ##########################################################################
 
     import hashlib

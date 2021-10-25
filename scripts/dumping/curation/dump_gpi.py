@@ -5,9 +5,6 @@ from src.models import Dbentity, Locusdbentity, LocusAlias, Locussummary, \
                        Taxonomy, Edam, Filedbentity, So, Dnasequenceannotation
 from urllib.request import urlretrieve
 from urllib.request import urlopen
-import transaction
-from boto.s3.key import Key
-import boto
 from datetime import datetime
 import logging
 import os
@@ -20,10 +17,6 @@ __author__ = 'sweng66'
 logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_BUCKET = os.environ['S3_BUCKET']
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
@@ -201,16 +194,10 @@ def write_header(fw, datestamp):
     fw.write("!Funding: NHGRI at US NIH, grant number U41-HG001315\n")
     fw.write("!\n")
 
-def upload_file_to_s3(file, filename):
+# def upload_file_to_s3(file, filename):
 
-    s3_path = filename
-    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = s3_path
-    k.set_contents_from_file(file, rewind=True)
-    k.make_public()
-    transaction.commit()
+#    s3 = boto3.client('s3')
+#    s3.upload_fileobj(file, S3_BUCKET, filename, ExtraArgs={'ACL': 'public-read'})
 
 def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to_id, datestamp):
 
@@ -225,7 +212,7 @@ def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to
     # print ("uploading to latest...")
     
     ### upload a current GPI file to S3 with a static URL for Go Community ###
-    upload_file_to_s3(local_file, "latest/gpi.sgd.gz")
+    # upload_file_to_s3(local_file, "latest/gpi.sgd.gz")
     ##########################################################################
 
     # print ("uploading to s3 sgdid system...")
@@ -238,6 +225,8 @@ def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to
     if row is not None:
         return
 
+    # file_size = os.path.getsize(gzip_file)
+    
     gzip_file = gzip_file.replace("scripts/dumping/curation/data/", "")
 
 
@@ -265,7 +254,7 @@ def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to
     upload_file(CREATED_BY, local_file,
                 filename=gzip_file,
                 file_extension='gz',
-                description='All GO annotations for yeast genes (protein and RNA) in GPAD file format',
+                description='All GO annotations for yeast genes (protein and RNA) in GPI file format',
                 display_name=gzip_file,
                 data_id=data_id,
                 format_id=format_id,
@@ -278,7 +267,9 @@ def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gpad_md5sum)
+                # file_size=file_size)
 
+    
     gpi = nex_session.query(Dbentity).filter_by(
         display_name=gzip_file, dbentity_status='Active').one_or_none()
     if gpi is None:
