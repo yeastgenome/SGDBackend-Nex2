@@ -1,8 +1,10 @@
+from src.helpers import upload_file
 from datetime import datetime
 import logging
 from src.models import Taxonomy, Dnasequenceannotation, Locusdbentity, LocusAlias, \
-     Contig, So
+     Contig, So, Source, Edam, Filedbentity, Path, FilePath, Dbentity
 from scripts.loading.database_session import get_session
+import os
 
 __author__ = 'sweng66'
 
@@ -10,7 +12,10 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-datafile = "scripts/dumping/ncbi/data/SGD_ncRNA_xref.txt"
+CREATED_BY = os.environ['DEFAULT_USER']
+
+datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
+datafile = "scripts/dumping/ncbi/data/SGD_ncRNA_xref.txt." + datestamp 
 
 # s3_archive_dir = "curation/chromosomal_feature/"
 
@@ -21,11 +26,12 @@ mito_accession = 'KP263414.1'
 def dump_data(rna_file):
 
     nex_session = get_session()
-
-    datestamp = str(datetime.now()).split(" ")[0]
-
+    
     log.info(str(datetime.now()))
     log.info("Getting basic data from the database...")
+
+    source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
+    edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
 
     taxon = nex_session.query(Taxonomy).filter_by(taxid=TAXON).one_or_none()
     taxonomy_id = taxon.taxonomy_id
@@ -92,8 +98,87 @@ def dump_data(rna_file):
     
     fw.close()
 
+    log.info("Uploading go_slim_mapping to S3...")
+
+    update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to_id, datestamp)
+
+    nex_session.close()
+    
     log.info(str(datetime.now()))
     log.info("Done!")
+
+def update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to_id, datestamp):
+
+    local_file = open(datafile, mode='rb')
+
+    import hashlib
+    md5sum = hashlib.md5(datafile.encode()).hexdigest()
+    row = nex_session.query(Filedbentity).filter_by(md5sum=md5sum).one_or_none()
+
+    if row is not None:
+        return
+
+    datafile = datafile.replace("scripts/dumping/ncbi/data/", "")
+
+    nex_session.query(Dbentity).filter(Dbentity.display_name.like('SGD_ncRNA_xref.txt%')).filter(
+        Dbentity.dbentity_status == 'Active').update({"dbentity_status": 'Archived'}, synchronize_session='fetch')
+    nex_session.commit()
+
+    data_id = edam_to_id.get('EDAM:2048')  # data:2048 Report                                                          
+    topic_id = edam_to_id.get('EDAM:0085')  # topic:0085 Functional genomics                                           
+    format_id = edam_to_id.get('EDAM:3475')  # format:3475 TSV
+
+    from sqlalchemy import create_engine
+    from src.models import DBSession
+    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
+    DBSession.configure(bind=engine)
+
+    readme = nex_session.query(Dbentity).filter_by(
+        display_name="SGD_ncRNA_xref.README", dbentity_status='Active').one_or_none()
+    readme_file_id = None
+    if readme is not None:
+        readme_file_id = readme.dbentity_id
+
+        upload_file(CREATED_BY, local_file,
+                filename=datafile,
+                file_extension='.txt',
+                description='SGD RNA dbxref file',
+                display_name=datafile,
+                data_id=data_id,
+                format_id=format_id,
+                topic_id=topic_id,
+                status='Active',
+                readme_file_id=readme_file_id,
+                is_public='1',
+                is_in_spell='0',
+                is_in_browser='0',
+                file_date=datetime.now(),
+                source_id=source_to_id['SGD'],
+                md5sum=md5sum)
+
+    row = nex_session.query(Dbentity).filter_by(display_name=datafile, dbentity_status='Active').one_or_none()
+    if row is None:
+        log.info("The " + datafile + " is not in the database.")
+        return
+    file_id = row.dbentity_id
+
+    path = nex_session.query(Path).filter_by(
+        path="/reports/function").one_or_none()
+    if path is None:
+        log.info("The path /reports/function is not in the database.")
+        return
+    path_id = path.path_id
+
+    x = FilePath(file_id=file_id,
+                 path_id=path_id,
+                 source_id=source_to_id['SGD'],
+                 created_by=CREATED_BY)
+
+    nex_session.add(x)
+    nex_session.commit()
+
+    log.info("Done uploading " + datafile)
+
     
 def number2roman():
 
