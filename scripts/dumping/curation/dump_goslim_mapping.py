@@ -83,8 +83,8 @@ def update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to
     local_file = open(datafile, mode='rb')
         
     import hashlib
-    gpad_md5sum = hashlib.md5(datafile.encode()).hexdigest()
-    row = nex_session.query(Filedbentity).filter_by(md5sum=gpad_md5sum).one_or_none()
+    md5sum = hashlib.md5(datafile.encode()).hexdigest()
+    row = nex_session.query(Filedbentity).filter_by(md5sum=md5sum).one_or_none()
 
     if row is not None:
         return
@@ -127,7 +127,7 @@ def update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to
                 is_in_browser='0',
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
-                md5sum=gpad_md5sum)
+                md5sum=md5sum)
 
     row = nex_session.query(Dbentity).filter_by(display_name=datafile, dbentity_status='Active').one_or_none()
     if row is None:
