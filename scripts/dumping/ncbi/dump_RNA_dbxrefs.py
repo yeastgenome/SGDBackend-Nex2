@@ -139,7 +139,7 @@ def update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to
     if readme is not None:
         readme_file_id = readme.dbentity_id
 
-        upload_file(CREATED_BY, local_file,
+    upload_file(CREATED_BY, local_file,
                 filename=datafile,
                 file_extension='.txt',
                 description='SGD RNA dbxref file',
