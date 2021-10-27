@@ -19,8 +19,33 @@ def copy_files():
     copy_noctua_gpad(nex_session) 
     copy_go_slim_mapping_file(nex_session)
     copy_rna_dbxref_file(nex_session)
+    copy_gene_pmid_file(nex_session)
 
+def copy_gene_pmid_file(nex_session):
+    
+    dstDir = "curation/literature/"
+    gene2pmid_file = "gene2pmid.tab"
 
+    for x in nex_session.query(Filedbentity).filter(Filedbentity.previous_file_name.like('gene2pmid.tab%')).filter(Filedbentity.dbentity_status=='Active').all():
+
+        if x.s3_url is None:
+            continue
+
+        urlParam = x.s3_url.split('/')
+        filename = urlParam[4].split('?')[0]
+        srcFile = urlParam[3] + '/' + filename
+        
+        ## copy to archive                                                                                        
+        dstFile = dstDir + "archive/" + filename
+        print (x.dbentity_status, srcFile, dstFile)
+        boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
+
+        ## copy to current directory                                                                               
+        dstFile = dstDir + gene2pmid_file
+        print (x.dbentity_status, srcFile, dstFile)
+        boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
+
+        
 def copy_rna_dbxref_file(nex_session):
 
     dstDir = "curation/chromosomal_feature/"
