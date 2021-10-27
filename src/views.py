@@ -83,7 +83,7 @@ def search(request):
         query = query.replace('\\', '')
     elif "\\" in query:
         query = query.replace('\\', ' ')
-        
+
     temp_container = query.split(' ')
     int_flag = False
     if(temp_container):
@@ -184,6 +184,7 @@ def search(request):
         "synonyms",
         "go_id",
         "gene_ontology_loci",
+        "allele_loci",
         "author",
         "journal",
         "reference_loci",
@@ -368,6 +369,13 @@ def search(request):
                 }
 
     else:
+
+        query = query.upper()
+        
+        #if query.endswith('-') and query[3:-1].isdigit():
+        #    query = query[0:-1]
+        #    is_quick_flag = False
+            
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
