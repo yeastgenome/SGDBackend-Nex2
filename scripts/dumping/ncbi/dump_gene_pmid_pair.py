@@ -8,7 +8,6 @@ import json
 from src.models import Referencedbentity, Locusdbentity, Literatureannotation, Source, Edam,\
      Filedbentity, Path, FilePath, Dbentity
 from scripts.loading.database_session import get_session
-# from src.boto3_upload import upload_one_file_to_s3
 
 __author__ = 'sweng66'
 
@@ -16,15 +15,10 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-S3_BUCKET = os.environ['S3_BUCKET']
-S3_BUCKET2 = os.environ['ARCHIVE_S3_BUCKET']
-
 CREATED_BY = os.environ['DEFAULT_USER']
 
 datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
 datafile = "scripts/dumping/ncbi/data/gene2pmid.tab." + datestamp
-
-# s3_archive_dir = "curation/literature/"
 
 obsolete_pmids = [25423496, 27651461, 28068213, 31088842]
 
@@ -69,8 +63,6 @@ def dump_data():
         for pmid in pmids:
             fw.write(gene + "\t" + str(pmid) + "\t" + x.topic + "\n")
     fw.close()
-
-    # upload_file_to_latest(datafile)
 
     update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to_id)
 
@@ -150,13 +142,7 @@ def update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to
     nex_session.commit()
 
     log.info("Done uploading " + datafile)
-    
-#def upload_file_to_latest(datafile):
-#
-#    file = open(datafile, "rb")
-#    filename = "latest/" + datafile.split('/')[-1]
-#    upload_one_file_to_s3(file, filename)
-        
+            
 if __name__ == '__main__':
 
     dump_data()
