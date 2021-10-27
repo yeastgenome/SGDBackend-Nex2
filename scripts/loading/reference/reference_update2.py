@@ -20,10 +20,8 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 CREATED_BY = os.environ['DEFAULT_USER']
 
-MAX = 5000
-MAX2 = 50
-MAX_4_CONNECTION = 5000
-SLEEP_TIME = 5
+MAX = 10
+SLEEP_TIME = 1
 TOP = 105000
 PUBLISHED_STATUS = 'Published'
 EPUB_STATUS = 'Epub ahead of print'
@@ -99,34 +97,41 @@ def update_reference_data(log_file):
     fw.write(str(datetime.now()) + "\n")
     fw.write("Getting Pubmed records...\n")
 
+    # log.info(datetime.now())
+    log.info("Updating data for the rest of papers in the database...")
     log.info("Getting Pubmed records and updating the database...")
 
     update_log = {}
     for field_name in field_names:
         update_log[field_name] = 0
 
-    i = 0
+    pmids = []
     j = 0
+    i = 0
+
     updated_pmids = []
     dbentity_ids_with_author_changed = []
-    pmids = []
-    bad_pmids = []
-    max = MAX
     pmids_all.sort()
+    bad_pmids = []
     for pmid in pmids_all:
-
-        if pmid in [33853398, 33995399, 34320248, 34328721, 34490835]:
+        
+        i = i + 1
+    
+        if i <= TOP:
             continue
         
-        if i > TOP and max != MAX2:
-            max = MAX2
-            time.sleep(SLEEP_TIME*20)
-            
-        if len(pmids) >= max:
+        j = j + 1
+        
+        if j >= MAX:
+            log.info("Reference updated: " + str(i))
+            j = 0
+                    
+        if len(pmids) >= MAX:
             try:
                 records = get_pubmed_record_from_xml(','.join(pmids))
             except Exception as e:
                 bad_pmids = bad_pmids + pmids
+                # log.info("Error retrieving the pubmed records for " + ','.join(pmids))
                 pmids = []
                 continue
             try:
@@ -144,32 +149,19 @@ def update_reference_data(log_file):
                                       update_log,
                                       updated_pmids,
                                       dbentity_ids_with_author_changed)
-                
-                log.info("Reference updated: " + str(i))
             except:
                 log.info("Error in updating data for " + ','.join(pmids))
             pmids = []
             time.sleep(SLEEP_TIME)
-
         pmids.append(str(pmid))
 
-        i = i + 1
-        j = j + 1
-                
-        if j >= MAX_4_CONNECTION:
-            ###########################
-            nex_session.commit()
-            nex_session.close()
-            nex_session = get_session()
-            ###########################
-            j = 0
-            
     if len(pmids) > 0:
         records = None
         try:
             records = get_pubmed_record_from_xml(','.join(pmids))
         except Exception as e:
             bad_pmids = bad_pmids + pmids
+            # log.info("Error retrieving the pubmed records for " + ','.join(pmids))
             pmids = []
         if len(pmids) > 0:
             try:
@@ -190,12 +182,7 @@ def update_reference_data(log_file):
             except:
                 log.info("Error in updating data for " + ','.join(pmids))
 
-    log.info("\tGetting 'problematic' " + str(len(bad_pmids)) + " records...")
-    i = 0
-    j = 0
     for pmid in bad_pmids:
-        i = i + 1
-        j = j + 1
         record = None
         try:
             record = get_pubmed_record_from_xml(pmid)
@@ -217,9 +204,6 @@ def update_reference_data(log_file):
                                   update_log,
                                   updated_pmids,
                                   dbentity_ids_with_author_changed)
-            if j > 10:
-                log.info("\tReference updated: " + str(i))
-                j = 0
         except:
             log.info("Error in updating data for " + pmid)
 
@@ -685,7 +669,7 @@ def update_reference(nex_session, fw, pmid, record, journal_id_to_abbrev, source
         x.page = page
         update_log['page'] = update_log['page'] + 1
         has_update = 1
-    if (doi and doi != x.doi) or (doi is None and x.doi is not None):
+    if doi and doi != x.doi:
         x.doi = doi
         update_log['doi'] = update_log['doi'] + 1
         has_update = 1
@@ -713,7 +697,7 @@ def update_reference(nex_session, fw, pmid, record, journal_id_to_abbrev, source
 
 if __name__ == '__main__':
 
-    log_file = "scripts/loading/reference/logs/reference_update.log"
+    log_file = "scripts/loading/reference/logs/reference_update2.log"
     
     update_reference_data(log_file)
 

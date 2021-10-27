@@ -6,9 +6,6 @@ from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
     Filedbentity, ReferenceAlias, Dnasequenceannotation, So
 from urllib.request import urlretrieve
 from urllib.request import urlopen
-import transaction
-from boto.s3.key import Key
-import boto
 from datetime import datetime
 import logging
 import os
@@ -21,10 +18,6 @@ __author__ = 'sweng66'
 logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_BUCKET = os.environ['S3_BUCKET']
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
@@ -196,17 +189,6 @@ def get_curator_to_orcid_mapping():
              'ANAND'      : 'GOC:as'
     }
 
-def upload_file_to_s3(file, filename):
-
-    s3_path = filename
-    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
-    bucket = conn.get_bucket(S3_BUCKET)
-    k = Key(bucket)
-    k.key = s3_path
-    k.set_contents_from_file(file, rewind=True)
-    k.make_public()
-    transaction.commit()
-
 def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_to_id, datestamp):
 
     gzip_file = gpad_file + "." + datestamp + ".gz"
@@ -220,7 +202,7 @@ def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_t
     # print ("uploading file to latest...")
     
     ### upload a current GPAD file to S3 with a static URL for Go Community ###
-    upload_file_to_s3(local_file, "latest/gpad.sgd.gz")
+    # upload_file_to_s3(local_file, "latest/gpad.sgd.gz")
     ##########################################################################
 
     # print ("uploading file to s3 sgdid system...")
