@@ -10593,9 +10593,9 @@ class Complexdbentity(Dbentity):
             data['go'] = [g.go.to_dict() for g in go_objs]
             for x in go_annots:
                 go = x.go
-                if go.go_aspect == 'molecular function':
+                if go.go_namespace == 'molecular function':
                     function.append(x.to_dict())
-                elif go.go_aspect == 'cellular component':
+                elif go.go_namespace == 'cellular component':
                     component.append(x.to_dict())
                 else:
                     process.append(x.to_dict())
