@@ -10514,7 +10514,7 @@ class Complexdbentity(Dbentity):
         if go_objs:
 
             for g in go_objs:
-                go = g.go
+                go = g.go.to_dict()
                 goComplexes = DBSession.query(ComplexGo).filter_by(go_id=g.go_id).all()
                 if len(goComplexes) == 1:
                     continue
