@@ -10594,11 +10594,11 @@ class Complexdbentity(Dbentity):
             for x in go_annots:
                 go = x.go
                 if go.go_namespace == 'molecular function':
-                    function.append(x.to_dict())
+                    function.append(x.to_dict()[0])
                 elif go.go_namespace == 'cellular component':
-                    component.append(x.to_dict())
+                    component.append(x.to_dict()[0])
                 else:
-                    process.append(x.to_dict())
+                    process.append(x.to_dict()[0])
 
         data['process'] = process
         data['function'] = function
