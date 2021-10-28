@@ -10506,28 +10506,16 @@ class Complexdbentity(Dbentity):
             "category": "FOCUS",
         })
         network_nodes_ids[self.format_name] = True
-
+        
         go_objs = DBSession.query(ComplexGo).filter_by(complex_id=self.dbentity_id).all()
-
-        process = []
-        function = []
-        component = []
 
         foundComplex = {}
         
         if go_objs:
-            data['go'] = [g.go.to_dict() for g in go_objs]
+
             for g in go_objs:
-                go = g.go.to_dict()
-                if go['go_aspect'] == 'molecular function':
-                    function.append(go)
-                elif go['go_aspect'] == 'cellular component':
-                    component.append(go)
-                else:
-                    process.append(go)
-
+                go = g.go
                 goComplexes = DBSession.query(ComplexGo).filter_by(go_id=g.go_id).all()
-
                 if len(goComplexes) == 1:
                     continue
                     
@@ -10594,10 +10582,31 @@ class Complexdbentity(Dbentity):
                     else:
                         foundComplex[complex.format_name] = go['go_id']
 
+        ####
+        go_annots = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
-        data['process'] = sorted(process, key=lambda p: p['display_name'])
-        data['function'] = sorted(function, key=lambda f: f['display_name'])
-        data['component'] = sorted(component, key=lambda c: c['display_name'])
+        process = []
+        function = []
+        component = []
+
+        if go_annots:
+            data['go'] = [g.go.to_dict() for g in go_objs]
+            for x in go_annots:
+                go = x.go
+                if go['go_aspect'] == 'molecular function':
+                    function.append(x.to_dict())
+                elif go['go_aspect'] == 'cellular component':
+                    component.append(x.to_dict())
+                else:
+                    process.append(x.to_dict())
+
+        data['process'] = process
+        data['function'] = function
+        data['component'] = component
+        
+        # data['process'] = sorted(process, key=lambda p: p['display_name'])
+        # data['function'] = sorted(function, key=lambda f: f['display_name'])
+        # data['component'] = sorted(component, key=lambda c: c['display_name'])
 
         ## reference
 
