@@ -7716,6 +7716,9 @@ class Goannotation(Base):
             if len(experiment_name) > len(alia.display_name):
                 experiment_name = alia.display_name
 
+        if experiment_name is None and eco.display_name.startswith('biological system reconstruction evidence'):
+            experiment_name = 'BSR'
+                
         alias_url = DBSession.query(EcoUrl).filter_by(eco_id=self.eco_id).all()
 
         experiment_url = None
@@ -7725,7 +7728,7 @@ class Goannotation(Base):
                 break
         if experiment_url == None and len(alias_url) > 1:
             experiment_url = alias_url[1].obj_url
-
+            
         date_created = self.date_created
         if self.annotation_type == 'computational':
             date_created = self.date_assigned
