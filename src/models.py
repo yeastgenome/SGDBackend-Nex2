@@ -10599,14 +10599,10 @@ class Complexdbentity(Dbentity):
                     component.append(x.to_dict()[0])
                 else:
                     process.append(x.to_dict()[0])
-
-        data['process'] = process
-        data['function'] = function
-        data['component'] = component
         
-        # data['process'] = sorted(process, key=lambda p: p['display_name'])
-        # data['function'] = sorted(function, key=lambda f: f['display_name'])
-        # data['component'] = sorted(component, key=lambda c: c['display_name'])
+        data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
+        data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
+        data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
 
         ## reference
 
