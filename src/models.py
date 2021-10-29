@@ -10555,7 +10555,7 @@ class Complexdbentity(Dbentity):
                     network_nodes.append({
                             "name": go.display_name,
                             "id": go.go_id,
-                            "href": go.link,
+                            "href": go.obj_url,
                             "category": 'GO',
                     })
                     network_nodes_ids[go.go_id] = True
