@@ -10551,17 +10551,17 @@ class Complexdbentity(Dbentity):
                 if len(goComplexes) == 1:
                     continue
                     
-                if go["go_id"] not in network_nodes_ids:
+                if go.go_id not in network_nodes_ids:
                     network_nodes.append({
                             "name": go.display_name,
                             "id": go.go_id,
                             "href": go.link,
                             "category": 'GO',
                     })
-                    network_nodes_ids[go["go_id"]] = True
+                    network_nodes_ids[go.go_id] = True
                 
                 for g2 in goComplexes:
-                    complex = g2.complex
+                    complex = g2.dbentity
                     if complex.format_name == self.format_name:
                         continue
                     if complex.format_name in foundComplex:
