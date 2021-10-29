@@ -10536,7 +10536,7 @@ class Complexdbentity(Dbentity):
         foundComplex = {}
         
         if go_annots:
-            data['go'] = [g.go.to_dict() for g in go_objs]
+            data['go'] = [g.go.to_dict() for g in go_annots]
             for x in go_annots:
                 go = x.go
                 if go.go_namespace == 'molecular function':
