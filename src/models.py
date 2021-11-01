@@ -10837,7 +10837,8 @@ class Complexdbentity(Dbentity):
                 elif go_slim_dict not in process_go_slim_list:
                     process_go_slim_list.append(go_slim_dict)
 
-        obj = {}
+        obj = { 'date_last_reviewed': None,
+                'go_slim_grouped': [] }
         
         ## sort goslim terms here
         process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
