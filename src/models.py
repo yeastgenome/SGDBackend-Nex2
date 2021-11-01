@@ -10479,7 +10479,7 @@ class Complexdbentity(Dbentity):
         # data['description'] = link_gene_complex_names(self.description, {self.format_name: 1}, DBSession),
         # data['properties'] = link_gene_complex_names(self.properties, {self.format_name: 1}, DBSession),
         data['description'] = self.description
-        data['go_overview'] = self.go_overview_to_dict(),
+        data['go_overview'] = self.go_overview_to_dict()
         data['properties'] = self.properties
         data['eco'] = self.eco.format_name
 
