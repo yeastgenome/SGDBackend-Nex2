@@ -10813,10 +10813,6 @@ class Complexdbentity(Dbentity):
         return data
 
     def go_overview_to_dict(self):
-        obj = {
-            "go_slim_grouped": [],
-            "date_last_reviewed": None
-        }
 
         go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
         process_go_slim_list = []
@@ -10841,6 +10837,8 @@ class Complexdbentity(Dbentity):
                 elif go_slim_dict not in process_go_slim_list:
                     process_go_slim_list.append(go_slim_dict)
 
+        obj = {}
+        
         ## sort goslim terms here
         process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
         function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
