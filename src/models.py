@@ -10518,7 +10518,16 @@ class Complexdbentity(Dbentity):
         network_nodes =[]
         network_edges =[]
         
+        go_network_nodes =[]
+        go_network_edges =[]
+        
         network_nodes.append({
+            "name": self.display_name,
+            "id": self.format_name,
+            "href": "/complex/" + self.format_name,
+            "category": "FOCUS",
+        })
+        go_network_nodes.append({
             "name": self.display_name,
             "id": self.format_name,
             "href": "/complex/" + self.format_name,
@@ -10559,6 +10568,12 @@ class Complexdbentity(Dbentity):
                             "href": go.obj_url,
                             "category": 'GO',
                     })
+                    go_network_nodes.append({
+                            "name": go.display_name,
+                            "id": go.go_id,
+                            "href": go.obj_url,
+                            "category": 'GO',
+                    })
                     network_nodes_ids[go.go_id] = True
                 
                 for g2 in goComplexes:
@@ -10578,11 +10593,26 @@ class Complexdbentity(Dbentity):
                                     "source": self.format_name,
                                     "target": go.go_id
                             })
+
+                            go_network_edges.append({
+                                    "source": self.format_name,
+                                    "target": preGoid
+                            })
+                            go_network_edges.append({
+                                    "source": self.format_name,
+                                    "target": go.go_id
+                            })
                             
                             ### also need to add this complex to the network
 
                             if complex.format_name not in network_nodes_ids:
                                 network_nodes.append({
+                                        "name": complex.display_name,
+                                        "id": complex.format_name,
+                                        "href": "/complex/" + complex.format_name,
+                                        "category": "complex"
+                                })
+                                go_network_nodes.append({
                                         "name": complex.display_name,
                                         "id": complex.format_name,
                                         "href": "/complex/" + complex.format_name,
@@ -10599,6 +10629,14 @@ class Complexdbentity(Dbentity):
                                     "source": complex.format_name,
                                     "target": go.go_id
                             })
+                            go_network_edges.append({
+                                    "source": complex.format_name,
+                                    "target": preGoid
+                            })
+                            go_network_edges.append({
+                                    "source": complex.format_name,
+                                    "target": go.go_id
+                            })
                             foundComplex[complex.format_name] = 1
                         else:
                             ## this 3rd or 4th.. time see this complex
@@ -10611,11 +10649,19 @@ class Complexdbentity(Dbentity):
                                 "source": self.format_name,
                                 "target": go.go_id
                             })
+                            go_network_edges.append({
+                                "source": complex.format_name,
+                                "target": go.go_id
+                            })
+                            go_network_edges.append({
+                                "source": self.format_name,
+                                "target": go.go_id
+                            })
 
                     else:
                         foundComplex[complex.format_name] = go.go_id
         
-        data['go_network_graph'] = { "edges": network_edges, "nodes": network_nodes }
+        data['go_network_graph'] = { "edges": go_network_edges, "nodes": go_network_nodes }
         
         data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
         data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
