@@ -10517,7 +10517,7 @@ class Complexdbentity(Dbentity):
         
         network_nodes =[]
         network_edges =[]
-
+        
         network_nodes.append({
             "name": self.display_name,
             "id": self.format_name,
@@ -10525,7 +10525,7 @@ class Complexdbentity(Dbentity):
             "category": "FOCUS",
         })
         network_nodes_ids[self.format_name] = True
-
+        
         complex_ids = DBSession.query(Complexdbentity.dbentity_id).all()
         
         go_annots = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
@@ -10554,6 +10554,12 @@ class Complexdbentity(Dbentity):
                     
                 if go.go_id not in network_nodes_ids:
                     network_nodes.append({
+                            "name": go.display_name,
+                            "id": go.go_id,
+                            "href": go.obj_url,
+                            "category": 'GO',
+                    })
+                    go_network_nodes.append({
                             "name": go.display_name,
                             "id": go.go_id,
                             "href": go.obj_url,
@@ -10614,7 +10620,10 @@ class Complexdbentity(Dbentity):
 
                     else:
                         foundComplex[complex.format_name] = go.go_id
-        
+
+        data['go_network_graph'] = { "edges": network_edges, "nodes": network_nodes }
+                        
+                        
         data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
         data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
         data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
