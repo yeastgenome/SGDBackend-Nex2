@@ -10517,6 +10517,9 @@ class Complexdbentity(Dbentity):
         
         network_nodes =[]
         network_edges =[]
+
+        go_network_nodes =[]
+        go_network_edges =[]
         
         network_nodes.append({
             "name": self.display_name,
