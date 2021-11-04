@@ -10664,8 +10664,9 @@ class Complexdbentity(Dbentity):
         
         foundId = {}
         for edge in network_edges:
+            foundId[edge["source"]] = 1
             foundId[edge["target"]] = 1
-
+            
         go_network_nodes = []
         for node in network_nodes:
             if node["id"] in foundId:
