@@ -10661,7 +10661,7 @@ class Complexdbentity(Dbentity):
                     else:
                         foundComplex[complex.format_name] = go.go_id
         
-        data['go_network_graph'] = { "edges": go_network_edges, "nodes": go_network_nodes }
+        data['go_network_graph'] = { "edges": go_network_edges, "nodes": network_nodes }
         
         data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
         data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
