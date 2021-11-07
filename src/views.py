@@ -443,8 +443,7 @@ def genomesnapshot(request):
             parent = DBSession.query(ApoRelation).filter(ApoRelation.child_id==phenotype['id']).one_or_none()
             phenotype_slim_relationships.append([phenotype['id'], parent.parent_id])
         genome_snapshot['phenotype_slim_relationships'] = phenotype_slim_relationships
-        # go_slim_data = DBSession.query(Goslim).filter_by(slim_name='Yeast GO-Slim').all()
-        go_slim_data = DBSession.query(Goslim).all()
+        go_slim_data = DBSession.query(Goslim).filter_by(slim_name='Yeast GO-Slim').filter(GOslim.genome_count > 0).all()
         go_slim_terms = [go_slim.to_snapshot_dict() for go_slim in go_slim_data]
         genome_snapshot['go_slim_terms'] = go_slim_terms
         go_slim_relationships = list()
