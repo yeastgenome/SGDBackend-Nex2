@@ -7932,7 +7932,7 @@ class Goslim(Base):
         #    return None
 
     def to_snapshot_dict(self):
-        direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
+        direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).filter(or_(Goannotation.annotation_type == 'manually curated', Goannotation.annotation_type== 'high-throughput')).count()
         return {
             "descendant_annotation_gene_count": self.genome_count,
             "format_name": self.display_name if self.display_name in ['molecular_function', 'biological_process', 'cellular_component'] else self.obj_url.split('/')[2],
