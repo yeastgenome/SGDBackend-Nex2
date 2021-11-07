@@ -4737,6 +4737,18 @@ class Locusdbentity(Dbentity):
         obj["locus_type"] = ",".join([l[0] for l in locus_type])
         urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
         obj["urls"] = [u.to_dict() for u in urls]
+
+        uniprotID = None
+        aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
+        if aliases:
+            uniprotID = aliases[0].display_name
+        if uniprotID:
+            obj["urls"].append({
+                "category": "LOCUS_SEQUENCE",
+                "link": "https://alphafold.ebi.ac.uk/entry/" + uniprotID,
+                "display_name": "AlphaFold Protein Structure"
+            })
+
         obj["urls"].append({
             "category": "LOCUS_SEQUENCE",
             "link": "/seqTools?seqname=" + self.systematic_name,
@@ -4747,16 +4759,7 @@ class Locusdbentity(Dbentity):
             "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
             "display_name": "JBrowse"
         })
-        uniprotID = None
-        aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
-        if aliases:
-            uniprotID = aliases[0].display_name
         if uniprotID:
-            obj["urls"].append({
-                "category": "LOCUS_SEQUENCE",
-                "link": "https://alphafold.ebi.ac.uk/entry/" + uniprotID,
-                "display_name": "AlphaFold"
-            })
             obj["urls"].append({
                 "category": "LOCUS_SEQUENCE",
                 "link": "https://www.uniprot.org/uniprot/" + uniprotID,
