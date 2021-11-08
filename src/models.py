@@ -7934,7 +7934,7 @@ class Goslim(Base):
     def to_snapshot_dict(self):
         # direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).filter(or_(Goannotation.annotation_type == 'manually curated', Goannotation.annotation_type== 'high-throughput')).count()
         dbentity_ids = []
-        for x DBSession.query(Goannotation).filter_by(go_id=self.go_id).filter(or_(Goannotation.annotation_type == 'manually curated', Goannotation.annotation_type== 'high-throughput')):
+        for x in DBSession.query(Goannotation).filter(or_(Goannotation.annotation_type == 'manually curated', Goannotation.annotation_type== 'high-throughput')).filter_by(go_id=self.go_id).all():
             if x.dbentity_id not in dbentity_ids:
                 dbentity_ids.append(x.dbentity_id)
         direct_annotation_gene_count = len(dbentity_ids)
