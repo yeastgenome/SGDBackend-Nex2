@@ -7938,6 +7938,8 @@ class Goslim(Base):
             if x.dbentity_id not in dbentity_ids:
                 dbentity_ids.append(x.dbentity_id)
         direct_annotation_gene_count = len(dbentity_ids)
+        if direct_annotation_gene_count > self.genome_count:
+            direct_annotation_gene_count = self.genome_count
         return {
             "descendant_annotation_gene_count": self.genome_count,
             "format_name": self.display_name if self.display_name in ['molecular_function', 'biological_process', 'cellular_component'] else self.obj_url.split('/')[2],
