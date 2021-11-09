@@ -455,24 +455,23 @@ def update_complexdbentity(nex_session, fw, intact_id, complexAC, systematicName
     # return
 
     x = complexAC_to_complexdbentity.get(complexAC)
-    
-    update_hash = {}
+
+    updated = 0
     if x.systematic_name != systematicName:
-        update_hash['systematic_name'] = systematicName
+        x.systematic_name = systematicName
+        updated = 1
     if x.eco_id != eco_id:
-        update_hash['eco_id'] = eco_id
+        x.eco_id = eco_id
+        updated = 1
     if x.description != desc:
-        update_hash['description'] = desc
+        x.description = desc
+        updated = 1
     if x.properties != properties:
-        update_hash['properties'] = properties
-
-    if not update_hash:
-        return
-
-    nex_session.query(Complexdbentity).filter_by(format_name=intact_id).update(update_hash)
-
-    fw.write("Update complexdbentity row for format_name = " + intact_id + "\n")
-
+        updated = 1
+        x.properties = properties
+    if updated == 1:
+        nex_session.add(x)
+        fw.write("Update complexdbentity row for format_name = " + intact_id + "\n")
 
 def get_json(url):
 
