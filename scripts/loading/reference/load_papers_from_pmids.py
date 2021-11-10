@@ -1,7 +1,4 @@
 import sys
-import importlib
-importlib.reload(sys)  # Reload does the trick!
-sys.setdefaultencoding('UTF8')
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.promote_reference_triage import add_paper
 
