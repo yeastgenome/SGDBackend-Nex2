@@ -4737,6 +4737,18 @@ class Locusdbentity(Dbentity):
         obj["locus_type"] = ",".join([l[0] for l in locus_type])
         urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
         obj["urls"] = [u.to_dict() for u in urls]
+
+        uniprotID = None
+        aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
+        if aliases:
+            uniprotID = aliases[0].display_name
+        if uniprotID:
+            obj["urls"].append({
+                "category": "LOCUS_SEQUENCE",
+                "link": "https://alphafold.ebi.ac.uk/entry/" + uniprotID,
+                "display_name": "AlphaFold Protein Structure"
+            })
+
         obj["urls"].append({
             "category": "LOCUS_SEQUENCE",
             "link": "/seqTools?seqname=" + self.systematic_name,
@@ -4747,6 +4759,12 @@ class Locusdbentity(Dbentity):
             "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
             "display_name": "JBrowse"
         })
+        if uniprotID:
+            obj["urls"].append({
+                "category": "LOCUS_SEQUENCE",
+                "link": "https://www.uniprot.org/uniprot/" + uniprotID,
+                "display_name": "UniProtKB"
+            })
 
         locus_notes = DBSession.query(Locusnote).filter_by(locus_id=self.dbentity_id).all()
         obj["history"] = [h.to_dict() for h in locus_notes]
@@ -7716,6 +7734,9 @@ class Goannotation(Base):
             if len(experiment_name) > len(alia.display_name):
                 experiment_name = alia.display_name
 
+        if experiment_name is None and self.eco.display_name.startswith('biological system reconstruction evidence'):
+            experiment_name = 'BSR'
+                
         alias_url = DBSession.query(EcoUrl).filter_by(eco_id=self.eco_id).all()
 
         experiment_url = None
@@ -7725,7 +7746,7 @@ class Goannotation(Base):
                 break
         if experiment_url == None and len(alias_url) > 1:
             experiment_url = alias_url[1].obj_url
-
+            
         date_created = self.date_created
         if self.annotation_type == 'computational':
             date_created = self.date_assigned
@@ -10461,6 +10482,7 @@ class Complexdbentity(Dbentity):
         # data['description'] = link_gene_complex_names(self.description, {self.format_name: 1}, DBSession),
         # data['properties'] = link_gene_complex_names(self.properties, {self.format_name: 1}, DBSession),
         data['description'] = self.description
+        data['go_overview'] = self.go_overview_to_dict()
         data['properties'] = self.properties
         data['eco'] = self.eco.format_name
 
@@ -10498,16 +10520,19 @@ class Complexdbentity(Dbentity):
         
         network_nodes =[]
         network_edges =[]
-
+                
         network_nodes.append({
             "name": self.display_name,
             "id": self.format_name,
             "href": "/complex/" + self.format_name,
             "category": "FOCUS",
         })
+        
         network_nodes_ids[self.format_name] = True
-
-        go_objs = DBSession.query(ComplexGo).filter_by(complex_id=self.dbentity_id).all()
+        
+        complex_ids = DBSession.query(Complexdbentity.dbentity_id).all()
+        
+        go_annots = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
         process = []
         function = []
@@ -10515,33 +10540,33 @@ class Complexdbentity(Dbentity):
 
         foundComplex = {}
         
-        if go_objs:
-            data['go'] = [g.go.to_dict() for g in go_objs]
-            for g in go_objs:
-                go = g.go.to_dict()
-                if go['go_aspect'] == 'molecular function':
-                    function.append(go)
-                elif go['go_aspect'] == 'cellular component':
-                    component.append(go)
+        if go_annots:
+            data['go'] = [g.go.to_dict() for g in go_annots]
+            for x in go_annots:
+                go = x.go
+                if go.go_namespace == 'molecular function':
+                    function.append(x.to_dict()[0])
+                elif go.go_namespace == 'cellular component':
+                    component.append(x.to_dict()[0])
                 else:
-                    process.append(go)
-
-                goComplexes = DBSession.query(ComplexGo).filter_by(go_id=g.go_id).all()
-
+                    process.append(x.to_dict()[0])
+                    
+                goComplexes = DBSession.query(Goannotation).filter_by(go_id=go.go_id).filter(Goannotation.dbentity_id.in_(complex_ids)).all()
+                
                 if len(goComplexes) == 1:
                     continue
                     
-                if go["go_id"] not in network_nodes_ids:
+                if go.go_id not in network_nodes_ids:
                     network_nodes.append({
-                            "name": go["display_name"],
-                            "id": go["go_id"],
-                            "href": go["link"],
+                            "name": go.display_name,
+                            "id": go.go_id,
+                            "href": go.obj_url,
                             "category": 'GO',
                     })
-                    network_nodes_ids[go["go_id"]] = True
+                    network_nodes_ids[go.go_id] = True
                 
                 for g2 in goComplexes:
-                    complex = g2.complex
+                    complex = g2.dbentity
                     if complex.format_name == self.format_name:
                         continue
                     if complex.format_name in foundComplex:
@@ -10555,7 +10580,7 @@ class Complexdbentity(Dbentity):
                             })
                             network_edges.append({
                                     "source": self.format_name,
-                                    "target": go["go_id"]
+                                    "target": go.go_id
                             })
                             
                             ### also need to add this complex to the network
@@ -10576,7 +10601,7 @@ class Complexdbentity(Dbentity):
                             })
                             network_edges.append({
                                     "source": complex.format_name,
-                                    "target": go["go_id"]
+                                    "target": go.go_id
                             })
                             foundComplex[complex.format_name] = 1
                         else:
@@ -10584,20 +10609,32 @@ class Complexdbentity(Dbentity):
                             ## simply link this complex to current goid
                             network_edges.append({
                                 "source": complex.format_name,
-                                "target": go['go_id']
+                                "target": go.go_id
                             })
                             network_edges.append({
                                 "source": self.format_name,
-                                "target": go['go_id']
+                                "target": go.go_id
                             })
-
+                            
                     else:
-                        foundComplex[complex.format_name] = go['go_id']
+                        foundComplex[complex.format_name] = go.go_id
 
-
-        data['process'] = sorted(process, key=lambda p: p['display_name'])
-        data['function'] = sorted(function, key=lambda f: f['display_name'])
-        data['component'] = sorted(component, key=lambda c: c['display_name'])
+        
+        foundId = {}
+        for edge in network_edges:
+            foundId[edge["source"]] = 1
+            foundId[edge["target"]] = 1
+            
+        go_network_nodes = []
+        for node in network_nodes:
+            if node["id"] in foundId:
+                go_network_nodes.append(node)
+                
+        data['go_network_graph'] = { "edges": network_edges, "nodes": go_network_nodes }
+        
+        data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
+        data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
+        data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
 
         ## reference
 
@@ -10792,6 +10829,50 @@ class Complexdbentity(Dbentity):
 
         return data
 
+    def go_overview_to_dict(self):
+
+        go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        process_go_slim_list = []
+        function_go_slim_list = []
+        component_go_slim_list = []
+        complex_go_slim_list = []
+        for go_slim in go_slims:
+            go_slim_dict = go_slim.to_dict()
+            if 'complex' in go_slim_dict['slim_name'].lower():
+                if go_slim_dict not in complex_go_slim_list:
+                    complex_go_slim_list.append(go_slim_dict)
+            else:
+                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                if go is None:
+                    continue
+                if 'component' in go.go_namespace:
+                    if go_slim_dict not in component_go_slim_list:
+                        component_go_slim_list.append(go_slim_dict)
+                elif 'function' in go.go_namespace:
+                    if go_slim_dict not in function_go_slim_list:
+                        function_go_slim_list.append(go_slim_dict)
+                elif go_slim_dict not in process_go_slim_list:
+                    process_go_slim_list.append(go_slim_dict)
+
+        obj = { 'date_last_reviewed': None,
+                'go_slim_grouped': [] }
+        
+        ## sort goslim terms here
+        process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
+        function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
+        component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
+        complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
+        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + component_go_slim_sorted_list + complex_go_slim_sorted_list
+
+        go_annotations = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        for annotation in go_annotations:
+            if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
+                obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
+
+
+        return obj
+
+    
     def get_literatureannotation_references(self, topic, unique_references):
         references = []
         for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():

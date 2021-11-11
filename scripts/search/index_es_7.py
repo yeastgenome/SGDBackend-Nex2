@@ -1,4 +1,4 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, ComplexGo, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference, LocusAllele, Literatureannotation
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference, LocusAllele, Literatureannotation
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -840,6 +840,9 @@ def index_complex_names():
 
     for c in complexes:
 
+        if c.dbentity_status == 'Deleted':
+            continue
+        
         synonyms = DBSession.query(ComplexAlias.display_name).filter_by(
             complex_id=c.dbentity_id).all()
 
@@ -849,12 +852,12 @@ def index_complex_names():
         for ref in refs:
             references.add(ref.reference.display_name)
             
-        all_go = DBSession.query(ComplexGo).filter_by(
-                        complex_id=c.dbentity_id).all()
+        all_goannots = DBSession.query(Goannotation).filter_by(
+                        dbentity_id=c.dbentity_id).all()
         process = set([])
         component = set([])
         function = set([])
-        for x in all_go:
+        for x in all_goannots:
             if x.go.go_namespace == 'biological process':
                 process.add(x.go.display_name)
             elif x.go.go_namespace == 'cellular component':
