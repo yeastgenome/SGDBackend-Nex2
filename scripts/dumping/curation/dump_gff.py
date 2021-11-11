@@ -451,7 +451,7 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
     local_file = open(gzip_file, mode='rb')
 
     ### upload a current GFF file to S3 with a static URL for Go Community ###
-    upload_gff_to_s3(local_file, "latest/saccharomyces_cerevisiae.gff.gz")
+    # upload_gff_to_s3(local_file, "latest/saccharomyces_cerevisiae.gff.gz")
     ##########################################################################
 
     import hashlib
