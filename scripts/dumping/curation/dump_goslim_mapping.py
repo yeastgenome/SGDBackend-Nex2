@@ -1,7 +1,7 @@
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
 from src.models import Locusdbentity, Dnasequenceannotation, Source, Edam, So, Go, Goslim,\
-     Goslimannotation, Taxonomy, Filedbentity, Path, FilePath, Dbentity
+     Goslimannotation, Taxonomy, Filedbentity, Path, FilePath, Dbentity, Complexdbentity
 from datetime import datetime
 import logging
 import os
@@ -33,6 +33,7 @@ def dump_data():
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
 
     dbentity_id_to_names = dict([(x.dbentity_id, (x.systematic_name, x.gene_name, x.sgdid, x.qualifier)) for x in nex_session.query(Locusdbentity).all()])
+    dbentity_id_to_complex = dict([(x.dbentity_id, (x.format_name, x.display_name, x.sgdid)) for x in nex_session.query(Complexdbentity).all()])
     so_id_to_term_name = dict([(x.so_id, x.term_name) for x in nex_session.query(So).all()])
     taxonomy = nex_session.query(Taxonomy).filter_by(taxid = TAXID).one_or_none()
     taxonomy_id = taxonomy.taxonomy_id
@@ -42,26 +43,31 @@ def dump_data():
 
     data = []
     for x in nex_session.query(Goslimannotation).all():
-        (systematic_name, gene_name, sgdid, qualifier) = dbentity_id_to_names[x.dbentity_id]
-        so_id = dbentity_id_to_so_id.get(x.dbentity_id)
-        if so_id is None:
-            continue
-        so_term = so_id_to_term_name[so_id]
         go_id = goslim_id_to_go_id[x.goslim_id]
         (go_term, goid, go_aspect) = go_id_to_term_goid_aspect[go_id]
         if go_aspect.endswith('function'):
             go_aspect = 'F'
         elif go_aspect.endswith('process'):
-            go_aspect =	'P'
+            go_aspect =     'P'
         else:
-            go_aspect =	'C'
-        type = so_term
-        if qualifier:
-            type = so_term + "|" + qualifier
-        if gene_name is None:
-            gene_name = ''
-        data.append(systematic_name + "\t" + gene_name + "\t" + sgdid + "\t" + go_aspect + "\t" + go_term + "\t" + goid + "\t" + type)
-
+            go_aspect =     'C'
+        if x.dbentity_id in dbentity_id_to_names:
+            (systematic_name, gene_name, sgdid, qualifier) = dbentity_id_to_names.get(x.dbentity_id)
+            so_id = dbentity_id_to_so_id.get(x.dbentity_id)
+            if so_id is None:
+                continue
+            so_term = so_id_to_term_name[so_id]
+            type = so_term
+            if qualifier:
+                type = so_term + "|" + qualifier
+            if gene_name is None:
+                gene_name = ''
+            data.append(systematic_name + "\t" + gene_name + "\t" + sgdid + "\t" + go_aspect + "\t" + go_term + "\t" + goid + "\t" + type)
+        elif x.dbentity_id in dbentity_id_to_complex:
+            (complex_acc, complex_name, sgdid) = dbentity_id_to_complex.get(x.dbentity_id)
+            type = 'protein complex'
+            data.append(complex_acc + "\t" + complex_name + "\t" + sgdid + "\t" + go_aspect + "\t" + go_term + "\t" + goid + "\t" + type)
+            
     data.sort()
     
     fw = open(datafile, 'w')    
