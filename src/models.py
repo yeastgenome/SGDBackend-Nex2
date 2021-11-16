@@ -1785,6 +1785,7 @@ class Dataset(Base):
 
         obj = {
             "id": self.dataset_id,
+            "format_name": self.format_name,
             "display_name": self.display_name,
             "link": self.obj_url,
             "short_description": self.description,
