@@ -8,8 +8,8 @@ import sys
 import importlib
 importlib.reload(sys)  # Reload does the trick!
 from src.models import Source, Psimi, Dbentity, Go, Taxonomy, Eco, Referencedbentity, \
-       Locusdbentity, Complexdbentity, ComplexAlias, ComplexReference, \
-       Interactor, LocusAlias
+       Locusdbentity, Complexdbentity, ComplexAlias, ComplexGo, ComplexReference, \
+       Interactor, LocusAlias, Complexbindingannotation, Literatureannotation
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.promote_reference_triage import add_paper
 
@@ -276,7 +276,7 @@ def load_complex():
     nex_session.commit()
 
     
-def delete_complex(nex_session, complexAcc):
+def delete_complex(nex_session, complexAC):
    
     complex = nex_session.query(Dbentity).filter_by(subclass='COMPLEX').filter_by(format_name=complexAC).one_or_none()
     if complex is None:
