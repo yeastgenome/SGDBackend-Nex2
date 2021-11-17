@@ -290,11 +290,11 @@ def delete_complex(nex_session, complexAcc):
 
     ## delete go
     for	x in nex_session.query(ComplexGo).filter_by(complex_id=complex.dbentity_id).all():
-	nex_session.delete(x)
+        nex_session.delete(x)
 
     ## delete reference
     for x in nex_session.query(ComplexReference).filter_by(complex_id=complex.dbentity_id).all():
-	nex_session.delete(x)
+        nex_session.delete(x)
 
     ## delete complexbindingannotation
     for x in nex_session.query(Complexbindingannotation).filter_by(complex_id=complex.dbentity_id).all():
