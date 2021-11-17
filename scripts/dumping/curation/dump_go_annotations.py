@@ -213,6 +213,7 @@ def dump_data(noctua_gpad_file):
             row[HEADLINE] = ''
             name_type = COMPLEX_NAME_TYPE
         else:
+            print ("UNKNOWN object: ", x.annotation_id, x.dbentity_id)
             continue
           
         row[DBID] = id_to_sgdid[x.dbentity_id]
@@ -255,7 +256,11 @@ def dump_data(noctua_gpad_file):
 
         eco_code = id_to_eco.get(x.eco_id)
         if eco_code is None:
-            continue
+            if x.eco.display_name.startswith('biological system reconstruction '):
+                eco_code = 'BSR'
+            else:
+                print ("UNKNOWN eco_code", x.annotation_id, x.eco_id)
+                continue
         if eco_code == 'IMR':
             eco_code = "IKR"
         row[EVIDENCE] = eco_code

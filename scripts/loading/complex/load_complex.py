@@ -269,7 +269,7 @@ def load_complex():
             #    x.dbentity_status = 'Deleted'
             #    nex_session.add(x)
             #    print ("DELETE ", complexAC)
-            delete_complex(nex_session, complexAcc)
+            delete_complex(nex_session, complexAC)
             
     fw.close()
     # nex_session.rollback()
