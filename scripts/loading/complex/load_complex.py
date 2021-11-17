@@ -263,17 +263,54 @@ def load_complex():
     ## mark deleted Complex as "Deleted' 
     for complexAC in complexAC_to_dbentity:
         if complexAC not in found:
-            x = nex_session.query(Dbentity).filter_by(subclass='COMPLEX').filter_by(format_name=complexAC).one_or_none()
-            if x is not None:
-                x.dbentity_status = 'Deleted'
-                nex_session.add(x)
-                print ("DELETE ", complexAC)
-
+            
+            # x = nex_session.query(Dbentity).filter_by(subclass='COMPLEX').filter_by(format_name=complexAC).one_or_none()
+            # if x is not None:
+            #    x.dbentity_status = 'Deleted'
+            #    nex_session.add(x)
+            #    print ("DELETE ", complexAC)
+            delete_complex(nex_session, complexAcc)
+            
     fw.close()
     # nex_session.rollback()
     nex_session.commit()
 
-            
+    
+def delete_complex(nex_session, complexAcc):
+   
+    complex = nex_session.query(Dbentity).filter_by(subclass='COMPLEX').filter_by(format_name=complexAC).one_or_none()
+    if complex is None:
+        return
+
+    print ("DELETE ", complexAC)
+    
+    ## delete aliases
+    for x in nex_session.query(ComplexAlias).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete go
+    for	x in nex_session.query(ComplexGo).filter_by(complex_id=complex.dbentity_id).all():
+	nex_session.delete(x)
+
+    ## delete reference
+    for x in nex_session.query(ComplexReference).filter_by(complex_id=complex.dbentity_id).all():
+	nex_session.delete(x)
+
+    ## delete complexbindingannotation
+    for x in nex_session.query(Complexbindingannotation).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete literatureannotation rows
+    for x in nex_session.query(Literatureannotation).filter_by(dbentity_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete complexdbentity
+    y = nex_session.query(Complexdbentity).filter_by(dbentity_id=complex.dbentity_id).one_or_none()
+    nex_session.delete(y)
+
+    ## delete dbentity row
+    nex_session.delete(complex)
+
 def insert_interactor(nex_session, fw, format_name, display_name, obj_url, desc, source_id, locus_id, type_id, role_id, seq):
 
     print("INSERT INTERACTOR:", format_name, display_name, obj_url, desc, source_id, locus_id, type_id, role_id, seq)
