@@ -18,6 +18,8 @@ GROUP_ID = 1
 OBJ_URL = 'http://www.alliancegenome.org/gene/'
 EVIDENCE_TYPE = 'with'
 RO_ID = '1968075'
+eco_to_code_mapping = {"236289": "IGI",
+                         "236356": "ISS"}
 
 models_helper = ModelsHelper()
 
@@ -40,6 +42,7 @@ def insert_update_disease_annotations(request):
             return HTTPBadRequest(body=json.dumps({'error': "reference is blank"}), content_type='text/json')
 
         eco_id = request.params.get('eco_id')
+        print (eco_id)
         if not eco_id:
             return HTTPBadRequest(body=json.dumps({'error': "eco is blank"}), content_type='text/json')
         
@@ -52,7 +55,8 @@ def insert_update_disease_annotations(request):
             return HTTPBadRequest(body=json.dumps({'error': "annotation type is blank"}), content_type='text/json')
 
         with_ortholog = request.params.get('with_ortholog')
-        if not with_ortholog:
+        eco = eco_to_code_mapping.get(eco_id)
+        if eco and not with_ortholog:
             return HTTPBadRequest(body=json.dumps({'error': "with_ortholog is blank"}), content_type='text/json')
          
         try:
