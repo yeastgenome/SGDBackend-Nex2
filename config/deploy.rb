@@ -1,4 +1,4 @@
-lock '3.4.0'
+lock '3.16.0'
 
 set :application, 'SGDBackend-NEX2'
 
