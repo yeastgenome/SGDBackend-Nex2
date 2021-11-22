@@ -3310,7 +3310,6 @@ class Locusdbentity(Dbentity):
         return obj
 
     def complex_details(self):
-    
         # interactor = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).one_or_none()
         interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()   
         if len(interactors) == 0:
@@ -4604,9 +4603,7 @@ class Locusdbentity(Dbentity):
         return obj
 
     def to_dict(self):
-
-        return {}
-    
+        
         obj = {
             "id": self.dbentity_id,
             "display_name": self.display_name,
@@ -4634,11 +4631,10 @@ class Locusdbentity(Dbentity):
             "paragraph": {
                 "date_edited": None
             },
+            "literature_overview": self.literature_overview_to_dict(),
+            "disease_overview": self.disease_overview_to_dict(),
+            "ecnumbers": []    
         }
-        #    "literature_overview": self.literature_overview_to_dict(),
-        #    "disease_overview": self.disease_overview_to_dict(),
-        #    "ecnumbers": []    
-        # }
 
         return obj
     
@@ -4647,7 +4643,7 @@ class Locusdbentity(Dbentity):
 
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
-    
+            
         # summaries and paragraphs
         summaries = DBSession.query(Locussummary.summary_id, Locussummary.html, Locussummary.date_created,Locussummary.summary_order,Locussummary.summary_type).filter_by(locus_id=self.dbentity_id).all()
         summary_types = {}
