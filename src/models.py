@@ -4625,13 +4625,13 @@ class Locusdbentity(Dbentity):
             "protein_overview": self.protein_overview_to_dict(),
             "go_overview": self.go_overview_to_dict(),
             "pathways": [],
-            "alleles": []
+            "alleles": [],
+            "phenotype_overview": self.phenotype_overview_to_dict(),
+            "interaction_overview": self.interaction_overview_to_dict(),
+            "paragraph": {
+                "date_edited": None
+            }
         }
-            #"phenotype_overview": self.phenotype_overview_to_dict(),
-            #"interaction_overview": self.interaction_overview_to_dict(),
-            #"paragraph": {
-            #    "date_edited": None
-            #},
             #"literature_overview": self.literature_overview_to_dict(),
             #"disease_overview": self.disease_overview_to_dict(),
             #"ecnumbers": []    
