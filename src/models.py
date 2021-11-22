@@ -4632,7 +4632,7 @@ class Locusdbentity(Dbentity):
                 "date_edited": None
             },
             "literature_overview": self.literature_overview_to_dict(),
-            "disease_overview": self.disease_overview_to_dict(),
+            # "disease_overview": self.disease_overview_to_dict(),
             "ecnumbers": []    
         }
 
