@@ -4632,11 +4632,9 @@ class Locusdbentity(Dbentity):
                 "date_edited": None
             },
             "literature_overview": self.literature_overview_to_dict(),
-            # "disease_overview": self.disease_overview_to_dict(),
+            "disease_overview": self.disease_overview_to_dict(),
             "ecnumbers": []    
         }
-
-        return obj
     
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
@@ -5218,6 +5216,8 @@ class Locusdbentity(Dbentity):
             "high-throughput": {}
         }
 
+        return obj
+        
         do_annotations_mc = DBSession.query(Diseaseannotation).filter_by(dbentity_id=self.dbentity_id).all()
         for annotation in do_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj[
