@@ -10479,7 +10479,6 @@ class Complexdbentity(Dbentity):
         # data['description'] = link_gene_complex_names(self.description, {self.format_name: 1}, DBSession),
         # data['properties'] = link_gene_complex_names(self.properties, {self.format_name: 1}, DBSession),
         data['description'] = self.description
-        data['go_overview'] = self.go_overview_to_dict()
         data['properties'] = self.properties
         data['eco'] = self.eco.format_name
 
@@ -10812,50 +10811,6 @@ class Complexdbentity(Dbentity):
 
         return data
 
-    def go_overview_to_dict(self):
-
-        go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
-        process_go_slim_list = []
-        function_go_slim_list = []
-        component_go_slim_list = []
-        complex_go_slim_list = []
-        for go_slim in go_slims:
-            go_slim_dict = go_slim.to_dict()
-            if 'complex' in go_slim_dict['slim_name'].lower():
-                if go_slim_dict not in complex_go_slim_list:
-                    complex_go_slim_list.append(go_slim_dict)
-            else:
-                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
-                if go is None:
-                    continue
-                if 'component' in go.go_namespace:
-                    if go_slim_dict not in component_go_slim_list:
-                        component_go_slim_list.append(go_slim_dict)
-                elif 'function' in go.go_namespace:
-                    if go_slim_dict not in function_go_slim_list:
-                        function_go_slim_list.append(go_slim_dict)
-                elif go_slim_dict not in process_go_slim_list:
-                    process_go_slim_list.append(go_slim_dict)
-
-        obj = { 'date_last_reviewed': None,
-                'go_slim_grouped': [] }
-        
-        ## sort goslim terms here
-        process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
-        function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
-        component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
-        complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
-        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + component_go_slim_sorted_list + complex_go_slim_sorted_list
-
-        go_annotations = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
-        for annotation in go_annotations:
-            if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
-                obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
-
-
-        return obj
-
-    
     def get_literatureannotation_references(self, topic, unique_references):
         references = []
         for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
