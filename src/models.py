@@ -4630,9 +4630,9 @@ class Locusdbentity(Dbentity):
             "interaction_overview": self.interaction_overview_to_dict(),
             "paragraph": {
                 "date_edited": None
-            }
+            },
+            "literature_overview": self.literature_overview_to_dict()
         }
-            #"literature_overview": self.literature_overview_to_dict(),
             #"disease_overview": self.disease_overview_to_dict(),
             #"ecnumbers": []    
         #}
