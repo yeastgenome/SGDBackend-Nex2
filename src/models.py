@@ -4604,7 +4604,9 @@ class Locusdbentity(Dbentity):
         return obj
 
     def to_dict(self):
-        
+
+        return {}
+    
         obj = {
             "id": self.dbentity_id,
             "display_name": self.display_name,
