@@ -3310,6 +3310,8 @@ class Locusdbentity(Dbentity):
         return obj
 
     def complex_details(self):
+        return []
+
         # interactor = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).one_or_none()
         interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()   
         if len(interactors) == 0:
