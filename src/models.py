@@ -4737,18 +4737,6 @@ class Locusdbentity(Dbentity):
         obj["locus_type"] = ",".join([l[0] for l in locus_type])
         urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
         obj["urls"] = [u.to_dict() for u in urls]
-
-        uniprotID = None
-        aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
-        if aliases:
-            uniprotID = aliases[0].display_name
-        if uniprotID:
-            obj["urls"].append({
-                "category": "LOCUS_SEQUENCE",
-                "link": "https://alphafold.ebi.ac.uk/entry/" + uniprotID,
-                "display_name": "AlphaFold Protein Structure"
-            })
-
         obj["urls"].append({
             "category": "LOCUS_SEQUENCE",
             "link": "/seqTools?seqname=" + self.systematic_name,
@@ -4759,7 +4747,16 @@ class Locusdbentity(Dbentity):
             "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
             "display_name": "JBrowse"
         })
+        uniprotID = None
+        aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
+        if aliases:
+            uniprotID = aliases[0].display_name
         if uniprotID:
+            obj["urls"].append({
+                "category": "LOCUS_SEQUENCE",
+                "link": "https://alphafold.ebi.ac.uk/entry/" + uniprotID,
+                "display_name": "AlphaFold"
+            })
             obj["urls"].append({
                 "category": "LOCUS_SEQUENCE",
                 "link": "https://www.uniprot.org/uniprot/" + uniprotID,
@@ -10520,16 +10517,15 @@ class Complexdbentity(Dbentity):
         
         network_nodes =[]
         network_edges =[]
-                
+
         network_nodes.append({
             "name": self.display_name,
             "id": self.format_name,
             "href": "/complex/" + self.format_name,
             "category": "FOCUS",
         })
-        
         network_nodes_ids[self.format_name] = True
-        
+
         complex_ids = DBSession.query(Complexdbentity.dbentity_id).all()
         
         go_annots = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
@@ -10615,22 +10611,9 @@ class Complexdbentity(Dbentity):
                                 "source": self.format_name,
                                 "target": go.go_id
                             })
-                            
+
                     else:
                         foundComplex[complex.format_name] = go.go_id
-
-        
-        foundId = {}
-        for edge in network_edges:
-            foundId[edge["source"]] = 1
-            foundId[edge["target"]] = 1
-            
-        go_network_nodes = []
-        for node in network_nodes:
-            if node["id"] in foundId:
-                go_network_nodes.append(node)
-                
-        data['go_network_graph'] = { "edges": network_edges, "nodes": go_network_nodes }
         
         data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
         data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
