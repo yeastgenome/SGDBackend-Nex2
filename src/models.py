@@ -7716,9 +7716,6 @@ class Goannotation(Base):
             if len(experiment_name) > len(alia.display_name):
                 experiment_name = alia.display_name
 
-        if experiment_name is None and self.eco.display_name.startswith('biological system reconstruction evidence'):
-            experiment_name = 'BSR'
-                
         alias_url = DBSession.query(EcoUrl).filter_by(eco_id=self.eco_id).all()
 
         experiment_url = None
@@ -7728,7 +7725,7 @@ class Goannotation(Base):
                 break
         if experiment_url == None and len(alias_url) > 1:
             experiment_url = alias_url[1].obj_url
-            
+
         date_created = self.date_created
         if self.annotation_type == 'computational':
             date_created = self.date_assigned
@@ -10509,16 +10506,28 @@ class Complexdbentity(Dbentity):
             "category": "FOCUS",
         })
         network_nodes_ids[self.format_name] = True
-        
+
         go_objs = DBSession.query(ComplexGo).filter_by(complex_id=self.dbentity_id).all()
+
+        process = []
+        function = []
+        component = []
 
         foundComplex = {}
         
         if go_objs:
-
+            data['go'] = [g.go.to_dict() for g in go_objs]
             for g in go_objs:
                 go = g.go.to_dict()
+                if go['go_aspect'] == 'molecular function':
+                    function.append(go)
+                elif go['go_aspect'] == 'cellular component':
+                    component.append(go)
+                else:
+                    process.append(go)
+
                 goComplexes = DBSession.query(ComplexGo).filter_by(go_id=g.go_id).all()
+
                 if len(goComplexes) == 1:
                     continue
                     
@@ -10585,27 +10594,10 @@ class Complexdbentity(Dbentity):
                     else:
                         foundComplex[complex.format_name] = go['go_id']
 
-        ####
-        go_annots = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
-        process = []
-        function = []
-        component = []
-
-        if go_annots:
-            data['go'] = [g.go.to_dict() for g in go_objs]
-            for x in go_annots:
-                go = x.go
-                if go.go_namespace == 'molecular function':
-                    function.append(x.to_dict()[0])
-                elif go.go_namespace == 'cellular component':
-                    component.append(x.to_dict()[0])
-                else:
-                    process.append(x.to_dict()[0])
-        
-        data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
-        data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
-        data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
+        data['process'] = sorted(process, key=lambda p: p['display_name'])
+        data['function'] = sorted(function, key=lambda f: f['display_name'])
+        data['component'] = sorted(component, key=lambda c: c['display_name'])
 
         ## reference
 
