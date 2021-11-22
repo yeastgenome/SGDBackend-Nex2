@@ -5216,8 +5216,6 @@ class Locusdbentity(Dbentity):
             "high-throughput": {}
         }
 
-        return obj
-        
         do_annotations_mc = DBSession.query(Diseaseannotation).filter_by(dbentity_id=self.dbentity_id).all()
         for annotation in do_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj[
