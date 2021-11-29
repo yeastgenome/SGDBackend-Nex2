@@ -18,6 +18,8 @@ GROUP_ID = 1
 OBJ_URL = 'http://www.alliancegenome.org/gene/'
 EVIDENCE_TYPE = 'with'
 RO_ID = '1968075'
+eco_to_code_mapping = {"236289": "IGI",
+                         "236356": "ISS"}
 
 models_helper = ModelsHelper()
 
@@ -52,8 +54,11 @@ def insert_update_disease_annotations(request):
             return HTTPBadRequest(body=json.dumps({'error': "annotation type is blank"}), content_type='text/json')
 
         with_ortholog = request.params.get('with_ortholog')
-        if not with_ortholog:
-            return HTTPBadRequest(body=json.dumps({'error': "with_ortholog is blank"}), content_type='text/json')
+        eco = eco_to_code_mapping.get(eco_id)
+        if eco and not with_ortholog:
+            return HTTPBadRequest(body=json.dumps({'error': "with_ortholog should not be blank"}), content_type='text/json')
+        if with_ortholog and not eco:
+            return HTTPBadRequest(body=json.dumps({'error': "with_ortholog should be blank"}), content_type='text/json')
          
         try:
             dbentity_in_db = None
@@ -102,10 +107,12 @@ def insert_update_disease_annotations(request):
                                     'annotation_type': annotation_type,
                                     'disease_id': disease_id
                                     }
-                update_dse = {'dbxref_id': with_ortholog,
+                if eco:
+                    update_dse = {'dbxref_id': with_ortholog,
                                'obj_url': OBJ_URL + with_ortholog}
+                    curator_session.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == annotation_id).update(update_dse)
+                
                 curator_session.query(Diseaseannotation).filter(Diseaseannotation.annotation_id == annotation_id).update(update_disease)
-                curator_session.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == annotation_id).update(update_dse)
                 curator_session.flush()
                 transaction.commit()
                
@@ -126,9 +133,12 @@ def insert_update_disease_annotations(request):
                     'eco_id': disease.eco_id,
                     'association_type': disease.association_type,
                     'source_id': disease.source_id,
-                    'with_ortholog': dse.dbxref_id,
+                    #'with_ortholog': dse.dbxref_id,
                     'annotation_type': disease.annotation_type,
                 }
+                if dse:
+                    disease_in_db['with_ortholog'] = str(dse.dbxref_id)
+                    
                 if disease.eco:
                     disease_in_db['eco_id'] = str(disease.eco.eco_id)
 
@@ -182,14 +192,15 @@ def insert_update_disease_annotations(request):
                                     date_assigned = date_created)
                 curator_session.add(y)
                 curator_session.flush()
-                dse = Diseasesupportingevidence(
+                if eco:
+                    dse = Diseasesupportingevidence(
                                 annotation_id=y.annotation_id,
                                 group_id = GROUP_ID,
                                 dbxref_id=with_ortholog,
                                 obj_url=OBJ_URL+with_ortholog,
                                 evidence_type = 'with',
                                 created_by=CREATED_BY)
-                curator_session.add(dse)
+                    curator_session.add(dse)
                 update_ldb = {'has_disease': 'true'}
                 curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == dbentity_id).update(update_ldb)
                 transaction.commit()
@@ -276,8 +287,11 @@ def get_diseases_by_filters(request):
                 'association_type': disease.association_type,
                 'annotation_type': disease.annotation_type,
                 'disease_id': disease.disease_id,
-                'with_ortholog': dse.dbxref_id
+                #'with_ortholog': dse.dbxref_id
             }
+            if dse:
+                currentDisease['with_ortholog'] = str(dse.dbxref_id)
+
             if disease.eco:
                 currentDisease['eco_id'] = str(disease.eco_id)
 

@@ -5213,7 +5213,8 @@ class Locusdbentity(Dbentity):
 
         do = {
             "manually curated": {},
-            "high-throughput": {}
+            "high-throughput": {},
+            "computational": {}
         }
 
         do_annotations_mc = DBSession.query(Diseaseannotation).filter_by(dbentity_id=self.dbentity_id).all()
