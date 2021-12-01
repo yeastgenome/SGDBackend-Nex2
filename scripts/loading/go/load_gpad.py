@@ -14,7 +14,7 @@ from scripts.loading.database_session import get_session
 from src.helpers import upload_file
 from scripts.loading.util import get_relation_to_ro_id, read_gpi_file, \
                                  read_gpad_file, read_noctua_gpad_file, \
-                                 get_go_extension_link
+                                 read_complex_gpad_file, get_go_extension_link
 
 __author__ = 'sweng66'
 
@@ -29,7 +29,7 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, log_file):
+def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file, annotation_type, log_file):
 
     nex_session = get_session()
 
@@ -99,6 +99,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
                           dbentity_id_with_uniprot, bad_ref)
 
     noctua_data = []
+    complex_data = []
     if annotation_type == 'manually curated':
         log.info(str(datetime.now()))
         log.info("Reading noctua GPAD file...")
@@ -117,7 +118,17 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
                                             sgdid_to_date_assigned, foundAnnotation,
                                             yes_goextension, yes_gosupport, new_pmids, 
                                             dbentity_id_with_new_pmid, bad_ref)
+        log.info(str(datetime.now()))
+        log.info("Reading complex portal GPAD file...")
 
+        fw.write(str(datetime.now()) + "\n")
+        fw.write("reading complex portal gpad file...\n")
+
+        complex_data = read_complex_gpad_file(complex_gpad_file, nex_session,
+                                              foundAnnotation, yes_goextension,
+                                              yes_gosupport, new_pmids, bad_ref)
+        
+        
     nex_session.close()
 
     log.info(str(datetime.now()))
@@ -126,8 +137,9 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
     # load the new data into the database
     fw.write(str(datetime.now()) + "\n")
     fw.write("loading the new data into the database...\n")
-    [hasGoodAnnot, annotation_update_log] = load_new_data(data, noctua_data, source_to_id, 
-                                                          annotation_type, key_to_annotation, 
+    [hasGoodAnnot, annotation_update_log] = load_new_data(data, noctua_data, complex_data,
+                                                          source_to_id, annotation_type,
+                                                          key_to_annotation, 
                                                           annotation_id_to_extensions, 
                                                           annotation_id_to_support_evidences, 
                                                           taxonomy_id, go_id_to_aspect,
@@ -176,7 +188,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, gpi_file, annotation_type, 
     log.info("Done!\n\n")
 
 
-def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, deleted_merged_dbentity_ids, fw):
+def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type, key_to_annotation, annotation_id_to_extensions, annotation_id_to_support_evidences, taxonomy_id, go_id_to_aspect, deleted_merged_dbentity_ids, fw):
 
     annotation_update_log = {}
     for count_name in ['annotation_updated', 'annotation_added', 'annotation_deleted',
@@ -200,7 +212,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
     key_to_annotation_id = {}
     annotation_id_to_extension = {}
     annotation_id_to_support = {}
-    for x in data + noctua_data:
+    for x in data + noctua_data + complex_data:
         if x['annotation_type'] not in allowed_types:
             continue
         if x['dbentity_id'] in deleted_merged_dbentity_ids:
@@ -252,9 +264,7 @@ def load_new_data(data, noctua_data, source_to_id, annotation_type, key_to_annot
             annotation_id = None
     
             if key in key_to_annotation:
-                
-                # print "KEY=", str(key), " is in the database"
- 
+            
                 # remove the new key from the dictionary
                 # and the rest can be deleted later
                 thisAnnot = key_to_annotation.pop(key)
@@ -539,7 +549,7 @@ def all_go_annotations(nex_session, annotation_type):
         
     key_to_annotation = {}
     for x in nex_session.query(Goannotation).all():
-        if (x.source.display_name in ['SGD', 'GO_Central'] and x.annotation_type in ['manually curated', 'high-throughput'] and annotation_type == 'manually curated') or (annotation_type == 'computational' and x.annotation_type=='computational'):
+        if (x.source.display_name in ['SGD', 'GO_Central', 'ComplexPortal'] and x.annotation_type in ['manually curated', 'high-throughput'] and annotation_type == 'manually curated') or (annotation_type == 'computational' and x.annotation_type=='computational'):
             key = (x.dbentity_id, x.go_id, x.eco_id, x.reference_id, x.annotation_type, x.source.display_name, x.go_qualifier, x.taxonomy_id)
             key_to_annotation[key] = x
 
@@ -712,15 +722,32 @@ if __name__ == "__main__":
     urllib.request.urlcleanup()
     urllib.request.urlretrieve(noctua_path + noctua_gpad_file, dated_noctua_gpad_file)
 
+    # complex_path = 'http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/' 
+    complex_path = 'http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/'
+    complex_gpad_file = 'complex_portal.v2.gpad'
+    dated_complex_gpad_file = 'complex_portal.v2.gpad_' + datestamp 
+    urllib.request.urlcleanup()
+    urllib.request.urlretrieve(complex_path + complex_gpad_file, dated_complex_gpad_file)
+
     gpadFileInfo = os.stat(dated_gpad_file)
     gpiFileInfo = os.stat(dated_gpi_file)
+    gpadFile4noctua = os.stat(dated_noctua_gpad_file)
+    gpadFile4complex = os.stat(dated_complex_gpad_file)
     
-    if gpadFileInfo.st_size < 1700000:
+    if gpadFileInfo.st_size < 1900000:
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
         exit()
 
     if gpiFileInfo.st_size < 370000:
         print("This week's GPI file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz")
+        exit()
+
+    if gpadFile4noctua.st_size < 14000:
+        print("This week's noctua GPAD file size is too small, please check: http://snapshot.geneontology.org/products/annotations/noctua_sgd.gpad.gz")
+        exit()
+
+    if gpadFile4complex.st_size < 2000000:
+        print("This week's complex portal GPAD file size is too small, please check: http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/complex_portal.v2.gpad")
         exit()
 
     if len(sys.argv) >= 2:
@@ -734,7 +761,8 @@ if __name__ == "__main__":
     
     log_file = "scripts/loading/go/logs/GPAD_loading_" + annotation_type.replace(" ", "-") + ".log"
 
-    load_go_annotations(dated_gpad_file, dated_noctua_gpad_file, dated_gpi_file, annotation_type, log_file)
+    load_go_annotations(dated_gpad_file, dated_noctua_gpad_file, dated_complex_gpad_file,
+                        dated_gpi_file, annotation_type, log_file)
 
 
     

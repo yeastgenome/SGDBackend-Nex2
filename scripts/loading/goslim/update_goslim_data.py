@@ -27,7 +27,7 @@ def update_data():
             continue
         x.genome_count = genome_count
         display_name = go_id_to_term.get(x.go_id)
-        if display_name != x.display_name:
+        if display_name != x.display_name and x.display_name not in ['biological_process', 'molecular_function', 'cellular_component']:
             x.display_name = display_name
         nex_session.add(x)
         

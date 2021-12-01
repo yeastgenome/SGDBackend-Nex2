@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import sys
-from src.models import ComplexReference, Literatureannotation
+from src.models import ComplexReference, Goannotation, Literatureannotation
 from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
@@ -15,14 +15,27 @@ created_by = 'OTTO'
 def add_annotations():
 
     nex_session = get_session()
-    
-    key_to_topic = dict([((x.dbentity_id, x.reference_id), x.topic) for x in nex_session.query(Literatureannotation).all()])
 
+    key_to_topic = dict([((x.dbentity_id, x.reference_id), x.topic) for x in nex_session.query(Literatureannotation).all()])
+    
+    added = {}
     for x in nex_session.query(ComplexReference).all():
         if (x.complex_id, x.reference_id) in key_to_topic:
             continue
         insert_literatureannotation(nex_session, x.complex_id, x.reference_id)
-                
+        added[(x.complex_id, x.reference_id)] = 1
+
+    for x in nex_session.query(Goannotation).filter_by(annotation_type='manually curated').all():
+        if x.dbentity.subclass != 'COMPLEX':
+            continue
+        if (x.dbentity_id, x.reference_id) in key_to_topic:
+            continue
+        if (x.dbentity_id, x.reference_id) in added:
+            continue
+        insert_literatureannotation(nex_session, x.dbentity_id, x.reference_id)
+        added[(x.dbentity_id, x.reference_id)] = 1
+
+        
     # nex_session.rollback()
     nex_session.commit()
 

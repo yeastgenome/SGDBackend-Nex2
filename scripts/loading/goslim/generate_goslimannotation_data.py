@@ -1,6 +1,6 @@
 from sqlalchemy import func, distinct, or_
 import sys
-from src.models import Go, Goannotation, GoRelation, Goslim, Locusdbentity
+from src.models import Go, Goannotation, GoRelation, Goslim, Complexdbentity, Locusdbentity
 from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
@@ -18,6 +18,8 @@ def generate_data(goSlim):
     nex_session = get_session()
 
     dbentity_id_to_name =  dict([(x.dbentity_id, x.systematic_name) for x in nex_session.query(Locusdbentity).all()])
+    dbentity_id_to_complexAcc = dict([(x.dbentity_id, x.complex_accession) for x in nex_session.query(Complexdbentity).all()])
+    
     go_id_to_go = dict([(x.go_id, (x.goid, x.display_name)) for x in nex_session.query(Go).all()])
     
     go_id_to_dbentity_ids = {}
@@ -62,8 +64,13 @@ def generate_data(goSlim):
                 if key in foundSlimGoidGenePair:
                     continue
                 foundSlimGoidGenePair[key] = 1
-                name = dbentity_id_to_name[dbentity_id]
-                fw.write(name + "\t" + str(dbentity_id) + "\t" + str(x.goslim_id) + "\t" + x.format_name + "\t" + x.display_name + "\n")
+                name = None
+                if dbentity_id in dbentity_id_to_name:
+                    name = dbentity_id_to_name[dbentity_id]
+                elif dbentity_id in dbentity_id_to_complexAcc:
+                    name = dbentity_id_to_complexAcc[dbentity_id]
+                if name:
+                    fw.write(name + "\t" + str(dbentity_id) + "\t" + str(x.goslim_id) + "\t" + x.format_name + "\t" + x.display_name + "\n")
                 
     fw.close()
     nex_session.close()
