@@ -36,8 +36,8 @@ def add_annotations():
         added[(x.dbentity_id, x.reference_id)] = 1
 
         
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
 
 def insert_literatureannotation(nex_session, dbentity_id, reference_id):
 
