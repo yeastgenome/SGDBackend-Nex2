@@ -1,7 +1,7 @@
 from sqlalchemy.engine import create_engine
 from sqlalchemy.ext.declarative.api import declarative_base
 from sqlalchemy.orm.session import sessionmaker
-from sqlalchemy import not_
+from sqlalchemy import not_, or_
 from scripts.loading.database_session import get_session
 from scripts.loading.go.gpad_config import curator_id, computational_created_by,  \
     go_db_code_mapping, go_ref_mapping, current_go_qualifier, email_receiver, \
@@ -378,10 +378,135 @@ def get_strain_taxid_mapping():
              'Other':           "TAX:4932",
              'other':           "TAX:4932" }
 
+def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, bad_ref=None):
+
+    from src.models import Referencedbentity, Complexdbentity, Go, Eco, Ro
+
+    goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    ecoid_to_eco_id = dict([(x.ecoid, x.eco_id) for x in nex_session.query(Eco).all()])
+    roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
+    complexAcc_to_complex_id = dict([(x.complex_accession, x.dbentity_id) for x in nex_session.query(Complexdbentity).all()])
+
+    sgdid_to_reference_id = {}
+    pmid_to_reference_id = {}
+    for x in nex_session.query(Referencedbentity).all():
+        pmid_to_reference_id[x.pmid] = x.dbentity_id
+        sgdid_to_reference_id[x.sgdid] = x.dbentity_id
+        
+    f = None
+    if filename.endswith('.gz'):
+        f = gzip.open(filename, 'rt')
+    else:
+        f = open(filename)
+
+    read_line = {}
+    data = []
+
+    for line in f:
+
+        if line.startswith('!') or "NCBITaxon:559292" not in line:
+            continue
+        
+        field = line.strip().split('\t')
+
+        ## get rid of duplicate lines...
+        if line in read_line:
+            print ("Duplicate row: ", line)
+            continue
+        read_line[line] = 1
+
+        ## complex accession
+        complexAcc = field[0].replace("ComplexPortal:", '')
+        complex_id = complexAcc_to_complex_id.get(complexAcc)
+        if complex_id is None:
+            print ("The complexAcc = ", complexAcc, " is not in COMPLEXDBENTITY table.")
+            continue
+
+        ## go_qualifier
+        roid = field[2]
+        go_qualifier = roid_to_display_name.get(roid)
+        if go_qualifier is None:
+            print ("The ROID = ", roid, " is not in RO table.")
+            continue
+
+        ## go_id
+        goid = field[3]
+        go_id = goid_to_go_id.get(goid)
+        if go_id is None:
+            print("The GOID = ", goid, " is not in GO table.")
+            continue
+
+        ## reference_id
+        reference_id = None
+        pmid = None
+        if field[4].startswith('PMID:'):
+            pmid = field[4][5:]    
+            reference_id = pmid_to_reference_id.get(int(pmid))
+        else:
+            ref_sgdid = go_ref_mapping.get(field[4])
+            if ref_sgdid is None:
+                if bad_ref is not None and field[4] not in bad_ref:
+                    bad_ref.append(field[4])
+                print ("Bad ref: ", line)
+                continue
+            reference_id = sgdid_to_reference_id.get(ref_sgdid)
+        if reference_id is None:
+            if pmid is None:
+                print("NO REFERENCE: line=", line)
+                continue
+            print("The PMID = " + str(pmid) + " is not in the REFERENCEDBENTITY table.")
+            if new_pmids is not None:
+                if pmid not in new_pmids:
+                    new_pmids.append(pmid)
+            continue
+    
+        ## eco_id
+        eco = field[5]
+        eco_id = ecoid_to_eco_id.get(eco)
+        if eco_id is None:
+            print("The eco ID = ", eco, " is not in the ECO table.")
+            continue
+
+        ## date_created
+        date_created = field[8]
+        
+        ## source
+        source = field[9]
+
+        annotation_type = 'manually curated'
+
+        gosupport = field[6]
+        goextension = ''
+        if len(field) > 10:
+            goextension = field[10]
+        
+        key = (complex_id, go_id, reference_id, eco_id, gosupport, goextension)
+
+        if key not in foundAnnotation:
+
+            entry = { 'source': source,
+                      'dbentity_id': complex_id,
+                      'reference_id': reference_id,
+                      'go_id': go_id,
+                      'eco_id': eco_id,
+	              'annotation_type': annotation_type,
+                      'go_qualifier': go_qualifier,
+                      'date_assigned': date_created,
+                      'date_created': date_created,
+                      'created_by': 'OTTO' }
+
+            if get_extension == 1 and goextension:
+                entry['goextension'] = goextension
+            if get_support == 1 and gosupport:
+                entry['gosupport'] = gosupport
+            data.append(entry)
+
+    return data
+        
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, bad_ref=None):
 
-    from src.models import Referencedbentity, Locusdbentity, Go, Eco
-
+    from src.models import Referencedbentity, Dbentity, Go, Eco
+    
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
 
@@ -392,7 +517,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         pmid_to_reference_id[x.pmid] = x.dbentity_id
         sgdid_to_reference_id[x.sgdid] = x.dbentity_id
 
-    sgdid_to_locus_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Locusdbentity).all()])
+    sgdid_to_dbentity_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Dbentity).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).all()])
 
     f = None
     if filename.endswith('.gz'):
@@ -417,9 +542,9 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
 
         ## SGDID
         sgdid = field[1]
-        locus_id = sgdid_to_locus_id.get(sgdid)
-        if locus_id is None:
-            # print "The sgdid = ", sgdid, " is not in LOCUSDBENTITY table."
+        dbentity_id = sgdid_to_dbentity_id.get(sgdid)
+        if dbentity_id is None:
+            print ("The sgdid = ", sgdid, " is not in DBENTITY table or is not for LOCUS/COMPLEX.")
             continue
  
         ## go_qualifier
@@ -481,12 +606,12 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             date_assigned = date_created
         annotation_type = 'manually curated'
 
-        key = (locus_id, go_id, reference_id, eco_id, field[6], field[10])
+        key = (dbentity_id, go_id, reference_id, eco_id, field[6], field[10])
 
         if key not in foundAnnotation:
                  
             entry = { 'source': source,
-                      'dbentity_id': locus_id,
+                      'dbentity_id': dbentity_id,
                       'reference_id': reference_id,
                       'go_id': go_id,
                       'eco_id': eco_id,
@@ -501,6 +626,8 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             if get_support == 1 and field[6] != '':
                 entry['gosupport'] = field[6]
             data.append(entry)
+            
+            foundAnnotation[key] = 1
         
     return data
 
@@ -803,6 +930,9 @@ def get_go_extension_link(dbxref_id):
     if dbxref_id.startswith('Rfam:'):
         id = dbxref_id.replace('Rfam:', '')
         return "http://rfam.xfam.org/family/" + id
+    if dbxref_id.startswith('ComplexPortal:'):
+        id = dbxref_id.replace('ComplexPortal:', '')
+        return "https://www.ebi.ac.uk/complexportal/complex/" + id
     return "Unknown"
 
 def children_from_obo(filename, ancestor):

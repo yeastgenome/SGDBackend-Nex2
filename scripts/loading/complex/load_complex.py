@@ -9,7 +9,7 @@ import importlib
 importlib.reload(sys)  # Reload does the trick!
 from src.models import Source, Psimi, Dbentity, Go, Taxonomy, Eco, Referencedbentity, \
        Locusdbentity, Complexdbentity, ComplexAlias, ComplexGo, ComplexReference, \
-       Interactor, LocusAlias
+       Interactor, LocusAlias, Complexbindingannotation, Literatureannotation
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.promote_reference_triage import add_paper
 
@@ -33,14 +33,6 @@ detail_json_url_template = "https://www.ebi.ac.uk/intact/complex-ws/complex/REPL
 seq_json_url_template = "https://www.ebi.ac.uk/intact/complex-ws/export/REPLACE_ID_HERE"
 
 log_file = "scripts/loading/complex/logs/load_complex.log"
-
-goid_mapping = { "GO:0045449": "GO:0006355",
-                 "GO:0070188": "GO:1990879",
-                 "GO:0016251": "GO:0003703",
-                 "GO:0016944": "GO:0006368",
-                 "GO:0016481": "GO:0045892",
-                 "GO:0016565": "GO:0001078",
-                 "GO:0006350": "GO:0006351" }
 
 
 def load_complex():
@@ -79,20 +71,6 @@ def load_complex():
         reference_id_list.append(x.reference_id)
         complex_id_to_reference_id_list[x.complex_id] = reference_id_list
 
-
-    print("Retriving Go data from ComplexGo table...")
-    print(datetime.now())
-
-
-    complex_id_to_go_id_list = {}
-    for x in nex_session.query(ComplexGo).all():
-        go_id_list = []
-        if x.complex_id in complex_id_to_go_id_list:
-            go_id_list =complex_id_to_go_id_list[x.complex_id]
-        go_id_list.append(x.go_id)
-        complex_id_to_go_id_list[x.complex_id] = go_id_list
-
-
     print("Retriving Alias data from ComplexAlias table...")
     print(datetime.now())
 
@@ -122,6 +100,8 @@ def load_complex():
     interactor_added = {}
     pmid_added = {}
     annotation_data = []
+
+    found = {}
     for x in elements:
         desc = x['description'].replace("\n", " ")
         complexAC = x['complexAC']
@@ -158,8 +138,6 @@ def load_complex():
         for d in y['crossReferences']:
             if d['database'] == "evidence ontology":
                 ecoid = d['identifier']
-            if d['database'] == "gene ontology":
-                goid_list.append(d['identifier'])
             if d['database'] == 'wwpdb':
                 if ('PDB', d['identifier']) not in aliases:
                     aliases.append(('PDB', d['identifier']))
@@ -194,6 +172,7 @@ def load_complex():
             update_dbentity(nex_session, fw, complexAC, complexName, source_id, d.display_name)
             update_complexdbentity(nex_session, fw, intact_id, complexAC, systematicName, 
                                    eco_id, desc, properties, complexAC_to_complexdbentity)
+            found[complexAC] = 1
         else:
             dbentity_id = insert_complexdbentity(nex_session, fw, intact_id, complexAC, complexName, 
                                                  systematicName, eco_id, desc, properties, 
@@ -221,20 +200,6 @@ def load_complex():
             
         update_complex_reference(nex_session, fw, complex_id, reference_id_list, 
                                  source_id, complex_id_to_reference_id_list.get(complex_id))
-
-        go_id_list = []
-        for goid in goid_list:
-            if goid in goid_mapping:
-                goid = goid_mapping[goid]
-            go_id = goid_to_go_id.get(goid)
-            if go_id is None:
-                print("The goid ", goid, " is not in the database.")
-                continue
-            if go_id not in go_id_list:
-                go_id_list.append(go_id)
-            
-        update_complex_go(nex_session, fw, complex_id, go_id_list, source_id, 
-                          complex_id_to_go_id_list.get(complex_id))
 
         update_complex_alias(nex_session, fw, dbentity_id, aliases, source_id, complex_id_to_alias_list.get(complex_id))
         
@@ -295,11 +260,57 @@ def load_complex():
                        
         nex_session.commit()  
 
+    ## mark deleted Complex as "Deleted' 
+    for complexAC in complexAC_to_dbentity:
+        if complexAC not in found:
+            
+            # x = nex_session.query(Dbentity).filter_by(subclass='COMPLEX').filter_by(format_name=complexAC).one_or_none()
+            # if x is not None:
+            #    x.dbentity_status = 'Deleted'
+            #    nex_session.add(x)
+            #    print ("DELETE ", complexAC)
+            delete_complex(nex_session, complexAC)
+            
     fw.close()
     # nex_session.rollback()
     nex_session.commit()
 
-            
+    
+def delete_complex(nex_session, complexAC):
+   
+    complex = nex_session.query(Dbentity).filter_by(subclass='COMPLEX').filter_by(format_name=complexAC).one_or_none()
+    if complex is None:
+        return
+
+    print ("DELETE ", complexAC)
+    
+    ## delete aliases
+    for x in nex_session.query(ComplexAlias).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete go
+    for	x in nex_session.query(ComplexGo).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete reference
+    for x in nex_session.query(ComplexReference).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete complexbindingannotation
+    for x in nex_session.query(Complexbindingannotation).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete literatureannotation rows
+    for x in nex_session.query(Literatureannotation).filter_by(dbentity_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+
+    ## delete complexdbentity
+    y = nex_session.query(Complexdbentity).filter_by(dbentity_id=complex.dbentity_id).one_or_none()
+    nex_session.delete(y)
+
+    ## delete dbentity row
+    nex_session.delete(complex)
+
 def insert_interactor(nex_session, fw, format_name, display_name, obj_url, desc, source_id, locus_id, type_id, role_id, seq):
 
     print("INSERT INTERACTOR:", format_name, display_name, obj_url, desc, source_id, locus_id, type_id, role_id, seq)
@@ -396,44 +407,6 @@ def update_complex_alias(nex_session, fw, complex_id, aliases, source_id, aliase
 
         fw.write("The complex_alias row for complex_id=" + str(complex_id) + " and display_name=" + display_name + " has been deleted\n")
 
-
-def insert_complex_go(nex_session, fw, complex_id, go_id, source_id):
-
-    print("INSERT GO:", complex_id, go_id, source_id)
-    # return
-
-    x = ComplexGo(complex_id = complex_id,
-                  go_id = go_id,
-                  source_id = source_id,
-                  created_by = CREATED_BY)
-
-    nex_session.add(x)
-
-    fw.write("Insert a new COMPLEX_GO row for complex_id=" + str(complex_id) + " and go_id=" + str(go_id) + "\n")
-
-
-def update_complex_go(nex_session, fw, complex_id, go_id_list, source_id, go_id_list_in_db):
-
-    print("UPDATE GO:", complex_id, go_id_list, source_id)
-    # return
-
-    if go_id_list_in_db is None:
-        go_id_list_in_db = []
-
-    for go_id in go_id_list:
-        if go_id in go_id_list_in_db:
-            continue
-        insert_complex_go(nex_session, fw, complex_id, go_id, source_id)
-    
-    for go_id in go_id_list_in_db:
-        if go_id in go_id_list:
-            continue
-        x = nex_session.query(ComplexGo).filter_by(complex_id=complex_id, go_id=go_id).one_or_none()
-        nex_session.delete(x)
-
-        fw.write("The complex_go row for complex_id=" + str(complex_id) + " and go_id=" + str(go_id) + " has been deleted\n")
-
-
 def insert_complex_reference(nex_session, fw, complex_id, reference_id, source_id):
 
     print("INSERT REFERENCE:", complex_id, reference_id, source_id)
@@ -519,24 +492,23 @@ def update_complexdbentity(nex_session, fw, intact_id, complexAC, systematicName
     # return
 
     x = complexAC_to_complexdbentity.get(complexAC)
-    
-    update_hash = {}
+
+    updated = 0
     if x.systematic_name != systematicName:
-        update_hash['systematic_name'] = systematicName
+        x.systematic_name = systematicName
+        updated = 1
     if x.eco_id != eco_id:
-        update_hash['eco_id'] = eco_id
+        x.eco_id = eco_id
+        updated = 1
     if x.description != desc:
-        update_hash['description'] = desc
+        x.description = desc
+        updated = 1
     if x.properties != properties:
-        update_hash['properties'] = properties
-
-    if not update_hash:
-        return
-
-    nex_session.query(Complexdbentity).filter_by(format_name=intact_id).update(update_hash)
-
-    fw.write("Update complexdbentity row for format_name = " + intact_id + "\n")
-
+        updated = 1
+        x.properties = properties
+    if updated == 1:
+        nex_session.add(x)
+        fw.write("Update complexdbentity row for format_name = " + intact_id + "\n")
 
 def get_json(url):
 
