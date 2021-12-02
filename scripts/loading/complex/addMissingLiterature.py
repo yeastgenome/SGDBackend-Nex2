@@ -25,17 +25,18 @@ def add_annotations():
         insert_literatureannotation(nex_session, x.complex_id, x.reference_id)
         added[(x.complex_id, x.reference_id)] = 1
 
-    for x in nex_session.query(Goannotation).filter_by(annotation_type='manually curated').all():
-        if x.dbentity.subclass != 'COMPLEX':
+    for x in nex_session.query(Goannotation).all():
+        if x.annotation_type == 'computational':
             continue
+        # if x.dbentity.subclass != 'COMPLEX':
+        #    continue
         if (x.dbentity_id, x.reference_id) in key_to_topic:
             continue
         if (x.dbentity_id, x.reference_id) in added:
             continue
         insert_literatureannotation(nex_session, x.dbentity_id, x.reference_id)
         added[(x.dbentity_id, x.reference_id)] = 1
-
-        
+  
     # nex_session.rollback()
     nex_session.commit()
 
