@@ -10876,12 +10876,24 @@ class Complexdbentity(Dbentity):
 
     
     def get_literatureannotation_references(self, topic, unique_references):
+
         references = []
+
+        #for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
+        #    if x.reference.to_dict_citation() not in references:
+        #        references.append(x.reference.to_dict_citation())
+        #    if x.reference.dbentity_id not in unique_references:
+        #        unique_references.append(x.reference.dbentity_id)
+
+        ref_ids = []
         for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
-            if x.reference.to_dict_citation() not in references:
-                references.append(x.reference.to_dict_citation())
-            if x.reference.dbentity_id not in unique_references:
-                unique_references.append(x.reference.dbentity_id)
+            ref_ids.append(x.reference_id)
+
+        for x in DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(ref_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all():
+            if x.to_dict_citation() not in references:
+                references.append(x.to_dict_citation())  
+            if x.dbentity_id not in unique_references:
+                unique_references.append(x.dbentity_id)
 
         return references
 
