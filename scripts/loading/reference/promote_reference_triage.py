@@ -22,7 +22,10 @@ _all_genes = None
 def add_paper(pmid, created_by="OTTO"):
 
     record = get_pubmed_record(str(pmid))
-
+    if record is None:
+        print ("Can't retrieve PubMed record for PMID:" + str(pmid) + ".")
+        return (None, None)
+    
     ncbi = DBSession.query(Source).filter_by(format_name='NCBI').one_or_none()
     source_id = ncbi.source_id
 
@@ -444,6 +447,10 @@ def get_pubmed_record(pmid):
 
     handle = Entrez.efetch(db="pubmed", id=pmid, rettype='xml')
     record = Entrez.read(handle)
+    if 'PubmedArticle' not in record:
+        return None
+    if len(record['PubmedArticle']) < 1:
+        return None
     paper = record['PubmedArticle'][0]
     entry = {}
     entry['pmid'] = int(paper['MedlineCitation']['PMID'])
