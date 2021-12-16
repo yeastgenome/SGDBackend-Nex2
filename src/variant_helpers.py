@@ -211,8 +211,9 @@ def get_variant_data(request):
                 dna_snp_positions.append((x.start_index, x.end_index))
                 
         if x.seq_type == 'protein':
-
-            end_index = x.end_index
+            if x.end_index - x.start_index > 1:
+                continue
+            
             dna_start = 0
             dna_end = 0
             if x.variant_type == 'Insertion':
@@ -236,8 +237,7 @@ def get_variant_data(request):
                     else:
                         (dna_start, dna_end) = (x.start_index*3, x.end_index*3)
             elif x.variant_type == 'SNP':
-                if x.end_index - x.start_index != 1:
-                    end_index = x.start_index + 1
+            
                 if len(dna_snp_positions) > snp_index:
                     (dna_start, dna_end) = dna_snp_positions[snp_index]
                     snp_index = snp_index + 1
@@ -250,7 +250,7 @@ def get_variant_data(request):
                 
                         
             protein_row = { "start": x.start_index,
-                            "end": end_index,
+                            "end": x.end_index,
                             "score": x.score,
                             "variant_type": x.variant_type,
                             "dna_start": dna_start,
