@@ -211,7 +211,7 @@ def get_variant_data(request):
                 dna_snp_positions.append((x.start_index, x.end_index))
                 
         if x.seq_type == 'protein':
-            if x.end_index - x.start_index > 1:
+            if x.variant_id in [9167367, 9167362, 9167368, 9167363, 9167364]:
                 continue
             
             dna_start = 0
