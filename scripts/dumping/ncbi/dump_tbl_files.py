@@ -30,6 +30,13 @@ namespace_mapping = { 'biological process' : 'go_process',
                       'cellular component' : 'go_component',
                       'molecular function' : 'go_function' }
 
+orf_to_tpa_acc = { "YEL066W": "DAA07588.2",   "YJR012C": "DAA08804.2",   "YMR147W": "DAA10043.2",
+                   "YNL260C": "DAA10299.2",   "YHR052C-B": "DAD54801.1", "YHR054C-B": "DAD54802.1",
+                   "YBR266C": "DAD54803.1",   "YEL059W": "DAD54804.1",   "YJL142C": "DAD54805.1",
+                   "YJL075C": "DAD54806.1",   "YJR107C-A": "DAD54807.1", "YKL104W-A": "DAD54808.1",
+                   "YLR379W-A": "DAD54809.1", "YMR008C-A": "DAD54810.1", "YMR075C-A": "DAD54811.1",
+                   "YPR038W": "DAD54812.1",   "YGR227C-A": "DAF84567.1" } 
+
 MITO_ID = "KP263414.1"
 
 def dump_data():
@@ -504,9 +511,13 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
             
     protein_id = duplicate_gene_to_protein_id.get(sgdid)
     if protein_id is None:
-        protein_id = locus_id_to_protein_id.get(locus_id)
-        if protein_id is None and systematic_name == 'YPR099C':
-            protein_id = TABS + "protein_id\tDAC85312.1" 
+        protein_id = orf_to_tpa_acc.get(systematic_name)
+        if protein_id is None:
+            protein_id = locus_id_to_protein_id.get(locus_id)
+            if protein_id is None and systematic_name == 'YPR099C':
+                protein_id = TABS + "protein_id\tDAC85312.1"
+        else:
+            protein_id = TABS + "protein_id\t" + protein_id
     else:
         protein_id = TABS + "protein_id\t" + protein_id
     if protein_id:
