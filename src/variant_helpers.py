@@ -211,9 +211,10 @@ def get_variant_data(request):
                 dna_snp_positions.append((x.start_index, x.end_index))
                 
         if x.seq_type == 'protein':
-            # if x.variant_id in [9167367, 9167362, 9167368, 9167363, 9167364, 9167359, 9167360, 9167365, 9167361, 9167366]:
-            if x.variant_id in [9167368, 9167363, 9167364, 9167359, 9167360, 9167365, 9167361, 9167366]:  
-                continue
+            if x.locus_id == 1286547:
+                # if x.variant_id in [9167367, 9167362, 9167368, 9167363, 9167364, 9167359, 9167360, 9167365, 9167361, 9167366]:
+                if x.variant_id not in [9167367, 9167362]:  
+                    continue
             
             dna_start = 0
             dna_end = 0
