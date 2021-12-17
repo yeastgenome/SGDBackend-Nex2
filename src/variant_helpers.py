@@ -211,11 +211,18 @@ def get_variant_data(request):
                 dna_snp_positions.append((x.start_index, x.end_index))
                 
         if x.seq_type == 'protein':
+            score = x.score
+            end_index = x.end_index
             if x.locus_id == 1286547:
                 # if x.variant_id in [9167367, 9167362, 9167368, 9167363, 9167364, 9167359, 9167360, 9167365, 9167361, 9167366]:
-                if x.variant_id not in [9167367, 9167362, 9167368]:  
-                    continue
-            
+                #if x.variant_id not in [9167367, 9167362]:  
+                #    continue
+                if x.start_index == 127 and x.end_index == 129:
+                    end_index = 128
+                    score = 3
+                elif x.start_index == 128 and x.end_index == 129:
+                    score = 6
+                    
             dna_start = 0
             dna_end = 0
             if x.variant_type == 'Insertion':
@@ -252,14 +259,15 @@ def get_variant_data(request):
                 
                         
             protein_row = { "start": x.start_index,
-                            "end": x.end_index,
-                            "score": x.score,
+                            "end": end_index,
+                            "score": score,
                             "variant_type": x.variant_type,
                             "dna_start": dna_start,
                             "dna_end": dna_end }
             if x.variant_type not in ['Insertion', 'Deletion']:
-                protein_row['snp_type'] = "Nonsynonymous"
-
+                # protein_row['snp_type'] = "Nonsynonymous"
+                protein_row['snp_type'] = ""
+                
             variant_protein.append(protein_row)
             
     data['variant_data_dna'] = variant_dna
