@@ -213,16 +213,15 @@ def get_variant_data(request):
         if x.seq_type == 'protein':
             score = x.score
             end_index = x.end_index
-            if x.locus_id == 1286547:
+            if x.locus_id == 1286547: # for ATG39
                 # if x.variant_id in [9167367, 9167362, 9167368, 9167363, 9167364, 9167359, 9167360, 9167365, 9167361, 9167366]:
-                #if x.variant_id not in [9167367, 9167362]:  
-                #    continue
-                if x.start_index == 127 and x.end_index == 129:
-                    end_index = 128
-                    score = 3
-                elif x.start_index == 128 and x.end_index == 129:
-                    score = 6
-                    
+                if x.variant_id not in [9167367, 9167362]:
+                    continue
+            if x.locus_id == 1267795: # for SHU1
+                # if x.variant_id in [9158936, 9158935, 9158937]:
+                if x.variant_id not in [9158936, 9158935]:    
+                    continue
+                
             dna_start = 0
             dna_end = 0
             if x.variant_type == 'Insertion':
