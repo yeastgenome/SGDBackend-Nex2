@@ -219,7 +219,7 @@ def get_variant_data(request):
                     continue
             if x.locus_id == 1267795: # for SHU1
                 # if x.variant_id in [9158936, 9158935, 9158937]:
-                if x.variant_id not in [9158936, 9158935]:    
+                if x.variant_id not in [9158936]:    
                     continue
                 
             dna_start = 0
