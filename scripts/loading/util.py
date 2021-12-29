@@ -1,5 +1,6 @@
 from sqlalchemy.engine import create_engine
-from sqlalchemy.ext.declarative.api import declarative_base
+# from sqlalchemy.ext.declarative.api import declarative_base
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy import not_, or_
 from scripts.loading.database_session import get_session
