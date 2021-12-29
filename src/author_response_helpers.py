@@ -12,7 +12,7 @@ def get_author_responses(curation_id=None):
     try:
         all = None
         if curation_id is None:
-            all = DBSession.query(Authorresponse).filter_by(no_action_required = '0').all()
+            all = DBSession.query(Authorresponse).filter_by(no_action_required = False).all()
         else:
             all = DBSession.query(Authorresponse).filter_by(curation_id=int(curation_id)).all()
         data = []
@@ -22,7 +22,7 @@ def get_author_responses(curation_id=None):
                 r = DBSession.query(Referencedbentity).filter_by(pmid=int(row.pmid)).one_or_none()
                 if r is not None:
                     reference_id = r.dbentity_id
-            if row.curator_checked_datasets == '1' and curator_checked_genelist == '1':
+            if row.curator_checked_datasets == True and curator_checked_genelist == True:
                 continue
             genes = row.gene_list
             if row.gene_list:
@@ -125,12 +125,12 @@ def insert_author_response(request):
         if x is not None:
             return HTTPBadRequest(body=json.dumps({'error': "You have already subomitted info for PMID:" + str(pmid)+"."}), content_type='text/json')
 
-        has_novel_research = '0'
+        has_novel_research = False
         if request.params.get('has_novel_research'):
-            has_novel_research = '1'
-        has_large_scale_data = '0'
+            has_novel_research = True
+        has_large_scale_data = False
         if request.params.get('has_large_scale_data'):
-            has_large_scale_data = '1'
+            has_large_scale_data = True
 
         research_results = request.params.get('research_result')
         dataset_description = request.params.get('dataset_desc')
@@ -142,10 +142,10 @@ def insert_author_response(request):
                            author_email = email,
                            has_novel_research = has_novel_research,
                            has_large_scale_data = has_large_scale_data,
-                           has_fast_track_tag = '0',
-                           curator_checked_datasets = '0',
-                           curator_checked_genelist = '0',
-                           no_action_required = '0',
+                           has_fast_track_tag = False,
+                           curator_checked_datasets = False,
+                           curator_checked_genelist = False,
+                           no_action_required = False,
                            research_results = research_results,
                            gene_list = gene_list,
                            dataset_description = dataset_description,

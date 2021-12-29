@@ -83,7 +83,7 @@ def search(request):
         query = query.replace('\\', '')
     elif "\\" in query:
         query = query.replace('\\', ' ')
-
+        
     temp_container = query.split(' ')
     int_flag = False
     if(temp_container):
@@ -184,7 +184,6 @@ def search(request):
         "synonyms",
         "go_id",
         "gene_ontology_loci",
-        "allele_loci",
         "author",
         "journal",
         "reference_loci",
@@ -369,13 +368,6 @@ def search(request):
                 }
 
     else:
-
-        query = query.upper()
-        
-        #if query.endswith('-') and query[3:-1].isdigit():
-        #    query = query[0:-1]
-        #    is_quick_flag = False
-            
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
@@ -455,8 +447,12 @@ def genomesnapshot(request):
                 go_slim_relationships.append([go_slim['id'], parent.go_id])
         genome_snapshot['go_slim_relationships'] = go_slim_relationships
         so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
-        distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).filter(Dnasequenceannotation.so_id != so.so_id).all()
-        rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()
+        distinct_so_ids = []
+        for x in DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=TAXON_ID).filter(Dnasequenceannotation.so_id != so.so_id).all():
+            if x.so_id not in distinct_so_ids:
+                distinct_so_ids.append(x.so_id)
+        # rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()
+        rows = DBSession.query(So).filter(So.so_id.in_(distinct_so_ids)).all()
         contigs = DBSession.query(Contig).filter(or_(Contig.display_name.like("%micron%"), Contig.display_name.like("Chromosome%"))).order_by(Contig.contig_id).all()
         columns = [contig.to_dict_sequence_widget() for contig in contigs]
         genome_snapshot['columns'] = columns
@@ -480,11 +476,14 @@ def genomesnapshot(request):
         # sub-categories for 'ORF' data row
         sub_categories = ['Verified', 'Dubious', 'Uncharacterized']
         data_row.extend(sub_categories)
-        orf_so_id = DBSession.query(So.so_id).filter(So.display_name=='ORF').one_or_none()
+        orf_so = DBSession.query(So).filter_by(display_name='ORF').one_or_none()
+        orf_so_id = orf_so.so_id
         for category in sub_categories:
             row_data = list()
             for column in columns:
-                db_entity_ids = DBSession.query(Dnasequenceannotation.dbentity_id).filter(and_(Dnasequenceannotation.so_id==orf_so_id, Dnasequenceannotation.dna_type==GENOMIC, Dnasequenceannotation.contig_id==column['id']))
+                db_entity_ids = []
+                for x in DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.so_id==orf_so_id, Dnasequenceannotation.dna_type==GENOMIC, Dnasequenceannotation.contig_id==column['id'])):
+                    db_entity_ids.append(x.dbentity_id)
                 count = DBSession.query(Locusdbentity).filter(and_(Locusdbentity.dbentity_id.in_(db_entity_ids), Locusdbentity.qualifier==category)).count()
                 row_data.append(count)
             data.append(row_data)
@@ -1505,7 +1504,11 @@ def keyword(request):
 @view_config(route_name='keywords', renderer='json', request_method='GET')
 def keywords(request):
     try:
-        keyword_ids = DBSession.query(distinct(DatasetKeyword.keyword_id)).all()
+        # keyword_ids = DBSession.query(distinct(DatasetKeyword.keyword_id)).all()
+        keyword_ids = []
+        for x in DBSession.query(DatasetKeyword).all():
+            if x.keyword_id not in keyword_ids:
+                keyword_ids.append(x.keyword_id)
         keywords = DBSession.query(Keyword).filter(Keyword.keyword_id.in_(keyword_ids)).all()
         simple_keywords = [k.to_simple_dict() for k in keywords]
         for k in simple_keywords:
