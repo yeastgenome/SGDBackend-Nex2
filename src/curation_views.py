@@ -2,7 +2,8 @@ import pandas as pd
 from oauth2client import client, crypt
 from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
 from pyramid.view import view_config
-from pyramid.session import check_csrf_token
+# from pyramid.session import check_csrf_token
+from pyramid.csrf import check_csrf_token
 from sqlalchemy import create_engine, and_, or_
 from sqlalchemy.exc import IntegrityError, DataError, InternalError
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -802,7 +803,6 @@ def new_colleague(request):
 
 
 @view_config(route_name='reserved_name_index', renderer='json')
-@authenticate
 def reserved_name_index(request):
     try:
         res_triages = DBSession.query(ReservednameTriage).all()
@@ -818,7 +818,6 @@ def reserved_name_index(request):
             DBSession.remove()
 
 @view_config(route_name='reserved_name_curate_show', renderer='json')
-@authenticate
 def reserved_name_curate_show(request):
     try:
         req_id = request.matchdict['id'].upper()
@@ -1142,8 +1141,6 @@ def get_username_from_db_uri():
 #     config.add_route('add_new_colleague_triage', '/colleagues', request_method='POST')
 @view_config(route_name='add_new_colleague_triage', renderer='json', request_method='POST')
 def add_new_colleague_triage(request):
-    # username = request.session['username']
-    # curator_session = get_curator_session(username)
     curator_session = DBSession    
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
@@ -1204,6 +1201,77 @@ def add_new_colleague_triage(request):
         if curator_session:
             curator_session.close()
             
+# @view_config(route_name='upload', request_method='POST', renderer='json')
+# @authenticate
+# def upload_file(request):
+#     keys = ['file', 'old_filepath', 'new_filepath', 'previous_file_name', 'display_name', 'status', 'topic_id', 'format_id', 'extension', 'file_date', 'readme_name', 'pmids', 'keyword_ids']
+#     optional_keys = ['is_public', 'for_spell', 'for_browser']
+    
+#     for k in keys:
+#         if request.POST.get(k) is None:
+#             return HTTPBadRequest(body=json.dumps({'error': 'Field \'' + k + '\' is missing'}))
+
+#     file = request.POST['file'].file
+#     filename = request.POST['file'].filename
+
+#     if not file:
+#         log.info('No file was sent.')
+#         return HTTPBadRequest(body=json.dumps({'error': 'No file was sent.'}))
+
+#     if not allowed_file(filename):
+#         log.info('Upload error: File ' + request.POST.get('display_name') + ' has an invalid extension.')
+#         return HTTPBadRequest(body=json.dumps({'error': 'File extension is invalid'}))
+    
+#     try:
+#         references = extract_references(request)
+#         keywords = extract_keywords(request)
+#         topic = extract_topic(request)
+#         format = extract_format(request)
+#         filepath = get_or_create_filepath(request)
+#     except HTTPBadRequest as bad_request:
+#         return HTTPBadRequest(body=json.dumps({'error': str(bad_request.detail)}))
+
+#     if file_already_uploaded(request):
+#         return HTTPBadRequest(body=json.dumps({'error': 'Upload error: File ' + request.POST.get('display_name') + ' already exists.'}))
+
+#     fdb = Filedbentity(
+#         # Filedbentity params
+#         md5sum=None,
+#         previous_file_name=request.POST.get('previous_file_name'),
+#         topic_id=topic.edam_id,
+#         format_id=format.edam_id,
+#         file_date=datetime.datetime.strptime(request.POST.get('file_date'), '%Y-%m-%d %H:%M:%S'),
+#         is_public=request.POST.get('is_public', 0),
+#         is_in_spell=request.POST.get('for_spell', 0),
+#         is_in_browser=request.POST.get('for_browser', 0),
+#         filepath_id=filepath.filepath_id,
+#         file_extension=request.POST.get('extension'),        
+
+#         # DBentity params
+#         format_name=request.POST.get('display_name'),
+#         display_name=request.POST.get('display_name'),
+#         s3_url=None,
+#         source_id=339,
+#         dbentity_status=request.POST.get('status')
+#     )
+
+#     DBSession.add(fdb)
+#     DBSession.flush()
+#     DBSession.refresh(fdb)
+
+#     link_references_to_file(references, fdb.dbentity_id)
+#     link_keywords_to_file(keywords, fdb.dbentity_id)
+    
+#     # fdb object gets expired after transaction commit
+#     fdb_sgdid = fdb.sgdid
+#     fdb_file_extension = fdb.file_extension
+    
+#     transaction.commit() # this commit must be synchronous because the upload_to_s3 task expects the row in the DB
+#     log.info('File ' + request.POST.get('display_name') + ' was successfully uploaded.')
+#     return Response({'success': True})
+
+
+
 @view_config(route_name='colleague_with_subscription', renderer='json', request_method='GET')
 def colleague_with_subscription(request):
     try:
@@ -1667,7 +1735,7 @@ def get_reporter(request):
 @view_config(route_name='get_chebi', renderer='json', request_method='GET')
 def get_chebi(request):
     try:
-        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete='0').order_by(Chebi.display_name).all()
+        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete=False).order_by(Chebi.display_name).all()
         data = []
         for c in all_chemical:
             data.append({"chebi_id": c.chebi_id,
@@ -1684,7 +1752,6 @@ def get_chebi(request):
 @view_config(route_name='get_eco', renderer='json', request_method='GET')
 def get_eco(request):
     try:
-        # all_eco = DBSession.query(Eco).filter_by(is_obsolete='0').order_by(Eco.display_name).all()
         all_eco = DBSession.query(Eco).order_by(Eco.display_name).all()
         data = []
         for e in all_eco:
@@ -1856,13 +1923,11 @@ def file_metadata_delete(request):
     return delete_metadata(request)
 
 @view_config(route_name='get_dataset_data', renderer='json', request_method='GET')
-@authenticate
 def get_dataset_data(request):
 
     return get_one_dataset(request)
 
 @view_config(route_name='get_datasets', renderer='json', request_method='GET')
-@authenticate
 def get_datasets(request):
 
     return get_list_of_dataset(request)
@@ -1924,9 +1989,10 @@ def upload_suppl_file(request):
 @view_config(route_name='get_curation_tag', renderer='json', request_method='GET')
 def get_curation_tag(request):
     try:
-        all_tags = DBSession.query(CurationReference.curation_tag).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all()
-        data = [x[0] for x in all_tags]
-        return HTTPOk(body=json.dumps(data),content_type='text/json')
+        all_tags = []
+        for x in DBSession.query(CurationReference).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all():
+            all_tags.append(x.curation_tag)
+        return HTTPOk(body=json.dumps(all_tags),content_type='text/json')
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
@@ -1937,9 +2003,10 @@ def get_curation_tag(request):
 @view_config(route_name='get_literature_topic', renderer='json', request_method='GET')
 def get_literature_topic(request):
     try:
-        all_topics = DBSession.query(Literatureannotation.topic).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all()
-        data = [x[0] for x in all_topics]
-        return HTTPOk(body=json.dumps(data),content_type='text/json')
+        all_topics = []
+        for x in DBSession.query(Literatureannotation).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all():
+            all_topics.append(x.topic)
+        return HTTPOk(body=json.dumps(all_topics),content_type='text/json')
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
@@ -1967,7 +2034,9 @@ def get_psimod(request):
     try:
         psimods = models_helper.get_all_psimods()
         if psimods:
-            distinct_psimod_ids = DBSession.query(Posttranslationannotation.psimod_id).distinct()
+            distinct_psimod_ids = []
+            for x in DBSession.query(Posttranslationannotation).distinct():
+                distinct_psimod_ids.append(x.psimod_id)
             psimods_in_use = psimods.filter(Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             psimods_not_in_use = psimods.filter(~Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             
@@ -2210,7 +2279,6 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 @view_config(route_name='get_all_go_for_regulations',renderer='json',request_method='GET')
-@authenticate
 def get_all_go_for_regulations(request):
     try:
         go_in_db = models_helper.get_all_go()
@@ -2223,7 +2291,6 @@ def get_all_go_for_regulations(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_eco_for_regulations', renderer='json', request_method='GET')
-@authenticate
 def get_all_eco_for_regulations(request):
     try:
         eco_in_db = models_helper.get_all_eco()
@@ -2246,7 +2313,6 @@ def get_papers_by_tag(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_eco', renderer='json', request_method='GET')
-@authenticate
 def get_all_eco(request):
     try:
         eco_in_db = models_helper.get_all_eco()
@@ -2259,7 +2325,6 @@ def get_all_eco(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_do', renderer='json', request_method='GET')
-@authenticate
 def get_all_do(request):
     try:
         do_in_db = models_helper.get_all_do()
@@ -2272,7 +2337,6 @@ def get_all_do(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_ro', renderer='json', request_method='GET')
-@authenticate
 def get_all_ro(request):
     try:
         ro_in_db = models_helper.get_all_ro()
@@ -3191,7 +3255,6 @@ def upload_file_curate(request):
 
 
 @view_config(route_name="get_file", renderer='json', request_method='GET')
-@authenticate
 def get_file(request):
     ''' Get file data '''
   
@@ -3235,7 +3298,6 @@ def file_curate_menus(request):
     return get_file_curate_dropdown_data()
 
 @view_config(route_name="triage_count", renderer='json', request_method='GET')
-@authenticate
 def triage_count(request):
     try:
         colleagueCount = DBSession.query(Colleaguetriage).count()
@@ -3250,7 +3312,6 @@ def triage_count(request):
 
 
 @view_config(route_name='get_reference_annotations',request_method='GET',renderer='json')
-@authenticate
 def get_reference_annotations(request):
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))
