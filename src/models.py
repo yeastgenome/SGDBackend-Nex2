@@ -3742,19 +3742,19 @@ class Locusdbentity(Dbentity):
         primary_ids = set([])
         additional_ids = set([])
         reviews_ids = set([])
-	all_ids = set([])
+        all_ids = set([])
         literature_annotations = DBSession.query(Literatureannotation).filter_by(dbentity_id = self.dbentity_id).all()
 
         for annotation in literature_annotations:
             if annotation.topic == "Primary Literature":
                 primary_ids.add(annotation.reference_id)
-		all_ids.add(annotation.reference_id)
+                all_ids.add(annotation.reference_id)
             elif annotation.topic == "Additional Literature":
                 additional_ids.add(annotation.reference_id)
-		all_ids.add(annotation.reference_id)
+                all_ids.add(annotation.reference_id)
             elif annotation.topic == "Reviews":
                 reviews_ids.add(annotation.reference_id)
-		all_ids.add(annotation.reference_id)
+                all_ids.add(annotation.reference_id)
 
         all_references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(list(all_ids))).all()
                 
@@ -5308,7 +5308,7 @@ class Locusdbentity(Dbentity):
                 obj["htp_biological_process_terms"] = [go[namespace][term] for term in terms]
 
         go_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Function").one_or_none()
-   	if go_summary:
+        if go_summary:
             obj["paragraph"] = go_summary.html
 
         return obj
@@ -8695,7 +8695,7 @@ class Pathwayannotation(Base):
 
     def to_dict(self):
         row = DBSession.query(PathwayUrl).filter(and_(PathwayUrl.pathway_id == self.pathway_id, PathwayUrl.url_type == 'YeastPathways')).one_or_none()
-	url = row.obj_url if row else ''
+        url = row.obj_url if row else ''
         row = DBSession.query(Dbentity).filter_by(dbentity_id=self.pathway.dbentity_id).one_or_none()
         display_name = row.display_name if row else ''
         return {
