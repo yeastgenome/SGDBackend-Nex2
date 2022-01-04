@@ -242,35 +242,35 @@ BEGIN
   IF (TG_OP = 'UPDATE') THEN
 
      IF (OLD.source_id != NEW.source_id) THEN
-       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'SOURCE_ID'::text, OLD.relation_id, OLD.source_id::text, NEW.source_id::text, USER);
+       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'SOURCE_ID'::text, OLD.colleague_relation_id, OLD.source_id::text, NEW.source_id::text, USER);
     END IF;
 
     IF (((OLD.bud_id IS NULL) AND (NEW.bud_id IS NOT NULL)) OR ((OLD.bud_id IS NOT NULL) AND (NEW.bud_id IS NULL)) OR (OLD.bud_id != NEW.bud_id)) THEN
-       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'BUD_ID'::text, OLD.relation_id, OLD.bud_id::text, NEW.bud_id::text, USER);
+       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'BUD_ID'::text, OLD.colleague_relation_id, OLD.bud_id::text, NEW.bud_id::text, USER);
     END IF;
 
     IF (OLD.colleague_id != NEW.colleague_id) THEN
-       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'COLLEAGUE_ID'::text, OLD.relation_id, OLD.colleague_id::text, NEW.colleague_id::text, USER);
+       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'COLLEAGUE_ID'::text, OLD.colleague_relation_id, OLD.colleague_id::text, NEW.colleague_id::text, USER);
     END IF;
 
      IF (OLD.associate_id != NEW.associate_id) THEN
-       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'ASSOCIATE_ID'::text, OLD.relation_id, OLD.associate_id::text, NEW.associate_id::text, USER);
+       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'ASSOCIATE_ID'::text, OLD.colleague_relation_id, OLD.associate_id::text, NEW.associate_id::text, USER);
     END IF;
 
     IF (OLD.association_type != NEW.association_type) THEN
-       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'ASSOCIATION_TYPE'::text, OLD.relation_id, OLD.association_type, NEW.association_type, USER);
+       PERFORM nex.insertupdatelog('COLLEAGUE_RELATION'::text, 'ASSOCIATION_TYPE'::text, OLD.colleague_relation_id, OLD.association_type, NEW.association_type, USER);
     END IF;
 
     RETURN NEW;
 
   ELSIF (TG_OP = 'DELETE') THEN
 
-    v_row := OLD.relation_id || '[:]' || OLD.source_id || '[:]' ||
+    v_row := OLD.colleague_relation_id || '[:]' || OLD.source_id || '[:]' ||
              coalesce(OLD.bud_id,0) || '[:]' || OLD.colleague_id || '[:]' ||
              OLD.associate_id || '[:]' || OLD.association_type || '[:]' ||
              OLD.date_created || '[:]' || OLD.created_by;
 
-            PERFORM nex.insertdeletelog('COLLEAGUE_RELATION'::text, OLD.relation_id, v_row, USER);
+            PERFORM nex.insertdeletelog('COLLEAGUE_RELATION'::text, OLD.colleague_relation_id, v_row, USER);
 
      RETURN OLD;
   END IF;
@@ -294,7 +294,7 @@ BEGIN
 
   ELSIF (TG_OP = 'UPDATE') THEN
 
-    IF (NEW.relation_id != OLD.relation_id) THEN
+    IF (NEW.colleague_relation_id != OLD.colleague_relation_id) THEN
         RAISE EXCEPTION 'Primary key cannot be updated';
     END IF;
 
