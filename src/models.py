@@ -5108,7 +5108,7 @@ class Locusdbentity(Dbentity):
             apo_ids.append(x.apo_id)
             
         phenotype_ids = []
-        for x in DBSession.query(PhenotypeannotatIon).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids))).all():
+        for x in DBSession.query(Phenotypeannotation).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids))).all():
             phenotype_ids.append(x.reference_id)
 
         apo_ids_large_scale = []
