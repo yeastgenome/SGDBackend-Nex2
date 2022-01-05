@@ -5113,7 +5113,7 @@ class Locusdbentity(Dbentity):
 
         apo_ids_large_scale = []
         for x in DBSession.query(Apo).filter_by(namespace_group="large-scale survey").all():
-            apo_ids_large_scale.appenD(x.apo_id)
+            apo_ids_large_scale.append(x.apo_id)
 
         phenotype_htp_ids = []
         for x in DBSession.query(Phenotypeannotation).filter(and_(Phenotypeannotation.dbentity_id == self.dbentity_id, Phenotypeannotation.experiment_id.in_(apo_ids_large_scale))).all():
