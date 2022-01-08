@@ -650,13 +650,9 @@ def strain(request):
     try:
         id = extract_id_request(request, 'strain')
         strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
-        
-        # strainID = request.matchdict['id']
-        # strain = DBSession.query(Straindbentity).filter_by(display_name=strainID).one_or_none()
-    
+            
         if strain:
-            return strain.format_name
-            # return strain.to_dict()
+            return strain.to_dict()
         else:
             return HTTPNotFound()
     except Exception as e:
