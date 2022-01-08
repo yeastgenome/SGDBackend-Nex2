@@ -6060,23 +6060,25 @@ class Straindbentity(Dbentity):
         elif (len(obj["genotype"]) > 1 and obj["genotype"][0] == "\"" and obj["genotype"][-1] == "\""):
             obj["genotype"] = obj["genotype"][1:len(obj["genotype"])-1]
 
-        urls = DBSession.query(StrainUrl.display_name, StrainUrl.url_type, StrainUrl.obj_url).filter_by(strain_id=self.dbentity_id).all()
-
-        for u in urls:
-            category = u[1].lower()
+        # urls = DBSession.query(StrainUrl.display_name, StrainUrl.url_type, StrainUrl.obj_url).filter_by(strain_id=self.dbentity_id).all()
+        rows = DBSession.query(StrainUrl).filter_by(strain_id=self.dbentity_id).all() 
+        for u in rows:
+            category = u.url_type.lower()
             if category == "external id":
                 category = "source"
 
             obj["urls"].append({
-                "display_name": u[0],
+                "display_name": u.display_name,
                 "category": category,
-                "link": u[2]
+                "link": u.obj_url
             })
 
-        paragraph = DBSession.query(Strainsummary.summary_id, Strainsummary.html).filter_by(strain_id=self.dbentity_id).one_or_none()
+        # paragraph = DBSession.query(Strainsummary.summary_id, Strainsummary.html).filter_by(strain_id=self.dbentity_id).one_or_none()
+
+        paragraph = DBSession.query(Strainsummary).filter_by(strain_id=self.dbentity_id).one_or_none()
         if paragraph:
             reference_ids = []
-            for x in DBSession.query(StrainsummaryReference).filter_by(summary_id=paragraph[0]).order_by(StrainsummaryReference.reference_order).all():
+            for x in DBSession.query(StrainsummaryReference).filter_by(summary_id=paragraph.summary_id).order_by(StrainsummaryReference.reference_order).all():
                 reference_ids.append(x.reference_id)
 
             references = []
