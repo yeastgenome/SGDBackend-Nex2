@@ -6073,6 +6073,8 @@ class Straindbentity(Dbentity):
                 "link": u.obj_url
             })
 
+        return obj
+            
         # paragraph = DBSession.query(Strainsummary.summary_id, Strainsummary.html).filter_by(strain_id=self.dbentity_id).one_or_none()
 
         paragraph = DBSession.query(Strainsummary).filter_by(strain_id=self.dbentity_id).one_or_none()
