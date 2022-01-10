@@ -611,7 +611,7 @@ def search_sequence_objects(request):
             'offset': offset
         }
         
-        return Response(body=json.dumps(formatted_response), content_type='application/json')
+        return Response(body=json.dumps(formatted_response), content_type='application/json', charset='UTF-8')
     
     except Exception as e:
         logging.exception(str(e))
