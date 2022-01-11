@@ -138,7 +138,14 @@ def dump_data():
             continue
         if locus.qualifier == 'Dubious':
             continue
-        main_data.append((x.annotation_id, x.dbentity_id, contig_id_to_chrnum[x.contig_id], locus.systematic_name, locus.gene_name, so_id_to_display_name[x.so_id], x.start_index, x.end_index, x.strand, locus.description))
+
+        description = locus.description
+        for char in description:
+            if ord(char) >= 128:
+                print ("non-ascii character " + char + " in " + locus.systematic_name + "'s description: \n" + description)
+                break
+            
+        main_data.append((x.annotation_id, x.dbentity_id, contig_id_to_chrnum[x.contig_id], locus.systematic_name, locus.gene_name, so_id_to_display_name[x.so_id], x.start_index, x.end_index, x.strand, description))
         annotation_id_to_strand[x.annotation_id] = x.strand    
     
     log.info(str(datetime.now()))
