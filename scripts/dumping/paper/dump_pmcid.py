@@ -21,7 +21,6 @@ def dump_data():
             continue
         if x.fulltext_status == 'N':
             fw.write(str(x.pmid) + "\t" + x.pmcid + "\t" + str(x.year) + "\t" + x.fulltext_status + "\n")
-
     fw.close()
     nex_session.close()
     
