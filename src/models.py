@@ -3799,19 +3799,20 @@ class Locusdbentity(Dbentity):
             all()
 
         regulation_ids = []
-        for x in regulation_ids:
+        for x in regulations:
             regulation_ids.append(x.reference_id)
 
         regulation_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(regulation_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
         
         for lit in regulation_lit:
             obj["regulation"].append(lit.to_dict_citation())
-
+        ###
         regulations_htp = DBSession.query(Regulationannotation).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id),Regulationannotation.annotation_type == "high-throughput").all()
 
         regulation_ids_htp = []
         for x in regulations_htp:
-            regulation_ids_htp.append(x.reference_id)
+            if x.reference_id not in regulation_ids_htp:
+                regulation_ids_htp.append(x.reference_id)
 
         # regulation_lit_htp = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(regulation_ids_htp)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
@@ -3828,7 +3829,7 @@ class Locusdbentity(Dbentity):
             
         apo_ids = []
         apo_ids_large_scale = []
-        for x in DBSession.query(Apo).filter_by(namespace_group="classical genetics").all():
+        for x in DBSession.query(Apo).all():
             if x.namespace_group == "classical genetics":
                 apo_ids.append(x.apo_id)
             elif x.namespace_group == "large-scale survey":
@@ -3852,11 +3853,13 @@ class Locusdbentity(Dbentity):
         
         valid_phenotype_ref_ids = []
         for x in DBSession.query(Phenotypeannotation).filter_by(dbentity_id = self.dbentity_id).filter(Phenotypeannotation.experiment_id.in_(apo_ids)).all():
-            valid_phenotype_ref_ids.append(x.reference_id)
+            if x.reference_id not in valid_phenotype_ref_ids:
+                valid_phenotype_ref_ids.append(x.reference_id)
 
         valid_phenotype_ref_ids_lsc = []
         for x in DBSession.query(Phenotypeannotation).filter_by(dbentity_id = self.dbentity_id).filter(Phenotypeannotation.experiment_id.in_(apo_ids_large_scale)).all():
-            valid_phenotype_ref_ids_lsc.append(x.reference_id)
+            if x.reference_id not in valid_phenotype_ref_ids_lsc:
+                valid_phenotype_ref_ids_lsc.append(x.reference_id)
         
         phenotype_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
@@ -3880,15 +3883,16 @@ class Locusdbentity(Dbentity):
             
         go_ids_htp = []
         for x in DBSession.query(Goannotation).filter(and_(Goannotation.dbentity_id == self.dbentity_id, Goannotation.annotation_type == "high-throughput")).all():
-            go_ids_htp.append(x.reference_id)
+            if x.reference_id not in go_ids_htp:
+                go_ids_htp.append(x.reference_id)
             
         go_ids_htp = set(go_ids_htp) - set(Referencedbentity.get_go_blacklist_ids())
+
         # go_lit_htp = DBSession.query(Referencedbentity).filter(
         #    Referencedbentity.dbentity_id.in_(go_ids_htp)).order_by(
         #        Referencedbentity.year.desc(),
         #        Referencedbentity.display_name.asc()).all()
 
-        
         htp_ids = regulation_ids_htp + valid_phenotype_ref_ids_lsc + list(go_ids_htp)
         all_lit_htp = DBSession.query(Referencedbentity).filter(
             Referencedbentity.dbentity_id.in_(htp_ids)).order_by(
@@ -3898,7 +3902,7 @@ class Locusdbentity(Dbentity):
         for lit in all_lit_htp:
             if lit.to_dict_citation() not in obj["htp"]:
                 obj["htp"].append(lit.to_dict_citation())
-        
+                
         return obj
 
     def go_graph(self):
@@ -6060,28 +6064,29 @@ class Straindbentity(Dbentity):
         elif (len(obj["genotype"]) > 1 and obj["genotype"][0] == "\"" and obj["genotype"][-1] == "\""):
             obj["genotype"] = obj["genotype"][1:len(obj["genotype"])-1]
 
-        urls = DBSession.query(StrainUrl.display_name, StrainUrl.url_type, StrainUrl.obj_url).filter_by(strain_id=self.dbentity_id).all()
-
-        for u in urls:
-            category = u[1].lower()
+        rows = DBSession.query(StrainUrl).filter_by(strain_id=self.dbentity_id).all() 
+        for u in rows:
+            category = u.url_type.lower()
             if category == "external id":
                 category = "source"
 
             obj["urls"].append({
-                "display_name": u[0],
+                "display_name": u.display_name,
                 "category": category,
-                "link": u[2]
+                "link": u.obj_url
             })
+            
+        # paragraph = DBSession.query(Strainsummary.summary_id, Strainsummary.html).filter_by(strain_id=self.dbentity_id).one_or_none()
 
-        paragraph = DBSession.query(Strainsummary.summary_id, Strainsummary.html).filter_by(strain_id=self.dbentity_id).one_or_none()
+        paragraph = DBSession.query(Strainsummary).filter_by(strain_id=self.dbentity_id).one_or_none()
         if paragraph:
             reference_ids = []
-            for x in DBSession.query(StrainsummaryReference).filter_by(summary_id=paragraph[0]).order_by(StrainsummaryReference.reference_order).all():
+            for x in DBSession.query(StrainsummaryReference).filter_by(summary_id=paragraph.summary_id).order_by(StrainsummaryReference.reference_order).all():
                 reference_ids.append(x.reference_id)
 
             references = []
             if len(reference_ids):
-                reference_ids = [r[0] for r in reference_ids]
+                # reference_ids = [r[0] for r in reference_ids]
                 references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).order_by(Referencedbentity.year.desc()).all()
 
             obj["paragraph"] = {
