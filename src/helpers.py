@@ -39,7 +39,8 @@ MAX_QUERY_ATTEMPTS = 3
 S3_BUCKET = os.environ['S3_BUCKET']
 
 import redis
-disambiguation_table = redis.Redis()
+# disambiguation_table = redis.Redis()
+disambiguation_table = redis.Redis(os.environ['REDIS_READ_HOST'], os.environ['REDIS_PORT'])
 
 # get list of URLs to visit from comma-separated ENV variable cache_urls 'url1, url2'
 cache_urls = None

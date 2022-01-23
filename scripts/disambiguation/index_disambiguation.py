@@ -11,7 +11,8 @@ engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
 DBSession.configure(bind=engine)
 Base.metadata.bind = engine
 
-disambiguation = redis.Redis()
+# disambiguation = redis.Redis()
+disambiguation = redis.Redis(os.environ['REDIS_WRITE_HOST'], os.environ['REDIS_PORT'])
 
 ignoring = []
 

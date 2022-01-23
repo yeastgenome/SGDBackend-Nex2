@@ -611,7 +611,7 @@ def search_sequence_objects(request):
             'offset': offset
         }
         
-        return Response(body=json.dumps(formatted_response), content_type='application/json')
+        return Response(body=json.dumps(formatted_response), content_type='application/json', charset='UTF-8')
     
     except Exception as e:
         logging.exception(str(e))
@@ -649,9 +649,8 @@ def reserved_name(request):
 def strain(request):
     try:
         id = extract_id_request(request, 'strain')
-
         strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
-
+            
         if strain:
             return strain.to_dict()
         else:

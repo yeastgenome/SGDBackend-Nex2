@@ -34,9 +34,10 @@ def add_annotations():
             continue
         if (x.dbentity_id, x.reference_id) in added:
             continue
+        if x.reference.sgdid in ['S000246339', 'S000069584']:
+            continue
         insert_literatureannotation(nex_session, x.dbentity_id, x.reference_id)
         added[(x.dbentity_id, x.reference_id)] = 1
-  
     # nex_session.rollback()
     nex_session.commit()
 
