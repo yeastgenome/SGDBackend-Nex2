@@ -252,7 +252,7 @@ def search(request):
         
         ## end of unmapped gene check
         
-        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
+        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match or t_query.startswith('MATA'):
             maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
             aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
             if aliases_count == 0 and maybe_gene_url:
