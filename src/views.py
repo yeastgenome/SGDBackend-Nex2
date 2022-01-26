@@ -378,6 +378,9 @@ def search(request):
                 }
 
     else:
+
+        query = query.upper()
+        
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
