@@ -218,6 +218,34 @@ def search(request):
     ]
 
 
+    ## added for allele search
+    # query2 = query.replace('Δ', "delta").replace('-', "delta")
+    # if is_quick_flag == 'true' and ('delta' in query2):   
+    if is_quick_flag:
+        query = query.strip()
+        allele_or_gene_url = None
+        rows = DBSession.query(Dbentity).filter(or_(Dbentity.subclass.in_(['ALLELE', 'LOCUS']))).filter(Dbentity.display_name.ilike(query)).all()
+        ## some allele name = gene_name eg MATA1 => if this is the case, let ES take care of it. 
+        for len(rows) == 1:
+            allele_or_gene_url = rows[0].obj_url 
+
+        if allele_or_gene__url is None:
+            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(query)).one_or_none()
+            if aa is not None:
+                allele_gene_url = aa.allele.obj_url
+        
+        if allele_or_gene_url:
+            gene_or_allele_search_obj = {
+                'href': gene_or_allele_url,
+                'is_quick': True
+            }
+            return {
+                'total': 1,
+                'results': [gene_or_allele_search_obj],
+                'aggregations': []
+            }
+
+    ## end of allele search section    
     
         
     # see if we can search for a simple gene name in db without using ES
@@ -253,7 +281,7 @@ def search(request):
         
         ## end of unmapped gene check
         
-        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match or t_query.startswith('MATA'):
+        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
             maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
             aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
             if aliases_count == 0 and maybe_gene_url:
@@ -279,38 +307,6 @@ def search(request):
         count = count_alias(terms)
         if (count > 0):
             alias_flag = True
-
-
-
-    ## added for allele search
-    # query2 = query.replace('Δ', "delta").replace('-', "delta")
-    # if is_quick_flag == 'true' and ('delta' in query2):
-    if is_quick_flag:
-        allele_name = query.strip()
-        maybe_allele_url = None
-        maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(query)).one_or_none()
-        if maybe_allele:
-            maybe_allele_url = maybe_allele.obj_url
-
-        if maybe_allele_url is None:
-            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele_name)).one_or_none()
-            if aa is not None:
-                maybe_allele_url = aa.allele.obj_url
-        if maybe_allele_url:
-            allele_search_obj = {
-                'href': maybe_allele_url,
-                'is_quick': True
-            }
-            return {
-                'total': 1,
-                'results': [allele_search_obj],
-                'aggregations': []
-            }
-
-    ## end of allele search section
-
-    
-
             
     limit = int(request.params.get('limit', 10))
     offset = int(request.params.get('offset', 0))
@@ -378,9 +374,9 @@ def search(request):
                 }
 
     else:
-
-        query = query.upper()
         
+        query = query.upper()
+
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
