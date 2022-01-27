@@ -229,7 +229,7 @@ def search(request):
         if len(rows) == 1:
             allele_or_gene_url = rows[0].obj_url 
 
-        if allele_or_gene__url is None:
+        if allele_or_gene_url is None:
             aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(query)).one_or_none()
             if aa is not None:
                 allele_gene_url = aa.allele.obj_url
