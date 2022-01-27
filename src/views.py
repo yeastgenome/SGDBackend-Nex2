@@ -226,7 +226,7 @@ def search(request):
         allele_or_gene_url = None
         rows = DBSession.query(Dbentity).filter(or_(Dbentity.subclass.in_(['ALLELE', 'LOCUS']))).filter(Dbentity.display_name.ilike(query)).all()
         ## some allele name = gene_name eg MATA1 => if this is the case, let ES take care of it. 
-        for len(rows) == 1:
+        if len(rows) == 1:
             allele_or_gene_url = rows[0].obj_url 
 
         if allele_or_gene__url is None:
