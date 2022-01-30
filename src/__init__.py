@@ -134,7 +134,7 @@ def main(global_config, **settings):
 
     config.add_route('alignment', '/alignment/{id}', request_method='GET')
 
-    config.add_route('primer3', '/primer3', request_method='POST')
+    config.add_route('primer3', '/primer3', request_method='GET')
     
     # curator interfaces
     config.add_route('account', '/account')

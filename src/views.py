@@ -1784,23 +1784,24 @@ def ecnumber(request):
         if DBSession:
             DBSession.remove()
     
-@view_config(route_name='primer3', renderer='json', request_method='POST')
+# @view_config(route_name='primer3', renderer='json', request_method='POST')
+@view_config(route_name='primer3', renderer='json', request_method='GET') 
 def primer3(request):
-    params = request.json_body
-    p_keys = list(params.keys())
 
-    if 'gene_name' in p_keys:
-        gene_name = params.get('gene_name')
-    if 'sequence' in p_keys:
-        sequence = params.get('sequence')
-
-    if gene_name is not None and sequence is not None:
+    gene_name = request.params.get('gene_name', '')
+    sequence = request.params.get('sequence', '')
+    if gene_name == "None":
+        gene_name = ''
+    if sequence == "None":
+        sequence = ''
+                                        
+    if gene_name != '' and sequence != '':
         return HTTPBadRequest(body=json.dumps({'error': 'Both gene name AND sequence provided'}))
 
-    if gene_name is None and sequence is None:
+    if gene_name == '' and sequence == '':
             return HTTPBadRequest(body=json.dumps({'error': 'No gene name OR sequence provided'}))
 
-    if gene_name is None:
+    if gene_name == '':
         decodeseq = sequence
         sequence = str(sequence.replace('\r', '').replace('\n', ''))
         input = 'seq'
@@ -1809,51 +1810,56 @@ def primer3(request):
         locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name == gene_name, Locusdbentity.systematic_name == gene_name)).one_or_none()
         if locus is None:
             return HTTPBadRequest(body=json.dumps({'error': 'Gene name provided does not exist in the database:  ' + gene_name}))
-        tax_id = DBSession.query(Straindbentity.taxonomy_id).filter(Straindbentity.strain_type =='Reference').one_or_none()
-        dna = DBSession.query(Dnasequenceannotation.residues).filter(and_(Dnasequenceannotation.taxonomy_id == tax_id, Dnasequenceannotation.dbentity_id == locus.dbentity_id, Dnasequenceannotation.dna_type =='1KB')).one_or_none()
-        if dna is None:
+        tax = DBSession.query(Straindbentity).filter(Straindbentity.strain_type =='Reference').one_or_none()
+        tax_id = tax.taxonomy_id        
+        seqRow = DBSession.query(Dnasequenceannotation.residues).filter(and_(Dnasequenceannotation.taxonomy_id == tax_id, Dnasequenceannotation.dbentity_id == locus.dbentity_id, Dnasequenceannotation.dna_type =='1KB')).one_or_none()
+        if seqRow is None:
             return HTTPBadRequest(body=json.dumps({'error': 'Sequence for provided gene name does not exist in the database:  ' + gene_name}))
         else:
+            dna = seqRow.residues
             decodeseq = dna
             sequence = str(dna)
             sequence = sequence[3:-3]
             input = 'name'
 
-    if 'maximum_tm' in p_keys:
-        maximum_tm = params.get('maximum_tm')
-    if 'minimum_tm' in p_keys:
-        minimum_tm = params.get('minimum_tm')
-    if 'optimum_tm' in p_keys:
-        optimum_tm = params.get('optimum_tm')
-    if 'maximum_gc' in p_keys:
-        maximum_gc = params.get('maximum_gc')
-    if 'minimum_gc' in p_keys:
-        minimum_gc = params.get('minimum_gc')
-    if 'optimum_gc' in p_keys:
-        optimum_gc = params.get('optimum_gc')
-    if 'maximum_length' in p_keys:
-        maximum_length = params.get('maximum_length')
-    if 'minimum_length' in p_keys:
-        minimum_length = params.get('minimum_length')
-    if 'optimum_primer_length' in p_keys:
-        optimum_primer_length = params.get('optimum_primer_length')
-    if 'max_three_prime_pair_complementarity' in p_keys:
-        max_three_prime_pair_complementarity = params.get('max_three_prime_pair_complementarity')
-    if 'max_pair_complementarity' in p_keys:
-        max_pair_complementarity = params.get('max_pair_complementarity')
-    if 'max_three_prime_self_complementarity' in p_keys:
-        max_three_prime_self_complementarity= params.get('max_three_prime_self_complementarity')
-    if 'max_self_complementarity' in p_keys:
-        max_self_complementarity = params.get('max_self_complementarity')
-    if 'input_end' in p_keys:
-        input_end = params.get('input_end')
-    if 'input_start' in p_keys:
-        input_start = params.get('input_start')
-    if 'maximum_product_size' in p_keys:
-        maximum_product_size = params.get('maximum_product_size')
-    if 'end_point' in p_keys:
-        end_point = params.get('end_point')
-
+    if 'maximum_tm' in request.params:
+        maximum_tm = int(request.params.get('maximum_tm'))
+    if 'minimum_tm' in request.params:
+        minimum_tm = int(request.params.get('minimum_tm'))
+    if 'optimum_tm' in request.params:
+        optimum_tm = int(request.params.get('optimum_tm'))
+    if 'maximum_gc' in request.params:
+        maximum_gc = int(request.params.get('maximum_gc'))
+    if 'minimum_gc' in request.params:
+        minimum_gc = int(request.params.get('minimum_gc'))
+    if 'optimum_gc' in request.params:
+        optimum_gc = int(request.params.get('optimum_gc'))
+    if 'maximum_length' in request.params:
+        maximum_length = int(request.params.get('maximum_length'))
+    if 'minimum_length' in request.params:
+        minimum_length = int(request.params.get('minimum_length'))
+    if 'optimum_primer_length' in request.params:
+        optimum_primer_length = int(request.params.get('optimum_primer_length'))
+    if 'max_three_prime_pair_complementarity' in request.params:
+        max_three_prime_pair_complementarity = int(request.params.get('max_three_prime_pair_complementarity'))
+    if 'max_pair_complementarity' in request.params:
+        max_pair_complementarity = int(request.params.get('max_pair_complementarity'))
+    if 'max_three_prime_self_complementarity' in request.params:
+        max_three_prime_self_complementarity= int(request.params.get('max_three_prime_self_complementarity'))
+    if 'max_self_complementarity' in request.params:
+        max_self_complementarity = int(request.params.get('max_self_complementarity'))
+    if 'input_end' in request.params:
+        input_end = int(request.params.get('input_end'))
+    if 'input_start' in request.params:
+        input_start = int(request.params.get('input_start'))
+    maximum_product_size = None
+    if 'mum_product_size' in request.params:
+        maximum_product_size = request.params.get('maximum_product_size')
+        if maximum_product_size != 'None':
+            maximum_product_size = int(maximum_product_size)
+    if 'end_point' in request.params:
+        end_point = request.params.get('end_point')
+       
     if gene_name is None:
         target_start = input_start
         target_extend_by =  input_end - input_start
