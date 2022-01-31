@@ -1784,7 +1784,6 @@ def ecnumber(request):
         if DBSession:
             DBSession.remove()
     
-# @view_config(route_name='primer3', renderer='json', request_method='POST')
 @view_config(route_name='primer3', renderer='json', request_method='GET') 
 def primer3(request):
 
@@ -1812,14 +1811,14 @@ def primer3(request):
             return HTTPBadRequest(body=json.dumps({'error': 'Gene name provided does not exist in the database:  ' + gene_name}))
         tax = DBSession.query(Straindbentity).filter(Straindbentity.strain_type =='Reference').one_or_none()
         tax_id = tax.taxonomy_id        
-        seqRow = DBSession.query(Dnasequenceannotation.residues).filter(and_(Dnasequenceannotation.taxonomy_id == tax_id, Dnasequenceannotation.dbentity_id == locus.dbentity_id, Dnasequenceannotation.dna_type =='1KB')).one_or_none()
+        seqRow = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.taxonomy_id == tax_id, Dnasequenceannotation.dbentity_id == locus.dbentity_id, Dnasequenceannotation.dna_type =='1KB')).one_or_none()
         if seqRow is None:
             return HTTPBadRequest(body=json.dumps({'error': 'Sequence for provided gene name does not exist in the database:  ' + gene_name}))
         else:
             dna = seqRow.residues
             decodeseq = dna
             sequence = str(dna)
-            sequence = sequence[3:-3]
+            sequence = sequence[1:-1]
             input = 'name'
 
     if 'maximum_tm' in request.params:
@@ -1860,7 +1859,7 @@ def primer3(request):
     if 'end_point' in request.params:
         end_point = request.params.get('end_point')
        
-    if gene_name is None:
+    if gene_name == '':
         target_start = input_start
         target_extend_by =  input_end - input_start
     else:
