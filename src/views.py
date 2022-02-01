@@ -1801,10 +1801,10 @@ def primer3(request):
             return HTTPBadRequest(body=json.dumps({'error': 'No gene name OR sequence provided'}))
 
     if gene_name == '':
+        # sequence = str(sequence.replace('\r', '').replace('\n', ''))  
         regex = re.compile('[^a-zA-Z]')
-        regex.sub('', sequence)
+        sequence = regex.sub('', sequence)
         decodeseq = sequence
-        # sequence = str(sequence.replace('\r', '').replace('\n', ''))
         input = 'seq'
     else:
         gene_name = gene_name.upper()
