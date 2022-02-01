@@ -1801,8 +1801,10 @@ def primer3(request):
             return HTTPBadRequest(body=json.dumps({'error': 'No gene name OR sequence provided'}))
 
     if gene_name == '':
+        regex = re.compile('[^a-zA-Z]')
+        regex.sub('', sequence)
         decodeseq = sequence
-        sequence = str(sequence.replace('\r', '').replace('\n', ''))
+        # sequence = str(sequence.replace('\r', '').replace('\n', ''))
         input = 'seq'
     else:
         gene_name = gene_name.upper()
@@ -1818,7 +1820,7 @@ def primer3(request):
             dna = seqRow.residues
             decodeseq = dna
             sequence = str(dna)
-            sequence = sequence[1:-1]
+            # sequence = sequence[1:-1]
             input = 'name'
 
     if 'maximum_tm' in request.params:
