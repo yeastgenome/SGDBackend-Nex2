@@ -10776,7 +10776,10 @@ class Complexdbentity(Dbentity):
         refs2 = sorted(refs, key=lambda r: r['display_name'])
         data["references"] = sorted(refs2, key=lambda r: r['year'], reverse=True)
 
-        ## subunits                                                                                                                                                                                                                              
+        ## subunits
+
+        rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()])
+        
         annot_objs = DBSession.query(Complexbindingannotation).filter_by(complex_id=self.dbentity_id).all()
 
         unique_interactors = []
@@ -10806,6 +10809,9 @@ class Complexdbentity(Dbentity):
                 link = '/complex/' + interactor.format_name
             elif interactor.format_name.startswith('CHEBI:'):
                 type = "small molecule"
+            elif interactor.format_name.startswith('URS') and 'rnacentral.org' in link:
+                if interactor.format_name in rna_id_to_locus:
+                    link = rna_id_to_locus[interactor.format_name].obj_url
 
             count = 1
             if annot.stoichiometry and annot.stoichiometry > 1:
@@ -10872,6 +10878,10 @@ class Complexdbentity(Dbentity):
                 link = '/complex/' + interactor.format_name
             elif interactor.format_name.startswith('CHEBI:'):
                 type = "small molecule"
+            elif interactor.format_name.startswith('URS') and 'rnacentral.org' in link:
+                if interactor.format_name in rna_id_to_locus:
+                    link = rna_id_to_locus[interactor.format_name].obj_url
+                    
             subunits.append({ "display_name": display_name,
                               "description": description,
                               "sgdid": sgdid,
