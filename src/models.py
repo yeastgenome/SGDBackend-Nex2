@@ -10650,7 +10650,7 @@ class Complexdbentity(Dbentity):
 
         ## subunits
 
-        rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlia).filter_by(alias_type='RNAcentral ID').all()])
+        rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()])
         
         annot_objs = DBSession.query(Complexbindingannotation).filter_by(complex_id=self.dbentity_id).all()
 
