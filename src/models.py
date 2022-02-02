@@ -10651,6 +10651,7 @@ class Complexdbentity(Dbentity):
         ## subunits
 
         rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()])
+        chebi_to_link = dict([(x.format_name, x.obj_url) for x in DBSession.query(Chebi).all()])
         
         annot_objs = DBSession.query(Complexbindingannotation).filter_by(complex_id=self.dbentity_id).all()
 
@@ -10681,6 +10682,8 @@ class Complexdbentity(Dbentity):
                 link = '/complex/' + interactor.format_name
             elif interactor.format_name.startswith('CHEBI:'):
                 type = "small molecule"
+                if interactor.format_name in chebi_to_link:
+                    link = chebi_to_link[interactor.format_name]
             elif interactor.format_name.startswith('URS') and 'rnacentral.org' in link:
                 if interactor.format_name in rna_id_to_locus:
                     link = rna_id_to_locus[interactor.format_name].obj_url
@@ -10750,6 +10753,8 @@ class Complexdbentity(Dbentity):
                 link = '/complex/' + interactor.format_name
             elif interactor.format_name.startswith('CHEBI:'):
                 type = "small molecule"
+                if interactor.format_name in chebi_to_link:
+                    link = chebi_to_link[interactor.format_name]
             elif interactor.format_name.startswith('URS') and 'rnacentral.org' in link:
                 if interactor.format_name in rna_id_to_locus:
                     link = rna_id_to_locus[interactor.format_name].obj_url
