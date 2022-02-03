@@ -5,7 +5,8 @@ import os
 from Bio import Entrez, Medline 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from zope.sqlalchemy import ZopeTransactionExtension
+# from zope.sqlalchemy import ZopeTransactionExtension
+from zope.sqlalchemy import register
 import transaction
 
 from src.models import Referencedbentity, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias
@@ -29,9 +30,13 @@ NEX2_URI = os.environ['NEX2_URI']
 
 def load_references():
     # create session
-    engine = create_engine(os.environ['NEX2_URI'])
-    session_factory = sessionmaker(bind=engine, extension=ZopeTransactionExtension())
-    db_session = scoped_session(session_factory)
+    # engine = create_engine(os.environ['NEX2_URI'])
+    # session_factory = sessionmaker(bind=engine, extension=ZopeTransactionExtension())
+    # db_session = scoped_session(session_factory)
+    
+    db_session = scoped_session(sessionmaker(autoflush=False))
+    register(db_session)
+
     # some preparation
     pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in db_session.query(Referencedbentity).all()])
     pmid_to_curation_id = dict([(x.pmid, x.curation_id) for x in db_session.query(Referencetriage).all()])
