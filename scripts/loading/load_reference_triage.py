@@ -3,11 +3,13 @@ from io import StringIO
 import logging
 import os
 from Bio import Entrez, Medline 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker, scoped_session
 # from zope.sqlalchemy import ZopeTransactionExtension
-from zope.sqlalchemy import register
+# from zope.sqlalchemy import register
 import transaction
+
+from scripts.loading.database_session import get_session
 
 from src.models import Referencedbentity, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias
 from scripts.loading.reference.pubmed import get_pmid_list, get_pubmed_record, set_cite, get_abstract
@@ -34,9 +36,10 @@ def load_references():
     # session_factory = sessionmaker(bind=engine, extension=ZopeTransactionExtension())
     # db_session = scoped_session(session_factory)
     
-    db_session = scoped_session(sessionmaker(autoflush=False))
-    register(db_session)
+    # db_session = scoped_session(sessionmaker(autoflush=False))
+    # register(db_session)
 
+    db_session = get_session()
     # some preparation
     pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in db_session.query(Referencedbentity).all()])
     pmid_to_curation_id = dict([(x.pmid, x.curation_id) for x in db_session.query(Referencetriage).all()])
