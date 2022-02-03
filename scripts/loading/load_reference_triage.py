@@ -7,7 +7,7 @@ from Bio import Entrez, Medline
 # from sqlalchemy.orm import sessionmaker, scoped_session
 # from zope.sqlalchemy import ZopeTransactionExtension
 # from zope.sqlalchemy import register
-import transaction
+# import transaction
 
 from scripts.loading.database_session import get_session
 
@@ -164,7 +164,7 @@ def insert_reference(db_session, pmid, citation, doi_url, abstract, gene_list):
                             citation = citation,
                             abstract_genes = gene_list)
     db_session.add(x)
-    transaction.commit()
+    db_session.commit()
     log.info("Insert new reference: " + citation)
 
 if __name__ == '__main__':    
