@@ -21,5 +21,5 @@
 # 
 # m h  dom mon dow   command
 MAILTO=fgondwe@stanford.edu
-#30 20 * * * /bin/bash /data/www/SGDBackend-NEX2/current/system_config/cron/compute_agr_data.sh
+#30 20 * * * /bin/bash /data/www/SGDBackend-NEX2/system_config/cron/compute_agr_data.sh
 
