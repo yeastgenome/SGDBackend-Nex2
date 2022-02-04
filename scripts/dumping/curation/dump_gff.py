@@ -433,6 +433,7 @@ def do_escape(text):
     text = text.replace(";", "%3B")
     text = text.replace('“', '"').replace('”', '"').replace("’", "'")
     text = text.replace('α', 'alpha').replace('β', 'beta')
+    text = text.replace('=', '%3D')
     text = text.rstrip()
     return text
 
