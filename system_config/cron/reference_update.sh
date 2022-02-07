@@ -1,7 +1,7 @@
 #! /bin/sh
 
 
-cd /data/www/SGDBackend-NEX2
+cd /data/www/SGDBackend-Nex2
 source /data/www/venv/bin/activate 
 source prod_variables.sh 
 python scripts/loading/reference/reference_update.py
