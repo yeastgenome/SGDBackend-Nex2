@@ -86,7 +86,7 @@ def load_new_data(nex_session, data, source_to_id, ecoid_to_eco, ro_id, eco_id_t
             y = ecoid_to_eco[x['id']]
             eco_id = y.eco_id
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = 'false'
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
@@ -110,7 +110,7 @@ def load_new_data(nex_session, data, source_to_id, ecoid_to_eco, ro_id, eco_id_t
                          display_name = x['term'],
                          description = x['definition'],
                          obj_url = '/eco/' + x['id'],
-                         is_obsolete = '0',
+                         is_obsolete = 'false',
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -165,7 +165,7 @@ def load_new_data(nex_session, data, source_to_id, ecoid_to_eco, ro_id, eco_id_t
             continue
         to_delete.append((ecoid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = 'true'
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
