@@ -116,7 +116,7 @@ def load_new_data(nex_session, data, source_to_id, doid_to_disease, ro_id, disea
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
 
             ## only for this testing time
             ## insert_url(nex_session, source_to_id['Alliance'], 'Alliance', 'Alliance of Genome Resources', disease_id,

@@ -102,7 +102,7 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.roid + " has been updated from " + x.is_obsolete + " to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.roid + " has been updated from " + str(x.is_obsolete) + " to " + 'True' + "\n")
 
     nex_session.commit()
 

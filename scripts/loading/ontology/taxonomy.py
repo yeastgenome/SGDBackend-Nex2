@@ -102,7 +102,7 @@ def load_new_data(nex_session, data, source_to_id, taxid_to_taxonomy, ro_id, tax
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + taxid + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + taxid + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['term'] != y.display_name.strip():
                 ## update term
                 fw.write("The display_name for " + taxid + " has been updated from " + y.display_name + " to " + x['term'] + "\n")

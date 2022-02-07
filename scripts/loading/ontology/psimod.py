@@ -77,7 +77,7 @@ def load_new_data(nex_session, data, source_to_id, psimodid_to_psimod, ro_id, ps
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['term'] != y.display_name:
                 ## update term
                 fw.write("The display_name for " + x['id'] + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
