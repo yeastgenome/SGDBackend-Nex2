@@ -1,10 +1,6 @@
 from datetime import datetime
 import sys
-import importlib
-importlib.reload(sys)  # Reload does the trick!
-sys.path.insert(0, '../../../src/')
-from models import Source, Apo, ApoUrl, ApoAlia, ApoRelation, Ro
-sys.path.insert(0, '../')
+from src.models import Source, Apo, ApoUrl, ApoAlia, ApoRelation, Ro
 from config import CREATED_BY
 from database_session import get_nex_session as get_session
 from ontology import read_owl  
