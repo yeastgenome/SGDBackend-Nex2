@@ -90,7 +90,7 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
             y = apoid_to_apo[x['id']]
             apo_id = y.apo_id
             if y.is_obsolete is True:
-                y.is_obsolete = 'false'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
@@ -115,7 +115,7 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
                          apo_namespace = x['namespace'],
                          description = x['definition'],
                          obj_url = x['namespace'] + '/' + x['id'],
-                         is_obsolete = 'false',
+                         is_obsolete = False,
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -168,7 +168,7 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
             continue
         to_delete.append((apoid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = 'true'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1

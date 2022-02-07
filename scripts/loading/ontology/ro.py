@@ -56,7 +56,7 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
             ro_id = y.ro_id
             
             if y.is_obsolete is True:
-                y.is_obsolete = 'false'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
@@ -79,7 +79,7 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
                         roid = x['id'],
                         display_name = x['term'],
                         obj_url = 'ro/' + x['id'],
-                        is_obsolete = 'false',
+                        is_obsolete = False,
                         created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -98,7 +98,7 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
             continue
         to_delete.append((roid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = 'true'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
