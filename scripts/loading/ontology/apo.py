@@ -11,7 +11,7 @@ __author__ = 'sweng66'
 ## This script is used to update APO ontology in NEX2.
 
 ontology_file = 'scripts/loading/ontology/data/apo.owl'
-lOg_file = 'scripts/loading/ontology/logs/apo.log'
+log_file = 'scripts/loading/ontology/logs/apo.log'
 ontology = 'APO'
 src = 'SGD'
 CREATED_BY = os.environ['DEFAULT_USER']
