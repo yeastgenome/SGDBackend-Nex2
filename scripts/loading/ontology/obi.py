@@ -72,7 +72,7 @@ def load_new_data(nex_session, data, source_to_id, obiid_to_obi, ro_id, obi_id_t
             y = obiid_to_obi[x['id']]
             obi_id = y.obi_id
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = 'false'
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
@@ -96,7 +96,7 @@ def load_new_data(nex_session, data, source_to_id, obiid_to_obi, ro_id, obi_id_t
                          display_name = x['term'],
                          description = x['definition'],
                          obj_url = '/obi/' + x['id'],
-                         is_obsolete = '0',
+                         is_obsolete = 'false',
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -141,7 +141,7 @@ def load_new_data(nex_session, data, source_to_id, obiid_to_obi, ro_id, obi_id_t
             continue
         to_delete.append((obiid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = 'true'
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
