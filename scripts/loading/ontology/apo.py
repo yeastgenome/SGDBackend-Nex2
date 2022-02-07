@@ -1,7 +1,6 @@
 from datetime import datetime
 import sys
 from src.models import Source, Apo, ApoUrl, ApoAlia, ApoRelation, Ro
-from scripts.loading.config import CREATED_BY
 from database_session import get_nex_session as get_session
 from ontology import read_owl  
                  
@@ -14,6 +13,7 @@ ontology_file = 'data/apo.owl'
 log_file = 'logs/apo.log'
 ontology = 'APO'
 src = 'SGD'
+CREATED_BY = 'OTTO'
 
 def load_ontology():
 
