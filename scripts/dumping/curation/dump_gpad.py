@@ -248,9 +248,9 @@ def update_database_load_file_to_s3(nex_session, gpad_file, source_to_id, edam_t
                 topic_id=topic_id,
                 status='Active',
                 readme_file_id=readme_file_id,
-                is_public='true',
-                is_in_spell='false',
-                is_in_browser='false',
+                is_public=True,
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gpad_md5sum)

@@ -330,7 +330,7 @@ def dump_data(noctua_gpad_file):
     log.info("Uploading GAF file to S3...")
 
     update_database_load_file_to_s3(
-        nex_session, gaf_file, 'true', source_to_id, edam_to_id, datestamp)
+        nex_session, gaf_file, True, source_to_id, edam_to_id, datestamp)
 
     nex_session.close()
 
@@ -388,7 +388,7 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
 
     gzip_file = gzip_file.replace("scripts/dumping/curation/data/", "")
 
-    if is_public == 'true':
+    if is_public == True:
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('gene_association.sgd%')).filter(
             Dbentity.dbentity_status == 'Active').update({"dbentity_status": 'Archived'}, synchronize_session='fetch')
         nex_session.commit()
@@ -423,8 +423,8 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
                 status='Active',
                 readme_file_id=readme_file_id,
                 is_public=is_public,
-                is_in_spell='false',
-                is_in_browser='false',
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gaf_md5sum)
