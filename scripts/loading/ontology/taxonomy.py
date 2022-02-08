@@ -114,6 +114,8 @@ def load_new_data(nex_session, data, source_to_id, taxid_to_taxonomy, ro_id, tax
             # else:
             #    print "SAME: ", taxid, y.display_name, x['aliases'], x['parents']
             active_taxid.append(taxid)
+        elif taxid == 'TAX:2305204':
+            continue
         else:
             fw.write("NEW entry = " + taxid + " " + x['term'] + "\n")
             format_name = x['term'].replace(" ", "_")

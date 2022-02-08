@@ -172,7 +172,7 @@ def load_new_data(nex_session, data, source_to_id, soid_to_so, ro_id, so_id_to_a
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.soid + " has been updated from " + x.is_obsolete +" to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.soid + " has been updated from " + str(x.is_obsolete) +" to " + 'True' + "\n")
 
     nex_session.commit()
  
@@ -293,7 +293,7 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    url_path = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/'
+    url_path = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/'
     owl_file = 'so.owl'
     urllib.request.urlretrieve(url_path + owl_file, owl_file)
 

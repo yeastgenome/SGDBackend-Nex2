@@ -1,3 +1,4 @@
+import urllib.request, urllib.parse, urllib.error
 import os
 from datetime import datetime
 import sys
@@ -10,13 +11,12 @@ __author__ = 'sweng66'
 ## Created on May 2017
 ## This script is used to update APO ontology in NEX2.
 
-ontology_file = 'scripts/loading/ontology/data/apo.owl'
 log_file = 'scripts/loading/ontology/logs/apo.log'
 ontology = 'APO'
 src = 'SGD'
 CREATED_BY = os.environ['DEFAULT_USER']
 
-def load_ontology():
+def load_ontology(ontology_file):
 
     nex_session = get_session()
 
@@ -263,7 +263,11 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    load_ontology()
+    url_path = 'http://purl.obolibrary.org/obo/'
+    apo_owl_file = 'apo.owl'
+    urllib.request.urlretrieve(url_path + apo_owl_file, apo_owl_file)
+    
+    load_ontology(apo_owl_file)
 
 
     
