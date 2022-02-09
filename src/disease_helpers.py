@@ -264,6 +264,9 @@ def get_diseases_by_filters(request):
         list_of_diseases = []
         for disease in diseases:
             dse = DBSession.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == disease.annotation_id).one_or_none()
+            dbxref_id = ''
+            if dse:
+                dbxref_id = dse.dbxref_id
             currentDisease = {
                 'annotation_id': disease.annotation_id,
                 'dbentity_id': {
@@ -276,7 +279,7 @@ def get_diseases_by_filters(request):
                 'association_type': disease.association_type,
                 'annotation_type': disease.annotation_type,
                 'disease_id': disease.disease_id,
-                'with_ortholog': dse.dbxref_id
+                'with_ortholog': dbxref_id
             }
             if disease.eco:
                 currentDisease['eco_id'] = str(disease.eco_id)
