@@ -1348,7 +1348,7 @@ def send_newsletter(request):
             return HTTPBadRequest(body=json.dumps(returnValue), content_type='text/json')
     except Exception as e:
         log.error(e)
-        return HTTPBadRequest(body=json.dumps({'error': "Error occured during sending newsletter"}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'error': "Error occured during sending newsletter: " + str(e) }), content_type='text/json')
 
 
 @view_config(route_name='ptm_file_insert', renderer='json', request_method='POST')
@@ -1673,9 +1673,9 @@ def ptm_by_gene(request):
         return HTTPOk(body=json.dumps({'ptms' :list_of_ptms}),content_type='text/json')
     except Exception as e:
         log.error(e)
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 @view_config(route_name='get_observable', renderer='json', request_method='GET')
 def get_observable(request):
@@ -1691,9 +1691,9 @@ def get_observable(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
             
 @view_config(route_name='get_allele', renderer='json', request_method='GET')
 def get_allele(request):
@@ -1709,9 +1709,9 @@ def get_allele(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 
 @view_config(route_name='get_reporter', renderer='json', request_method='GET')
@@ -1728,9 +1728,9 @@ def get_reporter(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 @view_config(route_name='get_chebi', renderer='json', request_method='GET')
 def get_chebi(request):
@@ -1745,9 +1745,9 @@ def get_chebi(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
             
 @view_config(route_name='get_eco', renderer='json', request_method='GET')
 def get_eco(request):
@@ -1763,9 +1763,9 @@ def get_eco(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 @view_config(route_name='get_obi', renderer='json', request_method='GET')
 def get_obi(request):
@@ -1780,9 +1780,9 @@ def get_obi(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 @view_config(route_name='get_keywords', renderer='json', request_method='GET')
 def get_keywords(request):
@@ -1797,9 +1797,9 @@ def get_keywords(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
             
 @view_config(route_name='get_all_datasets', renderer='json', request_method='GET')
 def get_all_datasets(request):
@@ -1814,9 +1814,9 @@ def get_all_datasets(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 
             
@@ -1835,9 +1835,9 @@ def get_apo(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
             
 @view_config(route_name='get_publication_year', renderer='json', request_method='GET')
 def get_publication_year(request):
@@ -1848,9 +1848,9 @@ def get_publication_year(request):
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
-    finally:
-        if DBSession:
-            DBSession.remove()
+    # finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 @view_config(route_name='get_edam', renderer='json', request_method='GET')
 def get_edam(request):
@@ -2486,9 +2486,9 @@ def diseases_by_filters(request):
         return get_diseases_by_filters(request)
     except Exception as e:
         log.error(e)
-    finally:
-        if DBSession:
-            DBSession.remove()
+    #finally:
+    #    if DBSession:
+    #        DBSession.remove()
 
 @view_config(route_name='disease_delete',renderer='json',request_method='DELETE')
 @authenticate
