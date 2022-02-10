@@ -70,6 +70,10 @@ def dump_data():
     curator_to_orcid_mapping = get_curator_to_orcid_mapping()
     
     for x in nex_session.query(Goannotation).all():
+
+        ## is this possible
+        if x.dbentity_id not in dbentity_id_to_sgdid:
+            continue
         
         # col1: database ID
         col1 = "SGD:" + dbentity_id_to_sgdid.get(x.dbentity_id)
