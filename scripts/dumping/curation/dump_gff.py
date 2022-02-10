@@ -148,13 +148,17 @@ def dump_data():
             tconditions.append('GAL')
         #    log.info("in GAL")
 
+        transSeqAnnot_strand = transSeqAnnot.strand
+        if transSeqAnnot_strand == '0':
+            transSeqAnnot_strand = '.'
+            
         if sysName in systematic_name_to_transcripts.keys():
             systematic_name_to_transcripts[sysName].append({"sgdid": "SGD:" + transcriptObj.sgdid,
                                                             "name": transcriptObj.format_name,
                                                             "start": transSeqAnnot.start_index,
                                                             "end": transSeqAnnot.end_index,
                                                             "contig": transSeqAnnot.contig,
-                                                            "strand": transSeqAnnot.strand,
+                                                            "strand": transSeqAnnot_strand,
                                                             "conditions": ",".join(tconditions)})
         else:
             systematic_name_to_transcripts[sysName] = [{"sgdid": "SGD:" + transcriptObj.sgdid,
@@ -162,7 +166,7 @@ def dump_data():
                                                         "start": transSeqAnnot.start_index,
                                                         "end": transSeqAnnot.end_index,
                                                         "contig": transSeqAnnot.contig,
-                                                        "strand": transSeqAnnot.strand,
+                                                        "strand": transSeqAnnot_strand,
                                                         "conditions": ",".join(tconditions)}]
 
     for chr in chromosomes:
@@ -216,12 +220,16 @@ def dump_data():
             if type == 'gene_group':
                 continue
 
+            strand = x.strand
+            if strand == '0':
+                strand = '.'
+                
             (systematic_name, gene_name, qualifier, headline,
              description) = locus_id_to_info[x.dbentity_id]
 
             if systematic_name in landmark_gene:
                 fw.write("chr" + chr + "\tlandmark\tregion\t" + str(x.start_index) + "\t" + str(
-                    x.end_index) + "\t.\t" + x.strand + "\t.\tID=" + landmark_gene[systematic_name] + "\n")
+                    x.end_index) + "\t.\t" + strand + "\t.\tID=" + landmark_gene[systematic_name] + "\n")
 
             alias_list = None
             if x.dbentity_id in locus_id_to_aliases:
@@ -234,9 +242,6 @@ def dump_data():
                 else:
                     alias_list = gene_name
             systematic_name = do_escape(systematic_name)
-            strand = x.strand
-            if strand == '0':
-                strand = '.'
             start_index = x.start_index
             end_index = x.end_index
             if x.annotation_id in UTRs:
@@ -322,7 +327,7 @@ def dump_data():
                 has_subfeature = 1
 
                 fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(
-                    contig_end_index) + "\t.\t" + x.strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
+                    contig_end_index) + "\t.\t" + strand + "\t" + str(phase) + "\tParent=" + parent + ";Name=" + name)
                 if type == 'gene' and qualifier:
                     fw.write(";orf_classification=" + qualifier)
                  # FOR Alliance ##
@@ -343,17 +348,15 @@ def dump_data():
                                      each["name"] + ";Parent=" + systematic_name + ";transcript_id=" + each["sgdid"] + ";conditions=" + each["conditions"] + "\n")
                 else:
                     if refseqid != "":
-                        fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand + "\t.\tID=" + systematic_name +
+                        fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + strand + "\t.\tID=" + systematic_name +
                                  "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + ";transcript_id="+refseqid + "\n")
                     else:
-                        fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand +
+                        fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + strand +
                                  "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
 
-  #              fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand +
-  #                       "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
             elif has_subfeature == 1:
                 rnaType = type.replace("_gene", "")
-                fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + x.strand + "\t.\tID=" +
+                fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + strand + "\t.\tID=" +
                          systematic_name + "_" + rnaType + ";Name=" + systematic_name + "_" + rnaType + ";Parent=" + systematic_name + "\n")
 
     # output 17 chr sequences at the end
@@ -430,6 +433,7 @@ def do_escape(text):
     text = text.replace(";", "%3B")
     text = text.replace('“', '"').replace('”', '"').replace("’", "'")
     text = text.replace('α', 'alpha').replace('β', 'beta')
+    text = text.replace('=', '%3D')
     text = text.rstrip()
     return text
 
