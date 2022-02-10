@@ -404,7 +404,7 @@ COMMENT ON COLUMN nex.goannotation.go_qualifier IS 'Qualifier of the GO annotati
 COMMENT ON COLUMN nex.goannotation.date_assigned IS 'Date the GO annotation was assigned or last reviewed.';
 ALTER TABLE nex.goannotation ADD CONSTRAINT goannotation_uk UNIQUE (dbentity_id,go_id,eco_id,reference_id,annotation_type,go_qualifier,source_id);
 ALTER TABLE nex.goannotation ADD CONSTRAINT goanno_qualifier_ck CHECK (GO_QUALIFIER IN ('acts upstream of', 'acts upstream of negative effect', 'acts upstream of or within', 
-'acts upstream of or within positive effect', 'enables', 'involved in', 'is active in', 'part of', 'NOT', 'colocalizes with', 'contributes to', 'located in'));
+'acts upstream of or within positive effect', 'enables', 'involved in', 'is active in', 'part of', 'NOT', 'colocalizes with', 'contributes to', 'located in', 'acts upstream of positive effect'));
 ALTER TABLE nex.goannotation ADD CONSTRAINT goanno_annotation_type_ck CHECK (ANNOTATION_TYPE IN ('high-throughput', 'manually curated', 'computational'));
 CREATE INDEX goanno_eco_fk_index ON nex.goannotation (eco_id);
 CREATE INDEX goanno_tax_fk_index ON nex.goannotation (taxonomy_id);
