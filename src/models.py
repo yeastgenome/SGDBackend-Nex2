@@ -3311,18 +3311,18 @@ class Locusdbentity(Dbentity):
 
     def complex_details(self):
 
-        complexes = []
         interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()
         if len(interactors) == 0:
             rna_ids = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()
             if len(rna_ids) == 0:
                 return []
             rna_id = rna_ids[0]
-            complexes = DBSession.query(Complexbindingannotation).filter_by(format_name = rna_id).all()
-        else:
-            interactor = interactors[0]
-            complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
-        
+            interactors = DBSession.query(Interactor).filter_by(format_name = rna_id).all()
+            if len(interactors) == 0:
+                return []
+    
+        interactor = interactors[0]
+        complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
         data = []
         found = {}
         for x in complexes:
