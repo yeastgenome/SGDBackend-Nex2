@@ -3316,8 +3316,7 @@ class Locusdbentity(Dbentity):
             rna_ids = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()
             if len(rna_ids) == 0:
                 return []
-            rna_id = rna_ids[0]
-            interactors = DBSession.query(Interactor).filter_by(format_name = rna_id).all()
+            interactors = DBSession.query(Interactor).filter_by(format_name = rna_ids[0].display_name).all()
             if len(interactors) == 0:
                 return []
     
