@@ -3318,7 +3318,7 @@ class Locusdbentity(Dbentity):
             if len(rna_ids) == 0:
                 return []
             rna_id = rna_ids[0]
-            complexes = DBSession.query(Complexbindingannotation).filter_by(interactor.format_name = rna_id).all()
+            complexes = DBSession.query(Complexbindingannotation).filter_by(format_name = rna_id).all()
         else:
             interactor = interactors[0]
             complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
