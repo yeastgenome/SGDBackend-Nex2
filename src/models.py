@@ -3355,7 +3355,7 @@ class Locusdbentity(Dbentity):
 
         sequence_summary = DBSession.query(Locussummary.html).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
         if sequence_summary:
-            ["paragraph"] = sequence_summary[0]
+            obj["paragraph"] = sequence_summary[0]
         
         main_strain_genomic = None
         main_strain_coding = None
@@ -4932,7 +4932,7 @@ class Locusdbentity(Dbentity):
 
         protein_summary = DBSession.query(Locussummary.html).filter_by(locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
         if protein_summary:
-            ["paragraph"] = protein_summary[0]
+            obj["paragraph"] = protein_summary[0]
         
         taxonomy_id = self.get_main_strain('taxonomy_id')
         protein = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).one_or_none()
