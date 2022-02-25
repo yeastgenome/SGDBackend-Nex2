@@ -3352,10 +3352,6 @@ class Locusdbentity(Dbentity):
             "protein": [],
             "1kb": []
         }
-
-        sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
-        if sequence_summary:
-            obj["paragraph"] = sequence_summary.html
         
         main_strain_genomic = None
         main_strain_coding = None
@@ -4627,6 +4623,7 @@ class Locusdbentity(Dbentity):
             "complements": self.complements_to_dict(),
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
+            "sequence_summary": '',
             "go_overview": self.go_overview_to_dict(),
             "pathways": [],
             "alleles": [],
@@ -4639,7 +4636,11 @@ class Locusdbentity(Dbentity):
             "disease_overview": self.disease_overview_to_dict(),
             "ecnumbers": []    
         }
-    
+
+        sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
+        if sequence_summary:
+	    obj["sequence_summary"] = sequence_summary.html
+            
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
