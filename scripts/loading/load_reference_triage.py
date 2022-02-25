@@ -103,11 +103,11 @@ def load_references():
 
     if i > 0:
         records = get_pubmed_record(','.join(pmids))
-        handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id)
+        handle_one_record(db_session, records, gene_list, alias_to_names, doi_to_reference_id)
 
     log.info("Done!")
 
-def handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id):
+def handle_one_record(db_session, records, gene_list, alias_to_names, doi_to_reference_id):
 
     i = 1
     for rec in records:
@@ -141,7 +141,7 @@ def handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_refe
         pages = record.get('PG', '')
         citation = set_cite(title, authors, year, journal, volume, issue, pages)  
         abstract = record.get('AB', '')
-        gene_names = extract_gene_names(abstract, gene_list, alias_to_name)
+        gene_names = extract_gene_names(abstract, gene_list, alias_to_names)
 
         # insert formatted data to DB
         insert_reference(db_session, pmid, citation, doi_url, abstract, " ".join(gene_names))
