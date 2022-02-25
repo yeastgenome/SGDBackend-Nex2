@@ -4923,6 +4923,7 @@ class Locusdbentity(Dbentity):
 
     def protein_overview_to_dict(self):
         obj = {
+            "paragraph": None,
             "length": 0,
             "molecular_weight": None,
             "pi": None, 
