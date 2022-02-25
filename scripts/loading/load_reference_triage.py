@@ -55,14 +55,19 @@ def load_references():
         gene_list.append(str(x.systematic_name.upper()))
         if x.gene_name and x.gene_name != x.systematic_name:
             gene_list.append(str(x.gene_name.upper()))
-    alias_to_name = {}
+    alias_to_names = {}
     for x in db_session.query(LocusAlias).all():
         if x.alias_type not in ['Uniform', 'Non-uniform']:
             continue
         if len(x.display_name) < 4:
             continue
         name = x.locus.gene_name if x.locus.gene_name else x.locus.systematic_name 
-        alias_to_name[x.display_name] = name
+        names = []
+        if x.display_name in alias_to_names:
+            names = alias_to_names[x.display_name]
+        names.append(name)
+        alias_to_names[x.display_name] = names
+        
     # get new PMIDs
     log.info(str(datetime.now()))
     log.info("Getting PMID list...")
@@ -91,7 +96,7 @@ def load_references():
         i = i + 1
         if i > MAX:
             records = get_pubmed_record(','.join(pmids))
-            handle_one_record(db_session, records, gene_list, alias_to_name, doi_to_reference_id)
+            handle_one_record(db_session, records, gene_list, alias_to_names, doi_to_reference_id)
             i = 0
 
     log.info("Done!")
