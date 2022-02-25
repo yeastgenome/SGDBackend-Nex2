@@ -3355,25 +3355,30 @@ class Locusdbentity(Dbentity):
         return obj
 
     def complex_details(self):
-        # interactor = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).one_or_none()
+
         interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()   
         if len(interactors) == 0:
-            return []
-        else:
-            interactor = interactors[0]
-            complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
-            data = []
+            rna_ids = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID', locus_id=self.dbentity_id).all()
+            if len(rna_ids) == 0:
+                return []
+            interactors = DBSession.query(Interactor).filter_by(format_name = rna_ids[0].display_name).all()
+            if len(interactors) == 0:
+                return []
 
-            found = {}
-            for x in complexes:
-                complex = x.complex
-                if complex.format_name in found:
-                    continue
-                found[complex.format_name] = 1
-                data.append({ "format_name": complex.format_name,
-                              "display_name": complex.display_name })
-            data = sorted(data, key=lambda c: c['display_name'])
-            return data
+        interactor = interactors[0]
+        complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
+        data = []
+        found = {}
+        for x in complexes:
+            complex = x.complex
+            if complex.format_name in found:
+                continue
+            found[complex.format_name] = 1
+            data.append({ "format_name": complex.format_name,
+                          "display_name": complex.display_name })
+        data = sorted(data, key=lambda c: c['display_name'])
+        return data
+    
 
     def posttranslational_details(self):
         annotations = DBSession.query(Posttranslationannotation).filter_by(dbentity_id=self.dbentity_id).order_by(Posttranslationannotation.site_index).all()
