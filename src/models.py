@@ -4624,6 +4624,7 @@ class Locusdbentity(Dbentity):
             "urls": [],
             "protein_overview": self.protein_overview_to_dict(),
             "sequence_summary": '',
+            "protein_summary": '',
             "go_overview": self.go_overview_to_dict(),
             "pathways": [],
             "alleles": [],
@@ -4640,7 +4641,12 @@ class Locusdbentity(Dbentity):
         sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
         if sequence_summary:
             obj["sequence_summary"] = sequence_summary.html
-            
+
+        protein_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
+        if protein_summary:
+            obj["protein_summary"] = protein_summary.html
+
+        
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
@@ -4924,17 +4930,12 @@ class Locusdbentity(Dbentity):
 
     def protein_overview_to_dict(self):
         obj = {
-            "paragraph": '',
             "length": 0,
             "molecular_weight": None,
             "pi": None, 
             "median_value": None,
             "median_abs_dev_value": None
         }
-
-        protein_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
-        if protein_summary:
-            obj["paragraph"] = protein_summary.html
         
         taxonomy_id = self.get_main_strain('taxonomy_id')
         protein = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).one_or_none()
