@@ -1155,7 +1155,7 @@ def get_dbentity_by_name(dbentity_name, to_ignore, nex_session):
     return None
 
 
-def extract_gene_names(text, name_list, alias_to_name):
+def extract_gene_names(text, name_list, alias_to_names):
     text = text.replace("/", ' ')
     text = text.replace('-', ' ')
     text = text.replace('_', ' ')
@@ -1183,8 +1183,10 @@ def extract_gene_names(text, name_list, alias_to_name):
         #    gene_name = gene_name[:-1]
         if gene_name.upper() in name_list:
             genes.append(word)
-        elif gene_name.upper() in alias_to_name:
-            genes.append(word + "=" + str(alias_to_name[gene_name.upper()]))
+        elif gene_name.upper() in alias_to_names:
+            names = alias_to_names[Gene_name.upper()]
+            for name in names:
+                genes.append(word + "=" + str(name))
             
     return genes
 
