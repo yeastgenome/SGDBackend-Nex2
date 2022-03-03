@@ -542,6 +542,8 @@ def load_dataset(request):
         error_message = check_non_ascii_characters(file)
         if error_message:
             return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+
+        file.seek(0)
         
         [data, error_message] = read_dataset_data_from_file(file)    
         if error_message != '':
@@ -710,6 +712,8 @@ def load_datasetsample(request):
         error_message = check_non_ascii_characters(file)
         if error_message:
             return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+
+        file.seek(0)
         
         [data, error_message] = read_dataset_sample_data_from_file(file)
         if error_message != '':
