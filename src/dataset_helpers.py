@@ -15,7 +15,7 @@ from src.models import DBSession, Dataset, Datasetsample, Datasettrack, Datasetl
                        Taxonomy
 from src.curation_helpers import get_curator_session
 from src.metadata_helpers import insert_file_keyword, insert_dataset_keyword
-# from src.helpers import file_upload_to_dict
+from src.helpers import check_for_non_ascii_characters
 
 log = logging.getLogger('curation')
 
@@ -450,7 +450,21 @@ def read_dataset_data_from_file(file):
     except Exception as e:
         return [[], str(e)]
         
+def check_non_ascii_characters(file):
 
+    f = open(file)
+
+    error = ''
+    for line in f:
+        non_ascii_chars = check_for_non_ascii_characters(line.strip())
+        if len(non_ascii_chars) > 0:
+            error = error + "<br>" + "non-ascii character(s) " + ", ".join(non_ascii_chars) + " are in line: " + line
+            
+    f.close()
+    
+    return error
+        
+        
 def insert_datasets(curator_session, CREATED_BY, data):
 
     dataset_added = 0
@@ -519,6 +533,10 @@ def load_dataset(request):
         if file is None or filename is None:
             return HTTPBadRequest(body=json.dumps({'error': "No dataset file is passed in."}), content_type='text/json')
 
+        error_message = check_non_ascii_characters(file)
+
+        if error_message:
+            return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
         
         [data, error_message] = read_dataset_data_from_file(file)    
         if error_message != '':
@@ -684,6 +702,10 @@ def load_datasetsample(request):
         if file is None or filename is None:
             return HTTPBadRequest(body=json.dumps({'error': "No dataset sample file is passed in."}), content_type='text/json')
 
+        error_message = check_non_ascii_characters(file)
+        if error_message:
+            return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+        
         [data, error_message] = read_dataset_sample_data_from_file(file)
         if error_message != '':
             return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
