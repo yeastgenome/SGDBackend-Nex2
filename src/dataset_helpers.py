@@ -504,29 +504,20 @@ def insert_datasets(curator_session, CREATED_BY, data):
 
 def check_non_ascii_characters(file):
 
-    # f = open(file)
-
-    import io
-    
     error = ''
-    for line in io.BufferedReader(file):
-        error = line
-        break
+    for line in file.readlines():
+        # convert bytes to string
+        line = line.decode("utf-8")
         datatype = 'dataset'
-        if line.startswith('dataset.format_name'):
-            if 'datasample' in line or 'datasetsample' in line:
-                datatype = 'datasample'
+        if 'dataset.format_name' in line:
             continue
-        non_ascii_chars = check_for_non_ascii_characters(line.strip())
+        line = line.strip().replace("’", "'").replace("‘", "'").replace("–", "-")
+        line = line.replace("≥", ">=")                                  
+        non_ascii_chars = check_for_non_ascii_characters(line)
         if len(non_ascii_chars) > 0:
             pieces = line.split('\t')
-            ID = pieces[0]
-            if datatype == 'datasample':
-                ID = ID + ":" + pieces[1]
-            error = error + "<br>" + "non-ascii character(s): '" + ", ".join(non_ascii_chars) + "' are in reccord: " + ID
-
-    f.close()
-
+            ID = pieces[0] + ": " + pieces[1]
+            error = error + "<br>" + "non-ascii character(s): " + ", ".join(non_ascii_chars) + " are in reccord: " + ID
     return error
 
 

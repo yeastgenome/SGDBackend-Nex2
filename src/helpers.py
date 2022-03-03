@@ -1123,5 +1123,6 @@ def check_for_non_ascii_characters(text):
     non_ascii_characters = []
     for char in text:
         if ord(char) >= 128:
-            non_ascii_characters.append(char)
+            if char not in non_ascii_characters:
+                non_ascii_characters.append(char)
     return non_ascii_characters
