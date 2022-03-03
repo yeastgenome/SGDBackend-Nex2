@@ -506,8 +506,10 @@ def check_non_ascii_characters(file):
 
     # f = open(file)
 
+    import io
+    
     error = ''
-    for line in file:
+    for line in io.BufferedReader(file):
         error = line
         break
         datatype = 'dataset'
