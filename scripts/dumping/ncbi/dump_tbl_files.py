@@ -8,7 +8,7 @@ from src.models import Taxonomy, Source, Contig, Edam, Path, Filedbentity, FileP
                        Dbentity, Go, EcoAlias, Goannotation, Gosupportingevidence, \
                        LocusAlias, Referencedbentity, Ec
 from scripts.loading.database_session import get_session
-from src.helpers import upload_file
+from src.helpers import upload_file, check_for_non_ascii_characters
 
 __author__ = 'sweng66'
 
@@ -139,11 +139,10 @@ def dump_data():
         if locus.qualifier == 'Dubious':
             continue
 
-        description = locus.description
-        for char in description:
-            if ord(char) >= 128:
-                print ("non-ascii character " + char + " in " + locus.systematic_name + "'s description: \n" + description)
-                break
+        non_ascii_characters = check_for_non_ascii_characters(locus.description)
+        if len(non_ascii_characters) > 0:
+            print ("non-ascii character(s) " + ', '.join(non_ascii_characters) + " in " + locus.systematic_name + "'s description: \n" + locus.description)
+            break
             
         main_data.append((x.annotation_id, x.dbentity_id, contig_id_to_chrnum[x.contig_id], locus.systematic_name, locus.gene_name, so_id_to_display_name[x.so_id], x.start_index, x.end_index, x.strand, description))
         annotation_id_to_strand[x.annotation_id] = x.strand    
