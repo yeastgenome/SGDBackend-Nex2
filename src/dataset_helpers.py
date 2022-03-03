@@ -504,10 +504,10 @@ def insert_datasets(curator_session, CREATED_BY, data):
 
 def check_non_ascii_characters(file):
 
-    f = open(file)
+    # f = open(file)
 
     error = ''
-    for line in f:
+    for line in file:
         datatype = 'dataset'
         if line.startswith('dataset.format_name'):
             if 'datasample' in line or 'datasetsample' in line:
