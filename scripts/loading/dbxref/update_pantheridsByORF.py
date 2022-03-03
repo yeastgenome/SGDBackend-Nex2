@@ -4,7 +4,7 @@ from datetime import datetime
 from scripts.loading.database_session import get_session
 from src.models import Locusdbentity, LocusAlias, Source
 
-pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList_20201102.txt'
+pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList.txt'
 
 __author__ = 'sagarjha'
 
@@ -115,7 +115,7 @@ def read_panther_gene_list_file(source_to_id):
         for line in lines:
             
             pieces = line.split("\t")
-            
+
             ORF_list = pieces[1].split(",")
 
             # print ("orf=", ORF_list)

@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, LocusAlias, Source
-pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList021119.txt'
+
+pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList.txt'
 
 __author__ = 'sagarjha'
 
@@ -111,7 +112,8 @@ def read_panther_gene_list_file(source_to_id):
         lines = file.readlines()
         for line in lines:
             words = line.split()
-            
+            if len(words) < 2:
+                continue
             sgdid_list = words[1].split(",")
             pantherid = words[-1]
             if(pantherid.startswith('(PTHR')):
