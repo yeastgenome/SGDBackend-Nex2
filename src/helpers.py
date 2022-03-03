@@ -1117,3 +1117,11 @@ def count_alias(terms):
         count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(
             ['Uniform', 'Non-uniform']), LocusAlias.display_name.in_(terms))).count()
     return count
+
+def check_for_non_ascii_characters(text):
+
+    non_ascii_characters = []
+    for char in text:
+        if ord(char) >= 128:
+            non_ascii_characters.append(char)
+    return non_ascii_characters
