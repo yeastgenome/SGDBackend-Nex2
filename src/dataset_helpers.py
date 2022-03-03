@@ -508,6 +508,8 @@ def check_non_ascii_characters(file):
 
     error = ''
     for line in file:
+        error = line
+        break
         datatype = 'dataset'
         if line.startswith('dataset.format_name'):
             if 'datasample' in line or 'datasetsample' in line:
