@@ -3404,7 +3404,10 @@ class Locusdbentity(Dbentity):
         return obj
 
     def neighbor_sequence_details(self):
-        dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
+
+        taxonomy_id = self.get_main_strain('taxonomy_id')
+        
+        dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id, dna_type='GENOMIC', taxonomy_id=taxonomy_id).all()
 
         obj = {}
 
