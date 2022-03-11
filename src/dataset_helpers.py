@@ -421,21 +421,30 @@ def read_dataset_data_from_file(file):
             if str(row.iat[6]) != 'nan' and str(row.iat[6]).isdigit():
                 parent_dataset_id = int(row.iat[6])
 
+            dbxref_type = row.iat[4]
+
+            for x in [format_name, display_name, dbxref_type, description, lab_name, coll_institution]:
+                if type(x) == str:
+                    continue
+                try:
+                    x = x.decode('utf-8')
+                except UnicodeDecodeError:
+                    pass
             
             entry = { "source_id": source_id,
-                      "format_name": format_name.encode('utf-8'),
-                      "display_name": str(display_name).replace('"', '').encode('utf-8'),
+                      "format_name": format_name, 
+                      "display_name": str(display_name).replace('"', ''),
                       "obj_url": "/dataset/" + format_name,
                       "sample_count": sample_count,
                       "is_in_spell": is_in_spell,
                       "is_in_browser": is_in_browser,
                       "dbxref_id": dbxref_id,
-                      "dbxref_type": row.iat[4].encode('utf-8'),
+                      "dbxref_type": dbxref_type,
                       "date_public": date_public,
                       "channel_count": channel_count,
-                      "description": str(description).replace('"', '').encode('utf-8'),
-                      "lab_name": lab_name.encode('utf-8'),
-                      "lab_location": coll_institution.encode('utf-8'),
+                      "description": str(description).replace('"', ''),
+                      "lab_name": lab_name,
+                      "lab_location": coll_institution,
                       "colleague_id": colleague_id,
                       "keyword_ids": keyword_ids,
                       "reference_ids": reference_ids,
@@ -501,26 +510,6 @@ def insert_datasets(curator_session, CREATED_BY, data):
 
     return dataset_added
 
-
-def check_non_ascii_characters(file):
-
-    error = ''
-    for line in file.readlines():
-        # convert bytes to string
-        line = line.decode("utf-8")
-        datatype = 'dataset'
-        if 'dataset.format_name' in line:
-            continue
-        line = line.strip().replace("’", "'").replace("‘", "'").replace("–", "-")
-        line = line.replace("≥", ">=")                                  
-        non_ascii_chars = check_for_non_ascii_characters(line)
-        if len(non_ascii_chars) > 0:
-            pieces = line.split('\t')
-            ID = pieces[0] + ": " + pieces[1]
-            error = error + "<br>" + "non-ascii character(s): " + ", ".join(non_ascii_chars) + " are in reccord: " + ID
-    return error
-
-
 def load_dataset(request):
     
     try:
@@ -539,11 +528,10 @@ def load_dataset(request):
         if file is None or filename is None:
             return HTTPBadRequest(body=json.dumps({'error': "No dataset file is passed in."}), content_type='text/json')
 
-        error_message = check_non_ascii_characters(file)
-        if error_message:
-            return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
-
-        file.seek(0)
+        #error_message = check_non_ascii_characters(file)
+        #if error_message:
+        #    return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+        #file.seek(0)
         
         [data, error_message] = read_dataset_data_from_file(file)    
         if error_message != '':
@@ -660,6 +648,15 @@ def read_dataset_sample_data_from_file(file):
                     continue
                 entry['obj_url'] = "/datasetsample/" + entry['format_name']
                 entry['dbxref_id'] = GSM
+
+            for x in [entry['format_name'], entry['display_name'], entry['dbxref_type'], entry['description']]:
+                if type(x) == str:
+                    continue
+                try:
+                    x = x.decode('utf-8')
+                except UnicodeDecodeError:
+                    pass
+                      
             data.append(entry)
         return [data, error_message]
     except Exception as e:
@@ -709,11 +706,10 @@ def load_datasetsample(request):
         if file is None or filename is None:
             return HTTPBadRequest(body=json.dumps({'error': "No dataset sample file is passed in."}), content_type='text/json')
 
-        error_message = check_non_ascii_characters(file)
-        if error_message:
-            return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
-
-        file.seek(0)
+        #error_message = check_non_ascii_characters(file)
+        #if error_message:
+        #    return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+        #file.seek(0)
         
         [data, error_message] = read_dataset_sample_data_from_file(file)
         if error_message != '':
