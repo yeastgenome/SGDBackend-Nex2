@@ -7,6 +7,8 @@ __author__ = 'sweng66'
 
 # taxid = "TAX:559292"
 
+print (datetime.now())
+
 nex_session = get_session()
 
 dbentity_id_to_names = dict([(x.dbentity_id, (x.systematic_name, x.gene_name)) for x in nex_session.query(Locusdbentity).all()])
@@ -41,9 +43,11 @@ for x in all_rows:
         nex_session.commit()
         # nex_session.rollback()
         i = 0
-               
+
 nex_session.commit()
 # nex_session.rollback()
 nex_session.close()
+
+print (datetime.now())
 
 exit
