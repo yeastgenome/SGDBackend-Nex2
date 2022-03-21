@@ -20,6 +20,8 @@ j = 0
 for x in all_rows:
     if x.dbentity_id not in dbentity_id_to_names:
         continue
+    if x.file_header == 'N/A' or x.download_filename == 'N/A':
+        continue
     (systematic_name, gene_name) = dbentity_id_to_names[x.dbentity_id]
     if gene_name is None:
         gene_name = systematic_name
