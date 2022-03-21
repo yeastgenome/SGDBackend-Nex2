@@ -1,6 +1,6 @@
 from sqlalchemy import or_
 from datetime import datetime
-from src.models import Locusdbentity, Dnasequenceannotation
+from src.models import Locusdbentity, Dnasequenceannotation, Proteinsequenceannotation
 from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
@@ -13,7 +13,9 @@ nex_session = get_session()
 
 dbentity_id_to_names = dict([(x.dbentity_id, (x.systematic_name, x.gene_name)) for x in nex_session.query(Locusdbentity).all()])
 
+## switch to update either one of the tables
 all_rows = nex_session.query(Dnasequenceannotation).all()
+# all_rows = nex_session.query(Proteinsequenceannotation).all()
 
 i = 0
 j = 0
