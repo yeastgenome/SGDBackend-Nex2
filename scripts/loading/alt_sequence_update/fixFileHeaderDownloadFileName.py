@@ -30,7 +30,7 @@ for x in all_rows:
         print (j, (systematic_name, gene_name), x.file_header)
         file_header[0] = systematic_name
         file_header[1] = gene_name
-        x.file_header = ' '.join(file_header)
+        x.file_header = '>' + ' '.join(file_header)
     if not x.download_filename.startswith(systematic_name):
         print (j, (systematic_name, gene_name), x.download_filename)
         file_name = x.download_filename.split('_')
