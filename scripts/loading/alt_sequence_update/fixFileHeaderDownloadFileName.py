@@ -30,6 +30,8 @@ for x in all_rows:
     if gene_name is None:
         gene_name = systematic_name
     file_header = x.file_header[1:].split(' ')
+    if len(file_header) < 2:
+        continue
     if file_header[0] == systematic_name and file_header[1] == gene_name and x.download_filename.startswith(systematic_name):
         continue
     i = i + 1
