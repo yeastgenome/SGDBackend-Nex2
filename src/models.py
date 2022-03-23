@@ -3310,25 +3310,29 @@ class Locusdbentity(Dbentity):
         return obj
 
     def complex_details(self):
-        # interactor = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).one_or_none()
-        interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()   
-        if len(interactors) == 0:
-            return []
-        else:
-            interactor = interactors[0]
-            complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
-            data = []
 
-            found = {}
-            for x in complexes:
-                complex = x.complex
-                if complex.format_name in found:
-                    continue
-                found[complex.format_name] = 1
-                data.append({ "format_name": complex.format_name,
-                              "display_name": complex.display_name })
-            data = sorted(data, key=lambda c: c['display_name'])
-            return data
+        interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()
+        if len(interactors) == 0:
+            rna_ids = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID', locus_id=self.dbentity_id).all()
+            if len(rna_ids) == 0:
+                return []
+            interactors = DBSession.query(Interactor).filter_by(format_name = rna_ids[0].display_name).all()
+            if len(interactors) == 0:
+                return []
+    
+        interactor = interactors[0]
+        complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
+        data = []
+        found = {}
+        for x in complexes:
+            complex = x.complex
+            if complex.format_name in found:
+                continue
+            found[complex.format_name] = 1
+            data.append({ "format_name": complex.format_name,
+                          "display_name": complex.display_name })
+        data = sorted(data, key=lambda c: c['display_name'])
+        return data
 
     def posttranslational_details(self):
         annotations = DBSession.query(Posttranslationannotation).filter_by(dbentity_id=self.dbentity_id).order_by(Posttranslationannotation.site_index).all()
@@ -3400,7 +3404,10 @@ class Locusdbentity(Dbentity):
         return obj
 
     def neighbor_sequence_details(self):
-        dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
+
+        taxonomy_id = self.get_main_strain('taxonomy_id')
+        
+        dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id, dna_type='GENOMIC', taxonomy_id=taxonomy_id).all()
 
         obj = {}
 
@@ -4626,6 +4633,8 @@ class Locusdbentity(Dbentity):
             "go_overview": self.go_overview_to_dict(),
             "pathways": [],
             "alleles": [],
+            "sequence_summary": '',
+            "protein_summary": '',
             "phenotype_overview": self.phenotype_overview_to_dict(),
             "interaction_overview": self.interaction_overview_to_dict(),
             "paragraph": {
@@ -4635,7 +4644,15 @@ class Locusdbentity(Dbentity):
             "disease_overview": self.disease_overview_to_dict(),
             "ecnumbers": []    
         }
-    
+
+        sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
+        if sequence_summary:
+            obj["sequence_summary"] = sequence_summary.html
+
+        protein_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
+        if protein_summary:
+            obj["protein_summary"] = protein_summary.html
+        
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
