@@ -652,6 +652,9 @@ def strain(request):
         # id = extract_id_request(request, 'strain')
         # strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
         id = request.matchdict['id']
+
+        return id
+    
         if id.startswith('CEN.PK'):
             id = 'CENPK'
         strain = DBSession.query(Straindbentity).filter(or_(Straindbentity.format_name==id, Straindbentity.sgdid==id)).one_or_none()
