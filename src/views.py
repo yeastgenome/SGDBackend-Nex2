@@ -649,10 +649,12 @@ def reserved_name(request):
 @view_config(route_name='strain', renderer='json', request_method='GET')
 def strain(request):
     try:
-        id = extract_id_request(request, 'strain')
-
-        strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
-
+        # id = extract_id_request(request, 'strain')
+        # strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
+        id = request.matchdict['id']
+        if id.startswith('CEN.PK'):
+            id = 'CENPK'
+        strain = DBSession.query(Straindbentity).filter(or_(Straindbentity.format_name==id, Straindbentity.sgdid==id)).one_or_none()
         if strain:
             return strain.to_dict()
         else:
