@@ -61,6 +61,7 @@ def process_data():
             print ("duplicate taxonomy_id for ", x.display_name, ": ", x.taxonomy_id, strain_to_taxonomy_id[x.display_name])
 
     found = {}
+    seen = {}
     for line in f:
         if "feature_name" in line.lower():
             continue
@@ -112,9 +113,15 @@ def process_data():
 
         file_header = ">" + systematic_name + " " + dbentity_id_to_gene_name[dbentity_id] + " " + strain + " " + contig + ":"
         genomic_file_header = file_header + str(start_index) + ".." + str(end_index)
-        oneKB_file_header = file_header + str(oneKB_start) + ".." + str(oneKB_end)
+        oneKB_file_header = file_header + str(oneKB_start) + ".." + str(oneKB_end) + " +/- 1kb"
         genomic_download_filename = systematic_name + "_" + strain + "_genomic.fsa"
         oneKB_download_filename = systematic_name + "_" + strain + "_1kb.fsa"
+
+        key = (pieces[1], systematic_name, strain, contig)
+        if key in seen:
+            print ("duplicate rows:", key, seen[key], (start_index, end_index))
+            continue
+        seen[key] = (start_index, end_index)
         
         if systematic_name not in found:
             fw.write(pieces[0] + "\t" + pieces[1] + "\t" + systematic_name + "\t" + str(dbentity_id) + "\n")
