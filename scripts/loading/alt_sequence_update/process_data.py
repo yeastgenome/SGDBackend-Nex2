@@ -62,6 +62,7 @@ def process_data():
 
     found = {}
     seen = {}
+    strain_list = []
     for line in f:
         if "feature_name" in line.lower():
             continue
@@ -97,6 +98,8 @@ def process_data():
             strain = 'CEN.PK'
         if strain == '10560-6B':
             strain = 'Sigma1278b'
+        if strain not in strain_list:
+            strain_list.append(strain)
         taxonomy_id = strain_to_taxonomy_id.get(strain.lower())
         if taxonomy_id is None:
             print (pieces[3], "is not in straindbentity/dbentity table.")
@@ -135,6 +138,9 @@ def process_data():
     fw.close()
     fw2.close()
     fw3.close()
+
+    print (', '.join(strain_list))
+    
 
 def _get_sequence_from_contig(contig_seq, start, end, strand):
 
