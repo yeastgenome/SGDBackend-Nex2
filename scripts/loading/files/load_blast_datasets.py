@@ -36,6 +36,8 @@ def load_data():
     
 def update_database_load_file_to_s3(nex_session, dataset_filename, desc, source_id, edam_to_id, datestamp):
 
+    desc = "BLAST: " + desc
+    
     dataset_file = dataDir + dataset_filename
     gzip_file = dataset_file + "." + datestamp + ".gz"
     import gzip
