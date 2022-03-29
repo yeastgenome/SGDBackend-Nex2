@@ -29,6 +29,7 @@ def load_data():
     f = open(infile)
     for line in f:
         pieces = line.strip().split('\t')
+        print ("uploading pieces[0] to s3")
         update_database_load_file_to_s3(nex_session, pieces[0], pieces[1], source_id, edam_to_id, datestamp)
         
     nex_session.close()
