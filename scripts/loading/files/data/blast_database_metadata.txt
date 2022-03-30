@@ -1,0 +1,183 @@
+Sc_nuclear_chr.fsa	S288C reference nuclear chromosome sequences | 64-3-1
+Sc_mito_chr.fsa	S288C reference mitochrondrial chromosome sequence | 64-3-1
+2-micron_chr.fsa	S288C reference 2-micron plasmid DNA sequence | 64-3-1
+YeastORF.fsa	S288C reference ORF coding sequences | 64-3-1
+YeastORF_pep.fsa	S288C reference protein sequences | 64-3-1
+YeastORF-Genomic.fsa	S288C reference ORF genomic sequences | 64-3-1
+YeastORF-Genomic-1K.fsa	S288C reference ORF genomic sequences +/- 1kb | 64-3-1
+YeastRNA-genomic.fsa	S288C reference RNA genomic sequences | 64-3-1
+YeastRNA-coding.fsa	S288C reference RNA coding sequences | 64-3-1
+YeastRNA-genomic-1K.fsa	S288C reference RNA genomic sequences +/- 1kb | 64-3-1
+NotFeature.fsa	S288C reference non-genic sequences (intergenic regions) | 64-3-1
+YeastVectorDB.fsa	Yeast cloning vector sequences from Vector DB | 1995-10-05
+AWRI1631_AWRI_2008_ABSV01000000.fsa	AWRI1631 (AWRI) strain contig genomic sequences | 2014-08-06
+AWRI1631_AWRI_2008_ABSV01000000_cds.fsa	AWRI1631 (AWRI) strain ORF coding sequences | 2014-08-06
+AWRI1631_AWRI_2008_ABSV01000000_pep.fsa	AWRI1631 (AWRI) strain protein sequences | 2014-08-06
+AWRI796_AWRI_2010_ADVS01000000.fsa	AWRI796 (AWRI) strain contig genomic sequences | 2014-08-11
+AWRI796_AWRI_2010_ADVS01000000_cds.fsa	AWRI796 (AWRI) strain ORF coding sequences | 2014-08-11
+AWRI796_AWRI_2010_ADVS01000000_pep.fsa	AWRI796 (AWRI) strain protein sequences | 2014-08-11 
+BC187_Stanford_2014_JRII00000000.fsa	BC187 (Stanford) strain contig genomic sequences | 2014-10-12
+BC187_Stanford_2014_JRII00000000_cds.fsa	BC187 (Stanford) strain ORF coding sequences | 2014-10-12
+BC187_Stanford_2014_JRII00000000_pep.fsa	BC187 (Stanford) strain protein sequences | 2014-10-12
+BY4741_Stanford_2014_JRIS00000000.fsa	BY4741 (Stanford) strain contig genomic sequences | 2014-10-12 
+BY4741_Stanford_2014_JRIS00000000_cds.fsa	BY4741 (Stanford) strain ORF coding sequences | 2014-10-12
+BY4741_Stanford_2014_JRIS00000000_pep.fsa	BY4741 (Stanford) strain protein sequences | 2014-10-12
+BY4741_Toronto_2012.fsa	BY4741 (Toronto) strain contig genomic sequences | 2014-10-12
+BY4741_Toronto_2012_cds.fsa	BY4741 (Toronto) strain ORF coding sequences | 2014-10-12
+BY4741_Toronto_2012_pep.fsa	BY4741 (Toronto) strain protein sequences | 2014-10-12
+BY4742_Stanford_2014_JRIR00000000.fsa	BY4742 (Stanford) strain contig genomic sequences | 2014-10-12
+BY4742_Stanford_2014_JRIR00000000_cds.fsa	BY4742 (Stanford) strain ORF coding sequences | 2014-10-12
+BY4742_Stanford_2014_JRIR00000000_pep.fsa	BY4742 (Stanford) strain protein sequences | 2014-10-12
+BY4742_Toronto_2012.fsa	BY4742 (Toronto) strain contig genomic sequences | 2014-10-12
+BY4742_Toronto_2012_cds.fsa	BY4742 (Toronto) strain ORF coding sequences | 2014-10-12
+BY4742_Toronto_2012_pep.fsa	BY4742 (Toronto) strain protein sequences | 2014-10-12
+CBS7960_WashU_2011_AEWL01000000.fsa	CBS7960 (WashU) strain contig genomic sequences | 2014-08-11
+CBS7960_WashU_2011_AEWL01000000_cds.fsa	CBS7960 (WashU) strain ORF coding sequences | 2014-08-11
+CBS7960_WashU_2011_AEWL01000000_pep.fsa	CBS7960 (WashU) strain protein sequences | 2014-08-11
+CEN.PK113-7D_Delft_2012_AEHG00000000.fsa	CEN.PK113-7D (Delft) strain contig genomic sequences | 2014-08-04
+CEN.PK113-7D_Delft_2012_AEHG00000000_cds.fsa	CEN.PK113-7D (Delft) strain ORF coding sequences | 2014-08-04
+CEN.PK113-7D_Delft_2012_AEHG00000000_pep.fsa	CEN.PK113-7D (Delft) strain protein sequences | 2014-08-04
+CEN.PK2-1Ca_SGD_2015_JRIV01000000.fsa	CEN.PK2-1Ca (SGD) strain contig genomic sequences | 2014-10-12
+CEN.PK2-1Ca_JRIV01000000_SGD_cds.fsa	CEN.PK2-1Ca (SGD) strain ORF coding sequences | 2014-10-12
+CEN.PK2-1Ca_JRIV01000000_SGD_pep.fsa	CEN.PK2-1Ca (SGD) strain protein sequences | 2014-10-12
+CLIB215_WashU_2010_AEWP01000000.fsa	CLIB215 (WashU) strain contig genomic sequences | 2014-08-11
+CLIB215_WashU_2010_AEWP01000000_cds.fsa	CLIB215 (WashU) strain ORF coding sequences | 2014-08-11
+CLIB215_WashU_2010_AEWP01000000_pep.fsa	CLIB215 (WashU) strain protein sequences | 2014-08-11
+CLIB324_WashU_2011_AEWM01000000.fsa	CLIB324 (WashU) strain contig genomic sequences | 2014-08-11
+CLIB324_WashU_2011_AEWM01000000_cds.fsa	CLIB324 (WashU) strain ORF coding sequences | 2014-08-11
+CLIB324_WashU_2011_AEWM01000000_pep.fsa	CLIB324 (WashU) strain protein sequences | 2014-08-11
+CLIB382_WashU_2011_AFDG01000000.fsa	CLIB382 (WashU) strain contig genomic sequences | 2014-08-04
+CLIB382_WashU_2011_AFDG01000000_cds.fsa	CLIB382 (WashU) strain ORF coding sequences | 2014-08-04
+CLIB382_WashU_2011_AFDG01000000_pep.fsa	CLIB382 (WashU) strain protein sequences | 2014-08-04
+D273-10B_SGD_2015_JRIY00000000.fsa	D273-10B (SGD) strain contig genomic sequences | 2014-10-12
+D273-10B_JRIY00000000_SGD_cds.fsa	D273-10B (SGD) strain ORF coding sequences | 2014-10-12
+D273-10B_JRIY00000000_SGD_pep.fsa	D273-10B (SGD) strain protein sequences | 2014-10-12
+DBVPG6044_Stanford_2014_JRIG00000000.fsa	DBVPG6044 (Stanford) strain contig genomic sequences | 2014-10-12
+DBVPG6044_Stanford_2014_JRIG00000000_cds.fsa	DBVPG6044 (Stanford) strain ORF coding sequences | 2014-10-12
+DBVPG6044_Stanford_2014_JRIG00000000_pep.fsa	DBVPG6044 (Stanford) strain protein sequences | 2014-10-12
+EC1118_Genoscope_2009_PRJEA37863.fsa	EC1118 (Genoscope) strain contig genomic sequences | 2015-02-27
+EC1118_Genoscope_2009_PRJEA37863_cds.fsa	EC1118 (Genoscope) strain ORF coding sequences | 2015-02-27
+EC1118_Genoscope_2009_PRJEA37863_pep.fsa	EC1118 (Genoscope) strain protein sequences | 2015-02-27
+EC9-8_ASinica_2011_AGSJ01000000.fsa	EC9-8 (ASinica) strain contig genomic sequences | 2014-08-11
+EC9-8_ASinica_2011_AGSJ01000000_cds.fsa	EC9-8 (ASinica) strain ORF coding sequences | 2014-08-11
+EC9-8_ASinica_2011_AGSJ01000000_pep.fsa	EC9-8 (ASinica) strain protein sequences | 2014-08-11
+FL100_SGD_2015_JRIT00000000.fsa	FL100 (SGD) strain contig genomic sequences | 2014-10-12
+FL100_JRIT00000000_SGD_cds.fsa	FL100 (SGD) strain ORF coding sequences | 2014-10-12
+FL100_JRIT00000000_SGD_pep.fsa	FL100 (SGD) strain protein sequences | 2014-10-12
+FL100_WashU_2011_AEWO01000000.fsa	FL100 (WashU) strain contig genomic sequences | 2014-08-11
+FL100_WashU_2011_AEWO01000000_cds.fsa	FL100 (WashU) strain ORF coding sequences | 2014-08-11
+FL100_WashU_2011_AEWO01000000_pep.fsa	FL100 (WashU) strain protein sequences | 2014-08-11
+FY1679_Stanford_2014_JRIN00000000.fsa	FY1679 (Stanford) strain contig genomic sequences | 2014-10-12
+FY1679_Stanford_2014_JRIN00000000_cds.fsa	FY1679 (Stanford) strain ORF coding sequences | 2014-10-12
+FY1679_Stanford_2014_JRIN00000000_pep.fsa	FY1679 (Stanford) strain protein sequences | 2014-10-12
+FostersB_AWRI_2010_AEHH01000000.fsa	FostersB (AWRI) strain contig genomic sequences | 2014-08-11
+FostersB_AWRI_2010_AEHH01000000_cds.fsa	FostersB (AWRI) strain ORF coding sequences | 2014-08-11
+FostersB_AWRI_2010_AEHH01000000_pep.fsa	FostersB (AWRI) strain protein sequences | 2014-08-11
+FostersO_AWRI_2010_AEEZ01000000.fsa	FostersO (AWRI) strain contig genomic sequences | 2014-08-11
+FostersO_AWRI_2010_AEEZ01000000_cds.fsa	FostersO (AWRI) strain ORF coding sequences | 2014-08-11
+FostersO_AWRI_2010_AEEZ01000000_pep.fsa	FostersO (AWRI) strain protein sequences | 2014-08-11
+JAY291_Duke_2009_ACFL01000000.fsa	JAY291 (Duke) strain contig genomic sequences | 2014-08-06
+JAY291_Duke_2009_ACFL01000000_cds.fsa	JAY291 (Duke) strain ORF coding sequences | 2014-08-06
+JAY291_Duke_2009_ACFL01000000_pep.fsa	JAY291 (Duke) strain protein sequences | 2014-08-06
+JK9-3d_SGD_2015_JRIZ00000000.fsa	JK9-3d (SGD) strain contig genomic sequences | 2014-10-12
+JK9-3d_JRIZ00000000_SGD_cds.fsa	JK9-3d (SGD) strain ORF coding sequences | 2014-10-12
+JK9-3d_JRIZ00000000_SGD_pep.fsa	JK9-3d (SGD) strain protein sequences | 2014-10-12
+K11_Stanford_2014_JRIJ00000000.fsa	K11 (Stanford) strain contig genomic sequences | 2014-10-12
+K11_Stanford_2014_JRIJ00000000_cds.fsa	K11 (Stanford) strain ORF coding sequences | 2014-10-12
+K11_Stanford_2014_JRIJ00000000_pep.fsa	K11 (Stanford) strain protein sequences | 2014-10-12
+Kyokai7_NRIB_2011_BABQ01000000.fsa	Kyokai7 (NRIB) strain contig genomic sequences | 2016-04-19
+Kyokai7_NRIB_2011_BABQ01000000_cds.fsa	Kyokai7 (NRIB) strain ORF coding sequences | 2016-04-19
+Kyokai7_NRIB_2011_BABQ01000000_pep.fsa	Kyokai7 (NRIB) strain protein sequences | 2016-04-19
+L1528_Stanford_2014_JRIK00000000.fsa	L1528 (Stanford) strain contig genomic sequences | 2014-10-12
+L1528_Stanford_2014_JRIK00000000_cds.fsa	L1528 (Stanford) strain ORF coding sequences | 2014-10-12
+L1528_Stanford_2014_JRIK00000000_pep.fsa	L1528 (Stanford) strain protein sequences | 2014-10-12
+LalvinQA23_AWRI_2011_ADVV01000000.fsa	LalvinQA23 (AWRI) strain contig genomic sequences | 2014-08-11
+LalvinQA23_AWRI_2011_ADVV01000000_cds.fsa	LalvinQA23 (AWRI) strain ORF coding sequences | 2014-08-11
+LalvinQA23_AWRI_2011_ADVV01000000_pep.fsa	LalvinQA23 (AWRI) strain protein sequences | 2014-08-11
+M22_WashU_2008_ABPC01000000.fsa	M22 (WashU) strain contig genomic sequences | 2014-08-04
+M22_WashU_2008_ABPC01000000_cds.fsa	M22 (WashU) strain ORF coding sequences | 2014-08-04
+M22_WashU_2008_ABPC01000000_pep.fsa	M22 (WashU) strain protein sequences | 2014-08-04
+PW5_WashU_2011_AFDC01000000.fsa	PW5 (WashU) strain contig genomic sequences | 2014-08-04
+PW5_WashU_2011_AFDC01000000_cds.fsa	PW5 (WashU) strain ORF coding sequences | 2014-08-04
+PW5_WashU_2011_AFDC01000000_pep.fsa	PW5 (WashU) strain protein sequences | 2014-08-04
+RM11-1a_Broad_2005_AAEG01000000.fsa	RM11-1a (Broad) strain contig genomic sequences | 2014-08-06
+RM11-1a_Broad_2005_AAEG01000000_cds.fsa	RM11-1a (Broad) strain ORF coding sequences | 2014-08-06
+RM11-1a_Broad_2005_AAEG01000000_pep.fsa	RM11-1a (Broad) strain protein sequences | 2014-08-06
+RM11-1A_SGD_2015_JRIP00000000.fsa	RM11-1A (SGD) strain contig genomic sequences | 2014-10-12
+RM11-1A_JRIP00000000_SGD_cds.fsa	RM11-1A (SGD) strain ORF coding sequences | 2014-10-12
+RM11-1A_JRIP00000000_SGD_pep.fsa	RM11-1A (SGD) strain protein sequences | 2014-10-12
+RedStar_Stanford_2014_JRIL00000000.fsa	RedStar (Stanford) strain contig genomic sequences | 2014-10-12
+RedStar_Stanford_2014_JRIL00000000_cds.fsa	RedStar (Stanford) strain ORF coding sequences | 2014-10-12
+RedStar_Stanford_2014_JRIL00000000_pep.fsa	RedStar (Stanford) strain protein sequences | 2014-10-12
+SEY6210_SGD_2015_JRIW00000000.fsa	SEY6210 (SGD) strain contig genomic sequences | 2014-10-12
+SEY6210_JRIW00000000_SGD_cds.fsa	SEY6210 (SGD) strain ORF coding sequences | 2014-10-12
+SEY6210_JRIW00000000_SGD_pep.fsa	SEY6210 (SGD) strain protein sequences | 2014-10-12
+SK1_SGD_2018_NCSL00000000.fsa	SK1 (SGD) strain contig genomic sequences | 2017-08-14
+SK1_SGD_2018_NCSL00000000_cds.fsa	SK1 (SGD) strain ORF coding sequences | 2017-08-14
+SK1_SGD_2018_NCSL00000000_pep.fsa	SK1 (SGD) strain protein sequences | 2017-08-14
+Sigma1278b-10560-6B_SGD_2015_JRIQ00000000.fsa	Sigma1278b-10560-6B (SGD) strain contig genomic sequences | 2014-10-12
+Sigma1278b-10560-6B_JRIQ00000000_SGD_cds.fsa	Sigma1278b-10560-6B (SGD) strain ORF coding sequences | 2014-10-12
+Sigma1278b-10560-6B_JRIQ00000000_SGD_pep.fsa	Sigma1278b-10560-6B (SGD) strain protein sequences | 2014-10-12
+Sigma1278b_MIT_2009_ACVY01000000.fsa	Sigma1278b (MIT) strain contig genomic sequences | 2014-08-04
+Sigma1278b_MIT_2009_ACVY01000000_cds.fsa	Sigma1278b (MIT) strain ORF coding sequences | 2014-08-04
+Sigma1278b_MIT_2009_ACVY01000000_pep.fsa	Sigma1278b (MIT) strain protein sequences | 2014-08-04
+T73_WashU_2011_AFDF01000000.fsa	T73 (WashU) strain contig genomic sequences | 2014-08-04
+T73_WashU_2011_AFDF01000000_cds.fsa	T73 (WashU) strain ORF coding sequences | 2014-08-04
+T73_WashU_2011_AFDF01000000_pep.fsa	T73 (WashU) strain protein sequences | 2014-08-04
+T7_WashU_2011_AFDE01000000.fsa	T7 (WashU) strain contig genomic sequences | 2014-08-11
+T7_WashU_2011_AFDE01000000_cds.fsa	T7 (WashU) strain ORF coding sequences | 2014-08-11
+T7_WashU_2011_AFDE01000000_pep.fsa	T7 (WashU) strain protein sequences | 2014-08-11
+UC5_WashU_2011_AFDD01000000.fsa	UC5 (WashU) strain contig genomic sequences | 2014-08-04
+UC5_WashU_2011_AFDD01000000_cds.fsa	UC5 (WashU) strain ORF coding sequences | 2014-08-04
+UC5_WashU_2011_AFDD01000000_pep.fsa	UC5 (WashU) strain protein sequences | 2014-08-04
+UWOPS05-217-3_Stanford_2014_JRIM00000000.fsa	UWOPS05-217-3 (Stanford) strain contig genomic sequences | 2014-10-12
+UWOPS05-217-3_Stanford_2014_JRIM00000000_cds.fsa	UWOPS05-217-3 (Stanford) strain ORF coding sequences	| 2014-10-12
+UWOPS05-217-3_Stanford_2014_JRIM00000000_pep.fsa	UWOPS05-217-3 (Stanford) strain protein sequences	| 2014-10-12
+VL3_AWRI_2011_AEJS01000000.fsa	VL3 (AWRI) strain contig genomic sequences | 2014-08-11
+VL3_AWRI_2011_AEJS01000000_cds.fsa	VL3 (AWRI) strain ORF coding sequences | 2014-08-11
+VL3_AWRI_2011_AEJS01000000_pep.fsa	VL3 (AWRI) strain protein sequences | 2014-08-11
+Vin13_AWRI_2010_ADXC01000000.fsa	Vin13 (AWRI) strain contig genomic sequences | 2014-08-11
+Vin13_AWRI_2010_ADXC01000000_cds.fsa	Vin13 (AWRI) strain ORF coding sequences | 2014-08-11
+Vin13_AWRI_2010_ADXC01000000_pep.fsa	Vin13 (AWRI) strain protein sequences | 2014-08-11
+W303_MPG_2012_ALAV00000000.fsa	W303 (MPG) strain contig genomic sequences | 2014-08-11
+W303_MPG_2012_ALAV00000000_cds.fsa	W303 (MPG) strain ORF coding sequences | 2014-08-11
+W303_MPG_2012_ALAV00000000_pep.fsa	W303 (MPG) strain protein sequences | 2014-08-11
+W303_SGD_2015_JRIU00000000.fsa	W303 (SGD) strain contig genomic sequences | 2014-10-12
+W303_JRIU00000000_SGD_cds.fsa	W303 (SGD) strain ORF coding sequences | 2014-10-12
+W303_JRIU00000000_SGD_pep.fsa	W303 (SGD) strain protein sequences | 2014-10-12
+X2180-1A_SGD_2015_JRIX00000000.fsa	X2180-1A (SGD) strain contig genomic sequences | 2014-10-12
+X2180-1A_JRIX00000000_SGD_cds.fsa	X2180-1A (SGD) strain ORF coding sequences | 2014-10-12
+X2180-1A_JRIX00000000_SGD_pep.fsa	X2180-1A (SGD) strain protein sequences | 2014-10-12
+Y10_WashU_2011_AEWK01000000.fsa	Y10 (WashU) strain contig genomic sequences | 2014-08-11
+Y10_WashU_2011_AEWK01000000_cds.fsa	Y10 (WashU) strain ORF coding sequences | 2014-08-11
+Y10_WashU_2011_AEWK01000000_pep.fsa	Y10 (WashU) strain protein sequences | 2014-08-11
+Y55_SGD_2015_JRIF00000000.fsa	Y55 (SGD) strain contig genomic sequences | 2014-10-12
+Y55_JRIF00000000_SGD_cds.fsa	Y55 (SGD) strain ORF coding sequences | 2014-10-12
+Y55_JRIF00000000_SGD_pep.fsa	Y55 (SGD) strain protein  sequences | 2014-10-12
+YJM269_WashU_2011_AEWN01000000.fsa	YJM269 (WashU) strain contig genomic sequences | 2014-08-11
+YJM269_WashU_2011_AEWN01000000_cds.fsa	YJM269 (WashU) strain ORF coding sequences | 2014-08-11
+YJM269_WashU_2011_AEWN01000000_pep.fsa	YJM269 (WashU) strain protein sequences | 2014-08-11
+YJM339_Stanford_2014_JRIE00000000.fsa	YJM339 (Stanford) strain contig genomic sequences | 2014-10-12
+YJM339_Stanford_2014_JRIE00000000_cds.fsa	YJM339 (Stanford) strain ORF coding sequences | 2014-10-12
+YJM339_Stanford_2014_JRIE00000000_pep.fsa	YJM339 (Stanford) strain protein sequences | 2014-10-12
+YJM789_Stanford_2007_AAFW02000000.fsa	YJM789 (Stanford) strain contig genomic sequences | 2014-08-06
+YJM789_Stanford_2007_AAFW02000000_cds.fsa	YJM789 (Stanford) strain ORF coding sequences | 2014-08-06
+YJM789_Stanford_2007_AAFW02000000_pep.fsa	YJM789 (Stanford) strain protein sequences | 2014-08-06
+YPH499_Stanford_2014_JRIO00000000.fsa	YPH499 (Stanford) strain contig genomic sequences | 2014-10-12
+YPH499_Stanford_2014_JRIO00000000_cds.fsa	YPH499 (Stanford) strain ORF coding sequences | 2014-10-12
+YPH499_Stanford_2014_JRIO00000000_pep.fsa	YPH499 (Stanford) strain protein sequences | 2014-10-12
+YPS128_Stanford_2014_JRID00000000.fsa	YPS128 (Stanford) strain contig genomic sequences | 2014-10-12
+YPS128_Stanford_2014_JRID00000000_cds.fsa	YPS128 (Stanford) strain ORF coding sequences | 2014-10-12
+YPS128_Stanford_2014_JRID00000000_pep.fsa	YPS128 (Stanford) strain protein sequences | 2014-10-12
+YPS163_Stanford_2014_JRIC00000000.fsa	YPS163 (Stanford) strain contig genomic sequences | 2014-10-12
+YPS163_Stanford_2014_JRIC00000000_cds.fsa	YPS163 (Stanford) strain ORF coding sequences | 2014-10-12
+YPS163_Stanford_2014_JRIC00000000_pep.fsa	YPS163 (Stanford) strain protein sequences | 2014-10-12
+YPS163_WashU_2008_ABPD01000000.fsa	YPS163 (WashU) strain contig genomic sequences | 2014-08-04
+YPS163_WashU_2008_ABPD01000000_cds.fsa	YPS163 (WashU) strain ORF coding sequences | 2014-08-04
+YPS163_WashU_2008_ABPD01000000_pep.fsa	YPS163 (WashU) strain protein sequences | 2014-08-04
+YS9_Stanford_2014_JRIB00000000.fsa	YS9 (Stanford) strain contig genomic sequences | 2014-10-12
+YS9_Stanford_2014_JRIB00000000_cds.fsa	YS9 (Stanford) strain ORF coding sequences | 2014-10-12
+YS9_Stanford_2014_JRIB00000000_pep.fsa	YS9 (Stanford) strain protein sequences | 2014-10-12
+ZTW1_Zhejiang_2012_AMDD00000000.fsa	ZTW1 (Zhejiang) strain contig genomic sequences | 2014-08-11
+ZTW1_Zhejiang_2012_AMDD00000000_cds.fsa	ZTW1 (Zhejiang) strain ORF coding sequences | 2014-08-11
+ZTW1_Zhejiang_2012_AMDD00000000_pep.fsa	ZTW1 (Zhejiang) strain protein sequences | 2014-08-11
