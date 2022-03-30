@@ -786,7 +786,7 @@ def sgd_blast_metadata(request):
             if len(desc) > 1:
                 seq_version = desc[1]
             comment = ''
-            if 'S288C' in descrition:
+            if 'S288C' in description:
                 comment = 'Saccharomyces cerevisiae S288C Reference strain'
             elif 'cloning vector' in description:
                 comment = 'Yeast cloning vector'
