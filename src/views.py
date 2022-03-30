@@ -776,7 +776,7 @@ def sgd_blast_metadata(request):
     
     try:
         obj = []
-        for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).all():
+        for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
             seq_type = 'nucl'
             if 'pep' in x.previous_file_name:
                 seq_type = 'prot'
