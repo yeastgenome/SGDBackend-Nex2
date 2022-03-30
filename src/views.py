@@ -775,30 +775,29 @@ def sgd_blast_metadata(request):
     datestamp = str(datetime.now()).split(" ")[0]
     
     try:
-        ref_version = "64-3-1"
-        alt_version = "2014-10-12"
         obj = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).all():
-            version = alt_version
-            if 'S288C' in x.description:
-                version = ref_version
             seq_type = 'nucl'
             if 'pep' in x.previous_file_name:
                 seq_type = 'prot'
-            desc = x.description.replace('BLAST: ', '')
+            desc = x.description.replace('BLAST: ', '').split(' | ')
+            description = desc[0]
+            seq_version = ''
+            if len(desc) > 1:
+                seq_version = desc[1]
             comment = ''
-            if 'S288C' in desc:
+            if 'S288C' in descrition:
                 comment = 'Saccharomyces cerevisiae S288C Reference strain'
-            elif 'cloning vector' in desc:
+            elif 'cloning vector' in description:
                 comment = 'Yeast cloning vector'
             else:
-                pieces = desc.split(' ')
+                pieces = description.split(' ')
                 comment = 'Saccharomyces cerevisiae ' + pieces[0] + " strain from " + pieces[1].replace('(', '').replace(')', '') 
             obj.append({ 'URI': x.s3_url,
-                         'descriptiion': desc,
+                         'descriptiion': description,
                          'md5sum': x.md5sum,
-                         'version': version,
-                         'blast_title': desc,
+                         'version': seq_version,
+                         'blast_title': description,
                          'seq_type': seq_type,
                          'comment': comment,
                          'meta': { "sgd_release": "SGD:" + datestamp }
