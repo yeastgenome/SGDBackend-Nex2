@@ -775,6 +775,50 @@ def reference_phenotype_details(request):
         if DBSession:
             DBSession.remove()
 
+
+@view_config(route_name='sgd_blast_metadata', renderer='json', request_method='GET')
+def sgd_blast_metadata(request):
+
+    from datetime import datetime
+    datestamp = str(datetime.now()).split(" ")[0]
+
+    try:
+        obj = []
+        for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
+            seq_type = 'nucl'
+            if 'pep' in x.previous_file_name:
+                seq_type = 'prot'
+            desc = x.description.replace('BLAST: ', '').split(' | ')
+            description = desc[0]
+            seq_version = ''
+            if len(desc) > 1:
+                seq_version = desc[1]
+            comment = ''
+            if 'S288C' in description:
+                comment = 'Saccharomyces cerevisiae S288C Reference strain'
+            elif 'cloning vector' in description:
+                comment = 'Yeast cloning vector'
+            else:
+                pieces = description.split(' ')
+                comment = 'Saccharomyces cerevisiae ' + pieces[0] + " strain from " + pieces[1].replace('(', '').replace(')', '')
+            obj.append({ 'URI': x.s3_url,
+                         'descriptiion': description,
+                         'md5sum': x.md5sum,
+                         'version': seq_version,
+                         'blast_title': description,
+                         'seq_type': seq_type,
+                         'comment': comment,
+                         'meta': { "sgd_release": "SGD:" + datestamp }
+                         }
+                       )
+        return obj
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+            
 @view_config(route_name='reference_disease_details', renderer='json', request_method='GET')
 def reference_disease_details(request):
     try:
