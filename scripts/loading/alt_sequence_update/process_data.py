@@ -10,13 +10,13 @@ taxid = "TAX:559292"
 
 # ARS, CEN, tRNA, snRNA, snoRNA
 
-inFile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate4Shuai031822.tsv"
+inFile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate4Shuai040222.tsv"
 
-nameMappingFile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate031822_name_mapping.data"
+nameMappingFile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate040222_name_mapping.data"
 
-outFile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate031822.data"
+outFile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate040222.data"
 
-outFileWithSeq = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate031822_with_seq.data"
+outFileWithSeq = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate040222_with_seq.data"
 
 def process_data():
     
