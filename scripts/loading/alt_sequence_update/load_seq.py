@@ -6,7 +6,7 @@ from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
 
-infile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate031822_with_seq.data"
+infile = "scripts/loading/alt_sequence_update/data/altRefGenomeUpdate040222_with_seq.data"
 
 genomic_dna_type = 'GENOMIC'
 oneKB_dna_type = '1KB'
