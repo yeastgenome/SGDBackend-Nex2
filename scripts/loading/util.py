@@ -1184,7 +1184,7 @@ def extract_gene_names(text, name_list, alias_to_names):
         if gene_name.upper() in name_list:
             genes.append(word)
         elif gene_name.upper() in alias_to_names:
-            names = alias_to_names[Gene_name.upper()]
+            names = alias_to_names[gene_name.upper()]
             for name in names:
                 genes.append(word + "=" + str(name))
             
