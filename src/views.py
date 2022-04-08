@@ -785,21 +785,24 @@ def sgd_blast_metadata(request):
             seq_version = ''
             if len(desc) > 1:
                 seq_version = desc[1]
-            comment = ''
-            if 'S288C' in description:
-                comment = 'Saccharomyces cerevisiae S288C Reference strain'
-            elif 'cloning vector' in description:
-                comment = 'Yeast cloning vector'
-            else:
-                pieces = description.split(' ')
-                comment = 'Saccharomyces cerevisiae ' + pieces[0] + " strain from " + pieces[1].replace('(', '').replace(')', '') 
-            obj.append({ 'URI': x.s3_url,
+            #comment = ''
+            #if 'S288C' in description:
+            #    comment = 'Saccharomyces cerevisiae S288C Reference strain'
+            #elif 'cloning vector' in description:
+            #    comment = 'Yeast cloning vector'
+            #else:
+            #    pieces = description.split(' ')
+            #    comment = 'Saccharomyces cerevisiae ' + pieces[0] + " strain from " + pieces[1].replace('(', '').replace(')', '') 
+            obj.append({ 'files': [
+                            { 'URI': x.s3_url,
+                              'md5sum': x.md5sum }
+                         ],
                          'descriptiion': description,
-                         'md5sum': x.md5sum,
+                         'genus': 'Saccharomyces',
+                         'species': 'S. cerevisiae',
                          'version': seq_version,
                          'blast_title': description,
                          'seq_type': seq_type,
-                         'comment': comment,
                          'meta': { "sgd_release": "SGD:" + datestamp }
                          }
                        )
