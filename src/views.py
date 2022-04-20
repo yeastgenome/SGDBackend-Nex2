@@ -873,13 +873,14 @@ def author(request):
 @view_config(route_name='chemical', renderer='json', request_method='GET')
 def chemical(request):
     try:
-        chebiID = request.matchdict['id']
-        chebi = None
-        if chebiID.startswith('CHEBI:'):
-            chebi = DBSession.query(Chebi).filter_by(format_name=chebiID).one_or_none()
-        else:
-            id = extract_id_request(request, 'chebi', param_name="format_name")
-            chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+        #chebiID = request.matchdict['id']
+        #chebi = None
+        #if chebiID.startswith('CHEBI:'):
+        #    chebi = DBSession.query(Chebi).filter_by(format_name=chebiID).one_or_none()
+        #else:
+
+        id = extract_id_request(request, 'chebi', param_name="format_name")
+        chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
         if chebi:
             return chebi.to_dict()
         else:
