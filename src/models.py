@@ -164,9 +164,10 @@ class Apo(Base):
         }
 
     def to_dict(self):
-        phenotypes = DBSession.query(Phenotype.obj_url, Phenotype.qualifier_id, Phenotype.phenotype_id).filter_by(observable_id=self.apo_id).all()
-
-        annotations_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p[2] for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
+        # phenotypes = DBSession.query(Phenotype.obj_url, Phenotype.qualifier_id, Phenotype.phenotype_id).filter_by(observable_id=self.apo_id).all()
+        phenotypes = DBSession.query(Phenotype).filter_by(observable_id=self.apo_id).all() 
+        
+        annotations_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p.phenotype_id for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
 
         children_relation = DBSession.query(ApoRelation).filter_by(parent_id=self.apo_id).all()
         if len(children_relation) > 0:
@@ -179,11 +180,12 @@ class Apo(Base):
 
         qualifiers = []
         for phenotype in phenotypes:
-            qualifier_name = DBSession.query(Apo.display_name).filter_by(apo_id=phenotype[1]).one_or_none()
-            if qualifier_name:
+            # qualifier_name = DBSession.query(Apo.display_name).filter_by(apo_id=phenotype[1]).one_or_none()
+            qualifier = DBSession.query(Apo).filter_by(apo_id=phenotype.qualifier_id).one_or_none()
+            if qualifier:
                 qualifiers.append({
-                    "link": phenotype[0],
-                    "qualifier": qualifier_name[0]
+                    "link": phenotype.obj_url,
+                    "qualifier": qualifier.display_name]
                 })
 
         return {
@@ -191,7 +193,7 @@ class Apo(Base):
             "display_name": self.display_name,
             "description": self.description,
             "phenotypes": qualifiers,
-            "overview": Phenotypeannotation.create_count_overview([p[2] for p in phenotypes]),
+            "overview": Phenotypeannotation.create_count_overview([p.phenotype_id for p in phenotypes]),
             "locus_count": annotations_count,
             "descendant_locus_count": annotations_count + children_annotation_count
         }
