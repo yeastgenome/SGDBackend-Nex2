@@ -781,10 +781,11 @@ class Chebi(Base):
         # obj["phenotype"] = self.phenotype_to_dict()
         obj["go"] = self.go_to_dict()
         obj["protein_abundance"] = self.proteinabundance_to_dict()
-        # obj["pathways"] = self.pathway_to_dict()
-        # obj["structure_image_url"] = self.get_structure_url()
-        # obj["pharmGKB_link_url"] = self.get_pharmGKB_url()
-        # obj["network_graph"] = self.chemical_network()
+
+        obj["pathways"] = self.pathway_to_dict()
+        obj["structure_image_url"] = self.get_structure_url()
+        obj["pharmGKB_link_url"] = self.get_pharmGKB_url()
+        obj["network_graph"] = self.chemical_network()
 
         return obj
     
