@@ -777,7 +777,7 @@ class Chebi(Base):
         }
         
         ## need to fix the following...
-        # obj["complexes"] = self.complex_to_dict() 
+        obj["complexes"] = self.complex_to_dict() 
         # obj["phenotype"] = self.phenotype_to_dict()
         # obj["go"] = self.go_to_dict()
         # obj["protein_abundance"] = self.proteinabundance_to_dict()
