@@ -798,9 +798,6 @@ class Chebi(Base):
 
         obj = []
 
-        return obj
-
-    
         for annotation in phenotype_annotations:
             obj += annotation.to_dict(chemical=self)
 
@@ -9110,8 +9107,11 @@ class Phenotypeannotation(Base):
                     chebi_url = chemical.obj_url
                 else:
                     if chebi_urls == None:
-                        chemical = DBSession.query(Chebi).filter_by(display_name=condition_item.condition_name, is_obsolete='0').one_or_none()
-                        chebi_url = chemical.obj_url
+                        chemical = DBSession.query(Chebi).filter_by(display_name=condition_item.condition_name, is_obsolete=False).one_or_none()
+                        if chemical:
+                            chebi_url = chemical.obj_url
+                        else:
+                            chebi_url = None
                     else:
                         chebi_url = chebi_urls.get(
                             condition_item.condition_name)
