@@ -185,7 +185,7 @@ class Apo(Base):
             if qualifier:
                 qualifiers.append({
                     "link": phenotype.obj_url,
-                    "qualifier": qualifier.display_name]
+                    "qualifier": qualifier.display_name
                 })
 
         return {
