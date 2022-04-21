@@ -778,10 +778,9 @@ class Chebi(Base):
         
         ## need to fix the following...
         obj["complexes"] = self.complex_to_dict() 
-        # obj["phenotype"] = self.phenotype_to_dict()
+        obj["phenotype"] = self.phenotype_to_dict()
         obj["go"] = self.go_to_dict()
         obj["protein_abundance"] = self.proteinabundance_to_dict()
-
         obj["pathways"] = self.pathway_to_dict()
         obj["structure_image_url"] = self.get_structure_url()
         obj["pharmGKB_link_url"] = self.get_pharmGKB_url()
@@ -799,6 +798,9 @@ class Chebi(Base):
 
         obj = []
 
+        return obj
+
+    
         for annotation in phenotype_annotations:
             obj += annotation.to_dict(chemical=self)
 
