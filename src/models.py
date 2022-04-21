@@ -174,7 +174,7 @@ class Apo(Base):
             children_phenotype_ids = []
             for x in DBSession.query(Phenotype).filter(Phenotype.observable_id.in_([c.child_id for c in children_relation])).all():
                 children_phenotype_ids.append(x.phenotype_id)
-            children_annotation_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([i[0] for i in children_phenotype_ids])).group_by(Phenotypeannotation.dbentity_id).count()
+            children_annotation_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([i for i in children_phenotype_ids])).group_by(Phenotypeannotation.dbentity_id).count()
         else:
             children_annotation_count = 0
 
