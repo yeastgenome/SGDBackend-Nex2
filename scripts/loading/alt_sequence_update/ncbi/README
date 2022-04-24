@@ -1,3 +1,10 @@
+// % ./mac.table2asn -indir W303 -t W303/template.sbt -M n -Z
+
+// % ./mac.table2asn -indir W303 -t W303/template.sbt -M n -Z -gaps-min 10 -l paired-ends -j "[tech=wgs]" 
+
+% ./mac.table2asn -indir W303 -t W303/template.sbt -M n -Z -gaps-min 10 -l paired-ends -j '[tech=wgs][organism=Saccharomyces cerevisiae W303][strain=W303][db_xref=taxon:580240][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]'
+
+
 SUBID BioProject BioSample Accession Organism
 ---------------------------------------------------
 SUB678493 PRJNA260311 SAMN03020218 JRIF00000000 Saccharomyces cerevisiae Y55		JRIF01_accs

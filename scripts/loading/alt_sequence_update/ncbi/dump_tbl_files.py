@@ -119,9 +119,13 @@ def dump_data():
         ## get all features with 'GENOMIC' sequence in given strain
         main_data = [] 
         annotation_id_to_strand = {}
-        prev_contig_id = 0
+        found = {}
         for x in nex_session.query(Dnasequenceannotation).filter_by(taxonomy_id = taxonomy_id, dna_type='GENOMIC').order_by(Dnasequenceannotation.contig_id, Dnasequenceannotation.start_index, Dnasequenceannotation.end_index).all():
-                
+
+            if x.dbentity_id in found:
+                continue
+            found[x.dbentity_id] = 1
+            
             locus = dbentity_id_to_locus.get(x.dbentity_id)
             if locus is None:
                 ## transcript
@@ -153,10 +157,9 @@ def dump_data():
 
             if contig_id != prev_contig_id:
                  accession = contig_id_to_display_name[contig_id]
-                 accession = accession.replace('.1', '')
                  wgs = accession[0:6]
-                 seqID = contig_to_seqID[accession]
-                 fw.write(">gnl|WGS:" + wgs + "|" + seqID + "|gb|" + accession + "\n")
+                 seqID = contig_to_seqID[accession.replace('.1', '')]
+                 fw.write(">Feature gnl|WGS:" + wgs + "|" + seqID + "|gb|" + accession + "|\n")
 
             prev_contig_id = contig_id
 

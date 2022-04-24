@@ -20,7 +20,7 @@ for line in f:
         accession = pieces[0].replace('>', '').replace('.1', '')
         wgs = accession[0:6]
         seqID = contig_to_seqID[accession]
-        fw.write(">gnl|WGS:" + wgs + "|" + seqID + "|gb|" + accession + " Saccharomyces cerevisiae strain SK1 " + seqID + ", whole genome sequence\n") 
+        fw.write(">gnl|WGS:" + wgs + "|" + seqID + "|gb|" + accession + "| Saccharomyces cerevisiae strain SK1 " + seqID + ", whole genome sequence\n") 
     else:
         fw.write(line)
 

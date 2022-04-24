@@ -265,7 +265,7 @@ def write_header(fw, strain, contigNum, datestamp):
     fw.write("#!date-produced " + datestamp.split(".")[0] + "\n")
     fw.write("#!data-source SGD\n")
     fw.write("#\n")
-    fw.write("# Saccharomyces cerevisiae S288C " + strain + " genome\n")
+    fw.write("# Saccharomyces cerevisiae " + strain + " genome\n")
     fw.write("#\n")
     fw.write("# Features from " + str(contigNum) + " contigs\n")
     fw.write("#\n")

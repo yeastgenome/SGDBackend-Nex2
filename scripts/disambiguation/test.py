@@ -1,7 +1,7 @@
 import os
 import redis
 
-disambiguation_table = redis.Redis(os.environ['REDIS_READ_HOST'], os.environ['REDIS_PORT'])
+disambiguation_table = redis.Redis(os.environ['REDIS_WTITE_HOST'], os.environ['REDIS_PORT'])
 
 
 # dbid = disambiguation_table.get(("/" + prefix + "/" + id).upper())

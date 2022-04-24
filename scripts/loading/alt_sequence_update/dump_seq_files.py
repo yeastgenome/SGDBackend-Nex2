@@ -64,7 +64,8 @@ def strain_to_taxon_id_filename():
              'Y55':        ('NTR:112', 'Y55_JRIF00000000_SGD_')
     }
                           
-                 
+             
+    
 if __name__ == '__main__':
 
     dump_data()
