@@ -666,6 +666,10 @@ def strain(request):
 @view_config(route_name='reference', renderer='json', request_method='GET')
 def reference(request):
     try:
+        return { 'sgdid': 'hello world!' }
+    
+        return { 'sgdid': request.matchdict['id'] }
+            
         id = extract_id_request(request, 'reference', 'id', True)
         # allow reference to be accessed by sgdid even if not in disambig table
         if id:
