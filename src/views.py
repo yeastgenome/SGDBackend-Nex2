@@ -670,7 +670,7 @@ def reference(request):
     
         return { 'sgdid': request.matchdict['id'] }
             
-    ;;    id = extract_id_request(request, 'reference', 'id', True)
+        id = extract_id_request(request, 'reference', 'id', True)
         # allow reference to be accessed by sgdid even if not in disambig table
         if id:
             reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
