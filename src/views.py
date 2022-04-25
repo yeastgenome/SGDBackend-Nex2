@@ -797,7 +797,7 @@ def sgd_blast_metadata(request):
                             { 'URI': x.s3_url,
                               'md5sum': x.md5sum }
                          ],
-                         'descriptiion': description,
+                         'description': description,
                          'genus': 'Saccharomyces',
                          'species': 'S. cerevisiae',
                          'version': seq_version,
