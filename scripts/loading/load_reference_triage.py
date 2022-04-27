@@ -3,14 +3,15 @@ from io import StringIO
 import logging
 import os
 from Bio import Entrez, Medline 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from zope.sqlalchemy import ZopeTransactionExtension
-import transaction
+#from sqlalchemy import create_engine
+#from sqlalchemy.orm import sessionmaker, scoped_session
+#from zope.sqlalchemy import ZopeTransactionExtension
+#import transaction
 
 from src.models import Referencedbentity, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias
 from scripts.loading.reference.pubmed import get_pmid_list, get_pubmed_record, set_cite, get_abstract
 from scripts.loading.util import extract_gene_names
+from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
 # adjusted to run in curation environment
@@ -29,9 +30,10 @@ NEX2_URI = os.environ['NEX2_URI']
 
 def load_references():
     # create session
-    engine = create_engine(os.environ['NEX2_URI'])
-    session_factory = sessionmaker(bind=engine, extension=ZopeTransactionExtension())
-    db_session = scoped_session(session_factory)
+    # engine = create_engine(os.environ['NEX2_URI'])
+    # session_factory = sessionmaker(bind=engine, extension=ZopeTransactionExtension())
+    # db_session = scoped_session(session_factory)
+    db_session = get_session()
     # some preparation
     pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in db_session.query(Referencedbentity).all()])
     pmid_to_curation_id = dict([(x.pmid, x.curation_id) for x in db_session.query(Referencetriage).all()])
@@ -161,7 +163,8 @@ def insert_reference(db_session, pmid, citation, doi_url, abstract, gene_list):
                             citation = citation,
                             abstract_genes = gene_list)
     db_session.add(x)
-    transaction.commit()
+    db_session.commit()
+    # transaction.commit()
     log.info("Insert new reference: " + citation)
 
 if __name__ == '__main__':    
