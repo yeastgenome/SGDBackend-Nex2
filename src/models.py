@@ -6111,7 +6111,7 @@ class Straindbentity(Dbentity):
                 references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).order_by(Referencedbentity.year.desc()).all()
 
             obj["paragraph"] = {
-                "text": paragraph[1],
+                "text": paragraph.html,
                 "references": [r.to_dict_citation() for r in references]
             }
 
