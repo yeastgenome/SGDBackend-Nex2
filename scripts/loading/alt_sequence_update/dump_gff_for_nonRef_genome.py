@@ -100,7 +100,7 @@ def dump_data(strain, taxon, gff_file_name):
         ## output contig
                                 
         (contig_name, seq, file_header) = contig_id_to_contig[contig_id]
-        contig_identifier = file_header.split(' ')[0]
+        contig_identifier = file_header[1:].split(' ')[0]
         fw.write(contig_identifier + "\tSGD\tcontig\t1\t" + str(len(seq)) + "\t.\t.\t.\tID=" + contig_identifier + ";dbxref=" + contig_name + ";Name=" + contig_name + "\n")
 
         ## output features in the given contig in order of coordinates
@@ -232,7 +232,7 @@ def dump_data(strain, taxon, gff_file_name):
 
     for contig_id in sorted(contig_id_to_contig):
         (contig_name, seq, header) = contig_id_to_contig[contig_id]                        
-        fw.write(">" + header + "\n")
+        fw.write(header + "\n")
         formattedSeq = formated_seq(seq)
         fw.write(formattedSeq + "\n")
 
