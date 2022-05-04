@@ -773,6 +773,8 @@ def sgd_blast_metadata(request):
 
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
+
+    taxon_id = "NCBITaxon:4932"
     
     try:
         data = []
@@ -795,10 +797,8 @@ def sgd_blast_metadata(request):
                          'version': version,
                          'blast_title': description,
                          'seqtype': seqtype,
-                         'bioproject': 'null',
-                         'meta': { "sgd_release": "SGD:" + datestamp }
-                         }
-                       )
+                         'taxon_id': taxon_id 
+                       })
         obj = { 'data': data,
                 'metaData': {
                     'contact': 'sweng@stanford.edu',
