@@ -45,6 +45,18 @@ def dump_data():
 
         generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data,	
                           so_id_to_display_name, rna_genomic_oneKB_file, '1KB', SEQ_FORMAT, FILE_TYPE)
+
+        FILE_TYPE = 'ORF'
+
+        orf_genomic_file = dataDir + filename_prefix + 'orf_genomic.fsa'
+
+        generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data,
+                          so_id_to_display_name, orf_genomic_file, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
+
+        orf_genomic_oneKB_file = dataDir + filename_prefix + 'orf_genomic_1kb.fsa'
+
+        generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data,
+                          so_id_to_display_name, orf_genomic_oneKB_file, '1KB', SEQ_FORMAT, FILE_TYPE)
         
     nex_session.close()
 

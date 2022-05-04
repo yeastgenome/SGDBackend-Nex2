@@ -768,7 +768,8 @@ def clean_up_desc(desc):
 
     desc = desc.replace('“', "'").replace('"', "'").replace("’", "'")
     desc = desc.replace('”', "'").replace("<i>", "").replace("</i>", "")
-    
+    desc = desc.replace('δ', "delta")
+
     return desc.replace("Putative protein of unknown function", "hypothetical protein").replace("Protein of unknown function", "hypothetical protein").replace("protein of unknown function", "hypothetical protein").replace("Hypothetical protein", "hypothetical protein")
           
 if __name__ == '__main__':
