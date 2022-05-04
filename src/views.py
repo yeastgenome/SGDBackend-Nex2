@@ -775,37 +775,38 @@ def sgd_blast_metadata(request):
     datestamp = str(datetime.now()).split(" ")[0]
     
     try:
-        obj = []
+        data = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
-            seq_type = 'nucl'
+            seqtype = 'nucl'
             if 'pep' in x.previous_file_name:
-                seq_type = 'prot'
+                seqtype = 'prot'
             desc = x.description.replace('BLAST: ', '').split(' | ')
             description = desc[0]
-            seq_version = ''
+            version = ''
             if len(desc) > 1:
-                seq_version = desc[1]
-            #comment = ''
-            #if 'S288C' in description:
-            #    comment = 'Saccharomyces cerevisiae S288C Reference strain'
-            #elif 'cloning vector' in description:
-            #    comment = 'Yeast cloning vector'
-            #else:
-            #    pieces = description.split(' ')
-            #    comment = 'Saccharomyces cerevisiae ' + pieces[0] + " strain from " + pieces[1].replace('(', '').replace(')', '') 
-            obj.append({ 'files': [
+                version = desc[1]
+            data.append({ 'files': [
                             { 'URI': x.s3_url,
                               'md5sum': x.md5sum }
                          ],
                          'description': description,
                          'genus': 'Saccharomyces',
-                         'species': 'S. cerevisiae',
-                         'version': seq_version,
+                         'species': 'cerevisiae',
+                         'version': version,
                          'blast_title': description,
-                         'seq_type': seq_type,
+                         'seqtype': seqtype,
+                         'bioproject': 'null',
                          'meta': { "sgd_release": "SGD:" + datestamp }
                          }
                        )
+        obj = { 'data': data,
+                'metaData': {
+                    'contact': 'sweng@stanford.edu',
+                    'dataProvider': 'SGD',
+                    'dateProduced': datestamp,
+                    'release': "SGD:" + datestamp 
+                }
+        }
         return obj
     except Exception as e:
         log.error(e)
