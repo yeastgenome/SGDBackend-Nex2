@@ -5,27 +5,25 @@ under scripts/loading/alt_sequence_update/ncbi/
 W303:
 *******
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae W303][strain=W303][db_xref=taxon:580240][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p W303
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae W303][strain=W303][db_xref=taxon:580240][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p W303 -t W303/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae Y55][strain=Y55][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p Y55
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae Y55][strain=Y55][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p Y55 -t Y55/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae RM11-1a][strain=RM11-1a][db_xref=taxon:285006][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p RM11-1a
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae RM11-1a][strain=RM11-1a][db_xref=taxon:285006][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p RM11-1a -t RM11-1a/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae SK1][strain=SK1][db_xref=taxon:580239][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p SK1
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae Sigma1278b][strain=Sigma1278b][db_xref=taxon:658763][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p Sigma1278b-10560-6B -t Sigma1278b-10560-6B/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae Sigma1278b][strain=Sigma1278b][db_xref=taxon:658763][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p Sigma1278b-10560-6B
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae D273-10B][strain=D273-10B][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p D273-10B -t D273-10B/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae D273-10B][strain=D273-10B][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p D273-10B
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae JK9-3d][strain=JK9-3d][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p JK9-3d -t JK9-3d/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae JK9-3d][strain=JK9-3d][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p JK9-3d
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae SEY6210][strain=SEY6210][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p SEY6210 -t SEY6210/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae SEY6210][strain=SEY6210][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p SEY6210
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae X2180-1A][strain=X2180-1A][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p X2180-1A -t X2180-1A/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae X2180-1A][strain=X2180-1A][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p X2180-1A
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae CEN.PK2-1Ca][strain=CEN.PK2-1Ca][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p CEN.PK2-1Ca -t CEN.PK2-1Ca/template.sbt
 
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae CEN.PK2-1Ca][strain=CEN.PK2-1Ca][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p CEN.PK2-1Ca
-
-./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae FL100][strain=FL100][db_xref=taxon:947036][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p FL100
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae FL100][strain=FL100][db_xref=taxon:947036][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p FL100 -t FL100/template.sbt
 
 ===============
 W303:
