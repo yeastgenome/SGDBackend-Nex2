@@ -787,10 +787,8 @@ def sgd_blast_metadata(request):
             version = ''
             if len(desc) > 1:
                 version = desc[1]
-            data.append({ 'files': [
-                            { 'URI': x.s3_url,
-                              'md5sum': x.md5sum }
-                         ],
+            data.append({'URI': x.s3_url,
+                         'md5sum': x.md5sum, 
                          'description': description,
                          'genus': 'Saccharomyces',
                          'species': 'cerevisiae',
