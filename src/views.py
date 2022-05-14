@@ -782,37 +782,44 @@ def sgd_blast_metadata(request):
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
 
+    taxon_id = "NCBITaxon:4932"
+    
     try:
-        obj = []
+        data = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
-            seq_type = 'nucl'
+            seqtype = 'nucl'
             if 'pep' in x.previous_file_name:
-                seq_type = 'prot'
+                seqtype = 'prot'
             desc = x.description.replace('BLAST: ', '').split(' | ')
             description = desc[0]
-            seq_version = ''
+            version = ''
             if len(desc) > 1:
-                seq_version = desc[1]
-            obj.append({ 'files': [
-                            { 'URI': x.s3_url,
-                              'md5sum': x.md5sum }
-                         ],
-                         'descriptiion': description,
+                version = desc[1]
+            data.append({'URI': x.s3_url,
+                         'md5sum': x.md5sum, 
+                         'description': description,
                          'genus': 'Saccharomyces',
-                         'species': 'S. cerevisiae',
-                         'version': seq_version,
+                         'species': 'cerevisiae',
+                         'version': version,
                          'blast_title': description,
-                         'seq_type': seq_type,
-                         'meta': { "sgd_release": "SGD:" + datestamp }
-                         }
-                       )
+                         'seqtype': seqtype,
+                         'taxon_id': taxon_id 
+                       })
+        obj = { 'data': data,
+                'metaData': {
+                    'contact': 'sweng@stanford.edu',
+                    'dataProvider': 'SGD',
+                    'dateProduced': datestamp,
+                    'release': "SGD:" + datestamp 
+                }
+        }
         return obj
     except Exception as e:
         log.error(e)
     finally:
         if DBSession:
             DBSession.remove()
-
+            
             
 @view_config(route_name='reference_disease_details', renderer='json', request_method='GET')
 def reference_disease_details(request):
