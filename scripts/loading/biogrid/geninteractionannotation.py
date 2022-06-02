@@ -64,7 +64,12 @@ def load_data(infile, logfile):
                 oldPheno = genetic_type_to_phenotype.get(row[4])
                 newPheno = old_to_new_phenotype.get(oldPheno)
 
+                if row[6] == '31133554':
+                    log.info("It is an obsolete PMID: " + row[6]);
+                    continue
+                                        
                 reference_id = pmid_to_reference_id.get(int(row[6]))
+                
                 if reference_id is None:
                     reference_id = paper_added.get(int(row[6]))
                 if reference_id is None:
