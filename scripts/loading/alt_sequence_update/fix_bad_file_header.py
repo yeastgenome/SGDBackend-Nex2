@@ -37,8 +37,8 @@ for line in f:
             nex_session.add(x)
 
 f.close()
-nex_session.rollback()
-# nex_session.commit()
+# nex_session.rollback()
+nex_session.commit()
 
     
         
