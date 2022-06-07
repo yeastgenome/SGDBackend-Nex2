@@ -139,12 +139,14 @@ def dump_data():
         if locus.qualifier == 'Dubious':
             continue
 
-        non_ascii_characters = check_for_non_ascii_characters(locus.description)
-	if len(non_ascii_characters) > 0:
+        desc = clean_up_desc(locus.description)
+        
+        non_ascii_characters = check_for_non_ascii_characters(desc)
+        if len(non_ascii_characters) > 0:
             print ("non-ascii character(s) " + ', '.join(non_ascii_characters) + " in " + locus.systematic_name + "'s description: \n" + locus.description)
             break
              
-        main_data.append((x.annotation_id, x.dbentity_id, contig_id_to_chrnum[x.contig_id], locus.systematic_name, locus.gene_name, so_id_to_display_name[x.so_id], x.start_index, x.end_index, x.strand, locus.description))
+        main_data.append((x.annotation_id, x.dbentity_id, contig_id_to_chrnum[x.contig_id], locus.systematic_name, locus.gene_name, so_id_to_display_name[x.so_id], x.start_index, x.end_index, x.strand, desc))
         annotation_id_to_strand[x.annotation_id] = x.strand    
     
     log.info(str(datetime.now()))
@@ -162,7 +164,7 @@ def dump_data():
 
         (annotation_id, locus_id, chrnum, systematic_name, gene_name, feature_type, start, stop, strand, desc) = row
 
-        desc = clean_up_desc(desc)
+        # desc = clean_up_desc(desc)
         
         if strand == '-':
             (start, stop) = (stop, start)
@@ -868,7 +870,8 @@ def clean_up_desc(desc):
 
     desc = desc.replace('“', "'").replace('"', "'").replace("’", "'")
     desc = desc.replace('”', "'").replace("<i>", "").replace("</i>", "")
-
+    desc = desc.replace('δ', 'delta')
+    
     return desc.replace("Putative protein of unknown function", "hypothetical protein").replace("Protein of unknown function", "hypothetical protein").replace("protein of unknown function", "hypothetical protein").replace("Hypothetical protein", "hypothetical protein")
           
 def update_database_load_file_to_s3(nex_session, gzip_file, source_to_id, edam_to_id):
