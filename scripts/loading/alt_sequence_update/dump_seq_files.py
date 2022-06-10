@@ -2,7 +2,8 @@ import sys
 from scripts.loading.database_session import get_session
 from src.models import Locusdbentity, Dnasequenceannotation, Taxonomy, Contig, So
 # from scripts.dumping.sequence_update import generate_not_feature_seq_file
-from scripts.loading.alt_sequence_update import generate_not_feature_seq_file, generate_dna_seq_file
+from scripts.loading.alt_sequence_update import generate_not_feature_seq_file, generate_dna_seq_file, \
+    generate_protein_seq_file
 
 __author__ = 'sweng66'
 
@@ -39,24 +40,33 @@ def dump_data():
         rna_genomic_file = dataDir + filename_prefix + 'rna_genomic.fsa'
 
         generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data, 
-                          so_id_to_display_name, rna_genomic_file, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
+                              so_id_to_display_name, rna_genomic_file, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
         
         rna_genomic_oneKB_file = dataDir + filename_prefix + 'rna_genomic_1kb.fsa'
 
         generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data,	
-                          so_id_to_display_name, rna_genomic_oneKB_file, '1KB', SEQ_FORMAT, FILE_TYPE)
+                              so_id_to_display_name, rna_genomic_oneKB_file, '1KB', SEQ_FORMAT, FILE_TYPE)
 
         FILE_TYPE = 'ORF'
 
         orf_genomic_file = dataDir + filename_prefix + 'orf_genomic.fsa'
 
+        dbentity_id_to_defline = {}
+        dbentity_id_list = []
         generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data,
-                          so_id_to_display_name, orf_genomic_file, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
+                              so_id_to_display_name, orf_genomic_file, 'GENOMIC', SEQ_FORMAT, FILE_TYPE,
+                              dbentity_id_to_defline, dbentity_id_list)
 
         orf_genomic_oneKB_file = dataDir + filename_prefix + 'orf_genomic_1kb.fsa'
 
         generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data,
-                          so_id_to_display_name, orf_genomic_oneKB_file, '1KB', SEQ_FORMAT, FILE_TYPE)
+                              so_id_to_display_name, orf_genomic_oneKB_file, '1KB', SEQ_FORMAT, FILE_TYPE)
+
+        protein_file = dataDir + filename_prefix + 'pep.fsa'
+
+        
+        generate_protein_seq_file(nex_session, taxonomy_id, dbentity_id_to_defline, dbentity_id_list,
+                                  protein_file, SEQ_FORMAT)
         
     nex_session.close()
 

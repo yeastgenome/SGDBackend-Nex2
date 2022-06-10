@@ -1,4 +1,4 @@
-from src.models import Dnasequenceannotation, Contig
+from src.models import Dnasequenceannotation, Proteinsequenceannotation, Contig
 from scripts.dumping.sequence_update import format_fasta, clean_up_description
 
 __author__ = 'sweng66'
@@ -8,6 +8,29 @@ orf_features = ['ORF', 'transposable_element_gene', 'pseudogene', 'blocked_readi
 rna_features = ['ncRNA_gene', 'snoRNA_gene', 'snRNA_gene', 'tRNA_gene', 'rRNA_gene',
                 'telomerase_RNA_gene']
 
+
+def generate_protein_seq_file(nex_session, taxonomy_id, dbentity_id_to_defline, dbentity_id_list, seqFile, seq_format):
+
+    fw = open(seqFile, "w")
+
+    dbentity_id_to_seq = {}
+    for x in nex_session.query(Proteinsequenceannotation).filter_by(taxonomy_id=taxonomy_id).all():
+        dbentity_id_to_seq[x.dbentity_id] = x.residues
+
+    for dbentity_id in dbentity_id_list:
+        if dbentity_id not in dbentity_id_to_defline:
+            continue
+        if dbentity_id not in dbentity_id_to_seq:
+            continue
+        fw.write(dbentity_id_to_defline[dbentity_id] + "\n")
+        seq = dbentity_id_to_seq[dbentity_id]
+        if seq_format == 'fasta':
+            fw.write(format_fasta(seq) + "\n")
+        else:
+            fw.write(seq + "\n")
+
+    fw.close
+    
 
 def generate_dna_seq_file(nex_session, strain, taxonomy_id, contig_id_to_header, dbentity_id_to_data, so_id_to_display_name, seqFile, dna_type, seq_format, file_type, dbentity_id_to_defline=None, dbentity_id_list=None):
 
