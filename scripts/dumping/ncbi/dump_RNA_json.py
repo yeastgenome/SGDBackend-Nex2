@@ -40,8 +40,9 @@ def dump_data():
 
     nex_session = get_session()
 
-    datestamp = str(datetime.now()).split(" ")[0]
-
+    # datestamp = str(datetime.now()).split(" ")[0]
+    datestamp = str(datetime.today().strftime("%Y-%m-%dT%H:%M:%S%z"))
+    
     log.info(str(datetime.now()))
     log.info("Getting basic data from the database...")
 
