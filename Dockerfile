@@ -15,7 +15,7 @@ RUN git clone https://github.com/yeastgenome/SGDBackend-Nex2.git
 WORKDIR /data/www/logs
 
 WORKDIR /data/www/SGDBackend-Nex2
-RUN git checkout  backend_2022-01-03 \
+RUN git checkout master_docker \
     && pip3 install virtualenv \
     && virtualenv venv \
     && . venv/bin/activate \
