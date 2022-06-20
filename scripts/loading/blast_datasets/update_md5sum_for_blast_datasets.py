@@ -7,7 +7,7 @@ import urllib
 
 __author__ = 'sweng66'
 
-dataDir = "scripts/loading/files/data/new_blast_datasets/"
+dataDir = "scripts/loading/blast_datasets/data/new_blast_datasets/"
 
 db_session = get_session()
 

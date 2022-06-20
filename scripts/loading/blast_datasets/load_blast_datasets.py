@@ -9,8 +9,8 @@ import gzip
 
 __author__ = 'sweng66'
 
-infile = "scripts/loading/files/data/blast_database_metadata.txt"
-dataDir = "scripts/loading/files/data/blast_datasets/"
+infile = "scripts/loading/blast_datasets/data/blast_database_metadata.txt"
+dataDir = "scripts/loading/blast_datasets/data/blast_datasets_for_alliance/"
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
