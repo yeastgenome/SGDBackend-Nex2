@@ -192,9 +192,9 @@ def insert_referencedbentity(pmid, source_id, record, created_by):
     pmcid = record.get('pmc')
     pmc_url = pmc_root + pmcid + '/' if pmcid else ''
 
-    if int(pmid) == 33895134:
+    if int(pmid) in [33895134, 34454103]:
         year = 2021
-    else:
+    elif year:
         year = int(year)
         
     publication_status = status
