@@ -773,7 +773,7 @@ def sgd_blast_metadata(request):
 
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
-
+    
     taxon_id = "NCBITaxon:4932"
     
     try:
