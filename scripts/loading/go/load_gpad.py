@@ -242,7 +242,9 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
             if key in seen:
                 if str(x) == str(seen[key]):
                     continue                
-                annotation_id = key_to_annotation_id[key]
+                annotation_id = key_to_annotation_id.get(key)
+                if annotation_id is None:
+                    continue
                 if x.get('goextension') is not None:
                     if annotation_id in annotation_id_to_extension:
                         (goextension, date_created, created_by, annotation_type) = annotation_id_to_extension[annotation_id]
@@ -738,7 +740,7 @@ if __name__ == "__main__":
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
         exit()
 
-    if gpiFileInfo.st_size < 370000:
+    if gpiFileInfo.st_size < 360000:
         print("This week's GPI file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz")
         exit()
 
