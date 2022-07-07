@@ -18,7 +18,7 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-supplFileDir = "scripts/loading/suppl_files/supplemental_files/"
+supplFileDir = "scripts/loading/suppl_files/pubmed_pmc_download/"
 
 def load_data():
     
