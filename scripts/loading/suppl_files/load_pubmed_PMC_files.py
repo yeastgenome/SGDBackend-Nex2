@@ -31,7 +31,8 @@ def load_data():
     src = nex_session.query(Source).filter_by(display_name='SGD').one_or_none()
     source_id = src.source_id
     pmid_to_reference_id_year = dict([(x.pmid, (x.dbentity_id, x.year)) for x in nex_session.query(Referencedbentity).filter(Referencedbentity.pmid.isnot(None)).all()])
-
+    filename_to_file_id = dict([(x.previous_file_name, x.dbentity_id) for x in nex_session.query(Filedbentity).filter_by(description='PubMed Central download').all()])
+    
     log.info(datetime.now())
     log.info("Uploading files to s3...")
 
@@ -41,7 +42,10 @@ def load_data():
         pmid = int(suppl_file.replace('.tar.gz', ''))
         if pmid in pmid_to_reference_id_year:
             (reference_id, year) = pmid_to_reference_id_year[pmid]
-            update_database_load_file_to_s3(nex_session, i, suppl_file, source_id, edam_to_id, year, reference_id)
+            if suppl_file in filename_to_file_id:
+                log.info(suppl_file + " is already in the database.")
+            else:
+                update_database_load_file_to_s3(nex_session, i, suppl_file, source_id, edam_to_id, year, reference_id)
         else:
             log.info("PMID:" + str(pmid) + " is not in the database.")
 
