@@ -504,7 +504,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
 
     return data
         
-def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, bad_ref=None):
+def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
     from src.models import Referencedbentity, Dbentity, Go, Eco
     
@@ -609,6 +609,8 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
 
         key = (dbentity_id, go_id, reference_id, eco_id, field[6], field[10])
 
+        dbentity_id_with_annotation[dbentity_id] = 1
+        
         if key not in foundAnnotation:
                  
             entry = { 'source': source,

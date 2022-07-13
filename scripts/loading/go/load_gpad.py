@@ -117,7 +117,8 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
         noctua_data = read_noctua_gpad_file(noctua_gpad_file, nex_session, 
                                             sgdid_to_date_assigned, foundAnnotation,
                                             yes_goextension, yes_gosupport, new_pmids, 
-                                            dbentity_id_with_new_pmid, bad_ref)
+                                            dbentity_id_with_new_pmid,
+                                            dbentity_id_with_uniprot, bad_ref)
         log.info(str(datetime.now()))
         log.info("Reading complex portal GPAD file...")
 
