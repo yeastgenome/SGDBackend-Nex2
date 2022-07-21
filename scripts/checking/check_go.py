@@ -1,7 +1,7 @@
 from sqlalchemy import or_
 import sys
 from src.models import Taxonomy, Dbentity, Locusdbentity, Dnasequenceannotation,\
-                       Goannotation, Go, GoRelation, Goslim, So
+                       Goannotation, Go, GoRelation, Goslim, So, Source
 from scripts.loading.database_session import get_session
 import logging
 
@@ -78,13 +78,16 @@ def check_macromacromolecular_complex_term(nex_session):
     go = nex_session.query(Go).filter_by(goid='GO:0032991').one_or_none()
     go_id = go.go_id
     all_complex_terms[go_id] = (go.goid, go.display_name)
-    
+
     get_child_ids(nex_session, go_id, all_complex_terms)
 
+    src = nex_session.query(Source).filter_by(display_name='SGD').one_or_none()
+    source_id = src.source_id
+    
     goslim_go_id = dict([(x.go_id, x.goslim_id) for x in nex_session.query(Goslim).filter_by(slim_name='Macromolecular complex terms').all()]) 
 
     not_in_goslim = []
-    for x in nex_session.query(Goannotation).filter(or_(Goannotation.annotation_type=='manually curated', Goannotation.annotation_type=='high-throughput')).all():
+    for x in nex_session.query(Goannotation).filter_by(source_id=source_id).filter(or_(Goannotation.annotation_type=='manually curated', Goannotation.annotation_type=='high-throughput')).all():
         if x.go_id not in all_complex_terms:
             continue
         if x.go_id not in goslim_go_id and all_complex_terms[x.go_id] not in not_in_goslim:
