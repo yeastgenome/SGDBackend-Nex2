@@ -4642,7 +4642,8 @@ class Locusdbentity(Dbentity):
             },
             "literature_overview": self.literature_overview_to_dict(),
             "disease_overview": self.disease_overview_to_dict(),
-            "ecnumbers": []    
+            "ecnumbers": [],
+            "URS_ID": None
         }
 
         sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
@@ -4756,6 +4757,21 @@ class Locusdbentity(Dbentity):
         urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
         obj["urls"] = [u.to_dict() for u in urls]
 
+        # get RNACentral URS ID from EBI
+        # https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/id_mapping/database_mappings/sgd.tsv
+        if "RNA" in obj["locus_type"]:
+            url_path = 'https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/id_mapping/database_mappings/'
+            mapping_file = 'sgd.tsv'
+            urllib.request.urlretrieve(url_path + mapping_file, mapping_file)
+            f = open(mapping_file)
+            for line in f:
+                pieces = line.split('\t')
+                if pieces[2] == self.sgdid:
+                    obj["URS_ID"] = pieces[0]
+                    break
+            f.close()
+            os.remove(mapping_file)
+                
         uniprotID = None
         aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
         if aliases:
