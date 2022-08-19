@@ -4759,7 +4759,7 @@ class Locusdbentity(Dbentity):
 
         # get RNACentral URS ID from EBI
         # https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/id_mapping/database_mappings/sgd.tsv
-        if "RNA" in obj["locus_type"]:
+        if "RNA" in obj["locus_type"] and 'ETS' not in self.gene_name:
             url_path = 'https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/id_mapping/database_mappings/'
             mapping_file = 'sgd.tsv'
             urllib.request.urlretrieve(url_path + mapping_file, mapping_file)
