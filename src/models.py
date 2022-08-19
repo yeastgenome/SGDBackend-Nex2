@@ -4767,6 +4767,11 @@ class Locusdbentity(Dbentity):
             for line in f:
                 pieces = line.split('\t')
                 if pieces[2] == self.sgdid:
+                    url = "https://rnacentral.org/api/v1/rna/" + pieces[0] + "/2d/svg/"
+                    content = urlopen(url)
+                    data = content.read()
+                    if "HTTP 404 Not Found" in data:
+                        break
                     obj["URS_ID"] = pieces[0]
                     break
             f.close()
