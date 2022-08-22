@@ -11737,7 +11737,7 @@ class ReservednameTriage(Base):
                 if not is_locus:
                     raise ValueError(res_systematic_name + ' is not a valid systematic_name.')
                 is_already_reserved = curator_session.query(Reservedname).filter(Reservedname.locus_id == is_locus.dbentity_id).one_or_none()
-                if is_already_reserved:
+                if len(is_already_reserved) > 0:
                     raise ValueError(res_systematic_name + ' is already reserved for ' + is_already_reserved.display_name)
                 data['systematic_name'] = res_systematic_name
             if new_info['name_description']:
@@ -11764,8 +11764,8 @@ class ReservednameTriage(Base):
             # create personal communication
             citation = self.to_citation()
             # see if there is already personal communication for this and add if not yet added
-            personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.citation == citation).one_or_none()
-            if not personal_communication_ref:
+            personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.citation == citation).all()
+            if len(personal_communication_ref) == 0:
                 title = None
                 if 'publication_title' in list(obj.keys()):
                     title = obj['publication_title']
