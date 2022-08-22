@@ -11764,8 +11764,8 @@ class ReservednameTriage(Base):
             # create personal communication
             citation = self.to_citation()
             # see if there is already personal communication for this and add if not yet added
-            personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.citation == citation).all()
-            if len(personal_communication_ref) == 0:
+            personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.citation == citation).one_or_none()
+            if not personal_communication_ref:
                 title = None
                 if 'publication_title' in list(obj.keys()):
                     title = obj['publication_title']
@@ -11774,9 +11774,11 @@ class ReservednameTriage(Base):
                 journal_id = None
                 if 'journal' in list(obj.keys()):
                     journal_name = obj['journal']
-                    existing_journal = curator_session.query(Journal).filter(Journal.display_name == journal_name).one_or_none()
-                    if existing_journal:
-                        journal_id = existing_journal.journal_id
+                    # existing_journal = curator_session.query(Journal).filter(Journal.display_name == journal_name).one_or_none()
+                    existing_journal = curator_session.query(Journal).filter(Journal.display_name == journal_name).all()
+                    
+                    if len(existing_journal) > 0:
+                        journal_id = existing_journal[0].journal_id
                 personal_communication_ref = Referencedbentity(
                     display_name = citation,
                     source_id = DIRECT_SUBMISSION_SOURCE_ID,
