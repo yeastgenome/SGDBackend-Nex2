@@ -11889,9 +11889,9 @@ class ReservednameTriage(Base):
                 journal_id = None
                 if 'journal' in list(obj.keys()):
                     journal_name = obj['journal']
-                    existing_journal = curator_session.query(Journal).filter(Journal.display_name == journal_name).one_or_none()
-                    if existing_journal:
-                        journal_id = existing_journal.journal_id
+                    existing_journal = curator_session.query(Journal).filter(Journal.display_name == journal_name).all()
+                    if len(existing_journal) > 0:
+                        journal_id = existing_journal[0].journal_id
                 personal_communication_ref = Referencedbentity(
                     display_name = citation,
                     source_id = DIRECT_SUBMISSION_SOURCE_ID,
