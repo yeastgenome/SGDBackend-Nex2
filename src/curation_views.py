@@ -597,7 +597,7 @@ def new_gene_name_reservation(request):
                 last_name = a['last_name'].replace(' ', '').replace('.', '')
                 last_name = last_name.replace('-', '').replace('_', '')
                 if not (first_name.isalpha() and last_name.isalpha()):
-                    return HTTPBadRequest(body=json.dumps({ 'message': 'Author names must contain only letters or space or dot.' }), content_type='text/json')
+                    return HTTPBadRequest(body=json.dumps({ 'message': 'Author names must contain only letters, space, dot, underscore, or hyphen.' }), content_type='text/json')
     res_required_fields = ['new_gene_name']
     # validate reservations themselves
     for res in data['reservations']:
