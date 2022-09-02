@@ -186,6 +186,7 @@ def search(request):
         "synonyms",
         "go_id",
         "gene_ontology_loci",
+        "allele_loci",
         "author",
         "journal",
         "reference_loci",
