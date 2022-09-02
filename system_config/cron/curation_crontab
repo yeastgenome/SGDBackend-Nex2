@@ -23,6 +23,7 @@
 #Comment restart every hour as it is internal.
 #0 * * * * /bin/bash /data/www/SGDBackend-NEX2/system_config/cron/restart.sh | echo 'Backend restarted on curation - prod'
 0 0 * * * /bin/bash /data/www/SGDBackend-NEX2/system_config/cron/index_disambiguation.sh
+# 0 5 * * * /bin/bash /data/www/SGDBackend-NEX2/system_config/cron/index_local_disambiguation.sh
 #move index right before refresh_cache - 2/7/2020
 30 17 * * * /bin/bash /data/www/SGDBackend-NEX2/system_config/cron/index_elasticsearch.sh
 30 18 * * * /bin/bash /data/www/SGDBackend-NEX2/system_config/cron/refresh_cache.sh > /data/www/logs/refresh_cache.log 2>&1
