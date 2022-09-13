@@ -129,7 +129,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
 
         complex_data = read_complex_gpad_file(complex_gpad_file, nex_session,
                                               foundAnnotation, yes_goextension,
-                                              yes_gosupport, new_pmids, bad_ref)
+                                              yes_gosupport)
         
         
     nex_session.close()
