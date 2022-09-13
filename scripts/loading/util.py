@@ -378,7 +378,7 @@ def get_strain_taxid_mapping():
              'Other':           "TAX:4932",
              'other':           "TAX:4932" }
 
-def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, bad_ref=None):
+def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension=None, get_support=None):
 
     from src.models import Referencedbentity, Complexdbentity, Go, Eco, Ro
 
@@ -442,23 +442,10 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
         if field[4].startswith('PMID:'):
             pmid = field[4][5:]    
             reference_id = pmid_to_reference_id.get(int(pmid))
+            if reference_id is None:
+                continue
         else:
-            ref_sgdid = go_ref_mapping.get(field[4])
-            if ref_sgdid is None:
-                if bad_ref is not None and field[4] not in bad_ref:
-                    bad_ref.append(field[4])
-                print ("Bad ref: ", line)
-                continue
-            reference_id = sgdid_to_reference_id.get(ref_sgdid)
-        if reference_id is None:
-            if pmid is None:
-                print("NO REFERENCE: line=", line)
-                continue
-            print("The PMID = " + str(pmid) + " is not in the REFERENCEDBENTITY table.")
-            if new_pmids is not None:
-                if pmid not in new_pmids:
-                    new_pmids.append(pmid)
-            continue
+            continue   
     
         ## eco_id
         eco = field[5]
