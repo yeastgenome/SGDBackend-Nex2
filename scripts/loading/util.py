@@ -444,6 +444,8 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
             reference_id = pmid_to_reference_id.get(int(pmid))
             if reference_id is None:
                 continue
+        else:
+            continue   
     
         ## eco_id
         eco = field[5]
