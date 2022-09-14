@@ -497,7 +497,8 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
     
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
-
+    deleted_pmid_to_sgdid = dict([(x.pmid, x.sgdid) for x in nex_session.query(Referencedeleted).all()])
+    
     pmid_to_reference_id = {}
 
     sgdid_to_reference_id = {}
@@ -569,6 +570,8 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         pmid = None
         if field[4].startswith('PMID:'):
             pmid = field[4][5:]    # PMID:1234567; need to be 1234567
+            if int(pmid) in deleted_pmid_to_sgdid:
+                continue
             reference_id = pmid_to_reference_id.get(int(pmid))
         else:
             ref_sgdid = go_ref_mapping.get(field[4])
@@ -622,7 +625,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
     return data
 
 
-def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_sgdid_list, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_with_uniprot=None, bad_ref=None):
+def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_sgdid_list, foundAnnotation, get_extension=None, get_support=None, dbentity_with_uniprot=None, bad_ref=None):
 
     from src.models import Referencedbentity, Locusdbentity, Go, EcoAlias
     # import src.scripts.loading.config
@@ -731,17 +734,8 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
                 continue
             reference_id = sgdid_to_reference_id.get(ref_sgdid)
         if reference_id is None:
-            if pmid is None:
-                print("NO REFERENCE: line=", line)
-                continue
-            print("The PMID = " + str(pmid) + " is not in the REFERENCEDBENTITY table.")
-            if new_pmids is not None:
-                if pmid not in new_pmids:
-                    new_pmids.append(pmid)
-                    for dbentity_id in dbentity_ids:
-                        dbentity_with_new_pmid[dbentity_id] = 1
             continue
-
+        
         # assigned_group = field[9]           
         # eg, SGD for manual cuartion + HTP;
         # Interpro, UniPathway, UniProtKB, GOC, RefGenome for computational annotation

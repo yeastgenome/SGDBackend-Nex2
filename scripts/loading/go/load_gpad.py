@@ -94,8 +94,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     foundAnnotation = {}
     data = read_gpad_file(gpad_file, nex_session, uniprot_to_date_assigned, 
     	   	          uniprot_to_sgdid_list, foundAnnotation, 
-                          yes_goextension, yes_gosupport, 
-			  new_pmids, dbentity_id_with_new_pmid, 
+                          yes_goextension, yes_gosupport,
                           dbentity_id_with_uniprot, bad_ref)
 
     noctua_data = []
