@@ -493,7 +493,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
         
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
-    from src.models import Referencedbentity, Dbentity, Go, Eco
+    from src.models import Referencedbentity, Dbentity, Go, Eco, Referencedeleted
     
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
