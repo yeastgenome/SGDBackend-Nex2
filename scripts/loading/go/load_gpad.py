@@ -94,8 +94,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     foundAnnotation = {}
     data = read_gpad_file(gpad_file, nex_session, uniprot_to_date_assigned, 
     	   	          uniprot_to_sgdid_list, foundAnnotation, 
-                          yes_goextension, yes_gosupport, 
-			  new_pmids, dbentity_id_with_new_pmid, 
+                          yes_goextension, yes_gosupport,
                           dbentity_id_with_uniprot, bad_ref)
 
     noctua_data = []
@@ -129,7 +128,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
 
         complex_data = read_complex_gpad_file(complex_gpad_file, nex_session,
                                               foundAnnotation, yes_goextension,
-                                              yes_gosupport, new_pmids, bad_ref)
+                                              yes_gosupport)
         
         
     nex_session.close()
@@ -743,7 +742,7 @@ if __name__ == "__main__":
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
         exit()
 
-    if gpiFileInfo.st_size < 360000:
+    if gpiFileInfo.st_size < 355500:
         print("This week's GPI file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz")
         exit()
 
