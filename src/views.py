@@ -666,7 +666,7 @@ def strain(request):
 @view_config(route_name='reference', renderer='json', request_method='GET')
 def reference(request):
     try:
-        id = extract_id_request(request, 'reference', 'id', True)
+        id = extract_id_request(request, 'reference', 'id', OTrue)
         # allow reference to be accessed by sgdid even if not in disambig table
         if id:
             reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
@@ -2118,6 +2118,22 @@ def goslim(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+@view_config(route_name='alliance_links', renderer='json', request_method='GET')
+def alliance_links(request):
+
+    mod_gene_id = str(request.matchdict['id'])
+    mod = mod_gene_id.split(':')[0]
+    if mod == mod_gene_id:
+        return []
+    alliance_json_url = "https://dev.alliancegenome.org/shuai/alliance_links/" + \
+        mod + "_to_alliance_ortholog_link.json"
+    res = urlopen(alliance_json_url)
+    jsonData = json.loads(res.read())
+    if mod_gene_id in jsonData['data']:
+        return jsonData['data'][mod_gene_id]
+    return []
+
 
 @view_config(route_name='ambiguous_names', renderer='json', request_method='GET')
 def ambiguous_names(request):

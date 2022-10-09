@@ -28,9 +28,10 @@ def main(global_config, **settings):
 
     # nex2
     config.add_route('reserved_name', '/reservedname/{id}', request_method='GET')
-
+    
     config.add_route('strain', '/strain/{id}', request_method='GET')
-
+    config.add_route('alliance_links', '/alliance_links/{id}', request_method='GET')
+    
     config.add_route('reference_this_week', '/references/this_week', request_method='GET')
     config.add_route('reference', '/reference/{id}', request_method='GET')
 
