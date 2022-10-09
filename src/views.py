@@ -2129,7 +2129,7 @@ def alliance_links(request):
     alliance_json_url = "https://dev.alliancegenome.org/shuai/alliance_links/" + \
         mod + "_to_alliance_ortholog_link.json"
     res = urlopen(alliance_json_url)
-    jsonData = json.loads(res.read())
+    jsonData = json.loads(res.read().decode('utf-8'))
     if mod_gene_id in jsonData['data']:
         return jsonData['data'][mod_gene_id]
     return []
