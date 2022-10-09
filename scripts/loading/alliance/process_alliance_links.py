@@ -1,4 +1,4 @@
-infile = 'data/ORTHOLOGY-ALLIANCE_COMBINED_29.tsv'
+infile = 'data/ORTHOLOGY-ALLIANCE_COMBINED_0.tsv'
 
 f = open(infile)
 
