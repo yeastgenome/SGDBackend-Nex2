@@ -467,7 +467,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
         if len(field) > 10:
             goextension = field[10]
         
-        key = (complex_id, go_id, reference_id, eco_id, gosupport, goextension)
+        key = (complex_id, go_id, reference_id, go_qualifier, eco_id, gosupport, goextension)
 
         if key not in foundAnnotation:
 
@@ -596,7 +596,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             date_assigned = date_created
         annotation_type = 'manually curated'
 
-        key = (dbentity_id, go_id, reference_id, eco_id, field[6], field[10])
+        key = (dbentity_id, go_id, reference_id, go_qualifier, eco_id, field[6], field[10])
 
         dbentity_id_with_annotation[dbentity_id] = 1
         
@@ -775,7 +775,7 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
 
             data.append(entry)
    
-            key = (locus_id, go_id, reference_id, eco_id, field[6], field[10])
+            key = (locus_id, go_id, reference_id, go_qualifier, eco_id, field[6], field[10])
             foundAnnotation[key] = 1
 
     return data
