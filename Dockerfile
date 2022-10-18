@@ -7,7 +7,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         make \
 	npm \
 	postfix \
-        python3-pip
+        python3-pip \
+	tzdata
 
 WORKDIR /data/www
 RUN git clone https://github.com/yeastgenome/SGDBackend-Nex2.git
