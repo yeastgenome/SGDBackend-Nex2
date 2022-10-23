@@ -3191,12 +3191,9 @@ class Locusdbentity(Dbentity):
             "genes": genes,
             "aspect": "P"
         })
-
-        return [genes]
     
         try:
             req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
-            # req = Request(url=os.environ['BATTER_URI'] + "?genes=" + genes)
             res = urlopen(req)
             response_json = json.loads(res.read().decode('utf-8'))
         except:
