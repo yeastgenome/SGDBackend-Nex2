@@ -3198,7 +3198,7 @@ class Locusdbentity(Dbentity):
             res = urlopen(req)
             response_json = json.loads(res.read().decode('utf-8'))
         except:
-            return []
+            return ["url=" + url=os.environ['BATTER_URI'] + genes]
 
         obj = []
         for row in response_json:
