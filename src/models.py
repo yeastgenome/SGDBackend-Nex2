@@ -3186,7 +3186,7 @@ class Locusdbentity(Dbentity):
         for x in DBSession.query(Dbentity).filter(Dbentity.dbentity_id.in_(target_ids)).all():
             format_names.append(x.format_name)
 
-        genes = ",".join([f[0] for f in format_names])
+        genes = ",".join(format_names)
         data = urllib.parse.urlencode({
             "genes": genes,
             "aspect": "P"
