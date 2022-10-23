@@ -3193,6 +3193,7 @@ class Locusdbentity(Dbentity):
         })
 
         return [genes]
+    
         try:
             req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
             # req = Request(url=os.environ['BATTER_URI'] + "?genes=" + genes)
