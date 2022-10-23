@@ -3186,13 +3186,13 @@ class Locusdbentity(Dbentity):
         for x in DBSession.query(Dbentity).filter(Dbentity.dbentity_id.in_(target_ids)).all():
             format_names.append(x.format_name)
 
-        # genes = ",".join([f[0] for f in format_names])
-        genes = "FSH1,PDC1,PDC5,PET18,PHO3,THI13,THI2,THI20,THI4,THI5,THI6,THI7,THI73,THI74"
+        genes = ",".join([f[0] for f in format_names])
         data = urllib.parse.urlencode({
             "genes": genes,
             "aspect": "P"
         })
 
+        return [genes]
         try:
             req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
             # req = Request(url=os.environ['BATTER_URI'] + "?genes=" + genes)
