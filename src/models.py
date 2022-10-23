@@ -3194,14 +3194,13 @@ class Locusdbentity(Dbentity):
         })
 
         try:
-            req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
+            # req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
+            req = Request(url=os.environ['BATTER_URI'] + "?genes=" + genes)
             res = urlopen(req)
             response_json = json.loads(res.read().decode('utf-8'))
         except Exception as e:
-            # return []
-            return {"url=" + os.environ['BATTER_URI'] + "?genes=" + genes,
-                    "error=" + str(e)}
-
+            return []
+        
         obj = []
         for row in response_json:
             obj.append({
