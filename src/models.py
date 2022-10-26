@@ -4845,7 +4845,7 @@ class Locusdbentity(Dbentity):
             locus_type.append(x.display_name)
         obj["locus_type"] = ",".join(locus_type)
 
-        urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).all()
+        urls = DBSession.query(LocusUrl).filter_by(locus_id=self.dbentity_id).order_by(LocusUrl.display_name).all()
         obj["urls"] = [u.to_dict() for u in urls]
 
         # get RNACentral URS ID from EBI
