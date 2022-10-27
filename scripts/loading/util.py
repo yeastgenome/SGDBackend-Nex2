@@ -742,20 +742,21 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
         
         date_created = str(field[8][0:4]) + '-' + str(field[8][4:6]) + '-' + str(field[8][6:])
         if source == 'SGD':
-            date_assigned = uniprot_to_date_assigned.get(uniprotID)
+            # date_assigned = uniprot_to_date_assigned.get(uniprotID)
             if go_evidence.startswith('H'):
                 annotation_type = 'high-throughput'
             else:
                 annotation_type = 'manually curated'
         else:
-            date_assigned = date_created
+            # date_assigned = date_created
             if go_evidence.startswith('H'):
                 annotation_type = 'high-throughput'
             elif go_evidence in ['IEA', 'IBA'] :
                 annotation_type = 'computational'
             else:
                 annotation_type = 'manually curated'
-
+        date_assigned = date_created
+                
         for locus_id in dbentity_ids: 
             entry = { 'source': source,
                       'dbentity_id': locus_id,
