@@ -799,8 +799,10 @@ class Chebi(Base):
         obj = []
 
         for annotation in phenotype_annotations:
-            obj += annotation.to_dict(chemical=self)
-
+            annot = annotation.to_dict(chemical=self)
+            if 'properties' in annot and 'class_type' in annot['properties'] and annot['properties']['class_type'] == 'CHEMICAL':
+                if 'bioitem' in annot['properties'] and 'display_name' in annot['properties']['bioitem'] and annot['properties']['bioitem']['display_name'] == self.display_name:
+                    obj += annot
         return obj
 
     def go_to_dict(self):
