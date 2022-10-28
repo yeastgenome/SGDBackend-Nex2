@@ -799,10 +799,11 @@ class Chebi(Base):
         obj = []
 
         for annotation in phenotype_annotations:
-            annot = annotation.to_dict(chemical=self)
-            if 'properties' in annot and 'class_type' in annot['properties'] and annot['properties']['class_type'] == 'CHEMICAL':
-                if 'bioitem' in annot['properties'] and 'display_name' in annot['properties']['bioitem'] and annot['properties']['bioitem']['display_name'] == self.display_name:
-                    obj += annot
+            obj += annotation.to_dict(chemical=self)
+            # annot = annotation.to_dict(chemical=self)
+            #if 'properties' in annot and 'class_type' in annot['properties'] and annot['properties']['class_type'] == 'CHEMICAL':
+            #    if 'bioitem' in annot['properties'] and 'display_name' in annot['properties']['bioitem'] and annot['properties']['bioitem']['display_name'] == self.display_name:
+            #        obj += annot
         return obj
 
     def go_to_dict(self):
@@ -9123,7 +9124,14 @@ class Phenotypeannotation(Base):
         groups = {}
 
         for condition_item in conditions:
-            if condition_item.condition_class == "chemical":
+
+            ## newly added code (10/27/2022) to remove other chemical rows for a given chemical
+            if chemical is not None:
+                if condition_item.condition_class != "chemical" or chemical.display_name != condition_item.condition_name:
+                    continue
+            ## end
+            
+            if condition_item.condition_class == "chemical":    
                 if chemical is not None and (chemical.display_name == condition_item.condition_name):
                     chebi_url = chemical.obj_url
                 else:
