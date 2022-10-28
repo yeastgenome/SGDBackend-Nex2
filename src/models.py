@@ -799,11 +799,17 @@ class Chebi(Base):
         obj = []
 
         for annotation in phenotype_annotations:
-            obj += annotation.to_dict(chemical=self)
-            # annot = annotation.to_dict(chemical=self)
-            #if 'properties' in annot and 'class_type' in annot['properties'] and annot['properties']['class_type'] == 'CHEMICAL':
-            #    if 'bioitem' in annot['properties'] and 'display_name' in annot['properties']['bioitem'] and annot['properties']['bioitem']['display_name'] == self.display_name:
-            #        obj += annot
+            # obj += annotation.to_dict(chemical=self)
+            for annot in annotation.to_dict(chemical=self):
+                properties = annot.get("properties")
+                if properties is None:
+                    continue
+                is_right_chemical = False
+                for p in properties: 
+                    if p['class_type'] == 'CHEMICAL' and p['bioitem']['display_name'] == self.display_name:
+                        is_right_chemical = True
+                if is_right_chemical:
+                    obj.append(annot)
         return obj
 
     def go_to_dict(self):
@@ -9126,9 +9132,9 @@ class Phenotypeannotation(Base):
         for condition_item in conditions:
 
             ## newly added code (10/27/2022) to remove other chemical rows for a given chemical
-            if chemical is not None:
-                if condition_item.condition_class != "chemical" or chemical.display_name != condition_item.condition_name:
-                    continue
+            # if chemical is not None:
+            #    if condition_item.condition_class != "chemical" or chemical.display_name != condition_item.condition_name:
+            #        continue
             ## end
             
             if condition_item.condition_class == "chemical":    
