@@ -9166,6 +9166,9 @@ class Phenotypeannotation(Base):
                 #    "unit": condition_item.condition_unit
                 # })
 
+                if chemical is not None and chemical.display_name != condition_item.condition_name:
+                    continue
+
                 group = {                                                     
                     "class_type": "CHEMICAL",
                     "concentration": condition_item.condition_value,
