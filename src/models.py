@@ -9127,16 +9127,12 @@ class Phenotypeannotation(Base):
         if conditions == None:
             conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id=self.annotation_id).all()
 
-        groups = {}
+        if len(conditions) == 0:
+            return [obj]
 
+        # groups = {}                                                                                         
+        final_obj = []
         for condition_item in conditions:
-
-            ## newly added code (10/27/2022) to remove other chemical rows for a given chemical
-            # if chemical is not None:
-            #    if condition_item.condition_class != "chemical" or chemical.display_name != condition_item.condition_name:
-            #        continue
-            ## end
-            
             if condition_item.condition_class == "chemical":    
                 if chemical is not None and (chemical.display_name == condition_item.condition_name):
                     chebi_url = chemical.obj_url
@@ -9155,10 +9151,22 @@ class Phenotypeannotation(Base):
                 if chebi_url:
                     link = chebi_url
 
-                if condition_item.group_id not in groups:
-                    groups[condition_item.group_id] = []
+                # if condition_item.group_id not in groups:
+                #    groups[condition_item.group_id] = []
 
-                groups[condition_item.group_id].append({
+                # groups[condition_item.group_id].append({
+                #    "class_type": "CHEMICAL",
+                #    "concentration": condition_item.condition_value,
+                #    "bioitem": {
+                #        "link": link,
+                #        "display_name": condition_item.condition_name
+                #    },
+                #    "note": None,
+                #    "role": "CHEMICAL",
+                #    "unit": condition_item.condition_unit
+                # })
+
+                group = {                                                     
                     "class_type": "CHEMICAL",
                     "concentration": condition_item.condition_value,
                     "bioitem": {
@@ -9168,7 +9176,10 @@ class Phenotypeannotation(Base):
                     "note": None,
                     "role": "CHEMICAL",
                     "unit": condition_item.condition_unit
-                })
+                }
+                obj2 = copy.deepcopy(obj) 
+                obj2["properties"].append(group)                                                     
+                final_obj.append(obj2) 
             else:
                 note = condition_item.condition_name
                 if condition_item.condition_value:
@@ -9176,36 +9187,44 @@ class Phenotypeannotation(Base):
                     if condition_item.condition_unit:
                         note += " " + condition_item.condition_unit
 
-                if condition_item.group_id not in groups:
-                    groups[condition_item.group_id] = []
+                # if condition_item.group_id not in groups:
+                #    groups[condition_item.group_id] = []
 
-                groups[condition_item.group_id].append({
+                # groups[condition_item.group_id].append({
+                #    "class_type": condition_item.condition_class,
+                #    "note": note,
+                #    "unit": condition_item.condition_unit
+                # })
+                group = {
                     "class_type": condition_item.condition_class,
                     "note": note,
                     "unit": condition_item.condition_unit
-                })
+                }
+                obj2 = copy.deepcopy(obj)	
+                obj2["properties"].append(group)
+                final_obj.append(obj2)
 
-        if chemical:
-            groups_to_delete = []
-            for group_id in groups:
-                chemical_present_in_group = False
-                for condition in groups[group_id]:
-                    if condition["class_type"] == "CHEMICAL" and condition["bioitem"]["display_name"] == chemical.display_name:
-                        chemical_present_in_group = True
-                if not chemical_present_in_group:
-                    groups_to_delete.append(group_id)
+        # if chemical:
+        #    groups_to_delete = []
+        #    for group_id in groups:
+        #        chemical_present_in_group = False
+        #        for condition in groups[group_id]:
+        #            if condition["class_type"] == "CHEMICAL" and condition["bioitem"]["display_name"] == chemical.display_name:
+        #                chemical_present_in_group = True
+        #        if not chemical_present_in_group:
+        #            groups_to_delete.append(group_id)
 
-            for group_id in groups_to_delete:
-                del groups[group_id]
+        #    for group_id in groups_to_delete:
+        #        del groups[group_id]
 
-        final_obj = []
-        for group_id in groups:
-            obj_group = copy.deepcopy(obj)
-            obj_group["properties"] += groups[group_id]
-            final_obj.append(obj_group)
-
-        if len(final_obj) == 0:
-            final_obj = [obj]
+        # final_obj = []
+        # for group_id in groups:
+        #    obj_group = copy.deepcopy(obj)
+        #    obj_group["properties"] += groups[group_id]
+        #    final_obj.append(obj_group)
+          
+        # if len(final_obj) == 0:
+        #    final_obj = [obj]
 
         return final_obj
 
