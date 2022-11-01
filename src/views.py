@@ -2226,7 +2226,9 @@ def complex(request):
 @view_config(route_name='allele', renderer='json', request_method='GET')
 def allele(request):
     try:
-        allele = request.matchdict['id'].replace('SGD:S', 'S').replace('Δ', 'delta')
+        # allele = allele.replace('%C3%8E%C2%94', 'Δ')
+        # allele = request.matchdict['id'].replace('SGD:S', 'S').replace('Δ', 'delta')
+        allele = request.matchdict['id'].replace('SGD:S', 'S')
         alleleObj = None
         if allele.startswith('S0'):
             alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
