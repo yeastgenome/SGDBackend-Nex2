@@ -9125,13 +9125,17 @@ class Phenotypeannotation(Base):
         }
 
         if conditions == None:
-            conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id=self.annotation_id).all()
+            conditions = DBSession.query(PhenotypeannotationCond).filter_by(
+                annotation_id=self.annotation_id).order_by(
+                    PhenotypeannotationCond.group_id).all()
 
         if len(conditions) == 0:
             return [obj]
 
         # groups = {}                                                                                         
         final_obj = []
+        pre_group_id = None
+        obj_with_cond = None
         for condition_item in conditions:
             if condition_item.condition_class == "chemical":    
                 if chemical is not None and (chemical.display_name == condition_item.condition_name):
@@ -9165,10 +9169,6 @@ class Phenotypeannotation(Base):
                 #    "role": "CHEMICAL",
                 #    "unit": condition_item.condition_unit
                 # })
-
-                if chemical is not None and chemical.display_name != condition_item.condition_name:
-                    continue
-
                 group = {                                                     
                     "class_type": "CHEMICAL",
                     "concentration": condition_item.condition_value,
@@ -9180,9 +9180,12 @@ class Phenotypeannotation(Base):
                     "role": "CHEMICAL",
                     "unit": condition_item.condition_unit
                 }
-                obj2 = copy.deepcopy(obj) 
-                obj2["properties"].append(group)                                                     
-                final_obj.append(obj2) 
+                if pre_group_id is None:
+                    obj_with_cond = copy.deepcopy(obj)
+                elif pre_group_id != condition_item.group_id:
+                    final_obj.append(obj_with_cond)
+                    obj_with_cond = copy.deepcopy(obj)
+                obj_with_cond["properties"].append(group)                                                      
             else:
                 note = condition_item.condition_name
                 if condition_item.condition_value:
@@ -9203,10 +9206,16 @@ class Phenotypeannotation(Base):
                     "note": note,
                     "unit": condition_item.condition_unit
                 }
-                obj2 = copy.deepcopy(obj)	
-                obj2["properties"].append(group)
-                final_obj.append(obj2)
-
+                if pre_group_id	is None:
+                    obj_with_cond = copy.deepcopy(obj)
+                elif pre_group_id != condition_item.group_id:
+                    final_obj.append(obj_with_cond)
+                    obj_with_cond = copy.deepcopy(obj)
+                obj_with_cond["properties"].append(group)
+            pre_group_id = condition_item.group_id
+        if obj_with_cond:
+            final_obj.append(obj_with_cond)
+            
         # if chemical:
         #    groups_to_delete = []
         #    for group_id in groups:
