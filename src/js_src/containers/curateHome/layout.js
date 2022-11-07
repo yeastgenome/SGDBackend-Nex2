@@ -10,7 +10,9 @@ class CurateLayout extends Component {
   render() {
     let location = this.props.location ? this.props.location.pathname : '';
     let colleagueCount = this.props.colleagueCount ? this.props.colleagueCount : 0;
-    let geneCount = this.props.geneCount ? this.props.geneCount : 0; 
+    let geneCount = this.props.geneCount ? this.props.geneCount : 0;
+    let authorResponseCount = this.props.authorResponseCount ? this.props.authorResponseCount : 0;
+      
     // console.log(this.props.location);
     return (
       <div className='row'>
@@ -36,7 +38,7 @@ class CurateLayout extends Component {
             <li><span><Link className={(location === '/new_phenotype') ? style.activeLink : null} to='/new_phenotype'><i className='fa fa-sticky-note' />Phenotype NEW</Link> | <Link className={(location === '/search_phenotype') ? style.activeLink : null} to='/search_phenotype'>UPDATE</Link></span></li>
 
             <li><span><Link className={(location === '/litguide_todo') ? style.activeLink : null} to='/litguide_todo'><i className='fa fa-sticky-note' />LitGuide TODO</Link> | <Link className={(location === '/add_litguide') ? style.activeLink : null} to='/add_litguide'>ADD</Link></span></li>
-            <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response </span></Link></li>
+            <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response <span style={ml_12}><Badge badgeContent={authorResponseCount} color="error" /></span></Link></li>	      
           </ul>
         </div>
         <div className={LARGE_COL_CLASS}>
@@ -53,7 +55,8 @@ CurateLayout.propTypes = {
   children: PropTypes.object,
   location: PropTypes.object,
   geneCount:PropTypes.number,
-  colleagueCount:PropTypes.number
+  colleagueCount:PropTypes.number,
+  authorResponseCount:PropTypes.number  
 };
 
 function mapStateToProps(state) {
@@ -61,6 +64,7 @@ function mapStateToProps(state) {
     location: state.router.location,
     geneCount:state.meta.get('geneCount'),
     colleagueCount:state.meta.get('colleagueCount')
+    authorResponseCount:state.meta.get('authorResponseCount')
   };
 }
 

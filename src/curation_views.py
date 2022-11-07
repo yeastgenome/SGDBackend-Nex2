@@ -3242,7 +3242,8 @@ def triage_count(request):
     try:
         colleagueCount = DBSession.query(Colleaguetriage).count()
         geneCount = DBSession.query(ReservednameTriage).count()
-        returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount}
+        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
+        returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount, "authorResponseCount":authorResponseCount}
         return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
 
     except Exception as e:
