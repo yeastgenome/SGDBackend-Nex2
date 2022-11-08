@@ -23,6 +23,7 @@ class CurateLayout extends Component {
             <li><Link className={(location === '/triage') ? style.activeLink : null} to='/triage'><span><i className='fa fa-book' /> Lit Triage</span></Link></li>
             <li><Link className={(location === '/colleagues/triage') ? style.activeLink : null} to='/colleagues/triage'><span><i className='fa fa-users' /> Colleague Updates <span style={ml_12}><Badge badgeContent={colleagueCount} color="error" /></span></span></Link></li>
             <li><Link className={(location.match('/reservations')) ? style.activeLink : null} to='/reservations'><span><i className='fa fa-sticky-note' /> Gene Name Reservations <span style={ml_12}><Badge badgeContent={geneCount} color="error" /></span></span></Link></li>
+	    <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response <span style={ml_12}><Badge badgeContent={authorResponseCount} color="error" /></span></span></Link></li>  
             <li><Link className={(location === '/spreadsheet_upload') ? style.activeLink : null} to='/spreadsheet_upload'><span><i className='fa fa-upload' /> Spreadsheet Upload</span></Link></li>
             <li><Link className={(location === '/settings') ? style.activeLink : null} to='/settings'><span><i className='fa fa-cog' /> Settings</span></Link></li>
             <li><Link className={(location === '/curate/reference/new') ? style.activeLink : null} to='/curate/reference/new'><span><i className='fa fa-plus' /> Add References</span></Link></li>
@@ -36,9 +37,7 @@ class CurateLayout extends Component {
             <li><span><Link className={(location === '/file_curate') ? style.activeLink : null} to='/file_curate'><i className='fa fa-file-text' />File Curate</Link> | <Link className={(location === '/search_file_metadata') ? style.activeLink : null} to='/search_file_metadata'>Edit File Metadata</Link></span></li>
             <li><span><Link className={(location === '/new_allele') ? style.activeLink : null} to='/new_allele'><i className="fa fa-upload" />Allele NEW</Link> | <Link className={(location === '/search_allele') ? style.activeLink : null} to='/search_allele'>UPDATE</Link></span></li>
             <li><span><Link className={(location === '/new_phenotype') ? style.activeLink : null} to='/new_phenotype'><i className='fa fa-sticky-note' />Phenotype NEW</Link> | <Link className={(location === '/search_phenotype') ? style.activeLink : null} to='/search_phenotype'>UPDATE</Link></span></li>
-
             <li><span><Link className={(location === '/litguide_todo') ? style.activeLink : null} to='/litguide_todo'><i className='fa fa-sticky-note' />LitGuide TODO</Link> | <Link className={(location === '/add_litguide') ? style.activeLink : null} to='/add_litguide'>ADD</Link></span></li>
-            <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response <span style={ml_12}><Badge badgeContent={authorResponseCount} color="error" /></span></span></Link></li>	      
           </ul>
         </div>
         <div className={LARGE_COL_CLASS}>
