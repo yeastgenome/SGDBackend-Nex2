@@ -9,7 +9,7 @@ import curateLogo from './curateLogo.png';
 import Loader from './loader/index';
 import { clearError, clearMessage } from '../../actions/metaActions';
 
-import {updateColleagueCount,updateGeneCount, updateAuthorResponseCount} from '../../actions/metaActions';
+import {updateColleagueCount, updateGeneCount, updateAuthorResponseCount} from '../../actions/metaActions';
 import getPusherClient from '../../lib/getPusherClient';
 const CHANNEL = 'sgd';
 const GENECOUNTEVENT = 'geneCount';
@@ -39,7 +39,7 @@ class LayoutComponent extends Component {
       this.channel.bind(COLLEAGUECOUNTEVENT, (data) => {
         this.props.dispatch(updateColleagueCount(data.message));
       });
-	this.channel.bind(AUTHORRESPONSECOUNTEVENT, (data) => {
+      this.channel.bind(AUTHORRESPONSECOUNTEVENT, (data) => {
         this.props.dispatch(updateAuthorResponseCount(data.message));
       });
     }

@@ -7,7 +7,7 @@ const DEFAULT_STATE = fromJS({
   isPending: false,
   colleagueCount:0,
   geneCount:0,
-  authorResponseCount:0  
+  authorResponseCount:0
 });
 
 export default function metaReducer(state = DEFAULT_STATE, action) {
