@@ -6,7 +6,8 @@ const DEFAULT_STATE = fromJS({
   isReady: true,
   isPending: false,
   colleagueCount:0,
-  geneCount:0
+  geneCount:0,
+  authorResponseCount:0
 });
 
 export default function metaReducer(state = DEFAULT_STATE, action) {
@@ -36,6 +37,8 @@ export default function metaReducer(state = DEFAULT_STATE, action) {
     return state.set('colleagueCount',action.payload);
   case 'UPDATE_GENE_COUNT':
     return state.set('geneCount',action.payload);
+  case 'UPDATE_AUTHOR_RESPONSE_COUNT':
+    return state.set('authorResponseCount',action.payload);
   default:
     return state;
   }

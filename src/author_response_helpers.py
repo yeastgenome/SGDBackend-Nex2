@@ -5,7 +5,7 @@ import json
 from pyramid.response import Response
 from validate_email import validate_email
 from src.models import DBSession, Authorresponse, Referencedbentity, Source
-from src.curation_helpers import get_curator_session
+from src.curation_helpers import get_curator_session, get_pusher_client
 
 def get_author_responses(curation_id=None):
 
@@ -91,6 +91,9 @@ def update_author_response(request):
             success_message = "The column <strong>" + ", ".join(cols_changed) + "</strong> got updated in authorresponse table."
         else:
             success_message = "Nothing is changed in authorresponse table."
+        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
+        pusher = get_pusher_client()
+        pusher.trigger('sgd','authorResponseCount',{'message':authorResponseCount})
         return HTTPOk(body=json.dumps({'success': success_message, 'authorResponse': "AUTHORRESPONSE"}), content_type='text/json')
     except Exception as e:
         transaction.abort()
@@ -154,6 +157,9 @@ def insert_author_response(request):
 
         DBSession.add(x)
         transaction.commit()
+        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
+        pusher = get_pusher_client()
+        pusher.trigger('sgd','authorResponseCount',{'message':authorResponseCount})
         return {'curation_id': 0}
     except Exception as e:
         transaction.abort()
