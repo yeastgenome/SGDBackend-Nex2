@@ -51,7 +51,7 @@ from src.models import DBSession, Dbentity, Dbuser, CuratorActivity, Colleague,\
      LocusRelationReference,LocussummaryReference,PathwaysummaryReference,\
      Referenceauthor,StrainsummaryReference,ReferenceAlias,ReferenceUrl,\
      Referencedocument,Referencetype,Referenceunlink,ReferenceFile, Edam, Filedbentity,\
-     Path, Dataset, Obi, Keyword
+     Path, Dataset, Obi, Keyword, Authorresponse
 from src.tsv_parser import parse_tsv_annotations
 from src.models_helpers import ModelsHelper
 from src.phenotype_helpers import add_phenotype_annotations, update_phenotype_annotations,\
@@ -3242,13 +3242,13 @@ def triage_count(request):
     try:
         colleagueCount = DBSession.query(Colleaguetriage).count()
         geneCount = DBSession.query(ReservednameTriage).count()
-        returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount}
+        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
+        returnValue = {"colleagueCount":colleagueCount,"geneCount":geneCount, "authorResponseCount":authorResponseCount}
         return HTTPOk(body=json.dumps(returnValue), content_type='text/json')
-
     except Exception as e:
         log.exception('DB error corrected. Rollingback previous error in db connection')
         DBSession.rollback()
-        return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague and gene count"}))
+        return HTTPBadRequest(body=json.dumps({"message":"Failed to get colleague, gene count, & author response count. error=" + str(e)}))
 
 
 @view_config(route_name='get_reference_annotations',request_method='GET',renderer='json')

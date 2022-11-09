@@ -8,7 +8,7 @@ import style from './style.css';
 import FlexiForm from '../../components/forms/flexiForm';
 import { authenticateUser } from '../../actions/authActions';
 import { parse } from 'query-string';
-import {updateColleagueCount,updateGeneCount, setError} from '../../actions/metaActions';
+import {updateColleagueCount,updateGeneCount, updateAuthorResponseCount, setError} from '../../actions/metaActions';
 
 const DEFAULT_AUTH_LANDING = '/';
 
@@ -37,7 +37,7 @@ class Login extends Component {
     
     let getCounts = () => {
       fetch('/triage_count')
-      .then(count =>   count.json())
+      .then(count => count.json())
       .then(count => {
         if(count.hasOwnProperty('message')){
           this.props.dispatch(setError(count.message));
@@ -45,6 +45,7 @@ class Login extends Component {
         else{
           this.props.dispatch(updateColleagueCount(count.colleagueCount));
           this.props.dispatch(updateGeneCount(count.geneCount));
+          this.props.dispatch(updateAuthorResponseCount(count.authorResponseCount));  
         }
       });
     };
