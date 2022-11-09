@@ -37,3 +37,7 @@ export function updateColleagueCount(count){
 export function updateGeneCount(count){
   return {type:'UPDATE_GENE_COUNT',payload:count};
 }
+
+export function updateAuthorResponseCount(count){
+  return {type:'UPDATE_AUTHOR_RESPONSE_COUNT',payload:count};
+}
