@@ -511,7 +511,7 @@ def file_upload_to_dict(file_upload, delimiter="\t"):
 
 def send_newsletter_email(subject, recipients, msg):
     try:
-        SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>" 
+        SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>"
         REPLY_TO = "sgd-helpdesk@lists.stanford.edu"
 
         message = MIMEMultipart("alternative")        
@@ -521,7 +521,9 @@ def send_newsletter_email(subject, recipients, msg):
         html_message = MIMEText(msg, "html")
         message.attach(html_message)
         
-        server = smtplib.SMTP("localhost", 25)
+        # server = smtplib.SMTP("localhost", 25)
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+        server.login(os.environ['LOGIN_EMAIL'], os.environ['LOGIN_PASSWORD'])
         any_recipients_error = server.sendmail(SENDER_EMAIL, recipients, message.as_string())
         server.quit()
 
