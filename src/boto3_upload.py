@@ -6,6 +6,8 @@ import logging
 from boto3.s3.transfer import TransferConfig
 
 S3_BUCKET = os.environ['S3_BUCKET']
+S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
+S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
 
 session = boto3.Session()
 
@@ -14,7 +16,9 @@ s3 = session.resource('s3')
 
 def upload_one_file_to_s3(file, filename):
 
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3',
+                      aws_access_key_id=S3_ACCESS_KEY,
+                      aws_secret_access_key=S3_SECRET_KEY)
     file.seek(0)
     s3.upload_fileobj(file, S3_BUCKET, filename, ExtraArgs={'ACL': 'public-read'})
     return "https://" + S3_BUCKET + ".s3.amazonaws.com/" + filename
