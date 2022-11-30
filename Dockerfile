@@ -3,6 +3,7 @@ FROM ubuntu:20.04
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    	awscli \
 	git \
         make \
 	npm \
@@ -23,4 +24,5 @@ RUN git checkout curate_docker \
     && pip3 install -U setuptools==57.5.0 \
     && make build
 
-CMD ["sh", "-c", ". /data/www/SGDBackend-Nex2/venv/bin/activate && pserve $INI_FILE --reload"]
+#CMD ["sh", "-c", ". /data/www/SGDBackend-Nex2/venv/bin/activate && pserve $INI_FILE --reload"]
+CMD ["sh", "-c", "aws s3 cp /etc/hosts s3://sgd-dev-upload/"]
