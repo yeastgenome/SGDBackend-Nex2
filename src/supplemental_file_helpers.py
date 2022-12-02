@@ -58,6 +58,7 @@ def upload_one_file(request, curator_session, CREATED_BY, source_id, file, filen
 
     try:
         #### add metadata to database
+        log.debug('before fd assignment')
         fd = Filedbentity(created_by=CREATED_BY,
                           display_name=filename,
                           format_name=filename,
@@ -79,31 +80,52 @@ def upload_one_file(request, curator_session, CREATED_BY, source_id, file, filen
                           readme_file_id=None,
                           source_id=source_id,
                           md5sum=md5sum)
+        log.debug('after fd assignment; before add')
         curator_session.add(fd)
+        log.debug('after add; before flush')
         curator_session.flush()
+        log.debug('after flush; before file_id')
         file_id = fd.dbentity_id
+        log.debug('after file_id; before commit')
         transaction.commit()
+        log.debug('after commit; before flush')
         curator_session.flush()
+        log.debug('after flush')
 
+        log.debug('before fd')
         fd = curator_session.query(Filedbentity).filter_by(dbentity_id=file_id).one_or_none()
+        log.debug('after fd')
                 
         #### upload file to s3
         s3_url = upload_file_to_s3(file, fd.sgdid + "/" + filename)
+        log.debug('after s3_url; before fd.s3_url')
         fd.s3_url = s3_url
+        log.debug('after fd.s3_url; before add')
         curator_session.add(fd)
+        log.debug('after add; before commit')
         transaction.commit()
+        log.debug('after commit')
         
         #### add path_id and newly created file_id to file_path table
+        log.debug('before path')
         path = curator_session.query(Path).filter_by(path=PATH).one_or_none()
+        log.debug('path is ' + str(path))
         if path is None:
             return "Path = " + PATH + " is not in the database"
+        log.debug('after path check; path is not None; before insert_file_path')
         insert_file_path(curator_session, CREATED_BY, source_id, file_id, path.path_id)
+        log.debug('after insert_file_path')
             
         #### add reference_id to this file
+        log.debug('before insert_reference_file')
         insert_reference_file(curator_session, CREATED_BY, source_id, file_id, reference_id)
+        log.debug('after insert_reference_file')
         
+        log,debug('before commit')
         transaction.commit()
+        log.debug('after commit')
         
+        log.debug('before return')
         return "loaded"
     
     except Exception as e:
