@@ -6,8 +6,8 @@ import logging
 from boto3.s3.transfer import TransferConfig
 
 S3_BUCKET = os.environ['S3_BUCKET']
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
+S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY'] if 'S3_ACCESS_KEY' in os.environ else ''
+S3_SECRET_KEY = os.environ['S3_SECRET_KEY'] if 'S3_SECRET_KEY' in os.environ else ''
 
 session = boto3.Session()
 

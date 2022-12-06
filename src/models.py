@@ -38,10 +38,8 @@ SEPARATOR = ' '
 TAXON_ID = 274901
 
 S3_BUCKET = os.environ['S3_BUCKET']
-S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-# S3_ACCESS_KEY = ''
-# S3_SECRET_KEY = ''
+S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY'] if 'S3_ACCESS_KEY' in os.environ else ''
+S3_SECRET_KEY = os.environ['S3_SECRET_KEY'] if 'S3_SECRET_KEY' in os.environ else ''
 
 # get list of URLs to visit from comma-separated ENV variable cache_urls 'url1, url2'
 cache_urls = None
