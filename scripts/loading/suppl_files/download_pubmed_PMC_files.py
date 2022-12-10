@@ -1,12 +1,14 @@
 import urllib.request, urllib.parse, urllib.error
 import gzip
-from os.path import exists
+import shutil
+from urllib import request
+from os import path,  makedirs
 import logging
-import os
 from datetime import datetime
 import sys
 from src.models import Referencedbentity, ReferenceFile, Filedbentity
 from scripts.loading.database_session import get_session
+from scripts.loading.suppl_files.load_pubmed_PMC_files import load_data
 from src.helpers import upload_file
 
 __author__ = 'sweng66'
@@ -50,7 +52,7 @@ def download_files(mapping_file):
                 i += 1
                 print (x.pmid, pmid_to_oa_url[x.pmid])
                 to_file = pmcFileDir + str(x.pmid) + '.tar.gz'
-                if exists(to_file):
+                if path.exists(to_file):
                     continue
                 try:
                     urllib.request.urlretrieve(pmcRootUrl + pmid_to_oa_url[x.pmid], to_file)
@@ -62,21 +64,24 @@ def download_files(mapping_file):
 
 
 if __name__ == "__main__":
-        
-    # https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv
 
-    ### the following times out
-    mapping_file = "oa_file_list.csv"
-    # try:
-    #    print ("Downloading ", mapping_file)
-    #    url_path = 'ftp://ncbi.nlm.nih.gov/pub/pmc/'
-    #    mapping_file = 'oa_file_list.csv'
-    #    urllib.request.urlretrieve(url_path + mapping_file, dataDir + mapping_file)
-    # except Exception as e:
-    #    print ("Error downloading:", mapping_file)
-    #     return
-    download_files(dataDir + mapping_file)
-    
+    if path.exists(pmcFileDir):
+        shutil.rmtree(pmcFileDir)
+    makedirs(pmcFileDir)
+
+    oafile_url = 'ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv'
+    mapping_file = dataDir + "oa_file_list.csv"
+
+    try:
+        log.info("Downloading " + oafile_url)
+        req = request.urlopen(oafile_url)
+        data = req.read()
+        with open(mapping_file, 'wb') as fh:
+            fh.write(data)
+        download_files(mapping_file)
+        load_data()
+    except Exception as e:
+        log.info("Error downloading the file: " + file + ". Error=" + str(e))
 
 
     
