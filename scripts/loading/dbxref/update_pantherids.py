@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, LocusAlias, Source
-pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList021119.txt'
+
+pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList.txt'
 
 __author__ = 'sagarjha'
 
