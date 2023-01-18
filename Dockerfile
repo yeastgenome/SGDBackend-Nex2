@@ -23,4 +23,6 @@ RUN git checkout curate_docker \
     && pip3 install -U setuptools==57.5.0 \
     && make build
 
+WORKDIR /root/.aws
+
 CMD ["sh", "-c", ". /data/www/SGDBackend-Nex2/venv/bin/activate && pserve $INI_FILE --reload"]
