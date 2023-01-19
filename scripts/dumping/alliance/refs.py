@@ -22,13 +22,17 @@ from random import randint
 from datetime import datetime
 from sqlalchemy import create_engine, and_, inspect
 import concurrent.futures
-from src.models.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
-from src.data_helpers.data_helpers import get_output, get_locus_alias_data
+from src.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
+from src.data_helpers import get_output, get_locus_alias_data
+from src.boto3_upload import boto3_copy_file
 
 
+S3_BUCKET = os.environ['S3_BUCKET']
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
+dstFile = 'latest/REFERENCE.json'
 DBSession.configure(bind=engine)
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 ###########
 # Reference file requirements -
@@ -387,6 +391,9 @@ def get_refs_information(root_path):
         
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(ref_output_obj))
+
+        boto3_copy_file(S3_BUCKET, file_name, S3_BUCKET, dstFile)
+
     
     if (len(ref_exchange_result) > 0):
         refExch_obj = get_output(ref_exchange_result)
