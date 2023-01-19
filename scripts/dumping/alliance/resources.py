@@ -205,7 +205,7 @@ def get_resources_information(root_path):
         resource_file_str = os.path.join(root_path, resources_file)
         
         with open(resource_file_str, 'w+') as res_file:
-            res_file.write(json.dumps(resource_output_obj))
+            res_file.write(json.dumps(resource_output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
     get_resources_information(THIS_FOLDER)

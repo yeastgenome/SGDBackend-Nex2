@@ -188,7 +188,7 @@ def get_disease_association_data(root_path):
         json_file_str = os.path.join(root_path, file_name)
         if (output_obj):
             with open(json_file_str, 'w+') as res_file:
-                res_file.write(json.dumps(output_obj))
+                res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
     get_disease_association_data(THIS_FOLDER)

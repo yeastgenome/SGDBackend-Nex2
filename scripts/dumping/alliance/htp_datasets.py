@@ -352,7 +352,7 @@ def get_htp_datasets(root_path):
         file_name = 'src/data/SGD' + SUBMISSION_VERSION + 'htp_dataset.json'
         json_file_str = os.path.join(root_path, file_name)
         with open(json_file_str, 'w+') as res_file:
-            res_file.write(json.dumps(output_obj))
+            res_file.write(json.dumps(output_obj, indent=4, sort_keys=True)
 
 if __name__ == '__main__':
     get_htp_sample_metadata(THIS_FOLDER)

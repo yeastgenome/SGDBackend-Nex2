@@ -22,8 +22,8 @@ from random import randint
 from datetime import datetime
 from sqlalchemy import create_engine, and_, inspect
 import concurrent.futures
-from ..models.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
-from ..data_helpers.data_helpers import get_output, get_locus_alias_data
+from src.models.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
+from src.data_helpers.data_helpers import get_output, get_locus_alias_data
 
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
@@ -312,7 +312,7 @@ def get_refs_information(root_path):
 
     print("getting References")
 ## change limit when ready ##
-    referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).limit(50).all()
+    referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).all()
 
     print("computing " + str(len(referencesObjList)) + " references")
     print("start time:" + str(datetime.now()))
@@ -381,7 +381,8 @@ def get_refs_information(root_path):
   
     if (len(ref_result) > 0):
         ref_output_obj = get_output(ref_result)
-        file_name = 'src/data_dump/SGD' + SUBMISSION_VERSION + 'references.json'
+        #file_name = 'src/data_dump/SGD' + SUBMISSION_VERSION + 'references.json'
+        file_name = 'src/data/REFERENCE_SGD.json'
         json_file_str = os.path.join(root_path, file_name)
         
         with open(json_file_str, 'w+') as res_file:
@@ -393,7 +394,7 @@ def get_refs_information(root_path):
         refEx_str = os.path.join(root_path, refExch_file)
 
         with open(refEx_str, 'w+') as res_file:
-            res_file.write(json.dumps(refExch_obj))
+            res_file.write(json.dumps(refExch_obj, indent=4, sort_keys=True))
 
     print("end time:" + str(datetime.now()))
 
