@@ -68,7 +68,7 @@ def get_allele_information(root_path):
                # dbentityObj = DBSession.query(Dbentity).filter(Dbentity.dbentity_id == alleleObj.dbentity_id)
               #  print("info from dbentity table:" + str(simple_allele_obj["date_created"]))
 
-                if re.search("\<sub\>", simple_allele_obj["format_name"]) or not simple_allele_obj["affected_geneObj"]:
+                if re.search("\<sub\>", simple_allele_obj["format_name"]) or not simple_allele_obj["affected_geneObjs"]:
                     print("skipping: " + simple_allele_obj["format_name"])
                     continue
                 #print("|".join(dir(alleleObj)))

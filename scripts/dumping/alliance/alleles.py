@@ -18,8 +18,8 @@ from random import randint
 from datetime import datetime
 from sqlalchemy import create_engine, and_, inspect
 import concurrent.futures
-from ..models.models import Alleledbentity, LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
-from ..data_helpers.data_helpers import get_output, get_locus_alias_data
+from src.models.models import Alleledbentity, LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
+from src.data_helpers.data_helpers import get_output, get_locus_alias_data
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
@@ -183,15 +183,15 @@ def get_allele_information(root_path):
                 if simple_allele_obj[
                         "affected_geneObj"]:  # check the affected gene object; skip if None (should be None if no affected Gene or multiple affected Genes)
                     #print(simple_allele_obj["affected_geneObj"].sgdid)
-                    affectedGenesList = []
-                    for each in simple_allele_obj["affected_geneObj"]:
-                        affectedGenesList.append
-                          (
+                    obj["alleleObjectRelations"] = [{
                         "objectRelation": {
-                            "associationType":"allele_of",
-                            "gene":"SGD:" + each.sgdid
-                        })
-                    obj["alleleObjectRelations"] = affectedGenesList
+                            "associationType":
+                            "allele_of",
+                            "gene":
+                            "SGD:" +
+                            simple_allele_obj["affected_geneObj"].sgdid
+                        }
+                    }]
                 #print ("done with " + simple_allele_obj["sgdid"])
 
                 result.append(obj)
@@ -207,7 +207,8 @@ def get_allele_information(root_path):
         json_file_str = os.path.join(root_path, file_name)
 
         with open(json_file_str, 'w+') as res_file:
-            res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+            res_file.write(json.dumps(output_obj, indent=4, sort_keys=True)))
+
 
 if __name__ == '__main__':
     get_allele_information(THIS_FOLDER)
