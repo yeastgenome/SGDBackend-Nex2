@@ -13,18 +13,16 @@ The env.sh file contains environment variables
 import os
 import json
 import re, sys
-import time
-from random import randint
-from datetime import datetime
+
 from sqlalchemy import create_engine, and_, inspect
 import concurrent.futures
 from src.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
 from src.data_helpers import get_output, get_locus_alias_data
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
-THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+
+local_dir = 'scripts/dumping/alliance/data/'
 
 """
 combine_panther_locus_list
@@ -133,7 +131,7 @@ SO_TYPES_TO_EXCLUDE = [
 DEFAULT_TAXID = '559292'
 
 
-def get_agm_information(root_path):
+def get_agm_information():
     """ Extract Affected Gene Model (AGM) information.
 
     Parameters
@@ -200,11 +198,11 @@ def get_agm_information(root_path):
             if (len(result) > 0):
                 output_obj = get_output(result)
 
-                file_name = 'data/SGD' + SUBMISSION_VERSION + 'affectedGeneModel.json'
-                json_file_str = os.path.join(root_path, file_name)
+                local_file_name = 'SGD' + SUBMISSION_VERSION + 'affectedGeneModel.json'
+                json_file_str = os.path.join(local_dir, local_file_name)
                 with open(json_file_str, 'w+') as res_file:
                     res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
 
 if __name__ == '__main__':
-    get_agm_information(THIS_FOLDER)
+    get_agm_information()

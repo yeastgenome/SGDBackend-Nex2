@@ -10,17 +10,16 @@ This file can be imported as a modules and contains the following functions:
     get_disease_association_data
 """
 import os
-import sys
 import json
-import re
 import concurrent.futures
-from datetime import datetime
 from src.models.models import DBSession, Diseaseannotation, Diseasesupportingevidence, Dbentity
-from src.data_helpers.data_helpers import get_eco_ids, get_output, SUBMISSION_VERSION
-from sqlalchemy import create_engine, and_
+from src.data_helpers.data_helpers import get_eco_ids, get_output
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
+
+local_dir = 'scripts/dumping/alliance/data/'
+
 
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
 """ EX: { 
@@ -182,11 +181,11 @@ def get_disease_association_data(root_path):
     if len(list(result.keys())) > 0:
         print("# objs:" + str(len(list(result.keys()))))
         output_obj = get_output(list(result.values()))
-        file_name = 'data/SGD' + SUBMISSION_VERSION + 'disease_association.json'
-        json_file_str = os.path.join(root_path, file_name)
+        file_name = 'SGD' + SUBMISSION_VERSION + 'disease_association.json'
+        json_file_str = os.path.join(local_dir, file_name)
         if (output_obj):
             with open(json_file_str, 'w+') as res_file:
                 res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    get_disease_association_data(THIS_FOLDER)
+    get_disease_association_data()

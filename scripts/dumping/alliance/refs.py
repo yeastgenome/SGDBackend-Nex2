@@ -17,22 +17,23 @@ refExchange.json -- all PMIDs to update? future submissions?
 import os
 import json
 import re, sys
-import time
-from random import randint
-from datetime import datetime
-from sqlalchemy import create_engine, and_, inspect
-import concurrent.futures
-from src.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
-from src.data_helpers import get_output, get_locus_alias_data
-from src.boto3_upload import boto3_copy_file
+import boto3
 
+from datetime import datetime
+from sqlalchemy import create_engine
+import concurrent.futures
+from src.models import DBSession, Referencedbentity, Referencedeleted
+from src.data_helpers import get_output
+
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
+DBSession.configure(bind=engine)
 
 S3_BUCKET = os.environ['S3_BUCKET']
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
-dstFile = 'latest/REFERENCE.json'
-DBSession.configure(bind=engine)
-THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+session = boto3.Session()
+s3 = session.resource('s3')
+s3_dir = 'latest/'
+local_dir = 'scripts/dumping/alliance/data/'
+
 
 ###########
 # Reference file requirements -
@@ -166,27 +167,20 @@ def make_ref_obj(refObj):
 
     if refObj.volume is not None and refObj.volume != "":
         obj["volume"] = str(refObj.volume)
-                #    print(str(refObj.volume))
-                #else:
-                #    print("no volume")
+
     if refObj.page is not None and refObj.page != "":
         obj["pages"] = refObj.page
-                #    print('pages:' + refObj.page)	
-                #else:
-                #    print("no pages")
+
     if refObj.issue is not None and refObj.issue != "":
         obj["issueName"] = refObj.issue
-                #else:
-                #   print('no issue')
+
 
     if newRefObj["abstract"] is not None:
         obj['abstract'] = newRefObj['abstract']['text']
-                #else:
-                #    print("no abstract")
+
 
     if refObj.date_revised: # dateLastModified for refexchange & refs (opt)
         obj['dateLastModified'] = refObj.date_revised.strftime("%Y-%m-%dT%H:%m:%S-00:00")
-#ds.date_public.strftime("%Y-%m-%dT%H:%m:%S-00:00")
 
 ## datePublished (req'd) - refObj.date_published || refObj.year if date_published isn't available
     if refObj.date_published:
@@ -297,36 +291,34 @@ def defineAllianceCat(referenceTypes):
             return("Other", refTypesList) 
  
  
-def get_refs_information(root_path):
-    """ Extract Reference information.
-
-    Parameters
-    ----------
-    root_path
-        root directory name path    
-
-    Returns
-    --------
-    file
-        writes data to json file
-
-    """
+def get_refs_information():
 
 ###### REFERENCES with PMIDS ###########
 
-    print("getting References")
-## change limit when ready ##
-    referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).all()
-
-    print("computing " + str(len(referencesObjList)) + " references")
+    print("getting ALL References")
     print("start time:" + str(datetime.now()))
-    
-    #sys.exit()
-    
+
     ref_result = []
     ref_exchange_result = []
+    ref_deleted_result = []
+
+    print ('Processing Resources -- deleted PMIDS')
+    deletedObjList = DBSession.query(Referencedeleted).filter(Referencedeleted.pmid != None).limit(20).all()
+
+    print ("computing " + str(len(deletedObjList)) + " refs (deleted-PMID)")
+
+    if (len(deletedObjList) > 0):
+
+        for resource in deletedObjList:
+            print(resource.pmid)
+            deletedPMID = resource.pmid
+            ref_deleted_result.append(deletedPMID)
 
 ### Process references with PMIDs ###
+    referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).limit(20).all()
+
+    print("computing " + str(len(referencesObjList)) + " references")
+
     if (len(referencesObjList) > 0):
         with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
       #  try:
@@ -335,9 +327,8 @@ def get_refs_information(root_path):
                 extRefObj = dbObj.to_dict()
 
                 fileObj = make_ref_obj(dbObj)  ##FOR REF FILE##
- 
-  #          if refObj.pmid:  ## make referenceExchange files
-                refExObj = {  # refexchange obj
+
+                refExObj = {
                     "pubMedId": "PMID:" + str(extRefObj['pubmed_id']),
                     "modId": "SGD:" + dbObj.sgdid
                 }
@@ -347,7 +338,6 @@ def get_refs_information(root_path):
                 refExObj['tags'] = [{'referenceId':"PMID:" + str(extRefObj['pubmed_id']), 'tagName':'inCorpus', 'tagSource': 'SGD'}]
                 
                 if 'reftypes' in extRefObj:
-                    refTypesList =[]
                     (allianceCat, refTypesList) = defineAllianceCat(extRefObj['reftypes'])
         
                     refExObj['allianceCategory'] = allianceCat
@@ -363,47 +353,59 @@ def get_refs_information(root_path):
 
 ##### Process references with no PMIDs for references.py ####
 
-    resources_result = []
-
     print ('Processing Resources -- refs without PMIDS')
-    resourceObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == None).all()
+    resourceObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == None).limit(20).all()
 
-    print ("computing " + str(len(resourceObjList)) + " refs (non-PMID)") 
+    print ("computing " + str(len(resourceObjList)) + " refs (non-PMID)")
 
     if (len(resourceObjList) > 0):
-       # with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-      #  try:
+
         for resource in resourceObjList:
             print(str(resourceObjList.index(resource)) + ': reference:' + resource.sgdid)
 
             nonPMIDObj = make_ref_obj(resource)
   
             ref_result.append(nonPMIDObj)
-        
-#        print(str(len(ref_result)))
-#        print(str(len(ref_exchange_result)))
-  
+
     if (len(ref_result) > 0):
         ref_output_obj = get_output(ref_result)
         #file_name = 'src/data_dump/SGD' + SUBMISSION_VERSION + 'references.json'
-        file_name = 'src/data/REFERENCE_SGD.json'
-        json_file_str = os.path.join(root_path, file_name)
+        local_ref_file_name =  'REFERENCE_SGD.json'
+        s3_ref_file = s3_dir + 'REFERENCE_SGD.json'
+        json_file_str = os.path.join(local_dir, local_ref_file_name)
         
         with open(json_file_str, 'w+') as res_file:
-            res_file.write(json.dumps(ref_output_obj))
+            res_file.write(json.dumps(ref_output_obj, indent=4, sort_keys=True))
 
-        boto3_copy_file(S3_BUCKET, file_name, S3_BUCKET, dstFile)
+        print(local_ref_file_name, s3_ref_file)
+        s3.meta.client.upload_file(json_file_str, S3_BUCKET, s3_ref_file, ExtraArgs={'ACL': 'public-read'})
 
     
     if (len(ref_exchange_result) > 0):
         refExch_obj = get_output(ref_exchange_result)
-        refExch_file = 'data/SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
-        refEx_str = os.path.join(root_path, refExch_file)
+        local_refExch_file =  'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        s3_refExch_file = s3_dir + 'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        refEx_str = os.path.join(local_dir, local_refExch_file)
 
         with open(refEx_str, 'w+') as res_file:
             res_file.write(json.dumps(refExch_obj, indent=4, sort_keys=True))
 
+        print(local_refExch_file, s3_refExch_file)
+        s3.meta.client.upload_file(refEx_str, S3_BUCKET, s3_refExch_file, ExtraArgs={'ACL': 'public-read'})
+
+    if (len(ref_deleted_result) > 0):
+        refDeleted_obj = get_output(ref_deleted_result)
+        local_refDeleted_file =  'SGD_false_positive_pmids.txt'
+        s3_refDeleted_file = s3_dir + 'SGD_false_positive_pmids.txt'
+        refDel_str = os.path.join(local_dir, local_refDeleted_file)
+
+        with open(refDel_str, 'w+') as res_file:
+            res_file.write(json.dumps(refDeleted_obj, indent=4, sort_keys=True))
+
+        print(local_refDeleted_file, s3_refDeleted_file)
+        s3.meta.client.upload_file(refDel_str, S3_BUCKET, s3_refDeleted_file, ExtraArgs={'ACL': 'public-read'})
+
     print("end time:" + str(datetime.now()))
 
 if __name__ == '__main__':
-    get_refs_information(THIS_FOLDER)
+    get_refs_information()

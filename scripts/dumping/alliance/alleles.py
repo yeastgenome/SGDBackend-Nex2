@@ -13,17 +13,13 @@ The env.sh file contains environment variables
 import os
 import json
 import re, sys
-import time
-from random import randint
-from datetime import datetime
-from sqlalchemy import create_engine, and_, inspect
-import concurrent.futures
+from sqlalchemy import create_engine
 from src.models.models import Alleledbentity, LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
 from src.data_helpers.data_helpers import get_output, get_locus_alias_data
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
+local_dir = 'scripts/dumping/alliance/data/'
 """
 Allele object:
 # requirements -- symbol, symbolText, taxonId, primaryId
@@ -203,12 +199,12 @@ def get_allele_information(root_path):
     if (len(result) > 0):
         output_obj = get_output(result)
 
-        file_name = 'src/data/SGD' + SUBMISSION_VERSION + 'alleles.json'
-        json_file_str = os.path.join(root_path, file_name)
+        file_name = 'SGD' + SUBMISSION_VERSION + 'alleles.json'
+        json_file_str = os.path.join(local_dir, file_name)
 
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True)))
 
 
 if __name__ == '__main__':
-    get_allele_information(THIS_FOLDER)
+    get_allele_information()

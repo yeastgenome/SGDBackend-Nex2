@@ -15,18 +15,15 @@ The env.sh file contains environment variables
 import os
 import json
 import re, sys
-import time
-from random import randint
-from datetime import datetime
-from sqlalchemy import create_engine, and_, inspect
-import concurrent.futures
-from ..models.models import Alleledbentity, LocusAlias, Dbentity, DBSession, PsimodRelation, Straindbentity, Referencedbentity
-from ..data_helpers.data_helpers import get_output, get_locus_alias_data, get_pers_output
+from sqlalchemy import create_engine
+from src.models.models import Alleledbentity, LocusAlias, Dbentity, DBSession, PsimodRelation, Straindbentity, Referencedbentity
+from src.data_helpers.data_helpers import get_output, get_locus_alias_data, get_pers_output
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
-SUBMISSION_TYPE = 'allele_ingest_set'
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
+SUBMISSION_TYPE = 'allele_ingest_set'
+local_dir = 'scripts/dumping/alliance/data/'
+
 """
 Allele object:
 # requirements -- curie, taxon, internal (true/false), name
@@ -34,7 +31,7 @@ Allele object:
 
 DEFAULT_TAXID = '559292'
 
-def get_allele_information(root_path):
+def get_allele_information():
     """ Extract Allele information.
 
     Parameters
@@ -147,11 +144,11 @@ def get_allele_information(root_path):
     if (len(result) > 0):
         output_obj = get_pers_output(SUBMISSION_TYPE, result)
 
-        file_name = 'src/data/Persistent_store/SGD' + SUBMISSION_VERSION + 'allelesPersistent.json'
-        json_file_str = os.path.join(root_path, file_name)
+        file_name = 'SGD' + SUBMISSION_VERSION + 'allelesPersistent.json'
+        json_file_str = os.path.join(local_dir, file_name)
 
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    get_allele_information(THIS_FOLDER
+    get_allele_information()

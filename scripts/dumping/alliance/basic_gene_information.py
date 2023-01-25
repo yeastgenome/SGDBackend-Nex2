@@ -15,18 +15,15 @@ This file can be imported as a modules and contains the following functions:
 
 import os
 import json
-import re
-import time
-from random import randint
-from datetime import datetime
-from sqlalchemy import create_engine, and_, inspect
+from sqlalchemy import create_engine
 import concurrent.futures
-from ..models.models import LocusAlias, Dnasequenceannotation, DBSession, Eco, Locusdbentity, Goannotation, Go, Referencedbentity
-from ..data_helpers.data_helpers import combine_panther_locus_data, pair_pantherid_to_sgdids, get_output, get_locus_alias_data
+from src.models.models import LocusAlias, Dnasequenceannotation, DBSession, Eco, Locusdbentity, Goannotation, Go, Referencedbentity
+from src.data_helpers.data_helpers import combine_panther_locus_data, pair_pantherid_to_sgdids, get_output, get_locus_alias_data
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
+local_dir = 'scripts/dumping/alliance/data/'
+
 """
 combine_panther_locus_list
 get_panther_sgdids
@@ -271,12 +268,10 @@ def get_basic_gene_information(root_path):
 
             if (len(result) > 0):
                 print("# of bgi objects:" + str(len(result)))
-
                 output_obj = get_output(result)
-
-                file_name = 'src/data/SGD' + SUBMISSION_VERSION + 'basicGeneInformation.json'
-                json_file_str = os.path.join(root_path, file_name)
+                file_name = 'SGD' + SUBMISSION_VERSION + 'basicGeneInformation.json'
+                json_file_str = os.path.join(local_dir, file_name)
                 with open(json_file_str, 'w+') as res_file:
                     res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 if __name__ == '__main__':
-    get_basic_gene_information(THIS_FOLDER
+    get_basic_gene_information()

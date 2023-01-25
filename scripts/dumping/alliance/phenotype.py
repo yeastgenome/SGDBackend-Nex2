@@ -14,9 +14,10 @@ import os, re
 import sys
 import json
 import concurrent.futures
-from datetime import datetime
 from src.models import Dbentity, Phenotypeannotation, PhenotypeannotationCond, Chebi, DBSession
-from src.data_helpers.data_helpers import get_output, SUBMISSION_VERSION
+from src.data_helpers.data_helpers import get_output
+
+local_dir = 'scripts/dumping/alliance/data/'
 
 COND_TO_ZECO = {"treatment": "ZECO:0000105", #biological treatment
 "radiation":"ZECO:0000208", #radiation
@@ -35,18 +36,7 @@ COND_TO_ZECO = {"treatment": "ZECO:0000105", #biological treatment
 #"ZECO:0000160", #temperature exposure
 #}""" 
 
-def get_phenotypephenotype_data(root_path):
-    """ Extract phenotype data and write to file.
-
-    Parameters
-    ----------
-    root_path
-        root directory name path
-    Returns
-    -------
-    file
-        write Phenotype Annotation objects to json file
-    """
+def get_phenotypephenotype_data():
 
     phenotype_data = DBSession.query(Phenotypeannotation).all()
     #phenotype_data = DBSession.query(Phenotypeannotation).filter_by(dbentity_id='1285516').all() # RPB2 test
@@ -226,10 +216,10 @@ def get_phenotypephenotype_data(root_path):
           #      print("no allele for " + item.dbentity.display_name + " pheno:" + pString)
         if len(result) > 0:
             output_obj = get_output(result)
-            file_name = 'data/SGD' + SUBMISSION_VERSION + 'phenotype.json'
-            json_file_str = os.path.join(root_path, file_name)
+            file_name = 'SGD' + SUBMISSION_VERSION + 'phenotype.json'
+            json_file_str = os.path.join(local_dir, file_name)
             with open(json_file_str, 'w+') as res_file:
                 res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    get_phenotypephenotype_data(THIS_FOLDER)
+    get_phenotypephenotype_data()

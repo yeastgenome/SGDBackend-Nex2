@@ -9,19 +9,18 @@ The env.sh file contains environment variables
 This file can be imported as a modules and contains the following functions:
     get_disease_association_data
 """
-from dis import dis
+
 import os
-import sys
 import json
-import re
 import concurrent.futures
-from datetime import datetime
 from src.models.models import DBSession, Diseaseannotation, Diseasesupportingevidence, Dbentity, Straindbentity, Locussummary
-from src.data_helpers.data_helpers import get_eco_ids, get_pers_output, SUBMISSION_VERSION
+from src.data_helpers.data_helpers import get_eco_ids, get_pers_output
 from sqlalchemy import create_engine, and_
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
+
+local_dir = 'scripts/dumping/alliance/data/'
 
 SUBMISSION_TYPE = "disease_gene_ingest_set"
 
@@ -56,7 +55,7 @@ eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
  """
 
 
-def get_disease_association_data(root_path):
+def get_disease_association_data():
     result = {}  #[]
     #    file_name = 'src/data_assets/disease_association.json'
     #    json_file_str = os.path.join(root_path, file_name)
@@ -184,11 +183,11 @@ def get_disease_association_data(root_path):
     if len(list(result.keys())) > 0:
         print("# objs:" + str(len(list(result.keys()))))
         output_obj = get_pers_output(SUBMISSION_TYPE, list(result.values()))
-        file_name = 'data/SGD' + SUBMISSION_VERSION + 'persist_disease_association.json'
-        json_file_str = os.path.join(root_path, file_name)
+        file_name = 'SGD' + SUBMISSION_VERSION + 'persist_disease_association.json'
+        json_file_str = os.path.join(local_dir, file_name)
         if (output_obj):
             with open(json_file_str, 'w+') as res_file:
                 res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    get_disease_association_data(THIS_FOLDER)
+    get_disease_association_data()

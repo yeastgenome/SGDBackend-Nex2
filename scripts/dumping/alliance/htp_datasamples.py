@@ -14,19 +14,16 @@ This file can be imported as a modules and contains the following functions:
 """
 
 import os
-import sys
 import json
-import re
-import concurrent.futures
-from datetime import datetime
 from sqlalchemy import create_engine, and_
 from src.models.models import DBSession, Dataset, DatasetKeyword, DatasetReference, Referencedbentity, Datasetsample, Dbentity
-from src.data_helpers.data_helpers import get_eco_ids, get_output, SUBMISSION_VERSION
+from src.data_helpers.data_helpers import get_eco_ids, get_output
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
 
-#SUBMISSION_VERSION = '_1.0.1.1B_'  #os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
+local_dir = 'scripts/dumping/alliance/data/'
+
 DEFAULT_MMO = 'MMO:0000000'  #MMO:0000642'
 CC = 'cellular component'
 DEFAULT_TAXID = '559292'
@@ -92,7 +89,7 @@ datasetSample object:
 """
 
 
-def get_htp_sample_metadata(root_path):
+def get_htp_sample_metadata():
     """ Get HTP metadata from database
     Parameters
     ----------
@@ -227,9 +224,9 @@ def get_htp_sample_metadata(root_path):
 
     if (len(sampleResult) > 0):
         output_obj = get_output(sampleResult)
-        file_name = 'data/SGD' + SUBMISSION_VERSION + 'htp_samples.json'
-        json_file_str = os.path.join(root_path, file_name)
+        file_name = 'SGD' + SUBMISSION_VERSION + 'htp_samples.json'
+        json_file_str = os.path.join(local_dir, file_name)
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 if __name__ == '__main__':
-    get_htp_sample_metadata(THIS_FOLDER)
+    get_htp_sample_metadata()

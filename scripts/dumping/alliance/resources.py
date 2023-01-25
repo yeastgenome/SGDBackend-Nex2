@@ -78,23 +78,16 @@ just makes the resources.json -- non-PMID journals/books/personal communications
 
 import os
 import json
-import re, sys
-import time
-from random import randint
-from datetime import datetime
 from sqlalchemy import create_engine, and_, inspect
-import concurrent.futures
-from sqlalchemy.sql.expression import null
 from sqlalchemy.sql.sqltypes import NullType
-
-from sqlalchemy.sql.type_api import NULLTYPE
 from src.models.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
 from src.data_helpers.data_helpers import get_output, get_locus_alias_data
 
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
 DBSession.configure(bind=engine)
+
+local_dir = 'scripts/dumping/alliance/data/'
 
 ###################### 
 # Resource file requirements -- 
@@ -134,20 +127,8 @@ REFTYPE_TO_ALLIANCE_CATEGORIES ={
 "Unknown": "Unknown",#
 "Retracted Publication": "Retraction"}#
 
-def get_resources_information(root_path):
-    """ Extract Reference information.
+def get_resources_information():
 
-    Parameters
-    ----------
-    root_path
-        root directory name path    
-
-    Returns
-    --------
-    file
-        writes data to json file
-
-    """
     addedResources = []
 ##### Process references with no PMIDs for Resources ####
     resources_result = []
@@ -201,11 +182,11 @@ def get_resources_information(root_path):
 
     if (len(resources_result) > 0):
         resource_output_obj = get_output(resources_result)
-        resources_file = 'data/SGD' + SUBMISSION_VERSION + 'resources.json'
-        resource_file_str = os.path.join(root_path, resources_file)
+        resources_file = 'SGD' + SUBMISSION_VERSION + 'resources.json'
+        resource_file_str = os.path.join(local_dir, resources_file)
         
         with open(resource_file_str, 'w+') as res_file:
             res_file.write(json.dumps(resource_output_obj, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
-    get_resources_information(THIS_FOLDER)
+    get_resources_information()
