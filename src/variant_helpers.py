@@ -278,8 +278,18 @@ def calculate_score(S288C_snp_seq, snp_seq, seq_length):
 
 def get_locus_id_list(query_text):
 
+    query_list = []
+    if query_text.startswith('"'):
+        ## it is a go term
+        term = query_text.replace('"', '').lower().replace('%20', ' ').replace('+', ' ')
+        for g in DBSession.query(Go).filter(Go.display_name.ilike('%' + term + '%')).all():
+            query_list.append('ACT1')
+            for ga in DBSession.query(Goannotation).filter_by(go_id=g.go_id, annotation_type='manually curated').all():
+                query_list.append(ga.dbentity.display_name)
+    else:
+        query_list = query_text.split(',')
+        
     locus_id_list = []
-    query_list = query_text.split(',')
     for query in query_list:
         query = query.strip().upper()
         query = query.replace('SGD:S', 'S')
