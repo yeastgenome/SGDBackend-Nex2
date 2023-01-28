@@ -283,7 +283,6 @@ def get_locus_id_list(query_text):
         ## it is a go term
         term = query_text.replace('"', '').lower().replace('%20', ' ').replace('+', ' ')
         for g in DBSession.query(Go).filter(Go.display_name.ilike('%' + term + '%')).all():
-            query_list.append('ACT1')
             for ga in DBSession.query(Goannotation).filter_by(go_id=g.go_id, annotation_type='manually curated').all():
                 query_list.append(ga.dbentity.display_name)
     else:
