@@ -226,7 +226,8 @@ def get_pmid_list(terms, retmax, day):
 
     pmid_list_all = []
     for term in terms:
-        results = search(term+'[tw]', retmax, day)
+        results = search(term+'[tw]NOT preprint[pt]', retmax, day) 
+        # results = search(term+'[tw]', retmax, day)
         pmid_list = results['IdList']
         for pmid in pmid_list:
             if pmid not in pmid_list_all:
