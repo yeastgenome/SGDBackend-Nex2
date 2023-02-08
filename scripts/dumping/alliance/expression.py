@@ -1,18 +1,9 @@
-""" Aggregate expression data for Alliance data submission
-The script extracts data from 5 tables into a dictionary that is written to a json file.
-The json file is submitted to Alliance for futher processing
-This file rewuires packages listed in requirements.txt file and env.sh file.
-The env.sh file contains environment variables
-This file can be imported as a modules and contains the following functions:
-    get_expression_data
-"""
-
 import os
 import json
 from sqlalchemy import create_engine, and_
 
-from src.models.models import DBSession, Eco, Locusdbentity, Goannotation, Go, Referencedbentity
-from src.data_helpers.data_helpers import get_eco_ids, get_output
+from src.models import DBSession, Locusdbentity, Goannotation, Go, Referencedbentity
+from src.data_helpers import get_eco_ids, get_output
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
@@ -55,16 +46,7 @@ PMID_TO_MMO = {
 
 
 def get_expression_data(root_path):
-    """ Get gene expression data
-    Parameters
-    ----------
-    root_path
-        root directory name path
-    Returns
-    ------
-    file
-        writes expression data to json file
-    """
+
     desired_eco_ids = get_eco_ids(ECO_FORMAT_NAME_LIST)
     genes = Locusdbentity.get_s288c_genes()
     result = []

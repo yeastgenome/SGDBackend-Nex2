@@ -1,30 +1,15 @@
-""" Aggregate expression data for Alliance data submission
-The script extracts data from 5 tables into a dictionary that is written to a json file.
-The json file is submitted to Alliance for futher processing
-This file rewuires packages listed in requirements.txt file and env.sh file.
-The env.sh file contains environment variables
-This file can be imported as a modules and contains the following functions:
-    get_htp_metadata
-
-1. Get all HTP samples
-2. skip ones that are not RNA-seq or transcription profiling by microarray
-3. make sample objects, combine all datasets they are in
-3b. keep track of datasets so objects aren't repeated
-4. make dataset objects, include superseries
-"""
-
 import os
 import json
 from sqlalchemy import create_engine, and_
-from src.models.models import DBSession, Dataset, DatasetKeyword, DatasetReference, Referencedbentity, Datasetsample, Dbentity
-from src.data_helpers.data_helpers import get_eco_ids, get_output
+from src.models import DBSession, DatasetReference, Datasetsample, Dbentity
+from src.data_helpers import get_eco_ids, get_output
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
 
 local_dir = 'scripts/dumping/alliance/data/'
 
-DEFAULT_MMO = 'MMO:0000000'  #MMO:0000642'
+DEFAULT_MMO = 'MMO:0000000'
 CC = 'cellular component'
 DEFAULT_TAXID = '559292'
 
@@ -47,66 +32,14 @@ OBI_MMO_MAPPING = {
     'OBI:0001985': 'MMO:0000649',
     'OBI:0001318': 'MMO:0000666'
 }
-#ECO_FORMAT_NAME_LIST = ['ECO:0000314', 'ECO:0007005', 'ECO:0000353']
-"""OBI TO MMO: OBI:0001271 RNA-seq assay	MMO:0000659
-OBI:0001463 high throughput transcription profiling by array	MMO:0000648
-OBI:0001235 high throughput transcription profiling by tiling array	MMO:0000650
-OBI:0001985 high throughput transcription profiling by microarray	MMO:0000649
-high throughput proteomic profiling	MMO:0000664
-OBI:0001318 high throughput proteomic profiling by array	MMO:0000666
-"""
-"""two files need to be output. SGD_htp_datasets.json and SGD_htp_datasetSamples.json #
-dataset.json object:
- { "data": [
- { "datasetId": {"primaryId":"GEO ID"}, dataset->dbxref_id
-   "publication": [{"publicationId":"PMID"}], dataset->reference_dbentity_id -> pubmed
-   "title": "string", dataset->display_name
-   "summary":"text", dataset->description
-   "numChannels": 1 or 2 (if microarray), dataset->channel_count
-   "dateAssigned":"string-time", dataset->
-   "datasetIds": [], (if a superset)
-   "categoryTags": ["text", "text2","text3"]}], dataset_id -> dataset_keyword -> display_name
- "metaData":{}
- }
 
-datasetSample object:
-{ "data": [
- { "sampleId": {"primaryId":"GEO ID"},
-   "publication": [{"publicationId":"PMID"}],
-   "sampleTitle": "string",
-   "sampleType":"text",
-   "genomicInformation": "AGM in the future",
-   "taxonId",
-   "sequencingFormat",
-   "assemblyVersion",
-   "notes",
-   "datasetId": [primaryIds],
-   "microarraySampleDetails": {}, (for microarrays only)
-   "dateAssigned":"string-time",
- "metaData":{}
- }
-
-"""
 
 
 def get_htp_sample_metadata():
-    """ Get HTP metadata from database
-    Parameters
-    ----------
-    root_path
-        root directory name path
-    Returns
-    ------
-    file
-        writes HTP metadata to  TWO json files
-    """
-    #desired_eco_ids = get_eco_ids(ECO_FORMAT_NAME_LIST)
-    #.limit(500)
+
     datasetSamples = DBSession.query(Datasetsample).filter(
         Datasetsample.biosample.in_(list(BIOSAMPLE_OBI_MAPPINGS.keys())),
         Datasetsample.dbxref_id != None).all()
-    dataset_result = []
-    datasample_result = []
 
     strain_name_to_sgdid = dict([
         (x.display_name, x.sgdid)
@@ -115,30 +48,22 @@ def get_htp_sample_metadata():
 
     print(("computing " + str(len(datasetSamples)) + " datasamples"))
 
-    dbentity_id_to_mmo = {}
-    datasetobjs = []
-    superseriesTodatasets = {}
     datasamplesDone = []
-    #sample_num = 1
-
     sampleResult = []
-    datasetResult = []
-# with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+
 
     for sampleObj in datasetSamples:
-        #print str(sample_num) + ". sample ID: " + sampleObj.display_name
+
         dataset = sampleObj.dataset
-        dsAssayObi = sampleObj.assay.obiid
 
         # check for references #
         dsRef = DBSession.query(DatasetReference).filter_by(
             dataset_id=dataset.dataset_id).all()
         # skip if not right kind of biosample,
         if len(dsRef) == 0 or sampleObj.display_name in datasamplesDone:
-            # print "skipping " + dsAssayObi + " wrong dataset OR no ref"
+
             continue
         else:
-            #  print dsAssayObi + ":" + sampleObj.dbxref_id + sampleObj.display_name
             datasamplesDone.append(sampleObj.display_name)
             obj = {
                 "sampleTitle":
@@ -170,17 +95,9 @@ def get_htp_sample_metadata():
                         }
                 else:
                     print (str(strains[0]) + " not a DB object")
-            ## taxon ID
-            # if sampleObj.taxonomy:
-            #   obj["taxonId"] = "NCBITaxon:" + sampleObj.taxonomy.taxid.replace(
-            #        'TAX:', '')
-            #else:
+
             obj["taxonId"] = "NCBITaxon:" + DEFAULT_TAXID
 
-            ## assay type ##
-            #    obj["assayType"] =
-
-            ## get all datasets
 
             datasetsForSample = DBSession.query(Datasetsample).filter_by(
                 dbxref_id=sampleObj.dbxref_id).with_entities(
@@ -190,17 +107,13 @@ def get_htp_sample_metadata():
             dsassayList = []
 
             for dsSample in datasetsForSample:
-                #  print dsSample.display_name + " belongs to: " + dsSample.dataset.dbxref_id + "|" +
-                #         dsSample.dataset.display_name + "*"
+
                 if dsSample.dataset.dbxref_id and dsSample.dataset.dbxref_id not in dsList:
                     dsList.append(dsSample.dataset.dbxref_type + ":" +
                                   dsSample.dataset.dbxref_id)
                     if dsSample.assay.obiid not in dsassayList:
                         dsassayList.append(dsSample.assay.obiid)
 
-                #  "datasetId": [primaryIds],
-            # break
-            ## make dataset list
             obj["datasetIds"] = dsList
             print(dsSample.display_name + " in " + str(
                 len(dsList)) + " datasets " + str(len(dsassayList)) + " assays")
@@ -211,16 +124,8 @@ def get_htp_sample_metadata():
                 else:
                     obj["assayType"] = DEFAULT_MMO
 
-            #datasetobjs.append(dsList)
-            #else:
-            #    print "skipping " + dataset.assay.display_name + " right assay, wrong sample or no DBXREFID"
-            #     continue
-
             sampleResult.append(obj)
-        #    sample_num = sample_num + 1
 
-
-## make datasetSample metadata file
 
     if (len(sampleResult) > 0):
         output_obj = get_output(sampleResult)

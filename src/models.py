@@ -6417,6 +6417,7 @@ class Diseaseannotation(Base):
     date_assigned = Column(DateTime, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
+    association_type = Column(ForeignKey('nex.ro.ro_id'), nullable=False)
 
     dbentity = relationship('Dbentity')
     disease = relationship('Disease')
@@ -6424,6 +6425,7 @@ class Diseaseannotation(Base):
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
+    ro = relationship('Ro')
 
     def to_dict_lsp(self):
         obj = {

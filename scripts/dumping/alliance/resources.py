@@ -1,118 +1,18 @@
-""" Resource object information for Alliance data submission
-
-The script extracts data into a dictionary that is written to a json file.
-The json file is submitted to Alliance for futher processing
-
-This file requires packages listed in requirements.txt file and env.sh file.
-The env.sh file contains environment variables
-
-just makes the resources.json -- non-PMID journals/books/personal communications
-
-"properties": {
-    "primaryId": {
-      "$ref": "../globalId.json#/properties/globalId",
-      "description": "The globally unique identifier for the resource.  ie: NLMId or ISBN or MOD Id.  Each identifier should be prefixed and of the form prefix:Id "
-    },
-    "title" : {
-      "type": "string",
-      "description": "The title of the resource."
-    },
-    "titleSynonyms":  {
-      "type" : "array",
-        "items": {
-          "type": "string"
-        },
-      "uniqueItems": true
-    },
-    "abbreviationSynonyms":  {
-      "type" : "array",
-        "items": {
-          "type": "string"
-        },
-      "uniqueItems": true
-    },
-    "isoAbbreviation": {
-      "type": "string"
-    },
-    "medlineAbbreviation": {
-      "type": "string"
-    },
-    "copyrightDate": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "publisher": {
-      "type": "string"
-    },
-    "printISSN" : {
-      "type": "string"
-    },
-    "onlineISSN" : {
-      "type": "string"
-    },
-    "editorsOrAuthors": {
-      "type": "array",
-      "items": {
-        "$ref": "authorReference.json"
-      }
-    },
-    "volumes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "pages": {
-      "type": "string"
-    },
-    "abstractOrSummary": {
-      "type": "string"
-    },
-    "crossReferences":{
-      "type": "array",
-      "items": {
-         "$ref": "../crossReference.json"
-      }
-
-"""
-
 import os
 import json
-from sqlalchemy import create_engine, and_, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.sql.sqltypes import NullType
-from src.models.models import LocusAlias, Dbentity, DBSession, Straindbentity, Referencedbentity
-from src.data_helpers.data_helpers import get_output, get_locus_alias_data
+from src.models import DBSession, Referencedbentity
+from src.data_helpers  import get_output,
 
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 DBSession.configure(bind=engine)
-
 local_dir = 'scripts/dumping/alliance/data/'
 
-###################### 
-# Resource file requirements -- 
-# required:
-# primaryId - string
-# title: string
-#
-# optional:
-# 
-# titleSynonyms - list
-# abbreviationSynonyms -- list
-# isoAbbreviation - string
-# medlineAbbreviation - string
-# copyrightDate - string (date-time)
-# publisher - string
-# printISSN - string
-# onlineISSN - string
-# editorsOrAuthors - list of authorRefObjects
-# volumes -- list
-# pages - string
-# abstractOrSummary -string
-# crossReferences - list of crossReference objects
-###########
-
 DEFAULT_TAXID = '559292'
+
 REFTYPE_TO_ALLIANCE_CATEGORIES ={
 "Journal Article": "Research Article",#
 "Review": "Review Article",#
@@ -130,7 +30,6 @@ REFTYPE_TO_ALLIANCE_CATEGORIES ={
 def get_resources_information():
 
     addedResources = []
-##### Process references with no PMIDs for Resources ####
     resources_result = []
 
     print ('Processing Resources -- refs without PMIDS')
@@ -139,8 +38,7 @@ def get_resources_information():
     print ("computing " + str(len(refObjList)) + " non-PMID references") 
 
     if (len(refObjList) > 0):
-       # with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-      #  try:
+
         for reference in refObjList:
             print(str(refObjList.index(reference)) + ': reference:' + reference.sgdid)
 

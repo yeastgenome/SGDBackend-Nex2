@@ -1,19 +1,3 @@
-""" Reference object information for Alliance data submission
-
-The script extracts data into a dictionary that is written to a json file.
-The json file is submitted to Alliance for futher processing
-
-This file requires packages listed in requirements.txt file and env.sh file.
-The env.sh file contains environment variables
-
-01/05/2021 - initial References objects
-splits into 3 files -- references.json, resources.json, resourceExchange.json
-references.json -- PMID articles
-resources.json -- non-PMID articles/books/personal communications
-refExchange.json -- all PMIDs to update? future submissions?
-
-"""
-
 import os
 import json
 import re, sys
@@ -26,6 +10,7 @@ from src.models import DBSession, Referencedbentity, Referencedeleted
 from src.data_helpers import get_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 DBSession.configure(bind=engine)
 
 S3_BUCKET = os.environ['S3_BUCKET']
@@ -33,67 +18,6 @@ session = boto3.Session()
 s3 = session.resource('s3')
 s3_dir = 'latest/'
 local_dir = 'scripts/dumping/alliance/data/'
-
-
-###########
-# Reference file requirements -
-# required: [
-# primaryId - string,
-# title - string,
-# datePublished -string (date-time format),
-# citation - string,
-# allianceCategory - string (ENUM),
-# resourceId - globalId.json
-# ],
-# optional --
-# dateLastModified - string, date-time,
-# authors - list,
-# volume - string
-# pages - string
-# abstract - string
-# keywords - array
-# pubMedType - list of strings (should be directly from PubMed)
-# publisher - string,
-# MODReferenceTypes - list of MODReferenceType objs
-# issueName - string
-# tags - list of referenceTag objs
-# meshTerms - list of meshDetail.json objs
-# crossReferences - list of crossReference.json  
-####################### 
-# Resource file requirements -- 
-# required:
-# primaryId - string
-# title: string
-#
-# optional:
-# 
-# titleSynonyms - list
-# abbreviationSynonyms -- list
-# isoAbbreviation - string
-# medlineAbbreviation - string
-# copyrightDate - string (date-time)
-# publisher - string
-# printISSN - string
-# onlineISSN - string
-# editorsOrAuthors - list of authorRefObjects
-# volumes -- list
-# pages - string
-# abstractOrSummary -string
-# crossReferences - list of crossReference objects
-##############
-# referenceExchange file requirements
-# required: 
-# PubMedId: string
-# allianceCategory - "enum": ["Research Article","Review Article","Thesis","Book","Other","Preprint","Conference Publication","Personal Communication","Direct Data Submission","Internal Process Reference", "Unknown","Retraction"],
-# 
-# optional: 
-# MODReferenceTypes
-# modId
-# dataLastModified - string (date-time)
-# tags - list of referenceTag objects
-# ################
-
-
 
 
 DEFAULT_TAXID = '559292'
@@ -144,9 +68,7 @@ def make_ref_obj(refObj):
     
     newRefObj = refObj.to_dict()
     
-    obj = {  #reference obj
- #   "primaryId": "PMID:" + str(newRefObj['pubmed_id'])  #"SGD:" + refObj.sgdid,
- #   "title": refObj.title,
+    obj = {
     "datePublished": str(refObj.year),
     "citation": refObj.citation,
     "crossReferences":[{'id':'SGD:'+refObj.sgdid,'pages':['reference']}]
@@ -178,26 +100,21 @@ def make_ref_obj(refObj):
     if newRefObj["abstract"] is not None:
         obj['abstract'] = newRefObj['abstract']['text']
 
-
-    if refObj.date_revised: # dateLastModified for refexchange & refs (opt)
+    if refObj.date_revised:
         obj['dateLastModified'] = refObj.date_revised.strftime("%Y-%m-%dT%H:%m:%S-00:00")
 
-## datePublished (req'd) - refObj.date_published || refObj.year if date_published isn't available
     if refObj.date_published:
-        obj['datePublished']= refObj.date_published #.strftime("%Y-%m-%dT%H:%m:%S-00:00")
+        obj['datePublished']= refObj.date_published
 
-## Authors for references##
-    authorOrder = 1
-    authorList = []
     
     if newRefObj['authors'] is not None and newRefObj['authors'] != '':
         obj['authors'] = []
         
         for name in newRefObj['authors']:
-               # nameList = name['display_name'].split(' ')
+
             authObj = {
                 'name': name['display_name'],
-                'referenceId': primaryID, #'PMID:' + str(newRefObj['pubmed']) #'SGD:' + refObj.sgdid,
+                'referenceId': primaryID,
                 'authorRank': newRefObj['authors'].index(name) + 1
             }
  
@@ -205,12 +122,9 @@ def make_ref_obj(refObj):
     if len(obj['authors']) == 0:
         del obj['authors']
 
-## crossref for author? id: SGD:last_first, pages"["/author"] 
-              #  authorOrder += 1
               
     if 'reftypes' in newRefObj and newRefObj['reftypes'] is not None:
-    #    refTypesList = []
-    #    modRefTypeList = []
+
         (allianceCat, refTypesList) = defineAllianceCat(newRefObj['reftypes'])
         
         obj['allianceCategory'] = allianceCat
@@ -221,21 +135,18 @@ def make_ref_obj(refObj):
     else:
         obj['allianceCategory'] = "Unknown"
 
-            
-## journal or book publication ##
+
     if refObj.book is not None:
         if refObj.book.publisher is not None:
            obj['publisher'] = refObj.book.publisher
         if refObj.book.title is not None:
            obj['resourceAbbreviation'] = refObj.book.title
     elif refObj.journal is not None:
-      #  if refObj.journal.title is not None:
-      #      obj['publisher'] = refObj.journal.title
+
         if refObj.journal.med_abbr is not None:
             obj['resourceAbbreviation'] = refObj.journal.med_abbr    
 
-## crossReferences for reference.json file #
-              # refObj.pmid, refObj.pmcid refObj.doi
+
     if refObj.pmcid is not None:
         obj['crossReferences'].append({'id': 'PMCID:' + refObj.pmcid})
 
@@ -247,28 +158,25 @@ def make_ref_obj(refObj):
     return obj
 
 def defineAllianceCat(referenceTypes):
-    ### alliance category for both objects (req'd) and make MODReferenceTypes (opt)               
+
     refTypesList = []
     refDisplayList = []
 
     for eachType in referenceTypes:
         refTypesList.append({'referenceType':eachType['display_name'], 'source':'SGD'})              
         refDisplayList.append(eachType['display_name'])
-## default category - research article
+
     refTypes = "|".join(refDisplayList)
 
-    if re.search('Journal Article', refTypes):#'Journal Article' in refTypesList:
+    if re.search('Journal Article', refTypes):
  
-        if re.search('Review', refTypes): #'Review' in refTypesList:
+        if re.search('Review', refTypes):
             return ("Review Article", refTypesList)
-                       # continue
-        if re.search('Retracted Publication', refTypes): #Retracted Publication' in refTypesList:
+        if re.search('Retracted Publication', refTypes):
             return ("Retraction", refTypesList)
-                       # continue
-        if re.search("Personal Communication in Publication", refTypes): # in refTypesList:
+        if re.search("Personal Communication in Publication", refTypes):
             return("Personal Communication", refTypesList)
-                       # continue
-        if re.search("Erratum", refTypes) or re.search("Comment", refTypes): #in refTypesList or "Comment" in refTypesList:
+        if re.search("Erratum", refTypes) or re.search("Comment", refTypes):
             return("Other", refTypesList) 
         
         return ("Research Article", refTypesList)
@@ -287,7 +195,7 @@ def defineAllianceCat(referenceTypes):
             return("Personal Communication", refTypesList)
         if "Direct Submission to SGD" in refDisplayList:
             return("Direct Data Submission", refTypesList)
-        else:  # not any of the others
+        else:
             return("Other", refTypesList) 
  
  
@@ -300,33 +208,39 @@ def get_refs_information():
 
     ref_result = []
     ref_exchange_result = []
-    ref_deleted_result = []
 
     print ('Processing Resources -- deleted PMIDS')
-    deletedObjList = DBSession.query(Referencedeleted).filter(Referencedeleted.pmid != None).limit(20).all()
+    local_refDeleted_file =  'Test_SGD_false_positive_pmids.txt'
+    s3_refDeleted_file = s3_dir + 'Test_SGD_false_positive_pmids.txt'
+    refDel_str = os.path.join(local_dir, local_refDeleted_file)
+
+    deletedObjList = DBSession.query(Referencedeleted).filter(Referencedeleted.pmid != None).all()
 
     print ("computing " + str(len(deletedObjList)) + " refs (deleted-PMID)")
 
     if (len(deletedObjList) > 0):
 
-        for resource in deletedObjList:
-            print(resource.pmid)
-            deletedPMID = resource.pmid
-            ref_deleted_result.append(deletedPMID)
+        with open(refDel_str, 'w+') as res_file:
 
-### Process references with PMIDs ###
-    referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).limit(20).all()
+            for resource in deletedObjList:
+                print(resource.pmid)
+                deletedPMID = resource.pmid
+                ref_deleted_result = str(deletedPMID) +"\n"
+                res_file.write(ref_deleted_result)
+
+    s3.meta.client.upload_file(refDel_str, S3_BUCKET, s3_refDeleted_file, ExtraArgs={'ACL': 'public-read'})
+    referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).all()
 
     print("computing " + str(len(referencesObjList)) + " references")
 
     if (len(referencesObjList) > 0):
         with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
-      #  try:
+
             for dbObj in referencesObjList:
-               # print(str(referencesObjList.index(refObj)) + ': reference:' + refObj.sgdid)
+
                 extRefObj = dbObj.to_dict()
 
-                fileObj = make_ref_obj(dbObj)  ##FOR REF FILE##
+                fileObj = make_ref_obj(dbObj)
 
                 refExObj = {
                     "pubMedId": "PMID:" + str(extRefObj['pubmed_id']),
@@ -354,7 +268,7 @@ def get_refs_information():
 ##### Process references with no PMIDs for references.py ####
 
     print ('Processing Resources -- refs without PMIDS')
-    resourceObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == None).limit(20).all()
+    resourceObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == None).all()
 
     print ("computing " + str(len(resourceObjList)) + " refs (non-PMID)")
 
@@ -362,16 +276,16 @@ def get_refs_information():
 
         for resource in resourceObjList:
             print(str(resourceObjList.index(resource)) + ': reference:' + resource.sgdid)
-
             nonPMIDObj = make_ref_obj(resource)
-  
             ref_result.append(nonPMIDObj)
+
+
 
     if (len(ref_result) > 0):
         ref_output_obj = get_output(ref_result)
         #file_name = 'src/data_dump/SGD' + SUBMISSION_VERSION + 'references.json'
-        local_ref_file_name =  'REFERENCE_SGD.json'
-        s3_ref_file = s3_dir + 'REFERENCE_SGD.json'
+        local_ref_file_name =  'Test_REFERENCE_SGD.json'
+        s3_ref_file = s3_dir + 'Test_REFERENCE_SGD.json'
         json_file_str = os.path.join(local_dir, local_ref_file_name)
         
         with open(json_file_str, 'w+') as res_file:
@@ -383,8 +297,8 @@ def get_refs_information():
     
     if (len(ref_exchange_result) > 0):
         refExch_obj = get_output(ref_exchange_result)
-        local_refExch_file =  'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
-        s3_refExch_file = s3_dir + 'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        local_refExch_file =  'Test_SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        s3_refExch_file = s3_dir + 'Test_SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
         refEx_str = os.path.join(local_dir, local_refExch_file)
 
         with open(refEx_str, 'w+') as res_file:
@@ -393,17 +307,6 @@ def get_refs_information():
         print(local_refExch_file, s3_refExch_file)
         s3.meta.client.upload_file(refEx_str, S3_BUCKET, s3_refExch_file, ExtraArgs={'ACL': 'public-read'})
 
-    if (len(ref_deleted_result) > 0):
-        refDeleted_obj = get_output(ref_deleted_result)
-        local_refDeleted_file =  'SGD_false_positive_pmids.txt'
-        s3_refDeleted_file = s3_dir + 'SGD_false_positive_pmids.txt'
-        refDel_str = os.path.join(local_dir, local_refDeleted_file)
-
-        with open(refDel_str, 'w+') as res_file:
-            res_file.write(json.dumps(refDeleted_obj, indent=4, sort_keys=True))
-
-        print(local_refDeleted_file, s3_refDeleted_file)
-        s3.meta.client.upload_file(refDel_str, S3_BUCKET, s3_refDeleted_file, ExtraArgs={'ACL': 'public-read'})
 
     print("end time:" + str(datetime.now()))
 
