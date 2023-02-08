@@ -255,7 +255,7 @@ def load_summaries(nex_session, file_content, username, summary_type=None):
     return annotation_summary
 
 if __name__ == '__main__':
-    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
+    engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600, pool_size=100)
     DBSession.configure(bind=engine)
     with open('test/example_files/example_summary_upload.tsv') as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
