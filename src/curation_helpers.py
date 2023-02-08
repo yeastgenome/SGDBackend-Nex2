@@ -61,7 +61,8 @@ def process_pmid_list(raw):
 
 def get_curator_session(username):
     if username:
-        curator_engine = create_engine(os.environ['NEX2_URI'])
+        curator_engine = create_engine(os.environ['NEX2_URI'],
+                                       echo=False, pool_recycle=3600, pool_size=100)
         session_factory = sessionmaker(
             bind=curator_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
         curator_session = scoped_session(session_factory)
