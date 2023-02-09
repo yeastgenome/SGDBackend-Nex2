@@ -19,8 +19,8 @@ s3 = session.resource('s3')
 s3_dir = 'latest/'
 local_dir = 'scripts/dumping/alliance/data/'
 
-
 DEFAULT_TAXID = '559292'
+
 REFTYPE_TO_ALLIANCE_CATEGORIES ={
 "Journal Article": "Research Article",
 "Comparative Study":"Research Article",
