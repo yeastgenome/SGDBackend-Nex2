@@ -75,6 +75,17 @@ def extract_id_request(request, prefix, param_name='id', safe_return=False):
 def get_locus_by_id(id):
     return dbentity_safe_query(id, Locusdbentity)
 
+def get_locus_by_name_or_id(query):
+
+    dbentity = None
+    if str(query).isdigit():
+        dbentity = DBSession.query(Locusdbentity).filter_by(
+            dbentity_id=int(query)).one_or_none()
+    else:
+        dbentity = Nex_session.query(Locusdbentity).filter(
+            or_(Locusdbentity.gene_name.ilike(query), Locusdbentity.systematic_name.ilike(query), Locusdbentity.sgdid.ilike(query))).one_or_none()
+
+    return dbentity
 
 def get_go_by_id(id):
     return dbentity_safe_query(id, Go)

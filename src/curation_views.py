@@ -27,7 +27,7 @@ from src.helpers import allowed_file, extract_id_request, secure_save_file,\
     curator_or_none, extract_references, extract_keywords,\
     get_or_create_filepath, extract_topic, extract_format,\
     file_already_uploaded, link_references_to_file, link_keywords_to_file,\
-    FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, set_string_format,\
+    FILE_EXTENSIONS, get_locus_by_name_or_id, get_go_by_id, set_string_format,\
     send_newsletter_email, get_file_delimiter, unicode_to_string,\
     file_curate_update_readme, upload_new_file, get_file_curate_dropdown_data,\
     get_file_details
@@ -93,8 +93,9 @@ def account(request):
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
 def get_locus_curate(request):
     try:
-        id = extract_id_request(request, 'locus', param_name="sgdid")
-        locus = get_locus_by_id(id)
+        # id = extract_id_request(request, 'locus', param_name="sgdid")
+        id = str(request.matchdict['sgdid'])
+        locus = get_locus_by_name_or_id(id)
         return locus.to_curate_dict()
     except Exception as e:
         log.error(e)
@@ -106,8 +107,9 @@ def get_locus_curate(request):
 @authenticate
 def locus_curate_summaries(request):
     try:
-        id = extract_id_request(request, 'locus', param_name='sgdid')
-        locus = get_locus_by_id(id)
+        # id = extract_id_request(request, 'locus', param_name='sgdid')
+        id = str(request.matchdict['sgdid'])
+        locus = get_locus_by_name_or_id(id)
         new_phenotype_summary = request.params.get('phenotype_summary')
         new_regulation_summary = request.params.get('regulation_summary')
         new_regulation_pmids = process_pmid_list(request.params.get('regulation_summary_pmids'))
@@ -118,19 +120,19 @@ def locus_curate_summaries(request):
         new_function_summary = request.params.get('function_summary')
 
         locus.update_summary('Phenotype', request.session['username'], new_phenotype_summary)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         locus.update_summary('Regulation', request.session['username'], new_regulation_summary, new_regulation_pmids)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         locus.update_summary('Protein', request.session['username'], new_protein_summary)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         locus.update_summary('Sequence', request.session['username'], new_sequence_summary)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         locus.update_summary('Interaction', request.session['username'], new_interaction_summary)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         locus.update_summary('Disease', request.session['username'], new_disease_summary)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         locus.update_summary('Function',request.session['username'],new_function_summary)
-        locus = get_locus_by_id(id)
+        locus = get_locus_by_name_or_id(id)
         
         locus.ban_from_cache()
         pusher = get_pusher_client()
@@ -151,8 +153,9 @@ def locus_curate_basic(request):
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error':'Bad CSRF Token'}))
     try:
-        id = extract_id_request(request, 'locus', param_name='sgdid')
-        locus = get_locus_by_id(id)
+        # id = extract_id_request(request, 'locus', param_name='sgdid')
+        id = str(request.matchdict['sgdid'])
+        locus = get_locus_by_name_or_id(id)
         params = request.json_body
         username = request.session['username']
         pusher = get_pusher_client()
@@ -477,11 +480,12 @@ def sign_out(request):
 # @authenticate
 def reference_tags(request):
     try:
-        id = extract_id_request(request, 'reference', 'id', True)
-        if id:
+        # id = extract_id_request(request, 'reference', 'id', True)
+        id = str(request.matchdict['id'])
+        if str(id).isdigit():
             reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
         else:
-            reference = DBSession.query(Referencedbentity).filter_by(sgdid=request.matchdict['id']).one_or_none()
+            reference = DBSession.query(Referencedbentity).filter_by(sgdid=id).one_or_none()
         return reference.get_tags()
     except Exception as e:
         log.error(e)
@@ -494,14 +498,15 @@ def reference_tags(request):
 def update_reference_tags(request):
     curator_session = None
     try:
-        id = extract_id_request(request, 'reference', 'id', True)
+        # id = extract_id_request(request, 'reference', 'id', True)
+        id = str(request.matchdict['id'])
         tags = request.json['tags']
         username = request.session['username']
         curator_session = get_curator_session(username)
-        if id:
+        if str(id).isdigit():
             reference = curator_session.query(Referencedbentity).filter_by(dbentity_id=id).one_or_none()
         else:
-            reference = curator_session.query(Referencedbentity).filter_by(sgdid=request.matchdict['id']).one_or_none()
+            reference = curator_session.query(Referencedbentity).filter_by(sgdid=id).one_or_none()
         reference.update_tags(tags, username)
         reference.ban_from_cache()
         processed_tags = reference.get_tags()
