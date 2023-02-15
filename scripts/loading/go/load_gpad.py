@@ -742,7 +742,7 @@ if __name__ == "__main__":
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
         exit()
 
-    if gpiFileInfo.st_size < 355500:
+    if gpiFileInfo.st_size < 350000:
         print("This week's GPI file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz")
         exit()
 
