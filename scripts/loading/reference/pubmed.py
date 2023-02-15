@@ -226,8 +226,16 @@ def get_pmid_list(terms, retmax, day):
 
     pmid_list_all = []
     for term in terms:
-        results = search(term+'[tw]NOT preprint[pt]', retmax, day) 
-        # results = search(term+'[tw]', retmax, day)
+
+        # results = search(term+'[tw]NOT preprint[pt]', retmax, day) => 293
+        # results = search(term+"[tw] NOT+(\"eLife\"[Journal])+NOT+(preprint[pt])", retmax, day) => 293
+        # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&reldate=14&term=yeast[tw]+NOT+("eLife"[Journal])+NOT+(preprint[pt])
+
+        # return 290 hits (excluded three papers with elift journal
+        results = search(term+'[tw] NOT ("eLife"[Journal]) NOT (preprint[pt])', retmax, day)
+        
+        # results = search(term+'[tw]NOT preprint[pt]', retmax, day)
+        # results = search(term+'[tw]', retmax, day) => this is working
         pmid_list = results['IdList']
         for pmid in pmid_list:
             if pmid not in pmid_list_all:
