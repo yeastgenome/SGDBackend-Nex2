@@ -197,6 +197,7 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
 
 
 def build_search_query(query, search_fields, category, category_filters, args, alias_flag=False, terms=[], ids=[], wildcard=None):
+    
     es_query = build_search_params(
         query, search_fields, alias_flag, terms, ids, wildcard, category)
     if category == '':
@@ -234,8 +235,14 @@ def build_search_query(query, search_fields, category, category_filters, args, a
 
     return query
 
-
+    
 def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[], wildcard=None, category=None):
+    ## terms = words in the search query
+    ## search_fields = a list of search fields eg, "feature_type", "name_description", "summary",
+    ##      "phenotypes", "cellular_component", etc
+    ## alias_flag = if search query is an alias
+    ## ids = one or more of these ['go', 'pmid', 'sgd', 'chebi', 'doid'] IDs
+    ## category = locus, disease, or allele, etc
     es_query = None
     skip_fields = ["name", "locus_name", "aliases",
                    "chemical_name", "locus_summary", "keys"]
@@ -262,8 +269,10 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
             }
         }
 
+        ## remove single and double quotes from the search query
         if (query[0] in ('"', "'") and query[-1] in ('"', "'")):
             query = query[1:-1]
+        ## if gene name follow by '-' remove the '-' eg, act1- => act1
         if query[-1] == '-' and query[3:-1].isdigit():
             query = query[0:-1]
         bool_must = es_query["bool"]["must"][0]["bool"]["should"]
@@ -373,6 +382,38 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
 
                         }
                     })
+        ### single word search
+        elif wildcard is True:
+            multi_name_field = {
+                "query_string": {
+                    "query": query,
+                    "fields": [
+                        "name^16",
+                        "colleague_name.engram^6",
+                        "author.white_space^4",
+                        "name.symbol",
+                        "raw_display_name",
+                        "ref_citation",
+                        "keys",
+                        "description"
+                    ]
+                }
+            }
+            multi_locus_name_field = {
+                "query_string": {
+                    "query": query,
+                    "fields": [
+                        "locus_name",
+                        "locus_name.engram^5",
+                        "aliases.egram^7",
+                        "aliases",
+                        "chemical_name^15",
+                        "locus_summary"
+                    ]
+                }
+            }
+            bool_must.append(multi_name_field)
+            bool_must.append(multi_locus_name_field)
         else:
             multi_name_field = {
                 "multi_match": {
@@ -416,7 +457,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
 
     return es_query
 
-
+                                                                                                                                                                                                                                           
 def map_other_search_field(query, es_query, search_fields, skip_fields):
     if es_query:
         other_fields = es_query['bool']['must'][0]["bool"]["should"]

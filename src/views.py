@@ -287,6 +287,9 @@ def search(request):
     ## added for allele search
     # query2 = query.replace('Δ', "delta").replace('-', "delta")
     # if is_quick_flag == 'true' and ('delta' in query2):
+    if "*" in query or "?" in query:
+        wildcard = True
+
     if is_quick_flag:
         allele_name = query.strip()
         maybe_allele_url = None
@@ -380,6 +383,9 @@ def search(request):
                 }
 
     else:
+        if "*" in query or "?" in query:
+            wildcard = True
+            
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
