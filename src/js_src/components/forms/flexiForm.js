@@ -42,7 +42,7 @@ class FlexiForm extends Component {
       if (this.props.onSuccess) this.props.onSuccess(data);
     }).catch( (data) => {
       this.setState({ isPending: false });
-      let errorMessage = data ? data.message : 'There was an unknown error with your submission. With the upmost humility, we ask that you please refresh the page and try again.';
+      let errorMessage = data ? data.message : 'There was an unknown error with your submission. Please refresh the page and try again.';
       this.props.dispatch(setError(errorMessage));
       if (this.props.onError) {
         this.props.onError(data);
