@@ -276,11 +276,14 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
         if query[-1] == '-' and query[3:-1].isdigit():
             query = query[0:-1]
         bool_must = es_query["bool"]["must"][0]["bool"]["should"]
+        match_type = "multi_match"
+        if wildcard is True:
+            match_type = "query_string"
         if alias_flag:
             if terms:
                 for item in terms:
                     bool_must.append({
-                        "multi_match": {
+                        match_type: {
                             "query": item,
                             "fields": [
                                 "name",
@@ -291,7 +294,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                     })
             else:
                 multi_field_match = {
-                    "multi_match": {
+                    match_type: {
                         "query": query,
                         "type": "phrase_prefix",
                         "fields": [
@@ -312,7 +315,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
         elif ids:
             for item in ids:
                 bool_must.append({
-                        "multi_match": {
+                        match_type: {
                             "query": item,
                             "type": "phrase_prefix",
                                 "fields": [
@@ -331,7 +334,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
             if category == 'locus':
                 for item in terms:
                     bool_must.append({
-                        "multi_match": {
+                        match_type: {
                             "query": item,
                             "type": "phrase_prefix",
                             "fields": [
@@ -360,7 +363,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
             else:
                 for item in terms:
                     bool_must.append({
-                        "multi_match": {
+                        match_type: {
                             "query": item,
                             "type": "phrase_prefix",
                             "fields": [
@@ -383,40 +386,9 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                         }
                     })
         ### single word search
-        elif wildcard is True:
-            multi_name_field = {
-                "query_string": {
-                    "query": query,
-                    "fields": [
-                        "name^16",
-                        "colleague_name.engram^6",
-                        "author.white_space^4",
-                        "name.symbol",
-                        "raw_display_name",
-                        "ref_citation",
-                        "keys",
-                        "description"
-                    ]
-                }
-            }
-            multi_locus_name_field = {
-                "query_string": {
-                    "query": query,
-                    "fields": [
-                        "locus_name",
-                        "locus_name.engram^5",
-                        "aliases.egram^7",
-                        "aliases",
-                        "chemical_name^15",
-                        "locus_summary"
-                    ]
-                }
-            }
-            bool_must.append(multi_name_field)
-            bool_must.append(multi_locus_name_field)
         else:
             multi_name_field = {
-                "multi_match": {
+                match_type: {
                     "query": query,
                     "type": "phrase_prefix",
                     "fields": [
@@ -432,7 +404,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                 }
             }
             multi_locus_name_field = {
-                "multi_match": {
+                match_type: {
                     "query": query,
                     "type": "phrase_prefix",
                     "fields": [
@@ -453,27 +425,31 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                     map_other_search_field(
                         id, es_query, search_fields, skip_fields)
             else:
-                es_query = map_other_search_field(query, es_query, search_fields, skip_fields)
+                es_query = map_other_search_field(query, es_query, search_fields,
+                                                  skip_fields, wildcard)
 
     return es_query
 
                                                                                                                                                                                                                                            
-def map_other_search_field(query, es_query, search_fields, skip_fields):
+def map_other_search_field(query, es_query, search_fields, skip_fields, wildcard=None):
     if es_query:
         other_fields = es_query['bool']['must'][0]["bool"]["should"]
         keyword_fields = es_query["bool"]["must"][0]["bool"]["should"]
 
         for field in search_fields:
             if field not in skip_fields:
-                if FIELD_MAP[field]['type'] is 'text':
+                if FIELD_MAP[field]['type'] == 'text':
                     temp_fields = FIELD_MAP[field].get('fields', None)
                     keyword_analyzer = FIELD_MAP[field].get('analyzer', None)
 
                     if temp_fields is not None:
                         most_fields = get_search_query_context(
                             field, 'text', temp_fields)
+                        match_type = "multi_match"
+                        if wildcard is True:
+                            match_type = "query_string"
                         other_fields.append({
-                            "multi_match": {
+                            match_type: {
                                 "query": query,
                                 "type": "phrase_prefix",
                                 "fields": most_fields
@@ -481,45 +457,75 @@ def map_other_search_field(query, es_query, search_fields, skip_fields):
                         })
                     else:
                         if (keyword_analyzer == 'keyword'):
+                            match_type = "match_bool_prefix"
+                            query_type = "query"
+                            if wildcard is True:
+                                match_type = "wildcard"
+                                query_type = "value"
                             keyword_fields.append({
-                                "match_bool_prefix": {
+                                match_type: {
                                     field: {
-                                        "query": query
+                                        query_type: query
                                     }
                                 }
                             })
                         elif (field == "description"):
-                            keyword_fields.append({
-                                "match": {
-                                    field: {
-                                        "query": query,
-                                        "operator": "and"
+                            if wildcard is True:
+                                keyword_fields.append({
+                                    "wildcard": {
+                                        field: {
+                                            "value": query
+                                        }
                                     }
-                                }
-                            })
+                                })
+                            else:
+                                keyword_fields.append({
+                                    "match": {
+                                        field: {
+                                            "query": query,
+                                            "operator": "AND"
+                                        }
+                                    }
+                                })
                         elif(field == "references"):
-                            keyword_fields.append({
-                                "match": {
-                                    field: {
-                                        "query": query,
-                                        "operator": "or"
+                            if wildcard is True:
+                                keyword_fields.append({
+                                    "wildcard": {
+                                        field: {
+                                            "value": query
+                                        }
                                     }
-                                }
-                            })
+                                })
+                            else:
+                                keyword_fields.append({
+                                    "match": {
+                                        field: {
+                                            "query": query,
+                                            "operator": "or"
+                                        }
+                                    }
+                                })
                         else:
+                            match_type = "match_phrase_prefix"
+                            query_type = "query"
+                            if wildcard is True:
+                                match_type = "wildcard"
+                                query_type = "value"
                             other_fields.append({
-                                "match_phrase_prefix": {
+                                match_type: {
                                     field: {
-                                        "query": query
+                                        query_type: query
                                     }
                                 }
                             })
-
-                if FIELD_MAP[field]['type'] is 'keyword':
+                if FIELD_MAP[field]['type'] == 'keyword':
                     if field in ['last_name', 'first_name']:
+                        match_type = "term"
+                        if wildcard is True:
+                            match_type = "wildcard"
                         if(isinstance(query, int)):
                             keyword_fields.append({
-                                "term": {
+                                match_type: {
                                     field: {
                                         "value": query,
                                         "boost": 0.9
@@ -528,7 +534,7 @@ def map_other_search_field(query, es_query, search_fields, skip_fields):
                             })
                         else:
                             keyword_fields.append({
-                                "term": {
+                                match_type: {
                                     field: {
                                         "value": query.capitalize(),
                                         "boost": 100
@@ -536,41 +542,60 @@ def map_other_search_field(query, es_query, search_fields, skip_fields):
                                 }
                             })
                     elif field in ['feature_type']:
+                        match_type = "match_bool_prefix"
+                        query_type = "query"
+                        if wildcard is True:
+                            match_type = "wildcard"
+                            query_type = "value"
                         keyword_fields.append({
-                            "match_bool_prefix": {
+                            match_type: {
                                 field: {
-                                    "query": query,
+                                    query_type: query,
                                     "boost": 10
                                 }
                             }
                         })
                     elif field in ['resource_name']:
+                        match_type = "match_bool_prefix"
+                        query_type = "query"
+                        if wildcard is True:
+                            match_type = "wildcard"
+                            query_type = "value"
                         keyword_fields.append({
-                            "match_bool_prefix": {
+                            match_type: {
                                 field: {
-                                    "query": query,
+                                    query_type: query,
                                     "boost": 400
                                 }
                             }
                         })
                     elif field in ['molecular_function', 'biological_process', 'cellular_component']:
+                        match_type = "match_phrase_prefix"
+                        query_type = "query"
+                        if wildcard is True:
+                            match_type = "wildcard"
+                            query_type = "value"
                         keyword_fields.append({
-                            "match_phrase_prefix": {
+                            match_type: {
                                 field + ".engram": {
-                                    "query": query,
+                                    query_type: query,
                                     "boost": "5.0"
                                 }
                             }
                         })
                     else:
+                        match_type = "term"
+                        if wildcard is True:
+                            match_type = "wildcard"
                         keyword_fields.append({
-                            "term": {
+                            match_type: {
                                 field: {
                                     "value": query,
                                     "boost": 3.8
                                 }
                             }
                         })
+                            
         return es_query
     else:
         return {"match_all": {}}
