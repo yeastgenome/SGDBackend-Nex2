@@ -384,6 +384,8 @@ def search(request):
 
     else:
         if "*" in query or "?" in query:
+            if query[0] == '*' and query[-1] not in ['*', '?']:
+                query = query + "*"
             wildcard = True
             
         es_query = build_search_query(query, search_fields, category,
