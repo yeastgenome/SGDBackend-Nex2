@@ -2,10 +2,11 @@ import os
 import json
 from sqlalchemy import create_engine
 from src.models import DBSession, Dataset
-from src.data_helpers  import get_eco_ids, get_output
+from src.data_helpers  import get_output
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 
 local_dir = 'scripts/dumping/alliance/data/'
 
@@ -47,7 +48,7 @@ CATEGORY_TAG_MAPPING = {
 
 result = []
 
-def make_json_obj(dataset):  # assay moved to datasetsample table #
+def make_json_obj(dataset):
     ds = dataset
 
     datasetObject = {
@@ -177,7 +178,8 @@ def get_htp_datasets():
         file_name = 'SGD' + SUBMISSION_VERSION + 'htp_dataset.json'
         json_file_str = os.path.join(local_dir, file_name)
         with open(json_file_str, 'w+') as res_file:
-            res_file.write(json.dumps(output_obj, indent=4, sort_keys=True)
+            res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
+    DBSession.close()
 if __name__ == '__main__':
-    get_htp_sample_metadata()
+    get_htp_datasets()

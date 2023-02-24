@@ -5,21 +5,18 @@ from src.models import DBSession, Diseaseannotation, Diseasesupportingevidence, 
 from src.data_helpers import get_pers_output
 from sqlalchemy import create_engine
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.5.0_')
+engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
-
 local_dir = 'scripts/dumping/alliance/data/'
 
-LINKML_VERSION = "linkml_version"+": " + os.getenv('LINKLM_VERSION', '1.5.0') +","+ '\n'
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.5.0')
 SUBMISSION_TYPE = "disease_gene_ingest_set"
-
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
 
 """
 https://github.com/alliance-genome/agr_curation_schema/blob/main/test/data/disease_gene_test.json
 """
-
 
 def get_disease_association_data():
     result = {}
@@ -98,7 +95,6 @@ def get_disease_association_data():
                 else:
                     obj["annotation_type_name"] = item.annotation_type
 
-                ## disease summaries from locussummary table, subtype='Disease' if there is one##
                 disSumObj = DBSession.query(Locussummary).filter(Locussummary.summary_type == 'Disease', Locussummary.locus_id==item.dbentity_id).one_or_none()
                 if disSumObj is not None:
                     obj["note_dtos"] = [{"free_text":disSumObj.text, "note_type_name":"disease_summary","internal":False}]
@@ -107,12 +103,14 @@ def get_disease_association_data():
 
     if len(list(result.keys())) > 0:
         print("# objs:" + str(len(list(result.keys()))))
-        output_obj = get_pers_output(SUBMISSION_TYPE, list(result.values()))
+        output_obj = get_pers_output(SUBMISSION_TYPE, list(result.values()), LINKML_VERSION)
         file_name = 'SGD' + SUBMISSION_VERSION + 'persist_disease_association.json'
         json_file_str = os.path.join(local_dir, file_name)
         if (output_obj):
             with open(json_file_str, 'w+') as res_file:
-                res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+                res_file.write(json.dumps(output_obj, indent=4, sort_keys=False))
+
+    DBSession.close()
 
 if __name__ == '__main__':
     get_disease_association_data()

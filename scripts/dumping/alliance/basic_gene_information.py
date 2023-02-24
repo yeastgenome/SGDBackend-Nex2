@@ -5,21 +5,19 @@ import concurrent.futures
 from src.models import LocusAlias, Dnasequenceannotation, DBSession, Locusdbentity
 from src.data_helpers import get_output, get_locus_alias_data
 
-engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 local_dir = 'scripts/dumping/alliance/data/'
-
 SO_TYPES_TO_EXCLUDE = [
     'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296', 'SO:0005855',
     'SO:0001984', 'SO:0002026', 'SO:0001789', 'SO:0000436', 'SO:0000624',
     'SO:0000036', 'SO:0002059'
 ]
 
-
 def get_basic_gene_information():
 
     combined_list = Locusdbentity.get_s288c_genes()
-
     print(("computing " + str(len(combined_list)) + " s288c genes"))
     result = []
     if (len(combined_list) > 0):
@@ -187,5 +185,8 @@ def get_basic_gene_information():
                 json_file_str = os.path.join(local_dir, file_name)
                 with open(json_file_str, 'w+') as res_file:
                     res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+
+    DBSession.close()
+
 if __name__ == '__main__':
     get_basic_gene_information()

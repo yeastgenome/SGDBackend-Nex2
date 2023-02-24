@@ -1,11 +1,12 @@
 import os
 import json
-from sqlalchemy import create_engine, and_
+from sqlalchemy import create_engine
 from src.models import DBSession, DatasetReference, Datasetsample, Dbentity
-from src.data_helpers import get_eco_ids, get_output
+from src.data_helpers import get_output
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 
 local_dir = 'scripts/dumping/alliance/data/'
 
@@ -34,7 +35,6 @@ OBI_MMO_MAPPING = {
 }
 
 
-
 def get_htp_sample_metadata():
 
     datasetSamples = DBSession.query(Datasetsample).filter(
@@ -56,12 +56,9 @@ def get_htp_sample_metadata():
 
         dataset = sampleObj.dataset
 
-        # check for references #
-        dsRef = DBSession.query(DatasetReference).filter_by(
-            dataset_id=dataset.dataset_id).all()
+        dsRef = DBSession.query(DatasetReference).filter_by(dataset_id=dataset.dataset_id).all()
         # skip if not right kind of biosample,
         if len(dsRef) == 0 or sampleObj.display_name in datasamplesDone:
-
             continue
         else:
             datasamplesDone.append(sampleObj.display_name)
@@ -85,7 +82,6 @@ def get_htp_sample_metadata():
             ## add genomic information (strain) if available
             if sampleObj.strain_name is not None:
                 strains = sampleObj.strain_name.split("|")
-                #   print "strain:" + ("*").join(strains)
                 if str(strains[0]) in strain_name_to_sgdid:
                     obj["genomicInformation"] = {
                         "biosampleId":
@@ -133,5 +129,7 @@ def get_htp_sample_metadata():
         json_file_str = os.path.join(local_dir, file_name)
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+
+    DBSession.close()
 if __name__ == '__main__':
     get_htp_sample_metadata()

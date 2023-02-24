@@ -3,25 +3,14 @@ import re
 import json
 from datetime import datetime
 from sqlalchemy import create_engine
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Eco, Locusdbentity, \
-    LocusUrl, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, \
-    Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, \
-    Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi
+from src.models import DBSession, Eco, Locusdbentity
 
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_1.0.0.0_')
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
 
 
 def get_sgdids_for_panther(root_path):
-    """ Populate sgd ids to a text file to search in panther.
-     
-     Returns
-     --------
-     file
-        txt file containing sgd ids
-     
-     """
 
     locus_data = Locusdbentity.get_s288c_genes()
     sgdids = []
@@ -37,22 +26,6 @@ def get_sgdids_for_panther(root_path):
 
 
 def pair_pantherid_to_sgdids(root_path=None):
-    """Pair panther ids to sgd ids.    
-
-    Paramaters
-    ----------
-    root_path : str
-        The file location of panther ids text file. Tab deliminated text file.
-        To get this file from panther you have to give panther list of sgd ids.
-        Please check get_sgdids_for_panther() method for further details on how
-        to extract sgd ids to pass to panther website
-    
-    Returns
-    -------
-    dictionary
-        key-value pair panther data to sgd data
-    
-    """
 
     data_dict = {}
     panther_json_file = os.path.join(
@@ -81,20 +54,6 @@ def pair_pantherid_to_sgdids(root_path=None):
 
 
 def combine_panther_locus_data(panther_list, locus_list):
-    """ Create dictionary with panther ids and locus objects.
-
-    Parameters
-    ----------
-    panther_list
-        list of panther objects
-    locus_list
-        list of locus object
-    
-    Returns
-    -------
-    dictionary
-
-    """
 
     combined_data = {}
     if (len(panther_list) > 0 and len(locus_list) > 0):
@@ -113,19 +72,7 @@ def combine_panther_locus_data(panther_list, locus_list):
 
 
 def get_eco_ids(eco_format_name_list):
-    """ Get eco ids based on given format names.
 
-    Parameters
-    ----------
-    eco_format_name_list
-        list of string eco format_name
-    
-    Returns
-    -------
-    list
-        list of eco ids based on eco ids
-
-    """
     if (eco_format_name_list):
         desired_eco_ids = DBSession.query(Eco.eco_id).filter(
             Eco.format_name.in_(eco_format_name_list)).all()
@@ -135,19 +82,7 @@ def get_eco_ids(eco_format_name_list):
 
 
 def get_locus_alias_data(locus_alias_list, dbentity_id, item_obj):
-    """ create locus alias data object
 
-    Parameters
-    ----------
-    locus_alias_list
-    dbentity_id
-    item_obj
-
-    Returns
-    -------
-    dictionary
-
-    """
     data_dict = {}
     aliases = []
     aliases_types = ["Uniform", "Non-uniform"]
@@ -178,16 +113,6 @@ def get_locus_alias_data(locus_alias_list, dbentity_id, item_obj):
 
 
 def get_output(result_data):
-    """Get generated data and format it to fit Alliance schema.
-
-    Parameters
-    ----------
-    result_data: list
-
-    Returns
-    -------
-    dictionary
-    """
 
     if (result_data):
         output_obj = {
@@ -211,20 +136,11 @@ def get_output(result_data):
     else:
         return None
 
-def get_pers_output(submission_type, result_data):
-    """Get generated data and format it to fit Alliance persistent schema.
-
-    Parameters
-    ----------
-    result_data: list
-
-    Returns
-    -------
-    dictionary
-    """
+def get_pers_output(submission_type, result_data, linkml_version):
 
     if (result_data):
         output_obj = {
+            "linkml_version": linkml_version,
             submission_type : result_data
         }
         return output_obj

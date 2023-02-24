@@ -1,55 +1,15 @@
 import os
 import json
 import concurrent.futures
+from sqlalchemy import create_engine
 from src.models import DBSession, Diseaseannotation, Diseasesupportingevidence, Dbentity
 from src.data_helpers import get_output
 
-engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
-
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 local_dir = 'scripts/dumping/alliance/data/'
-
-
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
-""" EX: { 
-            "DOid": "DOID:10629", # diseaseannotation.
-            "objectId": "SGD:S000000037",
-            "objectName:",
-            "objectRelation":,
-            "negation":,
-            "primaryGeneticEntityIDs": {
-"type": "array",},
-            "evidence": {
-                "evidenceCodes": [
-                    "IMP",
-                    "ISS"
-                ],
-                "publication": {
-                    "pubMedId": "PMID:11827457"
-                }
-            },
-            "objectRelation": {
-                "associationType": "is_implicated_in",  # diseaseannotation.association_type - ro.display_name
-                "objectType": "gene" 
-            },
-            "dateAssigned": "2017-04-12T00:04:00-00:00",
-            "dataProvider": [
-                {
-                    "crossReference": {
-                        "id": "SGD",
-                        "pages": [
-                            "homepage"
-                        ]
-                    },
-                    "type": "curated"
-                }
-            ],
-            "with": [
-                "HGNC:4837" ## diseasesupportingevidence.dbxref_id
-            ]
-        },
- """
-
 
 def get_disease_association_data():
     result = {}
@@ -67,7 +27,6 @@ def get_disease_association_data():
                 "objectId": "",
                 "dateAssigned": "",
                 "dataProvider": [],
-                #  "with": [],
                 "evidence": {
                     "evidenceCodes": [],
                     "publication": {
@@ -139,6 +98,8 @@ def get_disease_association_data():
         if (output_obj):
             with open(json_file_str, 'w+') as res_file:
                 res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+
+    DBSession.close()
 
 if __name__ == '__main__':
     get_disease_association_data()

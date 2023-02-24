@@ -5,8 +5,9 @@ from sqlalchemy import create_engine, and_
 from src.models import DBSession, Locusdbentity, Goannotation, Go, Referencedbentity
 from src.data_helpers import get_eco_ids, get_output
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 
 local_dir = 'scripts/dumping/alliance/data/'
 
@@ -45,7 +46,7 @@ PMID_TO_MMO = {
 }
 
 
-def get_expression_data(root_path):
+def get_expression_data():
 
     desired_eco_ids = get_eco_ids(ECO_FORMAT_NAME_LIST)
     genes = Locusdbentity.get_s288c_genes()
@@ -107,6 +108,8 @@ def get_expression_data(root_path):
         json_file_str = os.path.join(local_dir, file_name)
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+
+    DBSession.close()
 
 if __name__ == '__main__':
     get_expression_data()

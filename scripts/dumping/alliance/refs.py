@@ -9,7 +9,7 @@ import concurrent.futures
 from src.models import DBSession, Referencedbentity, Referencedeleted
 from src.data_helpers import get_output
 
-engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 DBSession.configure(bind=engine)
 
@@ -210,8 +210,8 @@ def get_refs_information():
     ref_exchange_result = []
 
     print ('Processing Resources -- deleted PMIDS')
-    local_refDeleted_file =  'Test_SGD_false_positive_pmids.txt'
-    s3_refDeleted_file = s3_dir + 'Test_SGD_false_positive_pmids.txt'
+    local_refDeleted_file =  'SGD_false_positive_pmids.txt'
+    s3_refDeleted_file = s3_dir + 'SGD_false_positive_pmids.txt'
     refDel_str = os.path.join(local_dir, local_refDeleted_file)
 
     deletedObjList = DBSession.query(Referencedeleted).filter(Referencedeleted.pmid != None).all()
@@ -269,7 +269,6 @@ def get_refs_information():
 
     print ('Processing Resources -- refs without PMIDS')
     resourceObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid == None).all()
-
     print ("computing " + str(len(resourceObjList)) + " refs (non-PMID)")
 
     if (len(resourceObjList) > 0):
@@ -283,9 +282,8 @@ def get_refs_information():
 
     if (len(ref_result) > 0):
         ref_output_obj = get_output(ref_result)
-        #file_name = 'src/data_dump/SGD' + SUBMISSION_VERSION + 'references.json'
-        local_ref_file_name =  'Test_REFERENCE_SGD.json'
-        s3_ref_file = s3_dir + 'Test_REFERENCE_SGD.json'
+        local_ref_file_name =  'REFERENCE_SGD.json'
+        s3_ref_file = s3_dir + 'REFERENCE_SGD.json'
         json_file_str = os.path.join(local_dir, local_ref_file_name)
         
         with open(json_file_str, 'w+') as res_file:
@@ -297,8 +295,8 @@ def get_refs_information():
     
     if (len(ref_exchange_result) > 0):
         refExch_obj = get_output(ref_exchange_result)
-        local_refExch_file =  'Test_SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
-        s3_refExch_file = s3_dir + 'Test_SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        local_refExch_file =  'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        s3_refExch_file = s3_dir + 'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
         refEx_str = os.path.join(local_dir, local_refExch_file)
 
         with open(refEx_str, 'w+') as res_file:
@@ -309,6 +307,9 @@ def get_refs_information():
 
 
     print("end time:" + str(datetime.now()))
+
+    DBSession.close()
+
 
 if __name__ == '__main__':
     get_refs_information()

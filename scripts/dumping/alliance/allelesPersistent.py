@@ -5,8 +5,9 @@ from sqlalchemy import create_engine
 from src.models import Alleledbentity, DBSession
 from src.data_helpers import get_pers_output
 
-engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.5.0')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'allele_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -16,9 +17,7 @@ DEFAULT_TAXID = '559292'
 def get_allele_information():
 
     print("getting Alleles")
-
     alleleObjList = DBSession.query(Alleledbentity).all()
-
     print(("computing " + str(len(alleleObjList)) + " alleles"))
 
     result = []
@@ -70,13 +69,13 @@ def get_allele_information():
             print(e)
 
     if (len(result) > 0):
-        output_obj = get_pers_output(SUBMISSION_TYPE, result)
-
+        output_obj = get_pers_output(SUBMISSION_TYPE, result, LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.5.0'))
         file_name = 'SGD' + SUBMISSION_VERSION + 'allelesPersistent.json'
         json_file_str = os.path.join(local_dir, file_name)
-
         with open(json_file_str, 'w+') as res_file:
-            res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+            res_file.write(json.dumps(output_obj, indent=4, sort_keys=False))
+
+    DBSession.close()
 
 if __name__ == '__main__':
     get_allele_information()
