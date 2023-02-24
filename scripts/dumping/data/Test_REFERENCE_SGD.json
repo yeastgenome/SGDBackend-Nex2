@@ -1,0 +1,2256 @@
+{
+    "data": [
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Cytoplasmic dynein and kinesin are both microtubule-based molecular motors but are structurally and evolutionarily unrelated. Under standard conditions, both move with comparable unloaded velocities toward either the microtubule minus (dynein) or plus (most kinesins) end. This similarity is important because it is often implicitly incorporated into models that examine the balance of cargo fluxes in cells and into models of the bidirectional motility of individual cargos. We examined whether this similarity is a robust feature, and specifically whether it persists across the biologically relevant temperature range. The velocity of mammalian cytoplasmic dynein, but not of mammalian kinesin-1, exhibited a break from simple Arrhenius behavior below 15 degrees C-just above the restrictive temperature of mammalian fast axonal transport. In contrast, the velocity of yeast cytoplasmic dynein showed a break from Arrhenius behavior at a lower temperature ( approximately 8 degrees C). Our studies implicate cytoplasmic dynein as a more thermally tunable motor and therefore a potential thermal regulator of microtubule-based transport. Our theoretical analysis further suggests that motor velocity changes can lead to qualitative changes in individual cargo motion and hence net intracellular cargo fluxes. We propose that temperature can potentially be used as a noninvasive probe of intracellular transport.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Hong W",
+                    "referenceId": "PMID:27653487"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Takshak A",
+                    "referenceId": "PMID:27653487"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Osunbayo O",
+                    "referenceId": "PMID:27653487"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Kunwar A",
+                    "referenceId": "PMID:27653487"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Vershinin M",
+                    "referenceId": "PMID:27653487"
+                }
+            ],
+            "citation": "Hong W, et al. (2016) The Effect of Temperature on Microtubule-Based Transport by Cytoplasmic Dynein and Kinesin-1 Motors. Biophys J 111(6):1287-1294",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185012",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5034348"
+                },
+                {
+                    "id": "DOI:10.1016/j.bpj.2016.08.006"
+                },
+                {
+                    "id": "PMID:27653487"
+                }
+            ],
+            "dateLastModified": "2021-12-04T00:12:00-00:00",
+            "datePublished": "2016 Sep 20",
+            "issueName": "6",
+            "pages": "1287-1294",
+            "primaryId": "PMID:27653487",
+            "resourceAbbreviation": "Biophys J",
+            "tags": [
+                {
+                    "referenceId": "PMID:27653487",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "The Effect of Temperature on Microtubule-Based Transport by Cytoplasmic Dynein and Kinesin-1 Motors.",
+            "volume": "111"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "DNA replication origins strikingly differ between eukaryotic species and cell types. Origins are localized and can be highly efficient in budding yeast, are randomly located in early fly and frog embryos, which do not transcribe their genomes, and are clustered in broad (10-100 kb) non-transcribed zones, frequently abutting transcribed genes, in mammalian cells. Nonetheless, in all cases, origins are established during the G1-phase of the cell cycle by the loading of double hexamers of the Mcm 2-7 proteins (MCM DHs), the core of the replicative helicase. MCM DH activation in S-phase leads to origin unwinding, polymerase recruitment, and initiation of bidirectional DNA synthesis. Although MCM DHs are initially loaded at sites defined by the binding of the origin recognition complex (ORC), they ultimately bind chromatin in much greater numbers than ORC and only a fraction are activated in any one S-phase. Data suggest that the multiplicity and functional redundancy of MCM DHs provide robustness to the replication process and affect replication time and that MCM DHs can slide along the DNA and spread over large distances around the ORC. Recent studies further show that MCM DHs are displaced along the DNA by collision with transcription complexes but remain functional for initiation after displacement. Therefore, eukaryotic DNA replication relies on intrinsically mobile and flexible origins, a strategy fundamentally different from bacteria but conserved from yeast to human. These properties of MCM DHs likely contribute to the establishment of broad, intergenic replication initiation zones in higher eukaryotes.",
+            "allianceCategory": "Review Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Hyrien O",
+                    "referenceId": "PMID:27635237"
+                }
+            ],
+            "citation": "Hyrien O (2016) How MCM loading and spreading specify eukaryotic DNA replication initiation sites. F1000Res 5",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185011",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5007759"
+                },
+                {
+                    "id": "DOI:10.12688/f1000research.9008.1"
+                },
+                {
+                    "id": "PMID:27635237"
+                }
+            ],
+            "dateLastModified": "2022-03-16T00:03:00-00:00",
+            "datePublished": "2016",
+            "primaryId": "PMID:27635237",
+            "resourceAbbreviation": "F1000Res",
+            "tags": [
+                {
+                    "referenceId": "PMID:27635237",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "How MCM loading and spreading specify eukaryotic DNA replication initiation sites.",
+            "volume": "5"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Chromatin structures are transmitted to daughter cells through a complex system of nucleosome disassembly and re-assembly at the advancing replication forks. However, the role of replication pausing in the transmission and perturbation of chromatin structures has not been addressed.  <a href='/locus/S000001073'>RRM3</a> encodes a DNA helicase, which facilitates replication at sites covered with non-histone protein complexes (tRNA genes, active gene promoters, telomeres) in Saccharomyces cerevisiae. In this report we show that the deletion of  <a href='/locus/S000001073'>RRM3</a> reduces the frequency of epigenetic conversions in the subtelomeric regions of the chromosomes. This phenotype is strongly dependent on 2 histone chaperones, CAF-I and  <a href='/locus/S000003651'>ASF1</a>, which are involved in the reassembly of nucleosomes behind replication forks, but not on the histone chaperone  <a href='/locus/S000000104'>HIR1</a>. We also show that the deletion of  <a href='/locus/S000001073'>RRM3</a> increases the spontaneous mutation rates in conjunction with CAF-I and  <a href='/locus/S000003651'>ASF1</a>, but not  <a href='/locus/S000000104'>HIR1</a>. Finally, we demonstrate that  <a href='/locus/S000001073'>Rrm3p</a> and CAF-I compete for the binding to the DNA replication clamp PCNA (Proliferating Cell Nuclear Antigen). We propose that the stalling of DNA replication predisposes to epigenetic conversions and that  <a href='/locus/S000001073'>RRM3</a> and CAF-I play key roles in this process.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Wyse B",
+                    "referenceId": "PMID:27645054"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Oshidari R",
+                    "referenceId": "PMID:27645054"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Rowlands H",
+                    "referenceId": "PMID:27645054"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Abbasi S",
+                    "referenceId": "PMID:27645054"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Yankulov K",
+                    "referenceId": "PMID:27645054"
+                }
+            ],
+            "citation": "Wyse B, et al. (2016) RRM3 regulates epigenetic conversions in Saccharomyces cerevisiae in conjunction with Chromatin Assembly Factor I. Nucleus 7(4):405-14",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185010",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5039003"
+                },
+                {
+                    "id": "DOI:10.1080/19491034.2016.1212796"
+                },
+                {
+                    "id": "PMID:27645054"
+                }
+            ],
+            "dateLastModified": "2020-12-09T00:12:00-00:00",
+            "datePublished": "2016 Jul 3",
+            "issueName": "4",
+            "pages": "405-14",
+            "primaryId": "PMID:27645054",
+            "resourceAbbreviation": "Nucleus",
+            "tags": [
+                {
+                    "referenceId": "PMID:27645054",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "RRM3 regulates epigenetic conversions in Saccharomyces cerevisiae in conjunction with Chromatin Assembly Factor I.",
+            "volume": "7"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Actin nucleation is the key rate limiting step in the process of actin polymerization, and tight regulation of this process is critical to ensure actin filaments form only at specific times and at defined regions of the cell. Arp2/3 is a well-characterised protein complex that can promote nucleation of new filaments, though its activity requires additional nucleation promotion factors (NPFs). The best recognized of these factors are the WASP family of proteins that contain binding motifs for both monomeric actin and for Arp2/3. Previously we demonstrated that the yeast WASP homologue,  <a href='/locus/S000005707'>Las17</a>, in addition to activating Arp2/3 can also nucleate actin filaments de novo, independently of Arp2/3. This activity is dependent on its polyproline rich region. Through biochemical and in vivo analysis we have now identified key motifs within the polyproline region that are required for nucleation and elongation of actin filaments, and have addressed the role of the WH2 domain in the context of actin nucleation without Arp2/3. We have also demonstrated that full length  <a href='/locus/S000005707'>Las17</a> is able to bind liposomes giving rise to the possibility of direct linkage of nascent actin filaments to specific membrane sites to which  <a href='/locus/S000005707'>Las17</a> has been recruited. Overall, we propose that  <a href='/locus/S000005707'>Las17</a> functions as the key initiator of de novo actin filament formation at endocytic sites by nucleating, elongating and tethering nascent filaments which then serve as a platform for Arp2/3 recruitment and function.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Allwood EG",
+                    "referenceId": "PMID:27637067"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Tyler JJ",
+                    "referenceId": "PMID:27637067"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Urbanek AN",
+                    "referenceId": "PMID:27637067"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Smaczynska-de Rooij II",
+                    "referenceId": "PMID:27637067"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Ayscough KR",
+                    "referenceId": "PMID:27637067"
+                }
+            ],
+            "citation": "Allwood EG, et al. (2016) Elucidating Key Motifs Required for Arp2/3-Dependent and Independent Actin Nucleation by Las17/WASP. PLoS One 11(9):e0163177",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185009",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5026357"
+                },
+                {
+                    "id": "DOI:10.1371/journal.pone.0163177"
+                },
+                {
+                    "id": "PMID:27637067"
+                }
+            ],
+            "dateLastModified": "2021-09-24T00:09:00-00:00",
+            "datePublished": "2016",
+            "issueName": "9",
+            "pages": "e0163177",
+            "primaryId": "PMID:27637067",
+            "resourceAbbreviation": "PLoS One",
+            "tags": [
+                {
+                    "referenceId": "PMID:27637067",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Elucidating Key Motifs Required for Arp2/3-Dependent and Independent Actin Nucleation by Las17/WASP.",
+            "volume": "11"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Ammonium is the most common N source for yeast fermentations. Although its transport and assimilation mechanisms are well documented, there have been only a few attempts to measure the in vivo intracellular concentration of ammonium and assess its impact on gene expression. Using an isotope dilution mass spectrometry (IDMS)-based method, we were able to measure the intracellular ammonium concentration in N-limited aerobic chemostat cultivations using three different N sources (ammonium, urea, and glutamate) at the same growth rate (0.05 h(-1)). The experimental results suggest that, at this growth rate, a similar concentration of intracellular (IC) ammonium, about 3.6 mmol NH(4)(+)/liter(IC), is required to supply the reactions in the central N metabolism, independent of the N source. Based on the experimental results and different assumptions, the vacuolar and cytosolic ammonium concentrations were estimated. Furthermore, we identified a futile cycle caused by NH(3) leakage into the extracellular space, which can cost up to 30% of the ATP production of the cell under N-limited conditions, and a futile redox cycle between  <a href='/locus/S000005902'>Gdh1</a> and  <a href='/locus/S000002374'>Gdh2</a> reactions. Finally, using shotgun proteomics with protein expression determined relative to a labeled reference, differences between the various environmental conditions were identified and correlated with previously identified N compound-sensing mechanisms.IMPORTANCE In our work, we studied central N metabolism using quantitative approaches. First, intracellular ammonium was measured under different N sources. The results suggest that Saccharomyces cerevisiae cells maintain a constant NH(4)(+) concentration (around 3 mmol NH(4)(+)/liter(IC)), independent of the applied nitrogen source. We hypothesize that this amount of intracellular ammonium is required to obtain sufficient thermodynamic driving force. Furthermore, our calculations based on thermodynamic analysis of the transport mechanisms of ammonium suggest that ammonium is not equally distributed, indicating a high degree of compartmentalization in the vacuole. Additionally, metabolomic analysis results were used to calculate the thermodynamic driving forces in the central N metabolism reactions, revealing that the main reactions in the central N metabolism are far from equilibrium. Using proteomics approaches, we were able to identify major changes, not only in N metabolism, but also in C metabolism and regulation.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Cueto-Rojas HF",
+                    "referenceId": "PMID:27637876"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Maleki Seifar R",
+                    "referenceId": "PMID:27637876"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Ten Pierick A",
+                    "referenceId": "PMID:27637876"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "van Helmond W",
+                    "referenceId": "PMID:27637876"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Pieterse MM",
+                    "referenceId": "PMID:27637876"
+                },
+                {
+                    "authorRank": 6,
+                    "name": "Heijnen JJ",
+                    "referenceId": "PMID:27637876"
+                },
+                {
+                    "authorRank": 7,
+                    "name": "Wahl SA",
+                    "referenceId": "PMID:27637876"
+                }
+            ],
+            "citation": "Cueto-Rojas HF, et al. (2016) In Vivo Analysis of NH4(+) Transport and Central Nitrogen Metabolism in Saccharomyces cerevisiae during Aerobic Nitrogen-Limited Growth. Appl Environ Microbiol 82(23):6831-6845",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185008",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5103083"
+                },
+                {
+                    "id": "DOI:10.1128/AEM.01547-16"
+                },
+                {
+                    "id": "PMID:27637876"
+                }
+            ],
+            "dateLastModified": "2019-11-20T00:11:00-00:00",
+            "datePublished": "2016 Sep 16",
+            "issueName": "23",
+            "pages": "6831-6845",
+            "primaryId": "PMID:27637876",
+            "resourceAbbreviation": "Appl Environ Microbiol",
+            "tags": [
+                {
+                    "referenceId": "PMID:27637876",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "In Vivo Analysis of NH4(+) Transport and Central Nitrogen Metabolism in Saccharomyces cerevisiae during Aerobic Nitrogen-Limited Growth.",
+            "volume": "82"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Microbial production of isoprene from renewable feedstock is a promising alternative to traditional petroleum-based processes. Currently, efforts to improve isoprenoid production in Saccharomyces cerevisiae mainly focus on cytoplasmic engineering, whereas comprehensive engineering of multiple subcellular compartments is rarely reported. Here, we propose dual metabolic engineering of cytoplasmic and mitochondrial acetyl-CoA utilization to boost isoprene synthesis in S. cerevisiae. This strategy increases isoprene production by 2.1-fold and 1.6-fold relative to the recombinant strains with solely mitochondrial or cytoplasmic engineering, respectively. By combining a modified reiterative recombination system for rapid pathway assembly, a two-phase culture process for dynamic metabolic regulation, and aerobic fed-batch fermentation for sufficient supply of acetyl-coA and carbon, we achieve 2527, mg\u2009l(-1) of isoprene, which is the highest ever reported in engineered eukaryotes. We propose this strategy as an efficient approach to enhancing isoprene production in yeast, which might open new possibilities for bioproduction of other value-added chemicals.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Lv X",
+                    "referenceId": "PMID:27650330"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Wang F",
+                    "referenceId": "PMID:27650330"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Zhou P",
+                    "referenceId": "PMID:27650330"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Ye L",
+                    "referenceId": "PMID:27650330"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Xie W",
+                    "referenceId": "PMID:27650330"
+                },
+                {
+                    "authorRank": 6,
+                    "name": "Xu H",
+                    "referenceId": "PMID:27650330"
+                },
+                {
+                    "authorRank": 7,
+                    "name": "Yu H",
+                    "referenceId": "PMID:27650330"
+                }
+            ],
+            "citation": "Lv X, et al. (2016) Dual regulation of cytoplasmic and mitochondrial acetyl-CoA utilization for improved isoprene production in Saccharomyces cerevisiae. Nat Commun 7:12851",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185007",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5036000"
+                },
+                {
+                    "id": "DOI:10.1038/ncomms12851"
+                },
+                {
+                    "id": "PMID:27650330"
+                }
+            ],
+            "dateLastModified": "2022-03-21T00:03:00-00:00",
+            "datePublished": "2016",
+            "pages": "12851",
+            "primaryId": "PMID:27650330",
+            "resourceAbbreviation": "Nat Commun",
+            "tags": [
+                {
+                    "referenceId": "PMID:27650330",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Dual regulation of cytoplasmic and mitochondrial acetyl-CoA utilization for improved isoprene production in Saccharomyces cerevisiae.",
+            "volume": "7"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "The eukaryotic  <a href='/locus/S000000945'>Ddi1</a> family is defined by a conserved retroviral aspartyl protease-like (RVP) domain found in association with a ubiquitin-like (UBL) domain.  <a href='/locus/S000000945'>Ddi1</a> from Saccharomyces cerevisiae additionally contains a ubiquitin-associated (UBA) domain. The substrate specificity and role of the protease domain in the biological functions of the Ddi family remain unclear. Yeast  <a href='/locus/S000000945'>Ddi1</a> has been implicated in the regulation of cell cycle progression, DNA-damage repair, and exocytosis. Here, we investigated the multi-domain structure of yeast  <a href='/locus/S000000945'>Ddi1</a> using X-ray crystallography, nuclear magnetic resonance, and small-angle X-ray scattering. The crystal structure of the RVP domain sheds light on a putative substrate recognition site involving a conserved loop. Isothermal titration calorimetry confirms that both UBL and UBA domains bind ubiquitin, and that  <a href='/locus/S000000945'>Ddi1</a> binds K48-linked diubiquitin with enhanced affinity. The solution NMR structure of a helical domain that precedes the protease displays tertiary structure similarity to DNA-binding domains from transcription regulators. Our structural studies suggest that the helical domain could serve as a landing platform for substrates in conjunction with attached ubiquitin chains binding to the UBL and UBA domains.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Trempe JF",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "\u0160a\u0161kov\u00e1 KG",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Siv\u00e1 M",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Ratcliffe CD",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Veverka V",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 6,
+                    "name": "Hoegl A",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 7,
+                    "name": "M\u00e9nade M",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 8,
+                    "name": "Feng X",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 9,
+                    "name": "Shenker S",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 10,
+                    "name": "Svoboda M",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 11,
+                    "name": "Ko\u017e\u00ed\u0161ek M",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 12,
+                    "name": "Konvalinka J",
+                    "referenceId": "PMID:27646017"
+                },
+                {
+                    "authorRank": 13,
+                    "name": "Gehring K",
+                    "referenceId": "PMID:27646017"
+                }
+            ],
+            "citation": "Trempe JF, et al. (2016) Structural studies of the yeast DNA damage-inducible protein Ddi1 reveal domain architecture of this eukaryotic protein family. Sci Rep 6:33671",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185006",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5028754"
+                },
+                {
+                    "id": "DOI:10.1038/srep33671"
+                },
+                {
+                    "id": "PMID:27646017"
+                }
+            ],
+            "dateLastModified": "2018-11-13T00:11:00-00:00",
+            "datePublished": "2016",
+            "pages": "33671",
+            "primaryId": "PMID:27646017",
+            "resourceAbbreviation": "Sci Rep",
+            "tags": [
+                {
+                    "referenceId": "PMID:27646017",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Structural studies of the yeast DNA damage-inducible protein Ddi1 reveal domain architecture of this eukaryotic protein family.",
+            "volume": "6"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Oxidative stress plays a pivotal role in pathogenesis of cardiovascular diseases and diabetes; however, the roles of protein kinase A (PKA) and human phosphodiesterase 3A (hPDE3A) remain unknown. Here, we show that yeast expressing wild-type (WT) hPDE3A or K13R hPDE3A (putative ubiquitinylation site mutant) exhibited resistance or sensitivity to exogenous hydrogen peroxide (H(2)O(2)), respectively. H(2)O(2)-stimulated ROS production was markedly increased in yeast expressing K13R hPDE3A (Oxidative stress Sensitive 1, OxiS1), compared with yeast expressing WT hPDE3A (Oxidative stress Resistant 1, OxiR1). In OxiR1,  <a href='/locus/S000004466'>YAP1</a> and YAP1-dependent antioxidant genes were up-regulated, accompanied by a reduction in thioredoxin peroxidase. In OxiS1, expression of  <a href='/locus/S000004466'>YAP1</a> and YAP1-dependent genes was impaired, and the thioredoxin system malfunctioned. H(2)O(2) increased cyclic adenosine monophosphate (cAMP)-hydrolyzing activity of WT hPDE3A, but not K13R hPDE3A, through PKA-dependent phosphorylation of hPDE3A, which was correlated with its ubiquitinylation. The changes in antioxidant gene expression did not directly correlate with differences in cAMP-PKA signaling. Despite differences in their capacities to hydrolyze cAMP, total cAMP levels among OxiR1, OxiS1, and mock were similar; PKA activity, however, was lower in OxiS1 than in OxiR1 or mock. During exposure to H(2)O(2), however,  <a href='/locus/S000001248'>Sch9p</a> activity, a target of Rapamycin complex 1-regulated Rps6 kinase and negative-regulator of PKA, was rapidly reduced in OxiR1, and  <a href='/locus/S000003700'>Tpk1p</a>, a PKA catalytic subunit, was diffusely spread throughout the cytosol, with PKA activation. In OxiS1,  <a href='/locus/S000001248'>Sch9p</a> activity was unchanged during exposure to H(2)O(2), consistent with reduced activation of PKA. These results suggest that, during oxidative stress, TOR-Sch9 signaling might regulate PKA activity, and that post-translational modifications of hPDE3A are critical in its regulation of cellular recovery from oxidative stress.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Rhee DK",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Lim JC",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Hockman SC",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Ahmad F",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Woo DH",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 6,
+                    "name": "Chung YW",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 7,
+                    "name": "Liu S",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 8,
+                    "name": "Hockman AL",
+                    "referenceId": "PMID:27647936"
+                },
+                {
+                    "authorRank": 9,
+                    "name": "Manganiello VC",
+                    "referenceId": "PMID:27647936"
+                }
+            ],
+            "citation": "Rhee DK, et al. (2016) Effects of heterologous expression of human cyclic nucleotide phosphodiesterase 3A (hPDE3A) on redox regulation in yeast. Biochem J 473(22):4205-4225",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185005",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "DOI:10.1042/BCJ20160572"
+                },
+                {
+                    "id": "PMID:27647936"
+                }
+            ],
+            "dateLastModified": "2019-03-20T00:03:00-00:00",
+            "datePublished": "2016 Sep 19",
+            "issueName": "22",
+            "pages": "4205-4225",
+            "primaryId": "PMID:27647936",
+            "resourceAbbreviation": "Biochem J",
+            "tags": [
+                {
+                    "referenceId": "PMID:27647936",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Effects of heterologous expression of human cyclic nucleotide phosphodiesterase 3A (hPDE3A) on redox regulation in yeast.",
+            "volume": "473"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Alternative ways to ensure mate compatibility, such as hermaphroditism and the breakdown of self-incompatibility, evolved repeatedly when finding a mating partner is difficult. In a variety of microorganisms where compatibility is determined by mating-types, a highly regulated form of universal compatibility system called mating-type switching has evolved several times. This sophisticated system allows for the genetic adjustment of the mating type during asexual growth, and it most likely evolved for reproductive assurance of immotile species under low densities. In this review, we compare the switching strategy to other universal compatibility systems such as \"unisexual mating\" and homothallism. We identify the costs of switching, including genome instability, and mechanistic costs, as well as the benefits, mainly the maintenance of important mating-type functions. Given the potential benefits of mating-type switching, we speculate that switching is likely to have evolved many times independently, and may be more common in groups where genetic mating types regulate mate compatibility than assumed so far.",
+            "allianceCategory": "Review Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Nieuwenhuis BP",
+                    "referenceId": "PMID:27650253"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Immler S",
+                    "referenceId": "PMID:27650253"
+                }
+            ],
+            "citation": "Nieuwenhuis BP and Immler S (2016) The evolution of mating-type switching for reproductive assurance. Bioessays 38(11):1141-1149",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185004",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "DOI:10.1002/bies.201600139"
+                },
+                {
+                    "id": "PMID:27650253"
+                }
+            ],
+            "dateLastModified": "2018-03-08T00:03:00-00:00",
+            "datePublished": "2016 Sep 21",
+            "issueName": "11",
+            "pages": "1141-1149",
+            "primaryId": "PMID:27650253",
+            "resourceAbbreviation": "Bioessays",
+            "tags": [
+                {
+                    "referenceId": "PMID:27650253",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "The evolution of mating-type switching for reproductive assurance.",
+            "volume": "38"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "The Sc2.0 project is perhaps the largest synthetic biology project in the public domain, and ultimately aims to construct a new version of the humble brewer's yeast, Saccharomyces cerevisiae. Each year, the Sc2.0 consortium gather to discuss progress in this ambitious project and highlight new developments at the forefront of synthetic genome engineering. This viewpoint summarizes some of the key moments of the 2016 conference, including updates on the Sc2.0 project itself, mammalian synthetic biology, DNA assembly automation, HGP-Write and a panel discussion on the social and ethical perspectives of synthetic biology.",
+            "allianceCategory": "Review Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Walker RS",
+                    "referenceId": "PMID:27633830"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Cai Y",
+                    "referenceId": "PMID:27633830"
+                }
+            ],
+            "citation": "Walker RS and Cai Y (2016) The Fifth Annual Sc2.0 and Synthetic Genomes Conference: Synthetic Genomes in High Gear. ACS Synth Biol 5(9):920-2",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185003",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "DOI:10.1021/acssynbio.6b00227"
+                },
+                {
+                    "id": "PMID:27633830"
+                }
+            ],
+            "dateLastModified": "2020-12-09T00:12:00-00:00",
+            "datePublished": "2016 Sep 16",
+            "issueName": "9",
+            "pages": "920-2",
+            "primaryId": "PMID:27633830",
+            "resourceAbbreviation": "ACS Synth Biol",
+            "tags": [
+                {
+                    "referenceId": "PMID:27633830",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "The Fifth Annual Sc2.0 and Synthetic Genomes Conference: Synthetic Genomes in High Gear.",
+            "volume": "5"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "BACKGROUND: Crude glycerol is the main byproduct of the biodiesel industry. Although it can have different applications, its purification is costly. Therefore, in this study a biotechnological route has been proposed for further utilization of crude glycerol in the fermentative production of lactic acid. This acid is largely utilized in food, pharmaceutical, textile, and chemical industries, making it the hydroxycarboxylic acid with the highest market potential worldwide. Currently, industrial production of lactic acid is done mainly using sugar as the substrate. Thus here, for the first time, Pichia pastoris has been engineered for heterologous L-lactic acid production using glycerol as a single carbon source. For that, the Bos taurus lactate dehydrogenase gene was introduced into P. pastoris. Moreover, a heterologous and a novel homologous lactate transporter have been evaluated for L-lactic acid production. RESULTS: Batch fermentation of the P. pastoris X-33 strain producing LDHb allowed for lactic acid production in this yeast. Although P. pastoris is known for its respiratory metabolism, batch fermentations were performed with different oxygenation levels, indicating that lower oxygen availability increased lactic acid production by 20 %, pushing the yeast towards a fermentative metabolism. Furthermore, a newly putative lactate transporter from P. pastoris named PAS has been identified by search similarity with the lactate transporter from Saccharomyces cerevisiae  <a href='/locus/S000001700'>Jen1p</a>. Both heterologous and homologous transporters,  <a href='/locus/S000001700'>Jen1p</a> and PAS, were evaluated in one strain already containing LDH activity. Fed-batch experiments of P. pastoris strains carrying the lactate transporter were performed with the batch phase at aerobic conditions followed by an aerobic oxygen-limited phase where production of lactic acid was favored. The results showed that the strain containing PAS presented the highest lactic acid titer, reaching a yield of approximately 0.7 g/g. CONCLUSIONS: We showed that P. pastoris has a great potential as a fermentative organism for producing L-lactic acid using glycerol as the carbon source at limited oxygenation conditions (below 0.05 % DO in the bioreactor). The best strain had both the LDHb and the homologous lactate transporter encoding genes expressed, and reached a titer 1.5 times higher than the strain with the S. cerevisiae transporter. Finally, it was also shown that increased lactic acid production was concomitant to reduction of acetic acid formation by half.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "de Lima PB",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Mulder KC",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Melo NT",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Carvalho LS",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Menino GS",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 6,
+                    "name": "Mulinari E",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 7,
+                    "name": "de Castro VH",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 8,
+                    "name": "Dos Reis TF",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 9,
+                    "name": "Goldman GH",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 10,
+                    "name": "Magalh\u00e3es BS",
+                    "referenceId": "PMID:27634467"
+                },
+                {
+                    "authorRank": 11,
+                    "name": "Parachin NS",
+                    "referenceId": "PMID:27634467"
+                }
+            ],
+            "citation": "de Lima PB, et al. (2016) Novel homologous lactate transporter improves L-lactic acid production from glycerol in recombinant strains of Pichia pastoris. Microb Cell Fact 15(1):158",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185002",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5025603"
+                },
+                {
+                    "id": "DOI:10.1186/s12934-016-0557-9"
+                },
+                {
+                    "id": "PMID:27634467"
+                }
+            ],
+            "dateLastModified": "2022-03-16T00:03:00-00:00",
+            "datePublished": "2016",
+            "issueName": "1",
+            "pages": "158",
+            "primaryId": "PMID:27634467",
+            "resourceAbbreviation": "Microb Cell Fact",
+            "tags": [
+                {
+                    "referenceId": "PMID:27634467",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Novel homologous lactate transporter improves L-lactic acid production from glycerol in recombinant strains of Pichia pastoris.",
+            "volume": "15"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "The Candida CTG clade is a monophyletic group of fungal species that translates CTG as serine, and includes the pathogens Candida albicans and Candida parapsilosis. Research has typically focused on identifying protein-coding genes in these species. Here, we use bioinformatic and experimental approaches to annotate known classes of non-coding RNAs in three CTG-clade species, Candida parapsilosis, Candida orthopsilosis and Lodderomyces elongisporus. We also update the annotation of ncRNAs in the C. albicans genome. The majority of ncRNAs identified were snoRNAs. Approximately 50% of snoRNAs (including most of the C/D box class) are encoded in introns. Most are within mono- and polycistronic transcripts with no protein coding potential. Five polycistronic clusters of snoRNAs are highly conserved in fungi. In polycistronic regions, splicing occurs via the classical pathway, as well as by nested and recursive splicing. We identified spliceosomal small nuclear RNAs, the telomerase RNA component, signal recognition particle, RNase P RNA component and the related RNase MRP RNA component in all three genomes. Stem loop IV of the U2 spliceosomal RNA and the associated binding proteins were lost from the ancestor of C. parapsilosis and C. orthopsilosis, following the divergence from L. elongisporus. The RNA component of the MRP is longer in C. parapsilosis, C. orthopsilosis and L. elongisporus than in S. cerevisiae, but is substantially shorter than in C. albicans.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Donovan PD",
+                    "referenceId": "PMID:27658249"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Schr\u00f6der MS",
+                    "referenceId": "PMID:27658249"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Higgins DG",
+                    "referenceId": "PMID:27658249"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Butler G",
+                    "referenceId": "PMID:27658249"
+                }
+            ],
+            "citation": "Donovan PD, et al. (2016) Identification of Non-Coding RNAs in the Candida parapsilosis Species Group. PLoS One 11(9):e0163235",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185001",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5033589"
+                },
+                {
+                    "id": "DOI:10.1371/journal.pone.0163235"
+                },
+                {
+                    "id": "PMID:27658249"
+                }
+            ],
+            "dateLastModified": "2021-01-11T00:01:00-00:00",
+            "datePublished": "2016",
+            "issueName": "9",
+            "pages": "e0163235",
+            "primaryId": "PMID:27658249",
+            "resourceAbbreviation": "PLoS One",
+            "tags": [
+                {
+                    "referenceId": "PMID:27658249",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Identification of Non-Coding RNAs in the Candida parapsilosis Species Group.",
+            "volume": "11"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Extramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Methods for regulating the concentrations of specific cellular proteins are valuable tools for biomedical studies. Artificial regulation of protein degradation by the proteasome is receiving increasing attention. Efficient proteasomal protein degradation requires a degron with two components: a ubiquitin tag that is recognized by the proteasome and a disordered region at which the proteasome engages the substrate and initiates degradation. Here we show that degradation rates can be regulated by modulating the disordered initiation region by the binding of modifier molecules, in vitro and in vivo. These results suggest that artificial modulation of proteasome initiation is a versatile method for conditionally inhibiting the proteasomal degradation of specific proteins.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Takahashi K",
+                    "referenceId": "PMID:26278914"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Matouschek A",
+                    "referenceId": "PMID:26278914"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Inobe T",
+                    "referenceId": "PMID:26278914"
+                }
+            ],
+            "citation": "Takahashi K, et al. (2015) Regulation of Proteasomal Degradation by Modulating Proteasomal Initiation Regions. ACS Chem Biol 10(11):2537-43",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000185000",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC4922138"
+                },
+                {
+                    "id": "DOI:10.1021/acschembio.5b00554"
+                },
+                {
+                    "id": "PMID:26278914"
+                }
+            ],
+            "dateLastModified": "2019-01-11T00:01:00-00:00",
+            "datePublished": "2015 Nov 20",
+            "issueName": "11",
+            "pages": "2537-43",
+            "primaryId": "PMID:26278914",
+            "resourceAbbreviation": "ACS Chem Biol",
+            "tags": [
+                {
+                    "referenceId": "PMID:26278914",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Regulation of Proteasomal Degradation by Modulating Proteasomal Initiation Regions.",
+            "volume": "10"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Extramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Intramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Three processes act in series to accurately replicate the eukaryotic nuclear genome. The major replicative DNA polymerases strongly prevent mismatch formation, occasional mismatches that do form are proofread during replication, and rare mismatches that escape proofreading are corrected by mismatch repair (MMR). This review focuses on MMR in light of increasing knowledge about nuclear DNA replication enzymology and the rate and specificity with which mismatches are generated during leading- and lagging-strand replication. We consider differences in MMR efficiency in relation to mismatch recognition, signaling to direct MMR to the nascent strand, mismatch removal, and the timing of MMR. These studies are refining our understanding of relationships between generating and repairing replication errors to achieve accurate replication of both DNA strands of the nuclear genome.",
+            "allianceCategory": "Review Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Kunkel TA",
+                    "referenceId": "PMID:26436461"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Erie DA",
+                    "referenceId": "PMID:26436461"
+                }
+            ],
+            "citation": "Kunkel TA and Erie DA (2015) Eukaryotic Mismatch Repair in Relation to DNA Replication. Annu Rev Genet 49:291-313",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184999",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5439269"
+                },
+                {
+                    "id": "DOI:10.1146/annurev-genet-112414-054722"
+                },
+                {
+                    "id": "PMID:26436461"
+                }
+            ],
+            "dateLastModified": "2021-01-09T00:01:00-00:00",
+            "datePublished": "2015",
+            "pages": "291-313",
+            "primaryId": "PMID:26436461",
+            "resourceAbbreviation": "Annu Rev Genet",
+            "tags": [
+                {
+                    "referenceId": "PMID:26436461",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Eukaryotic Mismatch Repair in Relation to DNA Replication.",
+            "volume": "49"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Overexpression experiments are sometimes considered as qualitative experiments designed to identify novel proteins and study their function. However, in order to draw conclusions regarding protein overexpression through association analyses using large-scale biological data sets, we need to recognize the quantitative nature of overexpression experiments. Here I discuss the quantitative features of two different types of overexpression experiment: absolute and relative. I also introduce the four primary mechanisms involved in growth defects caused by protein overexpression: resource overload, stoichiometric imbalance, promiscuous interactions, and pathway modulation associated with the degree of overexpression.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Moriya H",
+                    "referenceId": "PMID:26543202"
+                }
+            ],
+            "citation": "Moriya H (2015) Quantitative nature of overexpression experiments. Mol Biol Cell 26(22):3932-9",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184998",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC4710226"
+                },
+                {
+                    "id": "DOI:10.1091/mbc.E15-07-0512"
+                },
+                {
+                    "id": "PMID:26543202"
+                }
+            ],
+            "dateLastModified": "2018-11-13T00:11:00-00:00",
+            "datePublished": "2015 Nov 5",
+            "issueName": "22",
+            "pages": "3932-9",
+            "primaryId": "PMID:26543202",
+            "resourceAbbreviation": "Mol Biol Cell",
+            "tags": [
+                {
+                    "referenceId": "PMID:26543202",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Quantitative nature of overexpression experiments.",
+            "volume": "26"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Homologous recombination (HR) plays an important role in maintaining genomic integrity. It is responsible for repair of the most harmful DNA lesions, DNA double-strand breaks and inter-strand DNA cross-links. HR function is also essential for proper segregation of homologous chromosomes in meiosis, maintenance of telomeres, and resolving stalled replication forks. Defects in HR often lead to genetic diseases and cancer.  <a href='/locus/S000004494'>Rad52</a> is one of the key HR proteins, which is evolutionarily conserved from yeast to humans. In yeast,  <a href='/locus/S000004494'>Rad52</a> is important for most HR events;  <a href='/locus/S000004494'>Rad52</a> mutations disrupt repair of DNA double-strand breaks and targeted DNA integration. Surprisingly, in mammals,  <a href='/locus/S000004494'>Rad52</a> knockouts showed no significant DNA repair or recombination phenotype. However, recent work demonstrated that mutations in human  <a href='/locus/S000004494'>RAD52</a> are synthetically lethal with mutations in several other HR proteins including BRCA1 and BRCA2. These new findings indicate an important backup role for  <a href='/locus/S000004494'>Rad52</a>, which complements the main HR mechanism in mammals. In this review, we focus on the  <a href='/locus/S000004494'>Rad52</a> activities and functions in HR and the possibility of using human  <a href='/locus/S000004494'>RAD52</a> as therapeutic target in BRCA1 and BRCA2-deficient familial breast cancer and ovarian cancer.",
+            "allianceCategory": "Review Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Hanamshet K",
+                    "referenceId": "PMID:27649245"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Mazina OM",
+                    "referenceId": "PMID:27649245"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Mazin AV",
+                    "referenceId": "PMID:27649245"
+                }
+            ],
+            "citation": "Hanamshet K, et al. (2016) Reappearance from Obscurity: Mammalian Rad52 in Homologous Recombination. Genes (Basel) 7(9)",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184997",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5042393"
+                },
+                {
+                    "id": "DOI:10.3390/genes7090063"
+                },
+                {
+                    "id": "PMID:27649245"
+                }
+            ],
+            "dateLastModified": "2022-03-18T00:03:00-00:00",
+            "datePublished": "2016",
+            "issueName": "9",
+            "primaryId": "PMID:27649245",
+            "resourceAbbreviation": "Genes (Basel)",
+            "tags": [
+                {
+                    "referenceId": "PMID:27649245",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Reappearance from Obscurity: Mammalian Rad52 in Homologous Recombination.",
+            "volume": "7"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Letter",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Extramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, U.S. Gov't, Non-P.H.S.",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Molecular tools for controlling gene expression are essential for manipulating biological systems. One class of tools includes RNA switches that incorporate RNA-based sensors, known as aptamers. However, most switches reported to date are responsive to toxic molecules or to endogenous metabolites. For effective conditional control, switches must incorporate RNA aptamers that exhibit selectivity against such endogenous metabolites. We report a systematic approach which combines a rapid in vitro assay and an in silico model to support an efficient, streamlined application of aptamers into RNA switches. Model predictions were validated in vivo and demonstrate that the RNA switches enable selective and programmable gene regulation. We demonstrate the method using aptamers that bind the FDA-approved small molecule (6R)-folinic acid, providing access to new molecular targets for gene expression control and much-needed clinically relevant tools for advancing RNA-based therapeutics.",
+            "allianceCategory": "Other",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "McKeague M",
+                    "referenceId": "PMID:26359915"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Wang YH",
+                    "referenceId": "PMID:26359915"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Smolke CD",
+                    "referenceId": "PMID:26359915"
+                }
+            ],
+            "citation": "McKeague M, et al. (2015) In Vitro Screening and in Silico Modeling of RNA-Based Gene Expression Control. ACS Chem Biol 10(11):2463-2467",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184996",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC4936389"
+                },
+                {
+                    "id": "DOI:10.1021/acschembio.5b00518"
+                },
+                {
+                    "id": "PMID:26359915"
+                }
+            ],
+            "dateLastModified": "2018-11-13T00:11:00-00:00",
+            "datePublished": "2015 Nov 20",
+            "issueName": "11",
+            "pages": "2463-2467",
+            "primaryId": "PMID:26359915",
+            "resourceAbbreviation": "ACS Chem Biol",
+            "tags": [
+                {
+                    "referenceId": "PMID:26359915",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "In Vitro Screening and in Silico Modeling of RNA-Based Gene Expression Control.",
+            "volume": "10"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Meiotic recombination presents an uneven distribution across the genome. Genomic regions that exhibit at relatively high frequencies of recombination are called hotspots, whereas those with relatively low frequencies of recombination are called coldspots. Therefore, hotspots and coldspots would provide useful information for the study of the mechanism of recombination. In this study, we proposed a computational predictor called iRSpot-DACC to predict hot/cold spots across the yeast genome. It combined Support Vector Machines (SVMs) and a feature called dinucleotide-based auto-cross covariance (DACC), which is able to incorporate the global sequence-order information and fifteen local DNA properties into the predictor. Combined with Principal Component Analysis (PCA), its performance was further improved. Experimental results on a benchmark dataset showed that iRSpot-DACC can achieve an accuracy of 82.7%, outperforming some highly related methods.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Liu B",
+                    "referenceId": "PMID:27641752"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Liu Y",
+                    "referenceId": "PMID:27641752"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Jin X",
+                    "referenceId": "PMID:27641752"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Wang X",
+                    "referenceId": "PMID:27641752"
+                },
+                {
+                    "authorRank": 1,
+                    "name": "Liu B",
+                    "referenceId": "PMID:27641752"
+                }
+            ],
+            "citation": "Liu B, et al. (2016) iRSpot-DACC: a computational predictor for recombination hot/cold spots identification based on dinucleotide-based auto-cross covariance. Sci Rep 6:33483",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184995",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "PMCID:PMC5027590"
+                },
+                {
+                    "id": "DOI:10.1038/srep33483"
+                },
+                {
+                    "id": "PMID:27641752"
+                }
+            ],
+            "dateLastModified": "2020-03-09T00:03:00-00:00",
+            "datePublished": "2016",
+            "pages": "33483",
+            "primaryId": "PMID:27641752",
+            "resourceAbbreviation": "Sci Rep",
+            "tags": [
+                {
+                    "referenceId": "PMID:27641752",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "iRSpot-DACC: a computational predictor for recombination hot/cold spots identification based on dinucleotide-based auto-cross covariance.",
+            "volume": "6"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Single-stranded RNA molecules fold into extraordinarily complicated secondary and tertiary structures as a result of intramolecular base pairing. In vivo, these RNA structures are not static. Instead, they are remodeled in response to changes in the prevailing physicochemical environment of the cell and as a result of intermolecular base pairing and interactions with RNA-binding proteins. Remarkable technical advances now allow us to probe RNA secondary structure at single-nucleotide resolution and genome-wide, both in vitro and in vivo. These data sets provide new glimpses into the RNA universe. Analyses of RNA structuromes in HIV, yeast, Arabidopsis, and mammalian cells and tissues have revealed regulatory effects of RNA structure on messenger RNA (mRNA) polyadenylation, splicing, translation, and turnover. Application of new methods for genome-wide identification of mRNA modifications, particularly methylation and pseudouridylation, has shown that the RNA \"epitranscriptome\" both influences and is influenced by RNA structure. In this review, we describe newly developed genome-wide RNA structure-probing methods and synthesize the information emerging from their application.",
+            "allianceCategory": "Review Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Bevilacqua PC",
+                    "referenceId": "PMID:27648642"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Ritchey LE",
+                    "referenceId": "PMID:27648642"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Su Z",
+                    "referenceId": "PMID:27648642"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Assmann SM",
+                    "referenceId": "PMID:27648642"
+                }
+            ],
+            "citation": "Bevilacqua PC, et al. (2016) Genome-Wide Analysis of RNA Secondary Structure. Annu Rev Genet 50:235-266",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184994",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "DOI:10.1146/annurev-genet-120215-035034"
+                },
+                {
+                    "id": "PMID:27648642"
+                }
+            ],
+            "dateLastModified": "2017-04-28T00:04:00-00:00",
+            "datePublished": "2016 Sep 14",
+            "pages": "235-266",
+            "primaryId": "PMID:27648642",
+            "resourceAbbreviation": "Annu Rev Genet",
+            "tags": [
+                {
+                    "referenceId": "PMID:27648642",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Genome-Wide Analysis of RNA Secondary Structure.",
+            "volume": "50"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Rapid detection and identification of microorganisms is a challenging and important aspect in many areas of our life, beginning with medicine, ending with industry. Unfortunately, classical methods of microorganisms identification are based on time-consuming and labor-intensive approaches. Screening techniques require rapid and cheap grouping of bacterial isolates; however, modern bioanalytics demands comprehensive bacterial studies on molecular level. The new approach to the rapid identification of bacteria is to use the electromigration techniques, especially capillary zone electrophoresis (CZE). CZE is an important technique used in the analysis of microorganisms. However, the analysis of microbial complexes using this technology still encounters several problems-uncontrolled aggregation and/or adhesion to the capillary surface. One way to resolve this issue is the CZE analysis of microbial cell with surface charge modification by bivalent metal ions (e.g., Ca(2+) aq, Zn aq). Under the above conditions, bacterial cells create compact aggregates, and fewer high-intensity signals are observed in electropherograms. The chapter presents the capillary electrophoresis of microbial aggregates approach with UV and one-dimensional intact cell matrix-assisted laser desorption/ionization time-of-flight mass spectrometry (ICM MS) detection.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Pomastowski P",
+                    "referenceId": "PMID:27645746"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Railean-Plugaru V",
+                    "referenceId": "PMID:27645746"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Buszewski B",
+                    "referenceId": "PMID:27645746"
+                }
+            ],
+            "citation": "Pomastowski P, et al. (2016) Microbial Analysis of Escherichia coli ATCC, Lactobacteria and Saccharomyces cerevisiae Using Capillary Electrophoresis Approach. Methods Mol Biol 1483:393-406",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184993",
+                    "pages": [
+                        "reference"
+                    ]
+                },
+                {
+                    "id": "DOI:10.1007/978-1-4939-6403-1_19"
+                },
+                {
+                    "id": "PMID:27645746"
+                }
+            ],
+            "dateLastModified": "2018-04-09T00:04:00-00:00",
+            "datePublished": "2016",
+            "pages": "393-406",
+            "primaryId": "PMID:27645746",
+            "resourceAbbreviation": "Methods Mol Biol",
+            "tags": [
+                {
+                    "referenceId": "PMID:27645746",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Microbial Analysis of Escherichia coli ATCC, Lactobacteria and Saccharomyces cerevisiae Using Capillary Electrophoresis Approach.",
+            "volume": "1483"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "van Leeuwen J",
+                    "referenceId": "SGD:S000182237"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Boone C",
+                    "referenceId": "SGD:S000182237"
+                }
+            ],
+            "citation": "van Leeuwen J and Boone C (2015)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000182237",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2015",
+            "primaryId": "SGD:S000182237",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000182237",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "van Leeuwen J and Boone C (2015)   "
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Offman J",
+                    "referenceId": "SGD:S000128229"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Hoffman E",
+                    "referenceId": "SGD:S000128229"
+                }
+            ],
+            "citation": "Offman J and Hoffman E (2008)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000128229",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2008",
+            "primaryId": "SGD:S000128229",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000128229",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Offman J and Hoffman E (2008)   "
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Crouch RJ",
+                    "referenceId": "SGD:S000059047"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Hess SM",
+                    "referenceId": "SGD:S000059047"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Hopper AK",
+                    "referenceId": "SGD:S000059047"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Stanford DR",
+                    "referenceId": "SGD:S000059047"
+                }
+            ],
+            "citation": "Stanford DR, et al. (1997) Personal Communication",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000059047",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "1997",
+            "primaryId": "SGD:S000059047",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000059047",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Stanford DR, et al. (1997) Personal Communication"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Kurjan J",
+                    "referenceId": "SGD:S000058641"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Pike J",
+                    "referenceId": "SGD:S000058641"
+                }
+            ],
+            "citation": "Pike J and Kurjan J (1994) Personal Communication",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000058641",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "1994",
+            "primaryId": "SGD:S000058641",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000058641",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Pike J and Kurjan J (1994) Personal Communication"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Horowitz S",
+                    "referenceId": "SGD:S000184570"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Koepnick B",
+                    "referenceId": "SGD:S000184570"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Martin R",
+                    "referenceId": "SGD:S000184570"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Tymieniecki A",
+                    "referenceId": "SGD:S000184570"
+                },
+                {
+                    "authorRank": 5,
+                    "name": "Khatib F",
+                    "referenceId": "SGD:S000184570"
+                },
+                {
+                    "authorRank": 6,
+                    "name": "Bardwell JCA",
+                    "referenceId": "SGD:S000184570"
+                }
+            ],
+            "citation": "Horowitz S, et al. (2016) Determining crystal structures through crowdsourcing and coursework Nat Commun ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184570",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2016",
+            "primaryId": "SGD:S000184570",
+            "resourceAbbreviation": "Nat Commun",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000184570",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Horowitz S, et al. (2016) Determining crystal structures through crowdsourcing and coursework Nat Commun "
+        },
+        {
+            "allianceCategory": "Other",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Patton-Vogt J",
+                    "referenceId": "SGD:S000184346"
+                }
+            ],
+            "citation": "Patton-Vogt J (2016)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184346",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2016",
+            "primaryId": "SGD:S000184346",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000184346",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Patton-Vogt J (2016)   "
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Yeast fatty acid synthase is a stable multienzyme complex which catalyzes fatty acid synthesis according to the following equation: CH3-CO-SCoA + nHOOC-CH2-CO-SCoA + 2nTPNH + 2nH+ -> CH3-(CH2-CH2)n-CO-SCoA + nCoASH + nCO2 + 2nTPN+ + nH2O (1) where n = 6-8. Palmitoyl- and stearoyl-CoA are the main products; myristoyl-CoA is produced in small amounts.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Lynen F",
+                    "referenceId": "SGD:S000133512"
+                }
+            ],
+            "citation": "Lynen F (1969) Yeast fatty acid synthase Methods Enzymol 14:17-33",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000133512",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "1969",
+            "pages": "17-33",
+            "primaryId": "SGD:S000133512",
+            "resourceAbbreviation": "Methods Enzymol",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000133512",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Yeast fatty acid synthase",
+            "volume": "14"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Model Organism Databases (MODs) represent the union of database technology and biology, and are essential to modern biological and medical research. Research communities are producing floods of new data, of increasingly different types and complexity. MODs assimilate this information from a wide variety of sources, organize it in a comprehensible manner, and make it freely available to the public via the Internet. MODs permit researchers to sort through massive amounts of data, providing access to key information that they might otherwise have overlooked. The protocols in this unit offer a general introduction to different types of data available in the growing number of MODs, and approaches for accessing, browsing, and querying these data.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Engel SR",
+                    "referenceId": "SGD:S000184022"
+                }
+            ],
+            "citation": "Engel SR (2009) Using Model Organism Databases (MODs) Curr Protoc Essential Lab Tech 1:11.4.1-11.4.17",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000184022",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2009",
+            "pages": "11.4.1-11.4.17",
+            "primaryId": "SGD:S000184022",
+            "resourceAbbreviation": "Curr Protoc Essential Lab Tech",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000184022",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Using Model Organism Databases (MODs)",
+            "volume": "1"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Haber JE",
+                    "referenceId": "SGD:S000058968"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "McCusker JH",
+                    "referenceId": "SGD:S000058968"
+                }
+            ],
+            "citation": "McCusker JH and Haber JE (1996) SUG2 {crl13} is identical to CRL13. Personal Communication",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000058968",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "1996",
+            "primaryId": "SGD:S000058968",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000058968",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "SUG2 {crl13} is identical to CRL13"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Gao Q",
+                    "referenceId": "SGD:S000183741"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Binns D",
+                    "referenceId": "SGD:S000183741"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Kinch L",
+                    "referenceId": "SGD:S000183741"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Goodman JM",
+                    "referenceId": "SGD:S000183741"
+                }
+            ],
+            "citation": "Gao Q, et al. (2016)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000183741",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2016",
+            "primaryId": "SGD:S000183741",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000183741",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Gao Q, et al. (2016)   "
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Thesis",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "All cells and organelles must regulate volume to control their size, shape and copy number. Volume homeostasis, in turn, is dependent on osmosis facilitated by aquaporins. Despite being critical for membrane fusion and fission events that underlie organelle morphology and membrane trafficking, volume regulations in the endocytic pathway and the aquaporins responsible have not been characterized. Thus, the primary goals of my dissertation research were to better understand the role of osmosis in membrane fusion or fission and identify the aquaporin(s) responsible using the yeast vacuole as a model. First, I characterized osmosis across isolated vacuole membranes and identified the aquaporins responsible,  <a href='/locus/S000001840'>Aqy3</a> and  <a href='/locus/S000003966'>Fps1</a>, using stopped-flow fluorometry. Fluorescence microscopy revealed that knocking out  <a href='/locus/S000001840'>AQY3</a> or both aquaporins disrupted vacuole morphology, indicative of an impairment in membrane fission. Using a new cell-free vacuole fission assay, I then determined that osmosis can drive fission in vitro and that this process involves inactivation of Ytp7, a Rab-GTPase and key regulator of vacuole morphology. These results support a model whereby water efflux by  <a href='/locus/S000001840'>Aqy3</a> permits membrane invagination while signaling the fission machinery necessary for membrane fission.",
+            "allianceCategory": "Thesis",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Patel D",
+                    "referenceId": "SGD:S000183307"
+                }
+            ],
+            "citation": "Patel D (2013) Characterization of vacuole aquaporin function and its implication in membrane fission  ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000183307",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2013",
+            "primaryId": "SGD:S000183307",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000183307",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Characterization of vacuole aquaporin function and its implication in membrane fission"
+        },
+        {
+            "allianceCategory": "Other",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Erdmann R",
+                    "referenceId": "SGD:S000183178"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Schuldiner M",
+                    "referenceId": "SGD:S000183178"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Schliebs W",
+                    "referenceId": "SGD:S000183178"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Zalckvar E",
+                    "referenceId": "SGD:S000183178"
+                }
+            ],
+            "citation": "Erdmann R, et al. (2016)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000183178",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2016",
+            "primaryId": "SGD:S000183178",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000183178",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Erdmann R, et al. (2016)   "
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Thesis",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "The goal of the research described in this thesis was to identify the genes/enzymes involved in acyl chain remodeling of the major membrane lipid phosphatidylcholine (PC) in the model eukaryote S. cerevisiae. A database search yielded 75 candidates with (potential) phospholipase, acyltransferase or transacylase activity. The corresponding deletion strains were screened for the molecular species profiles of PC and phosphatidylethanolamine (PE), yielding 10 candidate strains. Using stable isotope labeling followed by analysis by mass spectrometry, the evolution of the species profile of PC newly synthesized via PE methylation was monitored in pulse-chase experiments, revealing that 6 strains displayed aberrant PC remodeling. Deletion of the SCT1/GAT2 gene coding for a glycerol-3-phosphate acyltransferase, led to the most pronounced change in PC remodeling. In-depth study into the role of  <a href='/locus/S000000107'>Sct1p</a> in regulating lipid acyl chain composition showed that  <a href='/locus/S000000107'>Sct1p</a> regulates fatty acyl chain desaturation, as deletion and overexpression of  <a href='/locus/S000000107'>SCT1</a> dramatically change the acyl chain composition. We showed that it does so by competing with the fatty acid desaturase  <a href='/locus/S000003023'>Ole1p</a> for the common substrate C16:0-CoA in co-overexpression experiments of  <a href='/locus/S000003023'>OLE1</a> and  <a href='/locus/S000000107'>SCT1</a>. A new paradigm for the regulation of fatty acid desaturation is presented in which an acyltransferase sequesters C16:0-CoA into lipids, thereby shielding it from desaturation by a fatty acid desaturase.  <a href='/locus/S000000107'>Sct1p</a> activity is regulated by phosphorylation. The level of  <a href='/locus/S000000107'>Sct1p</a> phosphorylation increases in response to the presence of C16:0 acyl chains in the culture medium, demonstrating the physiological relevance of these findings. Overexpression of  <a href='/locus/S000000107'>Sct1p</a> dramatically increases the cellular C16:0 content, and this excess C16:0 is incorporated into all glycerophospholipids: phosphatidic acid (PA), phosphatidylserine (PS), PE, PC, phosphatidylinositol (PI), phosphatidylglycerol (PG), and cardiolipin (CL). The extra C16:0 is incorporated into PC via both biosynthesis routes, and via enhanced remodeling. The increase in the extent of remodeling allowed a much more sensitive detection of PC acyl chain remodeling. Taking advantage of  <a href='/locus/S000000107'>Sct1p</a> overexpression we showed that remodeling occurs at both the sn-1 and sn-2 position of the glycerol backbone, and that the phospholipase B  <a href='/locus/S000004610'>Plb1p</a> is required for efficient remodeling.  <a href='/locus/S000004608'>Plb2p</a> and  <a href='/locus/S000005291'>Lro1p</a> were not required for PC acyl chain remodeling.  <a href='/locus/S000004610'>Plb1p</a> is the first enzyme that is shown to be directly involved in PC acyl chain remodeling, most probably by hydrolyzing both acyl chains. The role of PC as potential acyl donor of  <a href='/locus/S000006344'>Taz1p</a>, a CL remodeling transacylase, was also investigated. Analysis of the molecular species profiles of steady state and newly synthesized glycerophospholipids indicates that PS and/or PE rather than PC is the preferred acyl donor of  <a href='/locus/S000006344'>Taz1p</a>. ",
+            "allianceCategory": "Thesis",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "De Smet CH",
+                    "referenceId": "SGD:S000182803"
+                }
+            ],
+            "citation": "De Smet CH (2011) Mechanisms regulating the acyl chain composition of membrane lipids in S. cerevisiae  ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000182803",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2011",
+            "primaryId": "SGD:S000182803",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000182803",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Mechanisms regulating the acyl chain composition of membrane lipids in S. cerevisiae"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Thesis",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Thesis",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "McCusker JH",
+                    "referenceId": "SGD:S000058967"
+                }
+            ],
+            "citation": "McCusker JH (1987) Pleiotropic drug resistance mutations in Saccharomyces cerevisiae. Ph.D. Thesis",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000058967",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "1987",
+            "primaryId": "SGD:S000058967",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000058967",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Pleiotropic drug resistance mutations in Saccharomyces cerevisiae"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Labib KPM",
+                    "referenceId": "SGD:S000182391"
+                }
+            ],
+            "citation": "Labib KPM (2016)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000182391",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2016",
+            "primaryId": "SGD:S000182391",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000182391",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Labib KPM (2016)   "
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": " <a href='/locus/S000004808'>ICY1</a> has synthetic growth impaired phenotypes with tcp1-1 and with the ICY2 null mutant. Knock out affects cell shape, nuclear morphology and movement and membranous vesicle trafficking. Overexpression partially suppresses tcp1-2. Null mutant is hypersensitive to rapamycin (less than icy2 null), and the hypersensitivity is suppressed by the tcp1-1 mutation. The null mutant has defects in nuclear transport. The  <a href='/locus/S000004808'>icy1</a> icy2 double null is conditionally lethal at 15 deg C, hypersensitive to latrunculin A, displays defects in chromatin organization and nuclear transport, and is super-sensitive to alpha factor, using a disk assay. The double mutant arrests for growth in two stages, with a characteristic double halo. In addition, vacuole morphology of the double null mutant is aberrant, exhibiting a larger number of vacuole lobes than either single mutants or the wild-type. <br><br> ATG41/ICY2 has synthetic growth impaired phenotypes with tcp1-1 and with the  <a href='/locus/S000004808'>ICY1</a> null mutant. Knock out affects cell shape, nuclear morphology and movement and membranous vesicle trafficking. Null mutant is hypersensitive to rapamycin (more than  <a href='/locus/S000004808'>icy1</a> null), and the hypersensitivity is suppressed by the tcp1-1 mutation. The null mutant has defects in nuclear transport. The icy2  <a href='/locus/S000004808'>icy1</a> double null is conditionally lethal at 15 deg C, hypersensitive to latrunculin A, displays defects in chromatin organization and nuclear transport, and is super-sensitive to alpha factor, using a disk assay. The double mutant arrests for growth in two stages, with a characteristic double halo. In addition, vacuole morphology of the double null mutant is aberrant, exhibiting a larger number of vacuole lobes than either single mutants or the wild-type.",
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Ursic D",
+                    "referenceId": "SGD:S000182159"
+                }
+            ],
+            "citation": "Ursic D (2000) personal communication  ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000182159",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2000",
+            "primaryId": "SGD:S000182159",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000182159",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "personal communication"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "Saccharomyces cerevisiae  <a href='/locus/S000004637'>YMR034c</a> is a sequence homolog for the Candida albicans CaRCH1 gene, named as ScRCH1, and we show that ScRch1 localizes to the plasma membrane in response to high levels of extracellular calcium. To find out membrane and lipid proteins related to the subcellular localization of ScRch1, we screened 402 yeast single-gene deletion mutants for genes encoding membrane and lipid proteins through a fluorescence microscope approach. We have identified 10 genes, whose deletion renders ScRch1-GFP failed to localize to the plasma membrane. These genes include  <a href='/locus/S000002418'>SNQ2</a> and  <a href='/locus/S000001136'>HXT1</a> encoding plasma transport proteins,  <a href='/locus/S000005045'>AVT4</a> encoding vacuolar transport proteins,  <a href='/locus/S000004138'>PEP3</a> encoding docking/fusion tonoplast protein,  <a href='/locus/S000001311'>DFG10</a> related to cell differentiation,  <a href='/locus/S000000381'>EHT1</a> and  <a href='/locus/S000000408'>LDH1</a> encoding liposome proteins, as well as  <a href='/locus/S000000423'>YBR219c</a>,  <a href='/locus/S000000428'>YBR224w</a> and  <a href='/locus/S000002825'>YDR417c</a> with unknown functions. These data provide a basis for our understanding the regulatory mechanisms of ScRch1 subcellular localization.",
+            "allianceCategory": "Research Article",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Zhao G",
+                    "referenceId": "SGD:S000182150"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Cao C",
+                    "referenceId": "SGD:S000182150"
+                },
+                {
+                    "authorRank": 3,
+                    "name": "Zhao Y",
+                    "referenceId": "SGD:S000182150"
+                },
+                {
+                    "authorRank": 4,
+                    "name": "Jiang L",
+                    "referenceId": "SGD:S000182150"
+                }
+            ],
+            "citation": "Zhao G, et al. (2013) Screen for Membrane and Lipid Proteins Required for the Subcellular Localization of ScRch1 in Budding Yeast Chin J Cell Biol 35:1634-1642",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000182150",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2013",
+            "pages": "1634-1642",
+            "primaryId": "SGD:S000182150",
+            "resourceAbbreviation": "Chin J Cell Biol",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000182150",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Screen for Membrane and Lipid Proteins Required for the Subcellular Localization of ScRch1 in Budding Yeast",
+            "volume": "35"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Hesman T",
+                    "referenceId": "SGD:S000058894"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "Johnston M",
+                    "referenceId": "SGD:S000058894"
+                }
+            ],
+            "citation": "Hesman T and Johnston M (1997) SET2p contains both SET and CXC domains and regulates GAL4 expression. Unpublished",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000058894",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "1997",
+            "primaryId": "SGD:S000058894",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000058894",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "SET2p contains both SET and CXC domains and regulates GAL4 expression"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "abstract": "GO terms are manually assigned to each HAMAP family rule. High-quality Automated and Manual Annotation of microbial Proteins (HAMAP) family rules are a collection of orthologous microbial protein families, from bacteria, archaea and plastids, generated manually by expert curators. The assigned GO terms are then transferred to all the proteins that belong to each HAMAP family. Only GO terms from the molecular function and biological process ontologies are assigned. GO annotations using this technique will receive the evidence code Inferred from Electronic Annotation (IEA). These annotations are updated monthly by HAMAP and are available for download on both GO and GOA EBI ftp sites. To report an annotation error or inconsistency, or for further information, please contact the GO Consortium at gohelp@genome.stanford.edu or submit a comment the SourceForge Annotation Issues tracker (http://sourceforge.net/projects/geneontology/). HAMAP is a project based at the Swiss Institute of Bioinformatics (Gattiker et al. 2003, Comp. Biol and Chem. 27: 49-58). For further information, please see http://www.expasy.org/sprot/hamap/.",
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Swiss Institute of Bioinformatics (SIB) curators",
+                    "referenceId": "SGD:S000181932"
+                },
+                {
+                    "authorRank": 2,
+                    "name": "GOA curators",
+                    "referenceId": "SGD:S000181932"
+                }
+            ],
+            "citation": "Swiss Institute of Bioinformatics (SIB) curators and GOA curators (2006) Electronic Gene Ontology annotations created by transferring manual GO annotations between orthologous microbial proteins  ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000181932",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2006",
+            "primaryId": "SGD:S000181932",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000181932",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Electronic Gene Ontology annotations created by transferring manual GO annotations between orthologous microbial proteins"
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Personal Communication to SGD",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Personal Communication",
+            "authors": [
+                {
+                    "authorRank": 1,
+                    "name": "Lingner T",
+                    "referenceId": "SGD:S000181516"
+                }
+            ],
+            "citation": "Lingner T (2015)   ",
+            "crossReferences": [
+                {
+                    "id": "SGD:S000181516",
+                    "pages": [
+                        "reference"
+                    ]
+                }
+            ],
+            "datePublished": "2015",
+            "primaryId": "SGD:S000181516",
+            "tags": [
+                {
+                    "referenceId": "SGD:S000181516",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ],
+            "title": "Lingner T (2015)   "
+        }
+    ],
+    "metaData": {
+        "dataProvider": {
+            "crossReference": {
+                "id": "SGD",
+                "pages": [
+                    "homepage"
+                ]
+            },
+            "type": "curated"
+        },
+        "dateProduced": "2023-01-30T19:01:14-00:00",
+        "release": "SGD 5.4.0 2023-01-30"
+    }
+}

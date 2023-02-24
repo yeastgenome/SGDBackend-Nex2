@@ -1,0 +1,465 @@
+{
+    "data": [
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2021-12-04T00:12:00-00:00",
+            "modId": "SGD:S000185012",
+            "pubMedId": "PMID:27653487",
+            "tags": [
+                {
+                    "referenceId": "PMID:27653487",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Review Article",
+            "dateLastModified": "2022-03-16T00:03:00-00:00",
+            "modId": "SGD:S000185011",
+            "pubMedId": "PMID:27635237",
+            "tags": [
+                {
+                    "referenceId": "PMID:27635237",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2020-12-09T00:12:00-00:00",
+            "modId": "SGD:S000185010",
+            "pubMedId": "PMID:27645054",
+            "tags": [
+                {
+                    "referenceId": "PMID:27645054",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2021-09-24T00:09:00-00:00",
+            "modId": "SGD:S000185009",
+            "pubMedId": "PMID:27637067",
+            "tags": [
+                {
+                    "referenceId": "PMID:27637067",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2019-11-20T00:11:00-00:00",
+            "modId": "SGD:S000185008",
+            "pubMedId": "PMID:27637876",
+            "tags": [
+                {
+                    "referenceId": "PMID:27637876",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2022-03-21T00:03:00-00:00",
+            "modId": "SGD:S000185007",
+            "pubMedId": "PMID:27650330",
+            "tags": [
+                {
+                    "referenceId": "PMID:27650330",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2018-11-13T00:11:00-00:00",
+            "modId": "SGD:S000185006",
+            "pubMedId": "PMID:27646017",
+            "tags": [
+                {
+                    "referenceId": "PMID:27646017",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2019-03-20T00:03:00-00:00",
+            "modId": "SGD:S000185005",
+            "pubMedId": "PMID:27647936",
+            "tags": [
+                {
+                    "referenceId": "PMID:27647936",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Review Article",
+            "dateLastModified": "2018-03-08T00:03:00-00:00",
+            "modId": "SGD:S000185004",
+            "pubMedId": "PMID:27650253",
+            "tags": [
+                {
+                    "referenceId": "PMID:27650253",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Review Article",
+            "dateLastModified": "2020-12-09T00:12:00-00:00",
+            "modId": "SGD:S000185003",
+            "pubMedId": "PMID:27633830",
+            "tags": [
+                {
+                    "referenceId": "PMID:27633830",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2022-03-16T00:03:00-00:00",
+            "modId": "SGD:S000185002",
+            "pubMedId": "PMID:27634467",
+            "tags": [
+                {
+                    "referenceId": "PMID:27634467",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2021-01-11T00:01:00-00:00",
+            "modId": "SGD:S000185001",
+            "pubMedId": "PMID:27658249",
+            "tags": [
+                {
+                    "referenceId": "PMID:27658249",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Extramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2019-01-11T00:01:00-00:00",
+            "modId": "SGD:S000185000",
+            "pubMedId": "PMID:26278914",
+            "tags": [
+                {
+                    "referenceId": "PMID:26278914",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Extramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Intramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Review Article",
+            "dateLastModified": "2021-01-09T00:01:00-00:00",
+            "modId": "SGD:S000184999",
+            "pubMedId": "PMID:26436461",
+            "tags": [
+                {
+                    "referenceId": "PMID:26436461",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2018-11-13T00:11:00-00:00",
+            "modId": "SGD:S000184998",
+            "pubMedId": "PMID:26543202",
+            "tags": [
+                {
+                    "referenceId": "PMID:26543202",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Review Article",
+            "dateLastModified": "2022-03-18T00:03:00-00:00",
+            "modId": "SGD:S000184997",
+            "pubMedId": "PMID:27649245",
+            "tags": [
+                {
+                    "referenceId": "PMID:27649245",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Letter",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, N.I.H., Extramural",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, U.S. Gov't, Non-P.H.S.",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Other",
+            "dateLastModified": "2018-11-13T00:11:00-00:00",
+            "modId": "SGD:S000184996",
+            "pubMedId": "PMID:26359915",
+            "tags": [
+                {
+                    "referenceId": "PMID:26359915",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Research Support, Non-U.S. Gov't",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2020-03-09T00:03:00-00:00",
+            "modId": "SGD:S000184995",
+            "pubMedId": "PMID:27641752",
+            "tags": [
+                {
+                    "referenceId": "PMID:27641752",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                },
+                {
+                    "referenceType": "Review",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Review Article",
+            "dateLastModified": "2017-04-28T00:04:00-00:00",
+            "modId": "SGD:S000184994",
+            "pubMedId": "PMID:27648642",
+            "tags": [
+                {
+                    "referenceId": "PMID:27648642",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        },
+        {
+            "MODReferenceTypes": [
+                {
+                    "referenceType": "Journal Article",
+                    "source": "SGD"
+                }
+            ],
+            "allianceCategory": "Research Article",
+            "dateLastModified": "2018-04-09T00:04:00-00:00",
+            "modId": "SGD:S000184993",
+            "pubMedId": "PMID:27645746",
+            "tags": [
+                {
+                    "referenceId": "PMID:27645746",
+                    "tagName": "inCorpus",
+                    "tagSource": "SGD"
+                }
+            ]
+        }
+    ],
+    "metaData": {
+        "dataProvider": {
+            "crossReference": {
+                "id": "SGD",
+                "pages": [
+                    "homepage"
+                ]
+            },
+            "type": "curated"
+        },
+        "dateProduced": "2023-01-30T19:01:14-00:00",
+        "release": "SGD 5.4.0 2023-01-30"
+    }
+}
