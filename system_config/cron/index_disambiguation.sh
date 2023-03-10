@@ -1,4 +1,4 @@
 #! /bin/sh
 
 cd /data/www/SGDBackend-Nex2
-source /data/www/venv/bin/activate && source prod_variables.sh && python scripts/disambiguation/index_disambiguation.py
+. venv/bin/activate && python scripts/disambiguation/index_disambiguation.py
