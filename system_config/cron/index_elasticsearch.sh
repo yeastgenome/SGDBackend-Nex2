@@ -3,4 +3,4 @@
 cd /data/www/SGDBackend-Nex2
 
 # elasticsearch 7 script
-source /data/www/venv/bin/activate && source prod_variables.sh && python scripts/search/index_es_7.py
+. venv/bin/activate && python scripts/search/index_es_7.py
