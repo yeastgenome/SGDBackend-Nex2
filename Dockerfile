@@ -24,6 +24,7 @@ RUN git checkout master_docker \
     && . venv/bin/activate \
     && pip3 install -U setuptools==57.5.0 \
     && make build \
-    && chmod 1777 /data/www/tmp
+    && chmod 1777 /data/www/tmp \
+    && mkfifo /var/spool/postfix/public/pickup
 
 CMD ["sh", "-c", ". /data/www/SGDBackend-Nex2/venv/bin/activate && pserve $INI_FILE --reload"]
