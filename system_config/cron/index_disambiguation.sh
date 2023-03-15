@@ -11,3 +11,9 @@ cd /data/www/SGDBackend-Nex2
 echo "index_disambiguation.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
 /bin/mail -s "index_disambiguation.sh: `/bin/date`" $CRON_EMAIL < $OUTPUT_FILE
+
+if [ $? -eq 0 ]; then
+    echo "email output sent"
+else
+    echo "email output not sent"
+fi
