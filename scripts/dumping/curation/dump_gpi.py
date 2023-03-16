@@ -157,8 +157,9 @@ def dump_data():
         col5 = x.systematic_name + '|' + x.intact_id + '|' + x.display_name 
         col6 = 'protein_complex'
         col7 = TAXON
-    
-        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t\t\t\n") 
+        col9 = "ComplexPortal:" + x.complex_accession
+        
+        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t\t" + col9 + "\t\n") 
 
     fw.close()
    
