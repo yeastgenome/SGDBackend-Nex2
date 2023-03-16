@@ -61,12 +61,12 @@ def dump_data():
         elif x.alias_type == 'NCBI protein name':
             dbentity_id_to_ncbi_protein_name[x.locus_id] = x.display_name
         elif x.alias_type == 'UniProtKB ID':
-            dbentity_id_to_uniprot[x.locus_id] = x.display_name
+            dbentity_id_to_uniprot[x.locus_id] = "UniProtKB:" + x.display_name
         elif x.alias_type == 'RefSeq nucleotide version ID':
             refseq_ids = []
             if x.locus_id in dbentity_id_to_refseq_ids:
                 refseq_ids = dbentity_id_to_refseq_ids[x.locus_id]
-            refseq_ids.append(x.display_name)
+            refseq_ids.append("RefSeq:" + x.display_name)
             dbentity_id_to_refseq_ids[x.locus_id] = refseq_ids
 
     dbentity_id_to_date_assigned = {}
