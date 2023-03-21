@@ -12,4 +12,5 @@ echo "index_disambiguation.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
 /usr/local/bin/aws sns publish \
     --topic-arn "arn:aws:sns:us-east-1:172390527433:cron_jobs_qa" \
+    --region us-west-2 \
     --message file://${OUTPUT_FILE}
