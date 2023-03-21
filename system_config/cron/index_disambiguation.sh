@@ -10,10 +10,6 @@ cd /data/www/SGDBackend-Nex2
 
 echo "index_disambiguation.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
-/bin/mail -s "index_disambiguation.sh: `/bin/date`" $CRON_EMAIL < $OUTPUT_FILE
-
-if [ $? -eq 0 ]; then
-    echo "email output sent"
-else
-    echo "email output not sent"
-fi
+/usr/local/bin/aws sns publish \
+    --topic-arn "arn:aws:sns:us-east-1:172390527433:cron_jobs_qa" \
+    --message file://${OUTPUT_FILE}
