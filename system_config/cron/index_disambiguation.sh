@@ -12,4 +12,5 @@ echo "index_disambiguation.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
 /usr/local/bin/aws sns publish \
     --topic-arn $SNS_TOPIC_ARN \
+    --subject "index_disambiguation.py completed"
     --message file://${OUTPUT_FILE}
