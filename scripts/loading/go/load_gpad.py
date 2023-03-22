@@ -704,8 +704,9 @@ if __name__ == "__main__":
         
     # ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz
     # ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz
-    # http://current.geneontology.org/products/annotations/noctua_sgd.gpad.gz
-
+    # old: http://current.geneontology.org/products/annotations/noctua_sgd.gpad.gz
+    # http://current.geneontology.org/products/upstream_and_raw_data/noctua_sgd.gpad.gz
+    
     datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
 
     url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
@@ -717,8 +718,8 @@ if __name__ == "__main__":
     urllib.request.urlcleanup()
     urllib.request.urlretrieve(url_path + gpi_file, dated_gpi_file)
 
-    # noctua_path = 'http://current.geneontology.org/products/annotations/'
-    noctua_path = 'http://snapshot.geneontology.org/products/annotations/'
+    # noctua_path = 'http://current.geneontology.org/products/upstream_and_raw_data/'
+    noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
     urllib.request.urlcleanup()
@@ -745,7 +746,7 @@ if __name__ == "__main__":
         exit()
 
     if gpadFile4noctua.st_size < 14000:
-        print("This week's noctua GPAD file size is too small, please check: http://snapshot.geneontology.org/products/annotations/noctua_sgd.gpad.gz")
+        print("This week's noctua GPAD file size is too small, please check: http://snapshot.geneontology.org/products/upstream_and_raw_data/noctua_sgd.gpad.gz")
         exit()
 
     if gpadFile4complex.st_size < 2000000:
