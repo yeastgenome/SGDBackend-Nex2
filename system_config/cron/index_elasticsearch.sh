@@ -12,4 +12,7 @@ cd /data/www/SGDBackend-Nex2
 
 echo "index_elasticsearch.sh end:  `/bin/date`" | /bin/tee -a $OUTPUt_FILE
 
-/bin/mail -s "index_elasticsearch.sh: `/bin/date`" $CRON_EMAIL < $OUTPUT_FILE
+/usr/local/bin/aws sns publish \
+    --topic-arn $SNS_TOPIC_ARN \
+    --subject "index_elasticsearch.sh completed"
+    --message file://${OUTPUT_FILE}
