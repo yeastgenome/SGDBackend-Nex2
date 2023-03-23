@@ -6,6 +6,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 	git \
         make \
 	npm \
+	postfix \
         python3-pip \
 	tzdata
 
