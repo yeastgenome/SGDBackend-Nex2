@@ -15,7 +15,7 @@ RUN git clone https://github.com/yeastgenome/SGDBackend-Nex2.git
 WORKDIR /data/www/logs
 
 WORKDIR /data/www/SGDBackend-Nex2
-RUN git checkout master_docker_cron \
+RUN git checkout master_docker \
     && pip3 install awscli virtualenv \
     && virtualenv venv \
     && . venv/bin/activate \
