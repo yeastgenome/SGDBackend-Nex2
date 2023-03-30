@@ -2,7 +2,7 @@
 
 OUTPUT_FILE=/tmp/index_disambiguation.out
 
-echo "index_disambiguation.sh start:  `/bin/date`" | /bin/tee $OUTPUt_FILE
+echo "index_disambiguation.sh start:  `/bin/date`" | /bin/tee $OUTPUT_FILE
 
 cd /data/www/SGDBackend-Nex2
 . venv/bin/activate && \
