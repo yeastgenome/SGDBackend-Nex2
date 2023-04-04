@@ -293,7 +293,8 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    url_path = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/'
+    # url_path = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/'
+    url_path = 'https://github.com/The-Sequence-Ontology/SO-Ontologies/blob/master/Ontology_Files/'
     owl_file = 'so.owl'
     urllib.request.urlretrieve(url_path + owl_file, owl_file)
 
