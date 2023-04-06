@@ -4892,11 +4892,12 @@ class Locusdbentity(Dbentity):
             "link": "/seqTools?seqname=" + self.systematic_name,
             "display_name": "Gene/Sequence Resources"
         })
-        obj["urls"].append({
-            "category": "LOCUS_SEQUENCE",
-            "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
-            "display_name": "JBrowse"
-        })
+        if not self.systematic_name.startswith('R00'):
+            obj["urls"].append({
+                "category": "LOCUS_SEQUENCE",
+                "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
+                "display_name": "JBrowse"
+            })
         if uniprotID:
             obj["urls"].append({
                 "category": "LOCUS_SEQUENCE",
