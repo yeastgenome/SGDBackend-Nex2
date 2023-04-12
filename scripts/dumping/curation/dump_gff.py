@@ -1,7 +1,7 @@
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, \
-    Dnasubsequence, So, Contig, Go, Goannotation, Edam, Path, \
+    Dnasubsequence, So, Contig, Go, Goannotation, Ro, Edam, Path, LocusRelation, \
     FilePath, Filedbentity, Source, Transcriptdbentity, TranscriptReference
 import shutil
 import gzip
@@ -58,6 +58,11 @@ def dump_data():
                                for x in nex_session.query(So).all()])
     so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
     gene_soid = so.soid
+
+    ro = nex_session.query(Ro).filter_by(display_name='part of').one_or_none()
+    child_id_to_parent_id = dict([(x.child_id, x.parent_id)
+                                  for x in nex_session.query(LocusRelation).filter_by(ro_id=ro.ro_id).all()])
+    
     locus_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
         Dbentity).filter_by(subclass='LOCUS', dbentity_status='Active').all()])
 
@@ -254,6 +259,13 @@ def dump_data():
             fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(start_index) + "\t" + str(end_index) +
                      "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + systematic_name)
 
+            if type == "transposable_element_gene":
+                parent_dbentity_id = child_id_to_parent_id.get(x.dbentity_id)
+                if parent_dbentity_id and parent_dbentity_id in locus_id_to_info:
+                    (parent_systematic_name, parent_gene_name, parent_qualifier,
+                     parent_headline, parent_description) = locus_id_to_info[parent_dbentity_id]
+                    fw.write(";Parent=" + parent_systematic_name)
+                    
             if gene_name:
                 fw.write(";gene=" + gene_name)
             if alias_list:
@@ -319,8 +331,8 @@ def dump_data():
                         #           " CDS parent: " + parent)
                         #      break
                     else:
-                        parent = systematic_name + "_mRNA"
-                elif type.endswith('_gene'):
+                        parent = systematic_name + "_mRNA"                    
+                elif type.endswith('_gene') and type != 'transposable_element_gene':
                     rnaType = type.replace("_gene", "")
                     parent = systematic_name + "_" + rnaType
 
@@ -355,10 +367,13 @@ def dump_data():
                                  "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
 
             elif has_subfeature == 1:
-                rnaType = type.replace("_gene", "")
-                fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + strand + "\t.\tID=" +
-                         systematic_name + "_" + rnaType + ";Name=" + systematic_name + "_" + rnaType + ";Parent=" + systematic_name + "\n")
-
+                if type != "transposable_element_gene":
+                    rnaType = type.replace("_gene", "")
+                    fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" +
+                             str(end_index) + "\t.\t" + strand + "\t.\tID=" +
+                             systematic_name + "_" + rnaType + ";Name=" + systematic_name +
+                             "_" + rnaType + ";Parent=" + systematic_name + "\n")
+                
     # output 17 chr sequences at the end
 
     fw.write("###\n")
