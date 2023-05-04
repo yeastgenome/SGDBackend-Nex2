@@ -18,7 +18,7 @@ __author__ = 'sweng66'
 logging.basicConfig(format='%(message)s',
                     level=logging.INFO,
                     handlers=[
-                        logging.FileHandler(os.environ['LOG_FILE'),
+                        logging.FileHandler(os.environ['LOG_FILE'],
                         logging.StreamHandler(sys.stdout)
                     ]
                     )
