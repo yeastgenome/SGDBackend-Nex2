@@ -15,13 +15,14 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
-logging.basicConfig(format='%(message)s',
-                    level=logging.INFO,
-                    handlers=[
-                        logging.FileHandler(os.environ['LOG_FILE'],
-                        logging.StreamHandler(sys.stdout)
-                    ]
-                    )
+logging.basicConfig(
+    format='%(message)s',
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler(os.environ['LOG_FILE']),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 log = logging.getLogger()
 
 CREATED_BY = os.environ['DEFAULT_USER']
