@@ -3,7 +3,6 @@ FROM ubuntu:20.04
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    	awscli \
 	git \
         make \
 	npm \
@@ -18,7 +17,7 @@ WORKDIR /data/www/logs
 
 WORKDIR /data/www/SGDBackend-Nex2
 RUN git checkout master_docker \
-    && pip3 install virtualenv \
+    && pip3 install awscli virtualenv \
     && virtualenv venv \
     && . venv/bin/activate \
     && pip3 install -U setuptools==57.5.0 \
