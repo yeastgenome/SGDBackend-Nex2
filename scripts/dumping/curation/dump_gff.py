@@ -15,9 +15,11 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
-logging.basicConfig(format='%(message)s')
+logging.basicConfig(filename='/proc/self/fd/1',
+                    filemode='a',
+                    format='%(message)s',
+                    level=logging.INFO)
 log = logging.getLogger()
-log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
