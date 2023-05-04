@@ -15,8 +15,7 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
-logging.basicConfig(filename='/proc/self/fd/1',
-                    filemode='a',
+logging.basicConfig(stream=sys.stdout,
                     format='%(message)s',
                     level=logging.INFO)
 log = logging.getLogger()
