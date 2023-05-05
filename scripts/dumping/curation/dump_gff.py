@@ -48,7 +48,7 @@ def dump_data():
 #    log.info(str(datetime.now()))
 #    log.info("Getting edam, so, source, & sgdid  data from the database...")
     print(str(datetime.now()))
-    prin("Getting edam, so, source, & sgdid  data from the database...")
+    print("Getting edam, so, source, & sgdid  data from the database...")
 
     locus_id_to_uniprot = dict([(x.locus_id, x.display_name) for x in nex_session.query(
         LocusAlias).filter_by(alias_type='UniProtKB ID').all()])
