@@ -19,8 +19,9 @@ logging.basicConfig(
     format='%(message)s',
     level=logging.INFO,
     handlers=[
+        logging.FileHandler(os.environ['LOG_FILE'])
 #        logging.FileHandler(os.environ['LOG_FILE']),
-        logging.StreamHandler(sys.stdout)
+#        logging.StreamHandler(sys.stdout)
     ]
 )
 log = logging.getLogger()
@@ -44,8 +45,10 @@ def dump_data():
 
     write_header(fw, str(datetime.now()))
 
-    log.info(str(datetime.now()))
-    log.info("Getting edam, so, source, & sgdid  data from the database...")
+#    log.info(str(datetime.now()))
+#    log.info("Getting edam, so, source, & sgdid  data from the database...")
+    print(str(datetime.now()))
+    prin("Getting edam, so, source, & sgdid  data from the database...")
 
     locus_id_to_uniprot = dict([(x.locus_id, x.display_name) for x in nex_session.query(
         LocusAlias).filter_by(alias_type='UniProtKB ID').all()])
@@ -53,8 +56,10 @@ def dump_data():
     locus_id_to_refseq = dict([(x.locus_id, x.display_name) for x in nex_session.query(
         LocusAlias).filter_by(alias_type='RefSeq nucleotide version ID').all()])
 
-    log.info("num uniprot ids:" + str(len(locus_id_to_uniprot.keys())))
-    log.info("num refseq ids:" + str(len(locus_id_to_refseq.keys())))
+#    log.info("num uniprot ids:" + str(len(locus_id_to_uniprot.keys())))
+#    log.info("num refseq ids:" + str(len(locus_id_to_refseq.keys())))
+    print("num uniprot ids:" + str(len(locus_id_to_uniprot.keys())))
+    print("num refseq ids:" + str(len(locus_id_to_refseq.keys())))
 
     edam_to_id = dict([(x.format_name, x.edam_id)
                        for x in nex_session.query(Edam).all()])
