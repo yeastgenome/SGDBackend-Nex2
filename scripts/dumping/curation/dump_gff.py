@@ -15,20 +15,19 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
+# Handlers need to be reset for use under Fargate. See
+# https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda/56579088#56579088
+# for details.  Applies to Fargate in addition to Lambda.
+
 log = logging.getLogger()
 if log.handlers:
     for handler in log.handlers:
         log.removeHandler(handler)
-#logging.basicConfig(format='%(asctime)s %(message)s',level=logging.DEBUG)
 
 logging.basicConfig(
     format='%(message)s',
-#    handlers=[
-#        logging.FileHandler(os.environ['LOG_FILE']),
-#        logging.StreamHandler(sys.stdout)
-#    ]
-    level=logging.INFO,)
-#log = logging.getLogger()
+    level=logging.INFO
+)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
@@ -49,10 +48,8 @@ def dump_data():
 
     write_header(fw, str(datetime.now()))
 
-#    log.info(str(datetime.now()))
-#    log.info("Getting edam, so, source, & sgdid  data from the database...")
-    print(str(datetime.now()))
-    print("Getting edam, so, source, & sgdid  data from the database...")
+    log.info(str(datetime.now()))
+    log.info("Getting edam, so, source, & sgdid  data from the database...")
 
     locus_id_to_uniprot = dict([(x.locus_id, x.display_name) for x in nex_session.query(
         LocusAlias).filter_by(alias_type='UniProtKB ID').all()])
@@ -60,10 +57,8 @@ def dump_data():
     locus_id_to_refseq = dict([(x.locus_id, x.display_name) for x in nex_session.query(
         LocusAlias).filter_by(alias_type='RefSeq nucleotide version ID').all()])
 
-#    log.info("num uniprot ids:" + str(len(locus_id_to_uniprot.keys())))
-#    log.info("num refseq ids:" + str(len(locus_id_to_refseq.keys())))
-    print("num uniprot ids:" + str(len(locus_id_to_uniprot.keys())))
-    print("num refseq ids:" + str(len(locus_id_to_refseq.keys())))
+    log.info("num uniprot ids:" + str(len(locus_id_to_uniprot.keys())))
+    log.info("num refseq ids:" + str(len(locus_id_to_refseq.keys())))
 
     edam_to_id = dict([(x.format_name, x.edam_id)
                        for x in nex_session.query(Edam).all()])
