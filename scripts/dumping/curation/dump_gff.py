@@ -26,6 +26,10 @@ if log.handlers:
 
 logging.basicConfig(
     format='%(message)s',
+    handlers=[
+        logging.FileHandler(os.environ['LOG_FILE']),
+        logging.StreamHandler(sys.stdout)
+    ]
     level=logging.INFO
 )
 
