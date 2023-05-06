@@ -15,16 +15,20 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
+log = logging.getLogger()
+if log.handlers:
+    for handler in log.handlers:
+        log.removeHandler(handler)
+#logging.basicConfig(format='%(asctime)s %(message)s',level=logging.DEBUG)
+
 logging.basicConfig(
     format='%(message)s',
-    level=logging.INFO,
-    handlers=[
-        logging.FileHandler(os.environ['LOG_FILE'])
+#    handlers=[
 #        logging.FileHandler(os.environ['LOG_FILE']),
 #        logging.StreamHandler(sys.stdout)
-    ]
-)
-log = logging.getLogger()
+#    ]
+    level=logging.INFO,)
+#log = logging.getLogger()
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
