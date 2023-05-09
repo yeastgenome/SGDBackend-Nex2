@@ -166,7 +166,7 @@ def load_new_data(nex_session, data, source_to_id, edamid_to_edam, ro_id, edam_i
             # nex_session.add(x)
             # nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.edamid + " has been updated from " + x.is_obsolete +" to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.edamid + " has been updated from " + str(x.is_obsolete) +" to " + 'True' + "\n")
 
     nex_session.commit()
  
@@ -289,9 +289,9 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    # http://edamontology.org/EDAM_1.20.owl
+    # http://edamontology.org/EDAM.owl
     url_path = "http://edamontology.org/"
-    owl_file = "EDAM_1.20.owl"
+    owl_file = "EDAM.owl"
     urllib.request.urlretrieve(url_path + owl_file, owl_file)
     load_ontology(owl_file)
 
