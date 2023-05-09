@@ -18,7 +18,7 @@ WORKDIR /data/www/logs
 
 WORKDIR /data/www/SGDBackend-Nex2
 RUN git checkout master_docker \
-    && pip3 install awscli virtualenv \
+    && pip3 install virtualenv \
     && virtualenv venv \
     && . venv/bin/activate \
     && pip3 install -U setuptools==57.5.0 \
