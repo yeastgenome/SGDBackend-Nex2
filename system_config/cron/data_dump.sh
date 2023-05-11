@@ -14,5 +14,5 @@ echo "data_dump.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
     --destination "ToAddresses=${EMAIL_TO}" \
     --from $EMAIL_FROM \
     --subject "data_dump.sh completed" \
-    --text=file:${OUTPUT_FILE}
+    --text=file:///${OUTPUT_FILE}
     
