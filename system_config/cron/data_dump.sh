@@ -10,8 +10,9 @@ cd /data/www/SGDBackend-Nex2
 
 echo "data_dump.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
-/usr/bin/aws sns publish \
-    --topic-arn $SNS_TOPIC_ARN \
-    --subject "dump_gff.py completed" \
-    --message file://${OUTPUT_FILE} \
-    --region $AWS_REGION
+/usr/bin/aws ses send-email \
+    --destination "ToAddresses=${EMAIL_TO}" \
+    --from $EMAIL_FROM \
+    --subject "data_dump.sh completed" \
+    --text=file:${OUTPUT_FILE}
+    
