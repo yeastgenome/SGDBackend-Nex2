@@ -28,7 +28,7 @@ logging.basicConfig(
     format='%(message)s',
     handlers=[
         logging.FileHandler(os.environ['LOG_FILE']),
-        logging.StreamHandler(sys.stdout)
+        logging.StreamHandler(sys.stderr)
     ],
     level=logging.INFO
 )
