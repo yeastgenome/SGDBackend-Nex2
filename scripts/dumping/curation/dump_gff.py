@@ -15,9 +15,23 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
-logging.basicConfig(format='%(message)s')
+# Handlers need to be reset for use under Fargate. See
+# https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda/56579088#56579088
+# for details.  Applies to Fargate in addition to Lambda.
+
 log = logging.getLogger()
-log.setLevel(logging.INFO)
+if log.handlers:
+    for handler in log.handlers:
+        log.removeHandler(handler)
+
+logging.basicConfig(
+    format='%(message)s',
+    handlers=[
+        logging.FileHandler(os.environ['LOG_FILE']),
+        logging.StreamHandler(sys.stderr)
+    ],
+    level=logging.INFO
+)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
