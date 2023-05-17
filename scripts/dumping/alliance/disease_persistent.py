@@ -10,7 +10,7 @@ DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.5.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.0')
 SUBMISSION_TYPE = "disease_gene_ingest_set"
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
 
@@ -31,7 +31,7 @@ def get_disease_association_data():
                 "gene_curie": "",
                 "created_by_curie": "",
                 "updated_by_curie": "",
-                "data_provider_name": "SGD",
+                #"data_provider_name": "SGD",
                 "evidence_code_curies": [],
                 "disease_relation_name": "",
                 "date_created":"",
@@ -82,6 +82,9 @@ def get_disease_association_data():
                 obj["reference_curie"] = pubidref
                 obj["created_by_curie"] = "SGD:" + item.created_by
                 obj["updated_by_curie"] = "SGD:" +item.created_by
+                obj["data_provider_dto"] = {
+                    "source_organization_abbreviation": "SGD",
+                    "internal": False}
                 obj['internal'] = False
 
                 if item.taxonomy_id and item.taxonomy.display_name != 'Saccharomyces cerevisiae':

@@ -7,7 +7,7 @@ from src.data_helpers import get_pers_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.5.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.0')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'gene_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -20,7 +20,7 @@ SO_TYPES_TO_EXCLUDE = [
 
 def get_basic_gene_information():
 
-    combined_list = Locusdbentity.get_s288c_genes()
+    combined_list = Locusdbentity.get_s288c_genes().limit(5).all()
 
     print(("computing " + str(len(combined_list)) + " s288c genes"))
     result = []
@@ -46,9 +46,31 @@ def get_basic_gene_information():
                 else:
                     obj["gene_type_curie"] = dna_seq_annotation_obj[0].so.soid
 
-                obj["gene_synopsis"] = item.description
-                obj["gene_symbol_dto"] = item.gene_name if item.gene_name is not None else item.systematic_name
-                #obj["note_dto"] = [ {"free_text": disSumObj.text, "note_type_name": "disease_summary", "internal": False}]
+                obj["data_provider_dto"] = {"source_organization_abbreviation": "SGD",
+                                    "internal": False}
+                obj["gene_symbol_dto"] = {"name_type_name": "nomenclature_symbol",
+                                    "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+                                    "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+                                    "internal": False}
+
+                obj["gene_full_name_dto"] = {
+                    "name_type_name": "full_name",
+                    "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+                    "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+                    "internal": False}
+
+                obj["gene_systematic_name_dto"] = {
+                    "name_type_name": "systematic_name",
+                    "format_text": item.systematic_name,
+                    "display_text": item.systematic_name,
+                    "internal": False}
+
+                obj["gene_synonym_dtos"] = {
+                    "name_type_name": "synonym",
+                    "format_text": item.gene_name,
+                    "display_text": item.gene_name,
+                    "internal": False}
+
                 obj["curie"] = "SGD:" + item.sgdid
 
                 result.append(obj)

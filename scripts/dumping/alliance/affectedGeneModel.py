@@ -16,14 +16,18 @@ DEFAULT_TAXID = '559292'
 
 def get_agm_information():
 
-    combined_list = DBSession.query(Dbentity).filter(Dbentity.subclass == 'STRAIN').all()
-    print(("computing " + str(len(combined_list)) + " strains"))
+    #combined_list = DBSession.query(Dbentity).filter(Dbentity.subclass == 'STRAIN').all()
+    strains_in_db = DBSession.query(Straindbentity).order_by(Straindbentity.display_name).all()
+    filtered_strains = list([strain for strain in strains_in_db if
+                                 strain.strain_type == 'Alternative Reference' or strain.strain_type == 'Reference' or (
+                                         strain.taxonomy.taxid == 'TAX:4932' and strain.display_name.upper() == 'OTHER')])
+    print(("computing " + str(len(filtered_strains)) + " strains"))
 
     result = []
-    if (len(combined_list) > 0):
+    if (len(filtered_strains) > 0):
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-            for item in combined_list:
+            for item in filtered_strains:
                 strainobj = DBSession.query(Straindbentity).filter(Straindbentity.dbentity_id == item.dbentity_id).one()
                 
                 if re.match('NTR', strainobj.taxonomy.taxid):
