@@ -1,4 +1,14 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference, LocusAllele, Literatureannotation
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, \
+    Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, \
+    So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, \
+    Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, \
+    Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, \
+    Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, \
+    Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, \
+    ComplexReference, Complexbindingannotation, Pathwaydbentity, \
+    PathwayAlias, Pathwaysummary, PathwaysummaryReference, Pathwayannotation, \
+    PathwayUrl, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, \
+    AlleleReference, LocusAllele, Literatureannotation
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -831,7 +841,76 @@ def index_references():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
+def index_pathways():
+    pathways = DBSession.query(Pathwaydbentity).all()
+    print(("Indexing " + str(len(pathways)) + " pathways"))
 
+    bulk_data = []
+
+    pathway_id_to_summary_id  = dict([(x.pathway_id, (x.summary_id, x.text)) \
+                                      for x in nex_session.query(Pathwaysummary).all()])
+
+    for p in pathways:
+        if p.dbentity_status == 'Deleted':
+            continue
+        synonyms = DBSession.query(PathwayAlias.display_name).filter_by(
+            pathway_id=p.dbentity_id).all()
+
+        summary_id = None
+        summary_text = ''
+        if p.dbentity_id in pathway_id_to_summary:
+            (summary_id, summary_text) = pathway_id_to_summary[p.dbentity_id]
+        
+        references = set([])
+        if summary_id is not None:
+            refs = DBSession.query(PathwaysummaryReference).filter_by(
+                summary_id=summary_id).all()
+            for ref in refs:
+                references.add(ref.reference.display_name)
+
+        pathway_loci = set([])
+        annotations = DBSession.query(Pathwayannotation).filter_by(
+            pathway_id=p.dbentity_id).all()
+        for a in annotations:
+            pathway_loci.add(a.locus.display_name)
+
+        bioCycURL = None
+        yeastPathwayURL = None
+        for x in DBSession.query(PathwayUrl).filter_by(pathway_id=p.dbentity_id).all():
+            if x.url_type == 'BioCyc':
+                bioCycURL = x.obj_url
+            elif x.url_type == 'YeastPathways':
+                yeastPathwayURL = x.obj_url
+        
+        obj = {
+            "name": p.display_name,
+            "pathway_name": p.display_name,
+            "href": yeastPathwayURL,
+            "biocyc_id": p.biocyc_id, 
+            "description": summary_text,
+            "category": "pathway",
+            "synonyms": [s[0] for s in synonyms],
+            "pathway_loci": sorted(list(pathway_loci)),
+            "references": list(references),
+        }
+
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+
+        if len(bulk_data) == 800:
+            es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+            bulk_data = []
+
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+        
 def index_complex_names():
     complexes = DBSession.query(Complexdbentity).all()
     print(("Indexing " + str(len(complexes)) + " complex names"))
@@ -1034,12 +1113,14 @@ def index_part_2():
     index_disease_terms()
     index_references()
     index_alleles()
+    index_pathways()
     
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_go_terms()
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_complex_names()
-
+    
+        
 def index_toolbar_links():
 
     tools = DBSession.query(Tools).all()
