@@ -847,8 +847,8 @@ def index_pathways():
 
     bulk_data = []
 
-    pathway_id_to_summary_id  = dict([(x.pathway_id, (x.summary_id, x.text)) \
-                                      for x in nex_session.query(Pathwaysummary).all()])
+    pathway_id_to_summary  = dict([(x.pathway_id, (x.summary_id, x.text)) \
+                                   for x in DBSession.query(Pathwaysummary).all()])
 
     for p in pathways:
         if p.dbentity_status == 'Deleted':
@@ -872,7 +872,7 @@ def index_pathways():
         annotations = DBSession.query(Pathwayannotation).filter_by(
             pathway_id=p.dbentity_id).all()
         for a in annotations:
-            pathway_loci.add(a.locus.display_name)
+            pathway_loci.add(a.dbentity.display_name)
 
         bioCycURL = None
         yeastPathwayURL = None
