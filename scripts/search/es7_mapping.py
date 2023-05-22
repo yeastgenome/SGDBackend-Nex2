@@ -506,11 +506,6 @@ mapping = {
                 "fielddata": True,
                 "analyzer": "keyword"
             },
-            "associated_pathways": {
-                "type": "text",
-                "fielddata": True,
-                "analyzer": "keyword"
-            },
             "associated_alleles": {
                 "type": "text",
                 "fielddata": True,
