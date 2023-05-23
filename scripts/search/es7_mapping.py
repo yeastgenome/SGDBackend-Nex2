@@ -408,6 +408,17 @@ mapping = {
                     }
                 }
             },
+            "pathway_loci": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "allele_loci": {
                 "type": "text",
                 "fielddata": True,
@@ -628,6 +639,11 @@ mapping = {
 
             },
             "complex_name": {
+                "type": "text",
+                "analyzer": "reference_search"
+
+            },
+            "pathway_name": {
                 "type": "text",
                 "analyzer": "reference_search"
 

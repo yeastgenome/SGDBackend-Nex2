@@ -896,6 +896,14 @@ class Chebi(Base):
         return pathwaysSorted
     
     def get_structure_url(self):
+        chebiURL = "https://www.ebi.ac.uk/chebi/"
+        try:
+            timeout = 0.5 # half second
+            response = requests.get(chebiURL, timeout=timeout)
+            if response.status_code != 200:
+                return ''
+        except:
+            return ''
         url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "") + "&dimensions=200"
         response = urlopen(url)
         res = response.read()
