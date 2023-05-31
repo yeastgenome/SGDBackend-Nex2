@@ -26,7 +26,7 @@ DOI_ROOT = 'http://dx.doi.org/'
 limit = 2500
 loop_count = 60
 max_session = 10000
-max_commit = 250
+max_commit = 100
 
 json_file = 'reference_SGD.json.gz'
 bucketname = 'agr-literature'
@@ -234,12 +234,13 @@ def update_authors(nex_session, fw, pmid, reference_id, authorsDBwithOrcid, auth
     
     ## delete old ones
     for ra in nex_session.query(Referenceauthor).filter_by(reference_id=reference_id).order_by(Referenceauthor.author_order).all():
-        # logger.info("PMID:{}: deleting old author {}".format(pmid, ra.display_name))
+        logger.info("PMID:{}: deleting old author {}".format(pmid, ra.display_name))
         nex_session.delete(ra)
-
+        nex_session.flush()
+        
     ## add new ones
     for (author_name, orcid, author_order) in authorsABCwithOrcid:
-        # logger.info("PMID:{}: adding new author {}, {}".format(pmid, author_name, author_order)) 
+        logger.info("PMID:{}: adding new author {}, {}".format(pmid, author_name, author_order)) 
         ra = Referenceauthor(display_name = author_name,
                              source_id = source_id,
                              orcid = orcid if orcid else None,
@@ -249,7 +250,9 @@ def update_authors(nex_session, fw, pmid, reference_id, authorsDBwithOrcid, auth
                              author_type = AUTHOR_TYPE,
                              created_by = CREATED_BY)
         nex_session.add(ra)
-    
+        nex_session.flush()
+        nex_session.refresh(ra)
+        
     fw.write("PMID:{}: The author(s) in Referenceauthor table are updated.\n".format(pmid))
 
 
