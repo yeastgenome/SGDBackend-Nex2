@@ -90,9 +90,9 @@ def update_data():
         offset = index * limit
 
         ## for testing
-        # offset += 108993
+        # offset += 43036
         # if i == 0:
-        #    i += 108993
+        #    i += 43036
         ## end of testing
             
         if i != 0 and i % max_session == 0:
@@ -404,7 +404,7 @@ def update_abstract(nex_session, fw, pmid, reference_id, abstractDB, abstractABC
                               created_by = CREATED_BY)
         
         nex_session.add(x)
-        fw.write("PMID:{}: new abstract added. New abstract: {}\n".format(pmid, abstract_abc))        
+        fw.write("PMID:{}: new abstract added. New abstract: {}\n".format(pmid, abstractABC))        
     else:
         x = nex_session.query(Referencedocument).filter_by(
             reference_id=reference_id, document_type='Abstract').one_or_none()
