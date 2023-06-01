@@ -855,7 +855,7 @@ def index_pathways():
             continue
         synonyms = DBSession.query(PathwayAlias.display_name).filter_by(
             pathway_id=p.dbentity_id).all()
-
+        
         summary_id = None
         summary_text = ''
         if p.dbentity_id in pathway_id_to_summary:
@@ -881,17 +881,19 @@ def index_pathways():
                 bioCycURL = x.obj_url
             elif x.url_type == 'YeastPathways':
                 yeastPathwayURL = x.obj_url
-        
+            
+        keys = [p.biocyc_id, p.biocyc_id.lower()]
         obj = {
             "name": p.display_name,
             "pathway_name": p.display_name,
+            "biocyc_id": p.biocyc_id,
             "href": yeastPathwayURL,
-            "biocyc_id": p.biocyc_id, 
             "description": summary_text,
             "category": "pathway",
             "synonyms": [s[0] for s in synonyms],
             "pathway_loci": sorted(list(pathway_loci)),
             "references": list(references),
+            "keys": keys
         }
 
         bulk_data.append({
@@ -1107,13 +1109,13 @@ def index_part_1():
 
 
 def index_part_2():
+    index_pathways()
     index_reserved_names()
     index_toolbar_links()
     index_observables()
     index_disease_terms()
     index_references()
     index_alleles()
-    index_pathways()
     
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_go_terms()

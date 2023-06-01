@@ -321,6 +321,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                                 "fields": [
                                     "keys^10",
                                     "go_id",
+                                    "biocyc_id",
                                     "do_id",
                                     "chebiid",
                                     "bioentity_id"
@@ -328,7 +329,7 @@ def build_search_params(query, search_fields, alias_flag=False, terms=[], ids=[]
                             }
                         })
             skip_fields.\
-                extend(["keys", "go_id", "do_id", "chebiid", "bioentity_id"])
+                extend(["keys", "biocyc_id", "go_id", "do_id", "chebiid", "bioentity_id"])
 
         elif terms:
             if category == 'locus':

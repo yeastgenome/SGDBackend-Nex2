@@ -506,6 +506,11 @@ mapping = {
                 "fielddata": True,
                 "analyzer": "keyword"
             },
+            "associated_pathways": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword"
+            },
             "associated_alleles": {
                 "type": "text",
                 "fielddata": True,
@@ -647,6 +652,11 @@ mapping = {
                 "type": "text",
                 "analyzer": "reference_search"
 
+            },
+            "biocyc_id": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "reference_search"
             },
             "allele_name": {
                 "type": "text",
