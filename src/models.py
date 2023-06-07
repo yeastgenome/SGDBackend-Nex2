@@ -9983,6 +9983,7 @@ class Alleledbentity(Dbentity):
         obj = {
             "sgdid": self.sgdid,
             "allele_type": self.so.display_name,
+            "allele_so_id": self.so.format_name,
             "description": self.description
         }
         if self.get_aliases(reference_mapping, ref_order) is not NullType:

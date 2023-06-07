@@ -20,7 +20,7 @@ SO_TYPES_TO_EXCLUDE = [
 
 def get_basic_gene_information():
 
-    combined_list = Locusdbentity.get_s288c_genes().limit(5).all()
+    combined_list = Locusdbentity.get_s288c_genes()
 
     print(("computing " + str(len(combined_list)) + " s288c genes"))
     result = []

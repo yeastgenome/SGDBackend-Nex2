@@ -5,7 +5,7 @@ from src.models import DBSession, Diseaseannotation, Diseasesupportingevidence, 
 from src.data_helpers import get_pers_output
 from sqlalchemy import create_engine
 
-engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600, pool_size=100)
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 

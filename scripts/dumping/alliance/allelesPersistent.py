@@ -17,7 +17,7 @@ DEFAULT_TAXID = '559292'
 def get_allele_information():
 
     print("getting Alleles")
-    alleleObjList = DBSession.query(Alleledbentity).limit(5).all()
+    alleleObjList = DBSession.query(Alleledbentity).all()
     print(("computing " + str(len(alleleObjList)) + " alleles"))
 
     result = []
@@ -44,6 +44,9 @@ def get_allele_information():
                     "format_text": simple_allele_obj["display_name"],
                     "display_text": simple_allele_obj["display_name"],
                     "internal": False}
+                obj["allele_mutation_type_dtos"] = [{
+                    "mutation_type_curies": [simple_allele_obj["allele_so_id"]],
+                    "internal": False}]
                 obj["taxon_curie"] = "NCBITaxon:" + DEFAULT_TAXID
                 if len(simple_allele_obj["references"]) > 0:
                     obj['reference_curies'] =[]
