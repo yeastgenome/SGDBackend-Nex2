@@ -8,8 +8,9 @@ import sys
 import importlib
 importlib.reload(sys)  # Reload does the trick!
 from src.models import Source, Psimi, Dbentity, Go, Taxonomy, Eco, Referencedbentity, \
-       Locusdbentity, Complexdbentity, ComplexAlias, ComplexGo, ComplexReference, \
-       Interactor, LocusAlias, Complexbindingannotation, Literatureannotation
+       Locusdbentity, Complexdbentity, ComplexAlias, ComplexGo, Goannotation, \
+       ComplexReference, Interactor, LocusAlias, Complexbindingannotation, \
+       Literatureannotation, Goslimannotation
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.promote_reference_triage import add_paper
 
@@ -26,14 +27,15 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-all_json_url = "https://www.ebi.ac.uk/intact/complex-ws/search/*?format=json&facets=species_f&filters=species_f:(%22Saccharomyces%20cerevisiae%20\(strain%20ATCC%20204508%20/%20S288c\)%22)"
+# all_json_url = "https://www.ebi.ac.uk/intact/complex-ws/search/*?format=json&facets=species_f&filters=species_f:(%22Saccharomyces%20cerevisiae%20\(strain%20ATCC%20204508%20/%20S288c\)%22)"
+
+all_json_url = "https://www.ebi.ac.uk/intact/complex-ws/search/*?filters=species_f:(%22Saccharomyces%20cerevisiae%20(strain%20ATCC%20204508%20/%20S288c)%22)&facets=species_f"
 
 detail_json_url_template = "https://www.ebi.ac.uk/intact/complex-ws/complex/REPLACE_ID_HERE"
 
 seq_json_url_template = "https://www.ebi.ac.uk/intact/complex-ws/export/REPLACE_ID_HERE"
 
 log_file = "scripts/loading/complex/logs/load_complex.log"
-
 
 def load_complex():
 
@@ -290,6 +292,10 @@ def delete_complex(nex_session, complexAC):
 
     ## delete go
     for	x in nex_session.query(ComplexGo).filter_by(complex_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+    for x in nex_session.query(Goannotation).filter_by(dbentity_id=complex.dbentity_id).all():
+        nex_session.delete(x)
+    for x in nex_session.query(Goslimannotation).filter_by(dbentity_id=complex.dbentity_id).all():
         nex_session.delete(x)
 
     ## delete reference
