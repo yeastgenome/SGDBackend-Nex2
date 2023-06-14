@@ -1,6 +1,7 @@
 from sqlalchemy import Column, BigInteger, UniqueConstraint, Float, Boolean, SmallInteger, Integer, DateTime, ForeignKey, Index, Numeric, String, Text, text, FetchedValue, func, or_, and_, distinct, inspect
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.sqltypes import NullType
 from zope.sqlalchemy import ZopeTransactionExtension
 from elasticsearch import Elasticsearch
 import os
@@ -1777,6 +1778,9 @@ class Dataset(Base):
 
     parent_dataset = relationship('Dataset', remote_side=[dataset_id])
     source = relationship('Source')
+    references = relationship('DatasetReference', backref="parent")
+    keywords = relationship('DatasetKeyword', backref="parent")
+    samples = relationship('Datasetsample', backref="parent")
 
     def to_dict(self, reference=None, dataset_keywords=None, add_conditions=False, add_resources=False):
         keywords = DBSession.query(DatasetKeyword).filter_by(dataset_id=self.dataset_id).all()
@@ -6417,6 +6421,7 @@ class Diseaseannotation(Base):
     date_assigned = Column(DateTime, nullable=False)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
+    association_type = Column(ForeignKey('nex.ro.ro_id'), nullable=False)
 
     dbentity = relationship('Dbentity')
     disease = relationship('Disease')
@@ -6424,6 +6429,7 @@ class Diseaseannotation(Base):
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
+    ro = relationship('Ro')
 
     def to_dict_lsp(self):
         obj = {
@@ -9969,7 +9975,30 @@ class Alleledbentity(Dbentity):
     description = Column(String(500), nullable=True)
 
     so = relationship('So')
-    
+    dbent = relationship('Dbentity')
+
+    def to_simple_dict(self):
+        reference_mapping = {}
+        ref_order = 1
+        obj = {
+            "sgdid": self.sgdid,
+            "allele_type": self.so.display_name,
+            "allele_so_id": self.so.format_name,
+            "description": self.description
+        }
+        if self.get_aliases(reference_mapping, ref_order) is not NullType:
+            obj['aliases'] = self.get_aliases(reference_mapping, ref_order)
+
+        obj['format_name'] = self.format_name
+        obj['display_name'] = self.display_name
+        # obj['affected_geneObjs'] = self.get_affected_geneObjs()
+        obj['references'] = self.get_references()
+        if self.get_affected_geneObjs() is not NullType:
+            obj['affected_geneObjs'] = self.get_affected_geneObjs()
+        obj['date_created'] = self.dbent.date_created
+
+        return obj
+
     def to_dict(self):
 
         reference_mapping = {}
@@ -9996,7 +10025,16 @@ class Alleledbentity(Dbentity):
         obj['unique_references'] = unique_references
         
         return obj
+    def get_affected_geneObjs(self):
+        geneObjList = []
 
+        try:
+            la = DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).all()
+            for each in la:
+                geneObjList.append(each.locus)
+            return geneObjList
+        except:
+            return None
     def get_basic_info(self, display_text, reference_class, reference_mapping, ref_order):
 
         references = []
