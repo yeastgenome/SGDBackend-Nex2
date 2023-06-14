@@ -22,7 +22,6 @@ def get_allele_information():
         try:
             for alleleObj in alleleObjList:
                 simple_allele_obj = alleleObj.to_simple_dict()
-                #[print(keys) for keys in simple_allele_obj]
                 if re.search("\<sub\>", simple_allele_obj["format_name"]) or not simple_allele_obj["affected_geneObjs"]:
                     print("skipping: " + simple_allele_obj["format_name"])
                     continue
@@ -45,18 +44,6 @@ def get_allele_information():
                         if singlerefObj['pubmed_id'] not in obj['references']:
                             obj['references'].append(
                                 "PMID:" + str(singlerefObj['pubmed_id']))
-
-                #if "aliases" in simple_allele_obj.keys(
-                #) and simple_allele_obj['aliases'] is not None:
-                #    obj["synonyms"] = []
-                #    for aliasObj in simple_allele_obj["aliases"]:
-                #        obj["synonyms"].append(aliasObj["display_name"])
-                #obj["crossReferences"] = [{
-                #    "id":
-                #    "SGD:" + simple_allele_obj["sgdid"],
-                #    "pages": ["allele"]
-                #}]
-
                 #TODO: alleleObj.affected_gene.sgdid doesn't have field sgdid; #skip for rdn25-C2925A, rdn25-C2942A, rdn25-U2861A, rdn25-A2941C
                 # maybe switch to 'sgdid' for affected gene so it will be faster?
                 #print ('this is test' + simple_allele_obj["affected_geneObjs"])

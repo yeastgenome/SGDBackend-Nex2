@@ -112,6 +112,57 @@ def get_locus_alias_data(locus_alias_list, dbentity_id, item_obj):
     return data_dict
 
 
+def get_locus_synonyms(locus_alias_list):
+
+    aliases_types = ["Uniform", "Non-uniform"]
+    obj = []
+    for item in locus_alias_list:
+        if (item.alias_type in aliases_types):
+            obj.append({
+             "name_type_name": "unspecified",
+             "format_text": item.display_name,
+             "display_text": item.display_name,
+             "internal": False
+            })
+    return obj
+
+def get_locus_crossrefs(locus_alias_list):
+
+    obj = []
+    for item in locus_alias_list:
+        if (item.alias_type == "UniProtKB ID"):
+            obj.append({
+                "referenced_curie": item.display_name,
+                "created_by_curie": "SGD",
+                "updated_by_curie": "SGD",
+                "page_area": "gene",
+                "prefix": "UniProtKB:",
+                "display_name": "",
+                "internal": False
+            })
+        if (item.alias_type == "Gene ID" and item.source.display_name == 'NCBI'):
+            obj.append({
+                "referenced_curie": item.display_name,
+                "created_by_curie": "SGD",
+                "updated_by_curie": "SGD",
+                "page_area": "gene",
+                "prefix": "NCBI_Gene:",
+                "display_name": "",
+                "internal": False
+            })
+    return obj
+
+def get_locus_secondaryids(locus_alias_list):
+
+    obj = []
+    for item in locus_alias_list:
+        if (item.alias_type == "SGDID Secondary"):
+            obj.append({
+             "secondary_id": item.source.display_name + ":" +item.display_name,
+              "internal": False
+            })
+    return obj
+
 def get_output(result_data):
 
     if (result_data):

@@ -7,7 +7,7 @@ from src.data_helpers import get_pers_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.3')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'allele_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -37,8 +37,6 @@ def get_allele_information():
                 obj["data_provider_dto"] = {
                     "source_organization_abbreviation": "SGD",
                     "internal": False}
-                print ('SGDID:' + simple_allele_obj["sgdid"]+ " " + simple_allele_obj["display_name"])
-                #obj["name"] = simple_allele_obj["display_name"]
                 obj["allele_symbol_dto"] = {
                     "name_type_name": "nomenclature_symbol",
                     "format_text": simple_allele_obj["display_name"],
@@ -50,7 +48,7 @@ def get_allele_information():
                 obj["taxon_curie"] = "NCBITaxon:" + DEFAULT_TAXID
                 if len(simple_allele_obj["references"]) > 0:
                     obj['reference_curies'] =[]
-                    print ('getting refs:'+ str(len(simple_allele_obj["references"])))
+                    #print ('getting refs:'+ str(len(simple_allele_obj["references"])))
                     for singlerefObj in simple_allele_obj["references"]:
                         print("PMID:"+ str(singlerefObj['pubmed_id']))
                         if singlerefObj['pubmed_id'] not in obj['reference_curies']:

@@ -10,7 +10,7 @@ DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.3')
 SUBMISSION_TYPE = "disease_gene_ingest_set"
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
 
@@ -31,7 +31,6 @@ def get_disease_association_data():
                 "gene_curie": "",
                 "created_by_curie": "",
                 "updated_by_curie": "",
-                #"data_provider_name": "SGD",
                 "evidence_code_curies": [],
                 "disease_relation_name": "",
                 "date_created":"",

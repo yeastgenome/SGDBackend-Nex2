@@ -2,12 +2,12 @@ import os
 import json
 from sqlalchemy import create_engine
 import concurrent.futures
-from src.models import Dnasequenceannotation, DBSession, Locusdbentity
-from src.data_helpers import get_pers_output
+from src.models import Dnasequenceannotation, DBSession, Locusdbentity, LocusAlias
+from src.data_helpers import get_pers_output, get_locus_synonyms, get_locus_crossrefs, get_locus_secondaryids
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.3')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'gene_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -46,6 +46,7 @@ def get_basic_gene_information():
                 else:
                     obj["gene_type_curie"] = dna_seq_annotation_obj[0].so.soid
 
+
                 obj["data_provider_dto"] = {"source_organization_abbreviation": "SGD",
                                     "internal": False}
                 obj["gene_symbol_dto"] = {"name_type_name": "nomenclature_symbol",
@@ -64,12 +65,21 @@ def get_basic_gene_information():
                     "format_text": item.systematic_name,
                     "display_text": item.systematic_name,
                     "internal": False}
+                # get locus alias info
+                locus_alias_data = DBSession.query(LocusAlias).filter(
+                        LocusAlias.locus_id == item.dbentity_id).all()
 
-                obj["gene_synonym_dtos"] = {
-                    "name_type_name": "synonym",
-                    "format_text": item.gene_name,
-                    "display_text": item.gene_name,
-                    "internal": False}
+                if (len(locus_alias_data) > 0):
+                    obj["gene_synonym_dtos"]= get_locus_synonyms(
+                        locus_alias_data)
+
+                if (len(locus_alias_data) > 0):
+                    obj["cross_reference_dtos"]= get_locus_crossrefs(
+                        locus_alias_data)
+
+                if (len(locus_alias_data) > 0):
+                    obj["gene_secondary_id_dtos"]= get_locus_secondaryids(
+                        locus_alias_data)
 
                 obj["curie"] = "SGD:" + item.sgdid
 
