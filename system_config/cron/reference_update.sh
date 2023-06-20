@@ -5,7 +5,7 @@ LOG_FILE="scripts/loading/reference/logs/reference_update.log"
 MESSAGE_JSON_FILE="/tmp/message.json"
 
 cd /data/www/SGDBackend-Nex2
-. /data/www/venv/bin/activate 
+. venv/bin/activate 
 
 /usr/bin/touch $OUTPUT_FILE
 
