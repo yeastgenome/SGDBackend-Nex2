@@ -1,7 +1,7 @@
 #! /bin/sh -x
 
 OUTPUT_FILE="/tmp/output.log"
-LOG_FILE="scripts/loading/reference/logs/reference_update.log"
+LOG_FILE="/data/www/SGDBackend-Nex2/scripts/loading/reference/logs/reference_update.log"
 MESSAGE_JSON_FILE="/tmp/message.json"
 
 cd /data/www/SGDBackend-Nex2
