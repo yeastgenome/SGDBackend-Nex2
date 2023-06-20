@@ -9,9 +9,9 @@ cd /data/www/SGDBackend-Nex2
 
 /usr/bin/touch $OUTPUT_FILE
 
-python scripts/loading/reference/reference_update_from_abc.py | /usr/bin/tee -a $OUTPUT_FILE
-python scripts/loading/reference/reference_display_name_update.py | /usr/bin/tee -a $OUTPUT_FILE
-python scripts/dumping/ncbi/dump_gene_pmid_pair.py | /usr/bin/tee -a $OUTPUT_FILE
+python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_from_abc.py | /usr/bin/tee -a $OUTPUT_FILE
+python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_display_name_update.py | /usr/bin/tee -a $OUTPUT_FILE
+python /data/www/SGDBackend-Nex2/scripts/dumping/ncbi/dump_gene_pmid_pair.py | /usr/bin/tee -a $OUTPUT_FILE
 
 cat $LOG_FILE >> $OUTPUT_FILE
 
