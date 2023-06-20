@@ -22,6 +22,7 @@ PMC_URL_TYPE = 'PMC full text'
 DOI_URL_TYPE = 'DOI full text'
 PMC_ROOT = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
 DOI_ROOT = 'http://dx.doi.org/'
+AWS_REGION = 'us-east-1'
 
 limit = 2500
 loop_count = 60
@@ -179,7 +180,7 @@ def update_data():
 def download_reference_json_file_from_alliance_s3():
     
     s3_client = boto3.client('s3',
-                             region_name=environ['ABC_BUCKET_REGION'],
+                             region_name=AWS_REGION,
                              aws_access_key_id=environ['ABC_AWS_ACCESS_KEY_ID'],
                              aws_secret_access_key=environ['ABC_AWS_SECRET_ACCESS_KEY'])
     try:
