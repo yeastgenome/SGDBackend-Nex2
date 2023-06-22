@@ -34,10 +34,23 @@ bucketname = 'agr-literature'
 s3_file_location = 'prod/reference/dumps/latest/' + json_file
 log_file = "scripts/loading/reference/logs/reference_update_from_abc.log"
 
-logging.basicConfig(format='%(message)s')
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+# Handlers need to be reset for use under Fargate. See
+# https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda/56579088#56579088
+# for details.  Applies to Fargate in addition to Lambda.
 
+logger = logging.getLogger()
+if logger.handlers:
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
+logging.basicConfig(
+    format='%(message)s',
+    handlers=[
+        logging.FileHandler(os.environ['LOG_FILE']),
+        logging.StreamHandler(sys.stderr)
+    ],
+    level=logging.INFO
+)
 
 def update_data():
 
