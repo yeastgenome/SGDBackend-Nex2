@@ -46,7 +46,7 @@ if logger.handlers:
 logging.basicConfig(
     format='%(message)s',
     handlers=[
-        logging.FileHandler(os.environ['LOG_FILE']),
+        logging.FileHandler(environ['LOG_FILE']),
         logging.StreamHandler(sys.stderr)
     ],
     level=logging.INFO
