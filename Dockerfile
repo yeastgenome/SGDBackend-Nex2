@@ -33,4 +33,5 @@ RUN git checkout master_docker \
     && chmod 755 /data/www/SGDBackend-Nex2/system_config/cron/* \
     && echo 'export $(strings /proc/1/environ | grep AWS_CONTAINER_CREDENTIALS_RELATIVE_URI)' >> /root/.profile
 
-CMD ["sh", "-c", ". /data/www/SGDBackend-Nex2/venv/bin/activate && pserve $INI_FILE --reload"]
+#CMD ["sh", "-c", ". /data/www/SGDBackend-Nex2/venv/bin/activate && pserve $INI_FILE --reload"]
+CMD ["/bin/bash --reload"]
