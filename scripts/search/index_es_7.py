@@ -617,6 +617,7 @@ def index_go_terms():
 
         obj = {
             "name": go.display_name,
+            "identifier": go.goid,
             "go_name": go.display_name,
             "href": go.obj_url,
             "description": go.description,
@@ -677,6 +678,7 @@ def index_disease_terms():
                 keys.add(k.lower())
         obj = {
             "name": do.display_name,
+            "identifier": do.doid,
             "disease_name": do.display_name,
             "category": "disease",
             "href": do.obj_url,
@@ -807,9 +809,13 @@ def index_references():
                 keys.add(str(k).lower())
 
         name = ', '.join(authors) + ' (' + ' '.join(reference.citation.split('(')[1:])
-        
+
+        pmid = ''
+        if reference.pmid:
+            pmid = str(reference.pmid)
         obj = {
             "name": name,
+            "identifier": pmid,
             "reference_name": reference.citation,
             "href": reference.obj_url,
             "description": abstract,
@@ -885,6 +891,7 @@ def index_pathways():
         keys = [p.biocyc_id, p.biocyc_id.lower()]
         obj = {
             "name": p.display_name,
+            "identifier": p.biocyc_id,
             "pathway_name": p.display_name,
             "biocyc_id": p.biocyc_id,
             "href": yeastPathwayURL,
@@ -965,6 +972,7 @@ def index_complex_names():
 
         obj = {
             "name": c.display_name,
+            "identifier": c.complex_accession,
             "complex_name": c.display_name,
             "href": "/complex/" + c.complex_accession,
             "description": c.description + "; " + c.properties,
@@ -1071,6 +1079,7 @@ def index_chemicals():
         if item_v is not None:
             obj = {
                 "name": item_v.display_name,
+                "identifier": item_v.chebiid,
                 "chemical_name": item_v.display_name,
                 "href": item_v.obj_url,
                 "description": item_v.description,

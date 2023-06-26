@@ -217,6 +217,25 @@ mapping = {
                     }
                 }
             },
+            "identifier": {
+                "type": "text",
+                "fielddata": True,
+                "fields": {
+                    "symbol": {
+                        "type": "text",
+                        "analyzer": "symbols"
+                    },
+                    "raw": {
+                        "type": "keyword",
+                        "index": False
+                    },
+                    "autocomplete": {
+                        "type": "text",
+                        "analyzer": "autocomplete",
+                        "search_analyzer": "autocomplete_search"
+                    }
+                }
+            },
             "category": {
                 "type": "text",
                 "fielddata": True,
