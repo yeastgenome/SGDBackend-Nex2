@@ -8,7 +8,7 @@ FIELD_MAP = mapping['mappings']['properties']
 def build_autocomplete_search_body_request(query,
                                            category='locus',
                                            field='name'):
-    _source_fields = ['name', 'href', 'category', 'gene_symbol']
+    _source_fields = ['name', 'identifier', 'reference_name', 'href', 'category', 'gene_symbol']
     if category == 'colleague':
         _source_fields = _source_fields + ['institution']
     es_query = {
@@ -22,6 +22,7 @@ def build_autocomplete_search_body_request(query,
                                 "locus_name.engram^15",
                                 "colleague_name.engram^7",
                                 "name.autocomplete^8",
+                                "identifier.autocomplete^15",
                                 "name_description",
                                 "author.white_space",
                                 "aliases.egram^6",
@@ -80,8 +81,14 @@ def format_autocomplete_results(es_response, field='name'):
             formatted_results.append(obj)
     else:
         for hit in es_response['hits']['hits']:
+            name = hit['_source']['name']
+            if hit['_source'].get('identifier'):
+                if hit['_source'].get('reference_name'):
+                    name = hit['_source']['identifier'] + ": " + hit['_source']['reference_name']
+                else:
+                    name = hit['_source']['identifier'] + ": " + name
             obj = {
-                'name': hit['_source']['name'],
+                'name': name,
                 'href': hit['_source']['href'],
                 'category': hit['_source']['category']
             }
@@ -95,7 +102,6 @@ def format_autocomplete_results(es_response, field='name'):
                 obj['name'] = hit['_source']['gene_symbol'].upper()
 
             formatted_results.append(obj)
-
     return formatted_results
 
 
