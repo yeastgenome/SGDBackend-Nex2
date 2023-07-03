@@ -1165,8 +1165,9 @@ if __name__ == "__main__":
     cleanup()
     setup()
     
-    t1 = Thread(target=index_part_1)
-    t2 = Thread(target=index_part_2)
-    t1.start()
-    t2.start()
-    
+    # t1 = Thread(target=index_part_1)
+    # t2 = Thread(target=index_part_2)
+    # t1.start()
+    # t2.start()
+    index_part_1()
+    index_part_2()
