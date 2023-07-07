@@ -35,7 +35,7 @@ orf_to_tpa_acc = { "YEL066W": "DAA07588.2",   "YJR012C": "DAA08804.2",   "YMR147
                    "YBR266C": "DAD54803.1",   "YEL059W": "DAD54804.1",   "YJL142C": "DAD54805.1",
                    "YJL075C": "DAD54806.1",   "YJR107C-A": "DAD54807.1", "YKL104W-A": "DAD54808.1",
                    "YLR379W-A": "DAD54809.1", "YMR008C-A": "DAD54810.1", "YMR075C-A": "DAD54811.1",
-                   "YPR038W": "DAD54812.1",   "YGR227C-A": "DAF84567.1" } 
+                   "YPR038W": "DAD54812.1",   "YGR227C-A": "DAF84567.1", "YHL045W": "DAZ92295.1" } 
 
 MITO_ID = "KP263414.1"
 
