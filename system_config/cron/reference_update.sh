@@ -2,6 +2,8 @@
 
 OUTPUT_FILE=/tmp/output.log
 MESSAGE_JSON_FILE=/tmp/message.json
+SGD_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+SGD_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 
 echo "DEBUG: OUTPUT_FILE is $OUTPUT_FILE"
 echo "DEBUG: LOG_FILE is $LOG_FILE"
@@ -14,11 +16,18 @@ echo "reference_update.sh start:  `/bin/date`" | /bin/tee $OUTPUT_FILE
 
 echo "DEBUG:  starting reference_update_from_abc.py"
 
+export AWS_ACCESS_KEY_ID=$ABC_AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$ABC_AWS_SECRET_ACCESS_KEY
+
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_from_abc.py | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
 
 echo "DEBUG:  end reference_update_from_abc.py"
+
+export AWS_ACCESS_KEY_ID=$SGD_AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$SGD_AWS_SECRET_ACCESS_KEY
+
 echo "DEBUG:  starting reference_display_name_update.py"
 
 /usr/bin/cp /dev/null $LOG_FILE
