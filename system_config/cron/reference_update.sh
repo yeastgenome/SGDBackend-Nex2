@@ -55,4 +55,6 @@ echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: r
 
 /usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE_JSON_FILE} --region $AWS_SES_REGION --debug
 
+echo "DEBUG:  send-raw-email exit value:  $?"
+
 exit 0
