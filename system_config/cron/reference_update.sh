@@ -44,6 +44,7 @@ python /data/www/SGDBackend-Nex2/scripts/dumping/ncbi/dump_gene_pmid_pair.py | /
 cat $LOG_FILE >> $OUTPUT_FILE
 
 echo "DEBUG:  end dump_gene_pmid_pair.py"
+/usr/bin/touch $OUTPUT2_FILE
 /usr/bin/awk '{printf "%s\\n", $0}' $OUTPUT_FILE > $OUTPUT2_FILE
 
 echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: reference_update.sh report\nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\n\n--NextPart\nContent-Type: text/plain\n\ndata_dump.sh completed successfully\n\n--NextPart\nContent-Type: text/plain;\nContent-Disposition: attachment; filename=\"reference_update_report.txt\"\n\n'$(cat $OUTPUT2_FILE)'\n--NextPart--"}' > $MESSAGE_JSON_FILE
