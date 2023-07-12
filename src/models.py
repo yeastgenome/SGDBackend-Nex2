@@ -4739,6 +4739,7 @@ class Locusdbentity(Dbentity):
             "alleles": [],
             "sequence_summary": '',
             "protein_summary": '',
+            "regulation_summary": '',
             "phenotype_overview": self.phenotype_overview_to_dict(),
             "interaction_overview": self.interaction_overview_to_dict(),
             "paragraph": {
@@ -4757,7 +4758,11 @@ class Locusdbentity(Dbentity):
         protein_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
         if protein_summary:
             obj["protein_summary"] = protein_summary.html
-    
+
+        regulation_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Regulation").one_or_none()
+        if regulation_summary:
+            obj["regulation_summary"] = regulation_summary.html
+            
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
