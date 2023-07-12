@@ -3,7 +3,6 @@
 OUTPUT_FILE=/tmp/output.log
 OUTPUT2_FILE=/tmp/output2.log
 MESSAGE_JSON_FILE=/tmp/message.json
-MESSAGE2_JSON_FILE=/tmp/message2.json
 SGD_AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
 SGD_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 
@@ -50,10 +49,8 @@ echo "DEBUG:  end dump_gene_pmid_pair.py"
 echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: reference_update.sh report\nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\n\n--NextPart\nContent-Type: text/plain\n\ndata_dump.sh completed successfully\n\n--NextPart\nContent-Type: text/plain;\nContent-Disposition: attachment; filename=\"reference_update_report.txt\"\n\n'$(cat $OUTPUT2_FILE)'\n--NextPart--"}' > $MESSAGE_JSON_FILE
 
 /usr/bin/sed -i 's/$/\\n/' $MESSAGE_JSON_FILE
-/usr/bin/tr -d '\n' < $MESSAGE_JSON_FILE > $MESSAGE2_JSON_FILE
+#/usr/bin/sed -i 's/}\\n/}/' $MESSAGE_JSON_FILE
 
-export AWS_REGION=$AWS_SES_REGION
-
-/usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE2_JSON_FILE} --debug
+/usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE_JSON_FILE} --region $AWS_SES_REGION --debug
 
 exit 0
