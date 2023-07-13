@@ -50,6 +50,7 @@ echo "DEBUG:  end dump_gene_pmid_pair.py"
 echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: reference_update.sh report\nMIME-Version: 1.0\nContent-type: Multipart/Mixed; boundary=\"NextPart\"\n\n--NextPart\nContent-Type: text/plain\n\ndata_dump.sh completed successfully\n\n--NextPart\nContent-Type: text/plain;\nContent-Disposition: attachment; filename=\"reference_update_report.txt\"\n\n'$(cat $OUTPUT2_FILE)'\n--NextPart--"}' > $MESSAGE_JSON_FILE
 
 /usr/bin/sed -i 's/$/\\n/' $MESSAGE_JSON_FILE
+/usr/bin/touch $MESSAGE2_JSON_FILE
 /usr/bin/tr -d '\n' < $MESSAGE_JSON_FILE > $MESSAGE2_JSON_FILE
 /usr/bin/sed -i 's/}\\n/}/' $MESSAGE2_JSON_FILE
 
