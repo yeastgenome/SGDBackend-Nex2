@@ -52,7 +52,7 @@ echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: r
 /usr/bin/sed -i 's/$/\\n/' $MESSAGE_JSON_FILE
 /usr/bin/touch $MESSAGE2_JSON_FILE
 /usr/bin/tr -d '\n' < $MESSAGE_JSON_FILE > $MESSAGE2_JSON_FILE
-/usr/bin/sed -i 's/}\\n/}/' $MESSAGE2_JSON_FILE
+/usr/bin/sed -i 's/}\\n/}\n/' $MESSAGE2_JSON_FILE
 
 /usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE_JSON_FILE} --region $AWS_SES_REGION --debug
 
