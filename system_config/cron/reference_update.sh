@@ -54,6 +54,9 @@ echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: r
 /usr/bin/tr -d '\n' < $MESSAGE_JSON_FILE > $MESSAGE2_JSON_FILE
 /usr/bin/sed -i 's/}\\n/}\n/' $MESSAGE2_JSON_FILE
 
+export AWS_ACCESS_KEY_ID=$AGR_SGD_AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$AGR_SGD_AWS_SECRET_ACCESS_KEY
+
 /usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE_JSON_FILE} --region $AWS_SES_REGION --debug
 
 echo "DEBUG:  send-raw-email exit value:  $?"
