@@ -47,7 +47,7 @@ echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: r
 export AWS_ACCESS_KEY_ID=$AGR_SGD_AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$AGR_SGD_AWS_SECRET_ACCESS_KEY
 
-/usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE2_JSON_FILE} --region $AWS_SES_REGION --debug
+/usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE2_JSON_FILE} --region $AWS_SES_REGION
 
 echo "reference_update.sh finished:  `/bin/date`" | /bin/tee $OUTPUT_FILE
 
