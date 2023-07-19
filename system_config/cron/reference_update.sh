@@ -18,10 +18,6 @@ export AWS_SECRET_ACCESS_KEY=$ABC_AWS_SECRET_ACCESS_KEY
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_from_abc.py | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
 
-# set credentials to write to S3 bucket
-export AWS_ACCESS_KEY_ID=$SGD_AWS_ACCESS_KEY_ID
-export AWS_SECRET_ACCESS_KEY=$SGD_AWS_SECRET_ACCESS_KEY
-
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_display_name_update.py | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
@@ -29,6 +25,8 @@ cat $LOG_FILE >> $OUTPUT_FILE
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/dumping/ncbi/dump_gene_pmid_pair.py | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
+
+echo "reference_update.sh finished:  `/bin/date`" | /bin/tee $OUTPUT_FILE
 
 # add \n characters to end of each line in OUTPUT_FILE for JSON message
 /usr/bin/touch $OUTPUT2_FILE
@@ -48,7 +46,5 @@ export AWS_ACCESS_KEY_ID=$AGR_SGD_AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$AGR_SGD_AWS_SECRET_ACCESS_KEY
 
 /usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE2_JSON_FILE} --region $AWS_SES_REGION
-
-echo "reference_update.sh finished:  `/bin/date`" | /bin/tee $OUTPUT_FILE
 
 exit $?
