@@ -35,10 +35,12 @@ def read_data_and_update_database(nex_session, fw):
     f = open(domain_file)
 
     found = {}
+    count = 0
     for line in f:
         items = line.strip().split("\t")
         display_name = items[4]
         format_name = display_name.replace(' ', '_')
+        domain_name = items[5]
         if format_name in found:
             continue
         found[format_name] = 1
@@ -64,13 +66,13 @@ def read_data_and_update_database(nex_session, fw):
             interpro_id = items[11]
         if len(items) > 12:
             desc = items[12]
-            
+        if desc == '' or desc == '-':
+            desc = domain_name
+
         x = format_name_to_domain.get(format_name)
         
         if x is None:
-
             print ("not in DB:", format_name, display_name, source, source_id)
-
             proteindomain_id = insert_new_domain(nex_session, fw, format_name,
                                                  display_name, source_id, 
                                                  interpro_id, desc)
@@ -81,16 +83,16 @@ def read_data_and_update_database(nex_session, fw):
                     nex_session.commit()
                 else:
                     nex_session.rollback()
-            continue
-        else:
+        else:            
             print ("in DB:", format_name, display_name, source, source_id)
-
-        if x.interpro_id != interpro_id or x.description != desc:
-            x.interpro_id = interpro_id
-            x.description = desc
-            nex_session.add(x)
-            nex_session.commit()
-            fw.write("Update domain: " + display_name + "\n")
+            if x.interpro_id != interpro_id or x.description != desc:
+                x.interpro_id = interpro_id
+                x.description = desc
+                nex_session.add(x)
+                count += 1
+                if count % 250 == 0:
+                    nex_session.commit()
+                fw.write("Update domain: " + display_name + "\n")
                 
     f.close()
 
