@@ -4697,7 +4697,6 @@ class Locusdbentity(Dbentity):
             "headline": self.headline,
             "link": self.obj_url
         }
-
         
         taxonomy_id = self.get_main_strain('taxonomy_id')
 
@@ -4712,7 +4711,7 @@ class Locusdbentity(Dbentity):
         obj["locus_type"] = ",".join(locus_type)
 
         return obj
-
+        
     def to_dict(self):
         
         obj = {
@@ -4733,6 +4732,7 @@ class Locusdbentity(Dbentity):
             "paralogs": self.paralogs_to_dict(),
             "complements": self.complements_to_dict(),
             "urls": [],
+            "alliance_icon_links": [],
             "protein_overview": self.protein_overview_to_dict(),
             "go_overview": self.go_overview_to_dict(),
             "pathways": [],
@@ -4751,6 +4751,60 @@ class Locusdbentity(Dbentity):
             "URS_ID": None
         }
 
+        ## set alliance icon links
+
+        SO_TYPES_TO_EXCLUDE = "'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296', 'SO:0005855', 'SO:0001984', 'SO:0002026', 'SO:0001789', 'SO:0000436', 'SO:0000624', 'SO:0000036', 'SO:0002059'"
+
+        rows = DBSession.execute(f"SELECT annotation_id "
+                                 f"FROM nex.dnasequenceannotation "
+                                 f"WHERE dbentity_id = {self.dbentity_id} "
+                                 f"AND taxonomy_id = {TAXON_ID} "
+                                 f"AND dna_type = 'GENOMIC' "
+                                 f"AND so_id not in "
+                                 f"(select so_id from nex.so where soid in ({SO_TYPES_TO_EXCLUDE}))").fetchall()
+
+        if len(rows) > 0:
+            allianceSearchRootUrl = "https://www.alliancegenome.org/"
+            allianceSearchUrl = allianceSearchRootUrl + "search?biotypes=protein_coding_gene&category=gene&q=_SUBSTITUTE_&species="
+            mod_to_template_url = { "ZFIN": allianceSearchUrl + "Danio%20rerio",
+                                    "RGD":  allianceSearchUrl + "Rattus%20norvegicus",
+                                    "MGI":  allianceSearchUrl + "Mus%20musculus",
+                                    "FB":   allianceSearchUrl + "Drosophila%20melanogaster",
+                                    "WB":   allianceSearchUrl + "Caenorhabditis%20elegans",
+                                    "HGNC": allianceSearchUrl + "Homo%20sapiens" }
+            allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + self.sgdid + "/homologs?limit=10000"
+            try:
+                req = Request(allianceAPI)
+                res = urlopen(req)
+                records = json.loads(res.read().decode('utf-8'))
+                mod_to_ids = {}
+                for record in records['results']:
+                    homolog = record['homologGene']
+                    mod = homolog['id'].split(':')[0]
+                    ids = []
+                    if mod in mod_to_ids:
+                        ids = mod_to_ids[mod]
+                    if len(ids) < 100:
+                        ids.append(homolog['id'])
+                    mod_to_ids[mod] = ids
+                linkData = []
+                for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
+                    if mod in mod_to_ids:
+                        if len(mod_to_ids[mod]) > 1:
+                            ids = "+".join(mod_to_ids[mod])
+                            linkData.append({"mod": mod,
+                                             "icon_url": mod_to_template_url[mod].replace("_SUBSTITUTE_", ids)})
+                        else:
+                            linkData.append({"mod": mod,
+                                             "icon_url": allianceSearchRootUrl + "gene/" + mod_to_ids[mod][0]})
+                # linkData.insert(0, {"mod": 'SGD',
+                #                "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
+                linkData.append({"mod": 'SGD',                                                                                  
+                                "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
+                obj['alliance_icon_links'] = linkData
+            except Exception as e:
+                print('error fetching alliance homolog data:' + str(e))
+                
         sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
         if sequence_summary:
             obj["sequence_summary"] = sequence_summary.html
@@ -4762,7 +4816,7 @@ class Locusdbentity(Dbentity):
         regulation_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Regulation").one_or_none()
         if regulation_summary:
             obj["regulation_summary"] = regulation_summary.html
-            
+
         [main_strain, taxonomy_id] = self.get_main_strain()
         obj['main_strain'] = main_strain
 
