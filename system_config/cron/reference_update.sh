@@ -26,7 +26,7 @@ cat $LOG_FILE >> $OUTPUT_FILE
 python /data/www/SGDBackend-Nex2/scripts/dumping/ncbi/dump_gene_pmid_pair.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
 
-echo "reference_update.sh finished:  `/bin/date`" | /bin/tee $OUTPUT_FILE
+echo "reference_update.sh finished:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
 # add \n characters to end of each line in OUTPUT_FILE for JSON message
 /usr/bin/touch $OUTPUT2_FILE
