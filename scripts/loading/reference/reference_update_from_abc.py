@@ -22,6 +22,7 @@ PMC_URL_TYPE = 'PMC full text'
 DOI_URL_TYPE = 'DOI full text'
 PMC_ROOT = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
 DOI_ROOT = 'http://dx.doi.org/'
+AWS_REGION = 'us-east-1'
 
 limit = 2500
 loop_count = 60
@@ -33,10 +34,23 @@ bucketname = 'agr-literature'
 s3_file_location = 'prod/reference/dumps/latest/' + json_file
 log_file = "scripts/loading/reference/logs/reference_update_from_abc.log"
 
-logging.basicConfig(format='%(message)s')
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+# Handlers need to be reset for use under Fargate. See
+# https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda/56579088#56579088
+# for details.  Applies to Fargate in addition to Lambda.
 
+logger = logging.getLogger()
+if logger.handlers:
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
+logging.basicConfig(
+    format='%(message)s',
+    handlers=[
+        logging.FileHandler(environ['LOG_FILE']),
+        logging.StreamHandler(sys.stderr)
+    ],
+    level=logging.INFO
+)
 
 def update_data():
 
@@ -179,6 +193,7 @@ def update_data():
 def download_reference_json_file_from_alliance_s3():
     
     s3_client = boto3.client('s3',
+                             region_name=AWS_REGION,
                              aws_access_key_id=environ['ABC_AWS_ACCESS_KEY_ID'],
                              aws_secret_access_key=environ['ABC_AWS_SECRET_ACCESS_KEY'])
     try:
