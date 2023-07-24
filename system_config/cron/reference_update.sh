@@ -18,6 +18,10 @@ export AWS_SECRET_ACCESS_KEY=$ABC_AWS_SECRET_ACCESS_KEY
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_from_abc.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
 
+# use IAM for further permissions rather than access keys
+unset AWS_ACCESS_KEY_ID
+unset AWS_SECRET_ACCESS_KEY
+
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_display_name_update.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
@@ -40,10 +44,6 @@ echo '{"Data": "From: '$(echo $EMAIL_FROM)'\nTo: '$(echo $EMAIL_TO)'\nSubject: r
 /usr/bin/touch $MESSAGE2_JSON_FILE
 /usr/bin/tr -d '\n' < $MESSAGE_JSON_FILE > $MESSAGE2_JSON_FILE
 /usr/bin/sed -i 's/}\\n/}\n/' $MESSAGE2_JSON_FILE  # add final trailing newline
-
-# grant SES permissions via IAM role instead of access keys
-unset AWS_ACCESS_KEY_ID
-unset AWS_SECRET_ACCESS_KEY
 
 /usr/local/bin/aws ses send-raw-email --cli-binary-format raw-in-base64-out --raw-message file://${MESSAGE2_JSON_FILE} --region $AWS_SES_REGION
 
