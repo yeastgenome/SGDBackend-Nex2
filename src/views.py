@@ -1545,7 +1545,10 @@ def analyze(request):
         return HTTPBadRequest(body=json.dumps({'error': 'Key \"bioent_ids\" missing'}))
 
     try:
-        loci = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(data['bioent_ids'])).all()
+        if "is_name" in data and data['is_name'] is True:
+            loci = DBSession.query(Locusdbentity).filter(Locusdbentity.systematic_name.in_(data['bioent_ids'])).all()
+        else:
+            loci = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(data['bioent_ids'])).all()
 
         return [locus.to_dict_analyze() for locus in loci]
     except Exception as e:

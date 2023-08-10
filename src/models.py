@@ -3264,6 +3264,7 @@ class Locusdbentity(Dbentity):
             "data": {
                 "name": self.display_name,
                 "id": self.format_name,
+                "dbentity_id": self.dbentity_id, 
                 "link": self.obj_url,
                 "type": "BIOENTITY",
                 "sub_type": "FOCUS"
@@ -3272,7 +3273,7 @@ class Locusdbentity(Dbentity):
 
         i = 0
         while i < len(list_genes_to_proteindomain) and len(nodes) <= 30 and len(edges) <= 50:
-            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_proteindomain[i][0]).one_or_none()
+            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.dbentity_id, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_proteindomain[i][0]).one_or_none()
 
             proteindomain_ids = list_genes_to_proteindomain[i][1]
 
@@ -3281,7 +3282,8 @@ class Locusdbentity(Dbentity):
                     "data": {
                         "name": dbentity[0],
                         "id": dbentity[1],
-                        "link": dbentity[2],
+                        "dbentity_id": dbentity[2],
+                        "link": dbentity[3],
                         "type": "BIOENTITY"
                     }
                 }
@@ -3957,6 +3959,7 @@ class Locusdbentity(Dbentity):
             "data": {
                 "name": self.display_name.replace("_", " "),
                 "id": self.format_name,
+                "dbentity_id": self.dbentity_id,
                 "link": self.obj_url,
                 "type": "BIOENTITY",
                 "category": "FOCUS"
@@ -3968,7 +3971,7 @@ class Locusdbentity(Dbentity):
 
         i = 0
         while i < len(list_genes_to_go) and len(nodes) <= 20 and len(edges) <= 50:
-            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_go[i][0]).one_or_none()
+            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.dbentity_id, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_go[i][0]).one_or_none()
 
             go_ids = list_genes_to_go[i][1]
 
@@ -3983,7 +3986,8 @@ class Locusdbentity(Dbentity):
                     "data": {
                         "name": dbentity[0],
                         "id": dbentity[1],
-                        "link": dbentity[2],
+                        "dbentity_id": dbentity[2],
+                        "link": dbentity[3],
                         "type": "BIOENTITY",
                         "gene_count": len(go_ids)
                     }
@@ -4576,6 +4580,7 @@ class Locusdbentity(Dbentity):
             "data": {
                 "name": self.display_name,
                 "id": self.format_name,
+                "dbentity_id": self.dbentity_id,
                 "link": self.obj_url,
                 "type": "BIOENTITY",
                 "sub_type": "FOCUS"
@@ -4587,7 +4592,7 @@ class Locusdbentity(Dbentity):
 
         i = 0
         while i < len(list_genes_to_phenotypes) and len(nodes) <= 20 and len(edges) <= 50:
-            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_phenotypes[i][0]).one_or_none()
+            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.dbentity_id, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_phenotypes[i][0]).one_or_none()
 
             observable_ids = DBSession.query(distinct(Phenotype.observable_id)).filter(Phenotype.phenotype_id.in_(list_genes_to_phenotypes[i][1])).all()
 
@@ -4602,7 +4607,8 @@ class Locusdbentity(Dbentity):
                     "data": {
                         "name": dbentity[0],
                         "id": dbentity[1],
-                        "link": dbentity[2],
+                        "dbentity_id": dbentity[2],
+                        "link": dbentity[3],
                         "type": "BIOENTITY",
                         "gene_count": len(observable_ids)
                     }
@@ -10957,11 +10963,13 @@ class Complexdbentity(Dbentity):
             link = interactor.obj_url
             sgdid = None
             type = "other subunit"
+            dbentity_id = None
             if interactor.locus_id:
                 display_name = interactor.locus.display_name
                 sgdid = interactor.locus.sgdid
                 description = interactor.locus.headline
                 link = interactor.locus.obj_url
+                dbentity_id = interactor.locus_id
                 type = "protein"
             elif interactor.format_name.startswith('CPX-'):
                 type = 'subcomplex'
@@ -10993,6 +11001,7 @@ class Complexdbentity(Dbentity):
                     nodes.append({
                         "name": display_name,
                         "id": node_id,
+                        "dbentity_id": dbentity_id,
                         "href": link,
                         "category": type
                     })
@@ -11028,11 +11037,13 @@ class Complexdbentity(Dbentity):
             link = interactor.obj_url
             sgdid = None
             type = "other subunit"
+            dbentity_id = None
             if interactor.locus_id:
                 display_name = interactor.locus.display_name
                 sgdid = interactor.locus.sgdid
                 description = interactor.locus.headline
                 link = interactor.locus.obj_url
+                dbentity_id = interactor.locus_id
                 type = "protein"
             elif interactor.format_name.startswith('CPX-'):
                 type = 'subcomplex'
@@ -11048,6 +11059,7 @@ class Complexdbentity(Dbentity):
             subunits.append({ "display_name": display_name,
                               "description": description,
                               "sgdid": sgdid,
+                              "dbentity_id": dbentity_id,
                               "stoichiometry": stoichiometry4interactor.get(interactor.format_name),
                               "link": link })
 
@@ -11066,6 +11078,7 @@ class Complexdbentity(Dbentity):
                        "name": display_name,
                        "id": interactor.format_name,
                        "href": link,
+                       "dbentity_id": dbentity_id,
                        "category": "subunit"
                 })
                 network_nodes_ids[interactor.format_name] = True
