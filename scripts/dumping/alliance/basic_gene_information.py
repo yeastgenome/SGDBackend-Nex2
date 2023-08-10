@@ -7,7 +7,7 @@ from src.data_helpers import get_output, get_locus_alias_data
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_6.0.0_')
 local_dir = 'scripts/dumping/alliance/data/'
 SO_TYPES_TO_EXCLUDE = [
     'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296', 'SO:0005855',
@@ -162,6 +162,8 @@ def get_basic_gene_information():
                 # add synonyms,geneSynopsis, symbol, primaryId
                 obj["geneSynopsis"] = item.description
                 obj["symbol"] = item.gene_name if item.gene_name is not None else item.systematic_name
+                #if item.systematic_name is not None:
+                #    obj["gene_systematic_name"] = item.systematic_name
                 obj["basicGeneticEntity"]["synonyms"].append(
                     item.systematic_name)
                 obj["basicGeneticEntity"]["primaryId"] = "SGD:" + item.sgdid
