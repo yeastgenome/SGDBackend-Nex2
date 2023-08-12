@@ -27,7 +27,6 @@ if log.handlers:
 logging.basicConfig(
     format='%(message)s',
     handlers=[
-        logging.FileHandler(os.environ['LOG_FILE']),
         logging.StreamHandler(sys.stderr)
     ],
     level=logging.INFO
@@ -544,7 +543,9 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
         log.info("The " + gzip_file + " is not in the database.")
         return
     file_id = gff.dbentity_id
-
+    sgdid = gff.sgdid
+    log.info("The file will be uploaded to s3://sgd-[dev|prod]-upload/" + sgdid + "/" + gzip_file)
+    
     path = nex_session.query(Path).filter_by(
         path="/reports/chromosomal-features").one_or_none()
     if path is None:
