@@ -5186,7 +5186,7 @@ class Locusdbentity(Dbentity):
         expt_data = DBSession.query(Proteinexptannotation).filter_by(dbentity_id=self.dbentity_id).all()
         if len(expt_data) > 0:
             obj["half_life"] = { 'data_value': str(expt_data[0].data_value),
-                                 'date_unit': str(expt_data[0].data_unit) }
+                                 'data_unit': str(expt_data[0].data_unit) }
 
         return obj
 
