@@ -1392,7 +1392,22 @@ def locus_fungal_homolog_details(request):
         return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")        
     except Exception as e:
         log.error(e)        
-        
+
+@view_config(route_name='strain_literature_details', renderer='json', request_method='GET')
+def strain_literature_details(request):
+    try:
+        id = extract_id_request(request, 'strain')
+        strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
+        if strain:
+            return strain.literature_to_dict()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='locus_literature_details', renderer='json', request_method='GET')
 def locus_literature_details(request):
     try:

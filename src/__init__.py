@@ -45,7 +45,8 @@ def main(global_config, **settings):
     config.add_route('reserved_name', '/reservedname/{id}', request_method='GET')
 
     config.add_route('strain', '/strain/{id}', request_method='GET')
-
+    config.add_route('strain_literature_details', '/strain/{id}/literature_details', request_method='GET')
+    
     config.add_route('reference_this_week', '/references/this_week', request_method='GET')
     config.add_route('reference', '/reference/{id}', request_method='GET')
 

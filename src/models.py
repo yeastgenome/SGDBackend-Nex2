@@ -5185,7 +5185,8 @@ class Locusdbentity(Dbentity):
 
         expt_data = DBSession.query(Proteinexptannotation).filter_by(dbentity_id=self.dbentity_id).all()
         if len(expt_data) > 0:
-            obj["half_life"] = str(expt_data[0].data_value) + " (" + expt_data[0].data_unit + ")"
+            obj["half_life"] = { 'data_value': str(expt_data[0].data_value),
+                                 'data_unit': str(expt_data[0].data_unit) }
 
         return obj
 
@@ -6211,6 +6212,7 @@ class Straindbentity(Dbentity):
             return strain
 
     def to_dict(self):
+
         obj = {
             "display_name": self.display_name,
             "urls": [],
@@ -6224,6 +6226,7 @@ class Straindbentity(Dbentity):
             "longest_scaffold": self.longest_scaffold,
             "scaffold_n50": self.scaffold_nfifty,
             "feature_count": self.feature_count,
+            "literature_overview": self.literature_overview_to_dict(),
             "paragraph": None
         }
 
@@ -6279,6 +6282,180 @@ class Straindbentity(Dbentity):
             "taxonomy_id": self.taxonomy.taxonomy_id
         }
         return obj
+
+    def literature_overview_to_dict(self):
+        obj = {
+            "phenotype_count": 0,
+            "regulation_count": 0,
+            "funComplement_count": 0,
+            "disease_count": 0,
+            "ptm_count": 0,
+            "htp_count": 0,
+            "total_count": 0
+        }
+            
+        regulation_ids = []
+        for x in DBSession.query(Regulationannotation).filter_by(
+                taxonomy_id = self.taxonomy_id, annotation_type = "manually curated").all():
+            regulation_ids.append(x.reference_id)
+    
+        regulation_htp_ids = []
+        for x in DBSession.query(Regulationannotation).filter_by(
+                taxonomy_id = self.taxonomy_id, annotation_type = "high-throughput").all():
+            regulation_htp_ids.append(x.reference_id)
+
+        disease_ids = []
+        for x in DBSession.query(Diseaseannotation).filter_by(
+                taxonomy_id = self.taxonomy_id).all():
+            disease_ids.append(x.reference_id)
+    
+        apo_ids = []
+        for x in DBSession.query(Apo).filter_by(
+            namespace_group="classical genetics").all():
+            apo_ids.append(x.apo_id)
+
+        phenotype_ids = []
+        for x in DBSession.query(Phenotypeannotation).filter(
+                and_(Phenotypeannotation.taxonomy_id == self.taxonomy_id,
+                     Phenotypeannotation.experiment_id.in_(apo_ids))).all():
+            phenotype_ids.append(x.reference_id)
+    
+        apo_ids_large_scale = []
+        for x in DBSession.query(Apo).filter_by(
+                namespace_group="large-scale survey").all():
+            apo_ids_large_scale.append(x.apo_id)
+
+        phenotype_htp_ids = []
+        for x in DBSession.query(Phenotypeannotation).filter(
+            and_(Phenotypeannotation.taxonomy_id == self.taxonomy_id,
+                 Phenotypeannotation.experiment_id.in_(apo_ids_large_scale))).all():
+            phenotype_htp_ids.append(x.reference_id)
+    
+        ptm_ids = []
+        for x in DBSession.query(Posttranslationannotation).filter_by(
+                taxonomy_id = self.taxonomy_id).all():
+            ptm_ids.append(x.reference_id)
+    
+        funComplement_ids = []
+        for x in DBSession.query(Functionalcomplementannotation).filter_by(
+                taxonomy_id = self.taxonomy_id).all():
+            funComplement_ids.append(x.reference_id)
+            
+        htp_ids = regulation_htp_ids + phenotype_htp_ids
+        
+        obj["phenotype_count"] = len(set(phenotype_ids))
+        obj["regulation_count"] = len(set(regulation_ids))
+        obj["disease_count"] = len(set(disease_ids))
+        obj["ptm_count"] = len(set(ptm_ids))
+        obj["funComplement_count"] = len(set(funComplement_ids))
+        obj["htp_count"] = len(set(htp_ids))
+        obj["total_count"] = len(set(phenotype_ids + regulation_ids + disease_ids + ptm_ids + funComplement_ids + htp_ids))
+        return obj
+
+    def literature_to_dict(self):
+        obj = {            
+            "regulation": [],
+            "phenotype": [],
+            "disease": [],
+            "ptm": [],
+            "funComplement": [],
+            "htp": []
+        }
+
+        regulation_ids = []
+        for x in DBSession.query(Regulationannotation).filter_by(
+            taxonomy_id = self.taxonomy_id, annotation_type = "manually curated").all():
+            regulation_ids.append(x.reference_id)
+    
+        regulation_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(regulation_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        
+        for lit in regulation_lit:
+            obj["regulation"].append(lit.to_dict_citation())
+
+        regulation_htp_ids = []
+        for x in DBSession.query(Regulationannotation).filter_by(
+            taxonomy_id = self.taxonomy_id, annotation_type = "high-throughput").all():
+            regulation_htp_ids.append(x.reference_id)
+
+        disease_ref_ids = []
+        for x in DBSession.query(Diseaseannotation).filter_by(taxonomy_id = self.taxonomy_id).all():
+            disease_ref_ids.append(x.reference_id)
+            
+        disease_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(disease_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in disease_lit:
+            obj["disease"].append(lit.to_dict_citation())
+    
+        ptm_ref_ids = []
+        for x in DBSession.query(Posttranslationannotation).filter_by(taxonomy_id = self.taxonomy_id).all():
+            ptm_ref_ids.append(x.reference_id)
+
+        ptm_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(ptm_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in ptm_lit:
+            obj["ptm"].append(lit.to_dict_citation())
+
+        fc_ref_ids = []
+        for x in DBSession.query(Functionalcomplementannotation).filter_by(
+                taxonomy_id = self.taxonomy_id).all():
+            fc_ref_ids.append(x.reference_id)
+
+        fc_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(fc_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in fc_lit:
+            obj["funComplement"].append(lit.to_dict_citation())
+            
+        apo_ids = []
+        apo_ids_large_scale = []
+        for x in DBSession.query(Apo).all():
+            if x.namespace_group == "classical genetics":
+                apo_ids.append(x.apo_id)
+            elif x.namespace_group == "large-scale survey":
+                apo_ids_large_scale.append(x.apo_id)
+    
+        valid_phenotype_ref_ids = []
+        for x in DBSession.query(Phenotypeannotation).filter_by(
+                taxonomy_id = self.taxonomy_id).filter(
+                    Phenotypeannotation.experiment_id.in_(apo_ids)).all():
+            if x.reference_id not in valid_phenotype_ref_ids:
+                valid_phenotype_ref_ids.append(x.reference_id)
+    
+        valid_phenotype_ref_ids_lsc = []
+        for x in DBSession.query(Phenotypeannotation).filter_by(
+                taxonomy_id = self.taxonomy_id).filter(
+                    Phenotypeannotation.experiment_id.in_(apo_ids_large_scale)).all():
+            if x.reference_id not in valid_phenotype_ref_ids_lsc:
+                valid_phenotype_ref_ids_lsc.append(x.reference_id)
+    
+        phenotype_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(valid_phenotype_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+    
+        for lit in phenotype_lit:
+            obj["phenotype"].append(lit.to_dict_citation())
+            
+        htp_ids = regulation_htp_ids + valid_phenotype_ref_ids_lsc
+        all_lit_htp = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(htp_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+
+        for lit in all_lit_htp:
+            if lit.to_dict_citation() not in obj["htp"]:
+                obj["htp"].append(lit.to_dict_citation())
+
+        return obj
+
 
 class Dbuser(Base):
     __tablename__ = 'dbuser'
