@@ -16,7 +16,7 @@ export AWS_SECRET_ACCESS_KEY=$ABC_AWS_SECRET_ACCESS_KEY
 
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_from_abc.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
-cat $LOG_FILE >> $OUTPUT_FILE
+grep -v '_abstract=' $LOG_FILE >> $OUTPUT_FILE
 
 # use IAM for further permissions rather than access keys
 unset AWS_ACCESS_KEY_ID
