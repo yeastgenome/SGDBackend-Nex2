@@ -556,15 +556,19 @@ def extensions(request):
         return {'options': [{'id': e, 'name': e} for e in FILE_EXTENSIONS]}
     except Exception as e:
         log.error(e)
-        
+
 @view_config(route_name='reference_this_week', renderer='json', request_method='GET')
 def reference_this_week(request):
     try:
         start_date = datetime.datetime.today() - datetime.timedelta(days=30)
         end_date = datetime.datetime.today()
-
         recent_literature = DBSession.query(Referencedbentity).filter(Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created.desc()).all()
-        refs = [x.to_dict_citation() for x in recent_literature]
+        # refs = [x.to_dict_citation() for x in recent_literature]
+        refs = []
+        for x in recent_literature:
+            citation_dict = x.to_dict_citation()
+            citation_dict['entity_list'] = x.annotations_to_dict()
+            refs.append(citation_dict)
         return {
             'start': start_date.strftime("%Y-%m-%d"),
             'end': end_date.strftime("%Y-%m-%d"),

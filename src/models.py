@@ -3765,6 +3765,8 @@ class Locusdbentity(Dbentity):
             "phenotype": [],
             "disease": [],
             "go": [],
+            "ptm": [],
+            "funComplement": [],
             "htp": []
         }
 
@@ -3855,7 +3857,33 @@ class Locusdbentity(Dbentity):
                 Referencedbentity.display_name.asc()).all()
         for lit in disease_lit:
             obj["disease"].append(lit.to_dict_citation())
+
+        # posttranslationannotation
+        ptm_ref_ids = []
+        for x in DBSession.query(Posttranslationannotation).filter_by(dbentity_id = self.dbentity_id).all():
+            ptm_ref_ids.append(x.reference_id)
             
+        ptm_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(ptm_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+
+        for lit in ptm_lit:
+            obj["ptm"].append(lit.to_dict_citation())
+            
+        # functionalcomplementannotation
+        fc_ref_ids = []
+        for x in DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id = self.dbentity_id).all():
+            fc_ref_ids.append(x.reference_id)
+
+        fc_lit = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(fc_ref_ids)).order_by(
+                Referencedbentity.year.desc(),
+                Referencedbentity.display_name.asc()).all()
+        for lit in fc_lit:
+             obj["funComplement"].append(lit.to_dict_citation())
+
+        ##############################################
         apo_ids = []
         apo_ids_large_scale = []
         for x in DBSession.query(Apo).all():
@@ -5134,7 +5162,8 @@ class Locusdbentity(Dbentity):
             "molecular_weight": None,
             "pi": None, 
             "median_value": None,
-            "median_abs_dev_value": None
+            "median_abs_dev_value": None,
+            "half_life": None
         }
 
         taxonomy_id = self.get_main_strain('taxonomy_id')
@@ -5153,6 +5182,11 @@ class Locusdbentity(Dbentity):
                 if row.median_abs_dev_value:
                     obj["median_abs_dev_value"] = int(row.median_abs_dev_value)
                 break
+
+        expt_data = DBSession.query(Proteinexptannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        if len(expt_data) > 0:
+            obj["half_life"] = { 'data_value': str(expt_data[0].data_value),
+                                 'data_unit': str(expt_data[0].data_unit) }
 
         return obj
 
@@ -5196,6 +5230,8 @@ class Locusdbentity(Dbentity):
             "disease_count": 0,
             "interaction_count": 0,
             "regulation_count": 0,
+            "ptm_count": 0,
+            "funComplement_count": 0,
             "htp_count": 0,
             "total_count": 0
         }
@@ -5257,14 +5293,24 @@ class Locusdbentity(Dbentity):
             go_htp_ids.append(x.reference_id)
 
         htp_ids = regulation_htp_ids + phenotype_htp_ids + go_htp_ids
-        
+
+        ptm_ids = []
+        for x in DBSession.query(Posttranslationannotation).filter_by(dbentity_id = self.dbentity_id).all():
+            ptm_ids.append(x.reference_id)
+
+        fc_ids = []
+        for x in DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id = self.dbentity_id).all():
+            fc_ids.append(x.reference_id)
+            
         obj["go_count"] = len(set(list(go_ids)))
         obj["phenotype_count"] = len(set(phenotype_ids))
         obj["interaction_count"] = len(set(interaction_ids))
         obj["regulation_count"] = len(set(regulation_ids))
         obj["disease_count"] = len(set(disease_ids))
+        obj["ptm_count"] = len(set(ptm_ids))
+        obj["funComplement_count"] = len(set(fc_ids))
         obj["htp_count"] = len(set(htp_ids))
-        obj["total_count"] = len(set(literature_ids + interaction_ids + disease_ids + regulation_ids + phenotype_ids + htp_ids + list(go_ids)))
+        obj["total_count"] = len(set(literature_ids + interaction_ids + disease_ids + regulation_ids + phenotype_ids + ptm_ids + fc_ids + htp_ids + list(go_ids)))
         
         return obj
 
@@ -10298,40 +10344,58 @@ class Alleledbentity(Dbentity):
         return urls
 
     def get_literatureannotation_references(self, topic, unique_references):
-        references = []
+        reference_ids = set([])
         for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
-            if x.reference.to_dict_citation() not in references:
-                references.append(x.reference.to_dict_citation())
             if x.reference.dbentity_id not in unique_references:
                 unique_references.append(x.reference.dbentity_id)
-                
+            # if x.reference.to_dict_citation() not in references:
+            #    references.append(x.reference.to_dict_citation())
+            reference_ids.add(x.reference_id)
+        all_references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(list(reference_ids))).all()
+        all_references = sorted(sorted(all_references, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
+        references = []
+        for x in all_references:
+            if x.to_dict_citation() not in references:
+                references.append(x.to_dict_citation())
         return references
         
     def get_phenotype_references(self, unique_references):
-        references = []
+        reference_ids = set([])
         for x in DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all():
-            if x.reference.to_dict_citation() not in references:
-                references.append(x.reference.to_dict_citation())
             if x.reference.dbentity_id not in unique_references:
                 unique_references.append(x.reference.dbentity_id)
-                
+            # if x.reference.to_dict_citation() not in references:
+            #    references.append(x.reference.to_dict_citation())
+            reference_ids.add(x.reference_id)
+        all_references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(list(reference_ids))).all()
+        all_references = sorted(sorted(all_references, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
+        references = []
+        for x in all_references:
+            if x.to_dict_citation() not in references:
+                references.append(x.to_dict_citation())
         return references
-
+                
     def get_interaction_references(self, unique_references):
 
         interaction_ids = []
         for x in DBSession.query(AlleleGeninteraction).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all():
             interaction_ids.append(x.interaction_id)
-        
-        references = []
+
+        reference_ids = set([])
         for x in DBSession.query(Geninteractionannotation).filter(Geninteractionannotation.annotation_id.in_(interaction_ids)).all():
-            if x.reference.to_dict_citation() not in references:
-                references.append(x.reference.to_dict_citation())
-            if x.reference.dbentity_id	not in unique_references:
+            if x.reference.dbentity_id not in unique_references:
                 unique_references.append(x.reference.dbentity_id)
-                
+            # if x.reference.to_dict_citation() not in references:
+            #    references.append(x.reference.to_dict_citation())
+            reference_ids.add(x.reference_id)
+        all_references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(list(reference_ids))).all()
+        all_references = sorted(sorted(all_references, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
+        references = []
+        for x in all_references:
+            if x.to_dict_citation() not in references:
+                references.append(x.to_dict_citation())
         return references
-    
+                    
     def get_references(self):
 
         references = []
