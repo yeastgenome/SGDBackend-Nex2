@@ -874,6 +874,8 @@ def clean_up_desc(desc):
     desc = desc.replace('β', 'beta')
     desc = desc.replace('α', 'alpha')
     desc = desc.replace('°', '')
+    desc = desc.replace('–', '-')
+    desc = desc.replace('Δ', 'delta')
     return desc.replace("Putative protein of unknown function", "hypothetical protein").replace("Protein of unknown function", "hypothetical protein").replace("protein of unknown function", "hypothetical protein").replace("Hypothetical protein", "hypothetical protein")
           
 def update_database_load_file_to_s3(nex_session, gzip_file, source_to_id, edam_to_id):
