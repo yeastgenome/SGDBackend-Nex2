@@ -30,7 +30,7 @@ s3_archive_dir = "curation/chromosomal_feature/"
 
 taxonId = "NCBITaxon:559292"
 TAXON = "TAX:559292"
-assembly = "R64-3-1"
+assembly = "R64-4-1"
 
 obsolete_pmids = ['PMID:25423496', 'PMID:27651461',
                   'PMID:28068213', 'PMID:31088842']
