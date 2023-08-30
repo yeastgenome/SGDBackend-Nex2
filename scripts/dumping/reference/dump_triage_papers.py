@@ -2,10 +2,69 @@ from scripts.loading.database_session import get_session
 
 nex_session = get_session()
 
+## S288C
+taxonomy_id = 274901
+
+"""
+alliance non gene soid list:
+'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296', 
+'SO:0005855', 'SO:0001984', 'SO:0002026', 'SO:0001789', 
+'SO:0000436', 'SO:0000624', 'SO:0000036', 'SO:0002059'
+
+allinance non gene feature_type list:
+
+matrix attachment site
+LTR retrotransposon
+long terminal repeat
+origin of replication
+ARS
+centromere
+telomere
+mating type region
+silent mating type cassette array
+intein encoding region
+recombination enhancer
+gene group
+
+alliance gene feature_type list:
+
+ORF
+snRNA gene
+snoRNA gene
+rRNA gene
+tRNA gene
+ncRNA gene
+transposable element gene
+pseudogene
+blocked reading frame
+
+"""
+
+allianceNonGeneSOIDs = [
+    'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296',
+    'SO:0005855', 'SO:0001984', 'SO:0002026', 'SO:0001789',
+    'SO:0000436', 'SO:0000624', 'SO:0000036', 'SO:0002059' 
+]
+
+rows = nex_session.execute(
+    f"SELECT d.dbentity_id, s.soid "
+    f"FROM   nex.dnasequenceannotation d, nex.so s "
+    f"WHERE  d.taxonomy_id = {taxonomy_id} "
+    f"AND    d.dna_type = 'GENOMIC' "
+    f"AND    d.so_id = s.so_id").fetchall()
+
+dbentity_id_to_entity_type = {}
+
+for x in rows:
+    entity_type = 'gene'
+    if x[1] in allianceNonGeneSOIDs:
+        entity_type = 'genomic region'
+    dbentity_id_to_entity_type[x[0]] = entity_type
+
 rows = nex_session.execute(
     "SELECT rd.pmid, cr.curation_tag, " 
     "       cr.curator_comment, cr.created_by, cr.date_created, d.sgdid, "
-    "       d2.subclass, d2.display_name, d2.sgdid "
+    "       d2.dbentity_id, d2.subclass, d2.display_name, d2.sgdid "
     "FROM   nex.curation_reference cr "
     "JOIN   nex.dbentity d ON cr.reference_id = d.dbentity_id "
     "JOIN   nex.referencedbentity rd ON d.dbentity_id = rd.dbentity_id "
@@ -20,9 +79,12 @@ for x in rows:
     created_by = x[3]
     date_created = str(x[4]).split(" ")[0]
     sgdid = "SGD:" + x[5]
-    entity_type = x[6].lower().replace("locus", "gene") if x[6] else ''
-    entity_name = x[7] if x[7] else ''
-    entity_sgdid = "SGD:" + x[8] if x[8] else ''
+    dbentity_id = x[6]
+    entity_type = x[7].lower() if x[7] else ''
+    if entity_type == 'locus':
+        entity_type = dbentity_id_to_entity_type[dbentity_id]
+    entity_name = x[8] if x[8] else ''
+    entity_sgdid = "SGD:" + x[9] if x[9] else ''
                      
     print(pmid + "\t" + sgdid + "\t" + curation_tag + "\t" +  entity_type + "\t" + entity_name + "\t" + entity_sgdid + "\t" + note  + "\t" + created_by + "\t" + date_created)
                            
