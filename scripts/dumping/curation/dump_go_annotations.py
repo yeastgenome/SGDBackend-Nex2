@@ -495,7 +495,7 @@ def read_noctua_data(noctua_gpad_file):
 
 if __name__ == '__main__':
 
-    noctua_path = 'http://current.geneontology.org/products/annotations/'
+    noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
 
