@@ -5,7 +5,7 @@ from src.models import Locusdbentity, Dnasequenceannotation, Taxonomy, Contig, S
 
 __author__ = 'sweng66'
 
-VERSION = '64-3-1'
+VERSION = '64-4-1'
 
 orf_features = ['ORF', 'transposable_element_gene', 'pseudogene', 'blocked_reading_frame']
 rna_features = ['ncRNA_gene', 'snoRNA_gene', 'snRNA_gene', 'tRNA_gene', 'rRNA_gene',
