@@ -8,6 +8,7 @@ from src.data_helpers import get_pers_output
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.5')
+
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'allele_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -55,9 +56,9 @@ def get_allele_information():
                             obj['reference_curies'].append("PMID:"+ str(singlerefObj['pubmed_id']))
                 result.append(obj)
         except Exception as e:
+
             #import pdb
             #pdb.set_trace()
-            print(simple_allele_obj)
             print(e)
 
     if (len(result) > 0):
