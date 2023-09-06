@@ -67,10 +67,10 @@ def dump_data():
                        for x in nex_session.query(Edam).all()])
     source_to_id = dict([(x.display_name, x.source_id)
                          for x in nex_session.query(Source).all()])
-    so_id_to_term_name = dict([(x.so_id, x.term_name)
+    so_id_to_so = dict([(x.so_id, x)
                                for x in nex_session.query(So).all()])
-    so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
-    gene_soid = so.soid
+    # so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
+    # gene_soid = so.soid
 
     ro = nex_session.query(Ro).filter_by(display_name='part of').one_or_none()
     child_id_to_parent_id = dict([(x.child_id, x.parent_id)
@@ -232,7 +232,9 @@ def dump_data():
                 refseqid = "RefSeq:" + locus_id_to_refseq[x.dbentity_id]
                 log.info("has refseq:" + refseqid)
 
-            type = so_id_to_term_name[x.so_id]
+            # type = so_id_to_term_name[x.so_id]
+            so = so_id_to_so[x.so_id]
+            type = so.term_name
             if type == 'ORF':
                 type = 'gene'
             if type == 'gene_group':
@@ -281,12 +283,14 @@ def dump_data():
                     
             if gene_name:
                 fw.write(";gene=" + gene_name)
+            if type == 'gene':
+                fw.write(";so_term_name=protein_coding_gene")
             if alias_list:
                 fw.write(";Alias=" + alias_list)
             if x.dbentity_id in locus_id_to_goids:
                 goids = sorted(locus_id_to_goids[x.dbentity_id])
                 goid_list = ",".join(goids)
-                fw.write(";Ontology_term=" + goid_list + "," + gene_soid)
+                fw.write(";Ontology_term=" + goid_list + "," + so.soid)
             if description:
                 fw.write(";Note=" + do_escape(description))
             if headline:
@@ -569,10 +573,10 @@ def write_header(fw, datestamp):
     fw.write("##gff-version 3\n")
     fw.write("#!date-produced " + datestamp.split(".")[0] + "\n")
     fw.write("#!data-source SGD\n")
-    fw.write("#!assembly R64-3-1\n")
+    fw.write("#!assembly R64-4-1\n")
     fw.write("#!refseq-version GCF_000146045.2\n")
     fw.write("#\n")
-    fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-3-1)\n")
+    fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-4-1)\n")
     fw.write("#\n")
     fw.write("# Features from the 16 nuclear chromosomes labeled chrI to chrXVI,\n")
     fw.write("# plus the mitochondrial genome labeled chrmt.\n")
