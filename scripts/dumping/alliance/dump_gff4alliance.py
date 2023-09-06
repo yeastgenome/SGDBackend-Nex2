@@ -227,17 +227,20 @@ def dump_data():
                 fw.write("chr" + chr + "\tlandmark\tregion\t" + str(x.start_index) + "\t" + str(
                     x.end_index) + "\t.\t" + x.strand + "\t.\tID=" + landmark_gene[systematic_name] + "\n")
 
+            systematic_name = do_escape(systematic_name)
             alias_list = None
             if x.dbentity_id in locus_id_to_aliases:
                 aliases = sorted(locus_id_to_aliases[x.dbentity_id])
                 alias_list = ",".join(aliases)
             if gene_name:
                 gene_name = do_escape(gene_name)
+                name_attribute = gene_name
                 if alias_list:
-                    alias_list = gene_name + "," + alias_list
+                    alias_list = gene_name + "," + systematic_name + "," + alias_list
                 else:
                     alias_list = gene_name
-            systematic_name = do_escape(systematic_name)
+            else:
+                name_attribute = systematic_name
             strand = x.strand
             if strand == '0':
                 strand = '.'
@@ -252,7 +255,7 @@ def dump_data():
 ## This is where you'd check to put something if you were to NOT write IF type is CDS AND there are Pelechano transcripts ??##
 
             fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(start_index) + "\t" + str(end_index) +
-                     "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + systematic_name)
+                     "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + name_attribute)
 
             if gene_name:
                 fw.write(";gene=" + gene_name)
