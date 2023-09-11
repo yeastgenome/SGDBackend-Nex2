@@ -298,7 +298,6 @@ mapping = {
                 "type": "text",
                 "fielddata": True
             },
-
             "phenotypes": {
                 "type": "keyword",
                 "fields": {
@@ -308,7 +307,15 @@ mapping = {
                     }
                 }
             },
-
+            "diseases": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "cellular_component": {
                 "type": "keyword",
                 "fields": {
@@ -535,7 +542,7 @@ mapping = {
                 "fielddata": True,
                 "analyzer": "keyword"
             },
-            "associated_pathways": {
+            "associated_strains": {
                 "type": "text",
                 "fielddata": True,
                 "analyzer": "keyword"

@@ -1,7 +1,8 @@
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, \
     Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, \
     So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, \
-    Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, \
+    Regulationannotation, Posttranslationannotation, Goannotation, Go, Goslim, \
+    Goslimannotation, Apo, Straindbentity, Functionalcomplementannotation, \
     Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, \
     Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, \
     Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, \
@@ -511,7 +512,7 @@ def index_observables():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_strains():
+def index_strains_old():
     strains = DBSession.query(Straindbentity).all()
 
     print(("Indexing " + str(len(strains)) + " strains"))
@@ -709,6 +710,114 @@ def index_disease_terms():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
+def index_strains():
+
+    ## strains with taxonomy_id = 274803; same as 'Other' strain
+    other_strains = [ "A364A", "AB972", "DC5", "Foster's B",
+                      "Foster's O", "XJ24-24a", ]
+    
+    strains = DBSession.query(Straindbentity).all()
+
+    print(("Indexing " + str(len(strains)) + " strains"))
+            
+    i = 0
+    bulk_data = []
+    for s in strains:
+        key_values = [s.display_name, s.format_name, s.genbank_id ]
+        keys = set([])
+        for k in key_values:
+            if k is not None:
+                keys.add(k.lower())
+                                                    
+        i += 1
+        
+        taxonomy_id = s.taxonomy_id
+        strain_link_url = s.obj_url
+        description = s.headline
+        display_name = s.display_name
+
+        """
+        phenotypes = set([])
+        references = set([])
+        diseases = set([])
+
+        if s.display_name not in other_strains:
+
+            for x in DBSession.query(Phenotypeannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+                phenotypes.add(x.phenotype.display_name)
+            
+            for x in DBSession.query(Posttranslationannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+
+            for x in DBSession.query(Regulationannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+
+            for x in DBSession.query(Regulationannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+
+            for x in DBSession.query(Functionalcomplementannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+                
+            for x in DBSession.query(Diseaseannotation).filter_by(taxonomy_id = taxonomy_id).all():
+                references.add(x.reference.display_name)
+                diseases.add(x.disease.display_name)
+
+        """
+        
+        # print(s.display_name, "references=", len(references), "phenotypes=", len(phenotypes), "diseases=", len(diseases))
+        
+        obj = {
+            "name": display_name,
+            "strain_name": display_name,
+            "category": "strain",
+            "href": strain_link_url,
+            "description": description
+        }
+        """
+            "references": list(references),
+            "phenotype": sorted(list(phenotypes)),
+            "disease": sorted(list(diseases))
+        }
+        """
+        
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+        bulk_data.append(obj)
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+        bulk_data = []
+
+
+def get_references_for_strains(taxonomy_id_to_strain_name):
+
+    regulations = DBSession.query(Regulationannotation).filter_by(
+        annotation_type = "manually curated").all()
+
+    diseases = DBSession.query(Diseaseannotation).all()
+
+    ptms = DBSession.query(Posttranslationannotation).all()
+
+    funcComplements = DBSession.query(Functionalcomplementannotation).all()
+
+    phenotypes = DBSession.query(Phenotypeannotation).all()
+    
+    ref2strains = {}
+    for x in regulations + diseases + ptms + funcComplements + phenotypes:
+        strains = []
+        if x.reference_id in ref2strains:
+            strains = ref2strains[x.reference_id]
+        strain = taxonomy_id_to_strain_name.get(x.taxonomy_id)
+        if strain is not None and strain not in strains:
+            strains.append(strain)
+        ref2strains[x.reference_id] = strains
+
+    return ref2strains
+
+
 def index_references():
     # _ref_loci = IndexESHelper.get_dbentity_locus_note()
     _references = DBSession.query(Referencedbentity).all()
@@ -716,6 +825,16 @@ def index_references():
     _authors = IndexESHelper.get_ref_authors()
     _aliases = IndexESHelper.get_ref_aliases()
 
+    main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1",
+                        "SEY6210", "X2180-1A", "CEN.PK", "D273-10B",
+                        "JK9-3d", "FL100", "Y55", "RM11-1a"]
+    taxonomy_id_to_strain_name = {}
+    for x in DBSession.query(Straindbentity).all():
+        if x.display_name in main_strain_list:
+            taxonomy_id_to_strain_name[x.taxonomy_id] = x.display_name
+
+    ref2strains = get_references_for_strains(taxonomy_id_to_strain_name)
+    
     all = DBSession.query(Literatureannotation).all()
     ref2loci = {}
     ref2complexes = {}
@@ -761,6 +880,7 @@ def index_references():
         reference_complexes = []
         reference_alleles = []
         reference_pathways = []
+        reference_strains = []
         # if len(_ref_loci) > 0:
         #    temp_loci = _ref_loci.get(reference.dbentity_id)
         #    if temp_loci is not None:
@@ -781,7 +901,11 @@ def index_references():
         temp_pathways = ref2pathways.get(reference.dbentity_id)
         if temp_pathways is not None:
             reference_pathways = temp_pathways
-                    
+
+        temp_strains = ref2strains.get(reference.dbentity_id)
+        if temp_strains is not None:
+            reference_strains = temp_strains
+
         abstract = _abstracts.get(reference.dbentity_id)
         if abstract is not None:
             abstract = abstract[0]
@@ -809,7 +933,7 @@ def index_references():
                 keys.add(str(k).lower())
 
         name = ', '.join(authors) + ' (' + ' '.join(reference.citation.split('(')[1:])
-
+        
         pmid = ''
         if reference.pmid:
             pmid = str(reference.pmid)
@@ -826,6 +950,7 @@ def index_references():
             "associated_alleles": reference_alleles,
             "associated_complexes": reference_complexes,
             "associated_pathways": reference_pathways,
+            "associated_strains": reference_strains,
             "secondary_sgdid": sec_sgdid,
             "category": "reference",
             "keys": list(keys)
@@ -1104,9 +1229,10 @@ def index_chemicals():
 
 
 def index_part_1():
+    index_strains()
+    index_references()
     index_phenotypes()
     index_not_mapped_genes()
-    index_strains()
     index_colleagues()
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
@@ -1123,7 +1249,7 @@ def index_part_2():
     index_toolbar_links()
     index_observables()
     index_disease_terms()
-    index_references()
+    # index_references()
     index_alleles()
     
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
@@ -1159,15 +1285,15 @@ if __name__ == "__main__":
         with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
             index_references()
     '''
-    # index_strains()
-    # index_genes()
     
     cleanup()
     setup()
+
+    # index_strains()
+    # index_references()
+
+    t1 = Thread(target=index_part_1)
+    t2 = Thread(target=index_part_2)
+    t1.start()
+    t2.start()
     
-    # t1 = Thread(target=index_part_1)
-    # t2 = Thread(target=index_part_2)
-    # t1.start()
-    # t2.start()
-    index_part_1()
-    index_part_2()
