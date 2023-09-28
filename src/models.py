@@ -4806,7 +4806,7 @@ class Locusdbentity(Dbentity):
                                     "FB":   allianceSearchUrl + "Drosophila%20melanogaster",
                                     "WB":   allianceSearchUrl + "Caenorhabditis%20elegans",
                                     "HGNC": allianceSearchUrl + "Homo%20sapiens" }
-            allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + self.sgdid + "/homologs?limit=10000"
+            allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + self.sgdid + "/orthologs?limit=10000"
             try:
                 req = Request(allianceAPI)
                 res = urlopen(req)
