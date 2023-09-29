@@ -4799,7 +4799,7 @@ class Locusdbentity(Dbentity):
 
         if len(rows) > 0:
             allianceSearchRootUrl = "https://www.alliancegenome.org/"
-            allianceSearchUrl = allianceSearchRootUrl + "search?biotypes=protein_coding_gene&category=gene&q=_SUBSTITUTE_&species="
+            allianceSearchUrl = allianceSearchRootUrl + "search/?biotypes=protein_coding_gene&category=gene&q=_SUBSTITUTE_&species="
             mod_to_template_url = { "ZFIN": allianceSearchUrl + "Danio%20rerio",
                                     "RGD":  allianceSearchUrl + "Rattus%20norvegicus",
                                     "MGI":  allianceSearchUrl + "Mus%20musculus",
