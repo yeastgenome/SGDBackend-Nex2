@@ -47,16 +47,16 @@ def get_allele_information():
                 #TODO: alleleObj.affected_gene.sgdid doesn't have field sgdid; #skip for rdn25-C2925A, rdn25-C2942A, rdn25-U2861A, rdn25-A2941C
                 # maybe switch to 'sgdid' for affected gene so it will be faster?
                 #print ('this is test' + simple_allele_obj["affected_geneObjs"])
-                #if simple_allele_obj["affected_geneObjs"] > 0:  # check the affected gene object; skip if None (should be None if no affected Gene or multiple affected Genes)
-                #    obj["alleleObjectRelations"] = [{
-                #        "objectRelation": {
-                #            "associationType":
-                #            "allele_of",
-                #            "gene":
-                #            "SGD:" +
-                #            simple_allele_obj["affected_geneObjs"].sgdid
-                #        }
-                #    }]
+                if len(simple_allele_obj["affected_geneObjs"]) > 0:
+                    for gene in simple_allele_obj["affected_geneObjs"]:
+                        affectedObject = gene.to_dict()
+                    # check the affected gene object; skip if None (should be None if no affected Gene or multiple affected Genes)
+                        obj["alleleObjectRelations"] = [{
+                            "objectRelation": {
+                            "associationType": "allele_of",
+                            "gene": "SGD:" + affectedObject["sgdid"]
+                            }
+                        }]
                 result.append(obj)
         except Exception as e:
             print(e)
