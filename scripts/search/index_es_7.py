@@ -1200,8 +1200,147 @@ def index_chemicals():
     _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
     bulk_data = []
     print(("Indexing " + str(len(all_chebi_data)) + " chemicals"))
+
+    chemical2pathways = {}
+    rows = DBSession.execute("SELECT display_name FROM nex.dbentity "
+                             "WHERE  subclass = 'PATHWAY'").fetchall()
+    for x in rows:
+        pathway = x[0]
+        kw = pathway
+
+        kw = kw.replace('salvage pathways of ', ' ')
+        kw = kw.replace('superpathway of ', ' ')
+        kw = kw.replace('de novo biosynthesis of ', ' ')
+
+        kw = kw.split('biosynthesis')[0]
+        kw = kw.split('superpathway')[0]
+        kw = kw.split('degradation')[0]
+        kw = kw.split('elongation')[0]
+        kw = kw.split('pathway')[0]
+        kw = kw.split('cleavage')[0]
+        kw = kw.split('fermentation')[0]
+        kw = kw.split('cycle')[0]
+        kw = kw.split('oxidation')[0]
+        kw = kw.split('ribonucleotides')[0]
+        kw = kw.split('ribonucleotide')[0]
+        kw = kw.split('deoxyribonucleotides')[0]
+        kw = kw.split('deoxyribonucleotide')[0]
+        kw = kw.split('assimilation')[0]
+        kw = kw.split('catabolism')[0]
+        kw = kw.split('activation')[0]
+        kw = kw.split('utilization')[0]
+        kw = kw.split('shuttle')[0]
+        kw = kw.split('system')[0]
+        kw = kw.split('interconversion')[0]
+        kw = kw.split('reactions')[0]
+        kw = kw.split('metabolism')[0]
+        kw = kw.split('respiration')[0]
+        kw = kw.split('deoxy')[0]
+        kw = kw.split('diphosphate')[0]
+        kw = kw.split('phosphate')[0]
+        kw = kw.split('nucleotides')[0]
+        kw = kw.split('reduction')[0]
+        
+        kw = kw.replace(' of ', ' ')
+        kw = kw.replace('de novo ', ' ')
+        kw = kw.replace('very long chain ', ' ')
+        kw = kw.replace('fatty acids', 'fatty acid')
+        
+        kw = kw.strip()
+        kws = kw.split(' and ')
+        if " decarboxylation to " in kw:
+            kws = kw.split(' decarboxylation to ')
+        if ", " in kw:
+            kws = kw.split(', ')
+        for kw in kws:
+            pathways = chemical2pathways.get(kw.upper(), set([]))
+            pathways.add(pathway)
+            chemical2pathways[kw.upper()] = pathways
+            
+    chebi2loci = {}
+    chebi2references = {}
+    chebi2phenotypes = {}
+                
+    rows = DBSession.execute("SELECT distinct c.chebiid, p.display_name, "
+                             "       d.display_name, d2.display_name "
+                             "FROM   nex.phenotype p, nex.phenotypeannotation pa, "
+                             "       nex.phenotypeannotation_cond pc, nex.dbentity d, "
+                             "       nex.dbentity d2, nex.chebi c "
+                             "WHERE  p.phenotype_id = pa.phenotype_id "
+                             "and    pa.annotation_id = pc.annotation_id "
+                             "and    pc.condition_class = 'chemical' "
+                             "and    pc.condition_name = c.display_name "
+                             "and    pa.dbentity_id = d.dbentity_id "
+                             "and    pa.reference_id = d2.dbentity_id").fetchall()
+    for x in rows:
+
+        chebi = x[0]
+        phenotype = x[1]
+        gene = x[2]
+        reference = x[3]
+        
+        phenotypes = chebi2phenotypes.get(chebi, set([]))
+        phenotypes.add(phenotype)
+        chebi2phenotypes[chebi] = phenotypes
+
+        loci = chebi2loci.get(chebi, set([]))
+        loci.add(gene)
+        chebi2loci[chebi] = loci
+
+        references = chebi2references.get(chebi, set([]))
+        references.add(reference)
+        chebi2references[chebi] = references
+
+    chebi2processes = {}
+    chebi2functions = {}
+    chebi2components = {}
+    rows = DBSession.execute("SELECT distinct ge.dbxref_id, g.go_namespace, g.display_name, "
+                             "       d.display_name, d2.display_name "
+                             "FROM   nex.goannotation ga, nex.goextension ge, nex.go g, "
+                             "       nex.dbentity d, nex.dbentity d2 "
+                             "WHERE  ge.dbxref_id like 'CHEBI:%' "
+                             "and    ge.annotation_id = ga.annotation_id "
+                             "and    ga.go_id = g.go_id "
+                             "and    ga.dbentity_id = d.dbentity_id "
+                             "and    ga.reference_id = d2.dbentity_id").fetchall()
+    for x in rows:
+
+        chebi = x[0]
+        go_namespace = x[1]
+        go_term = x[2]
+        gene = x[3]
+        reference = x[4]
+
+        loci = chebi2loci.get(chebi, set([]))
+        loci.add(gene)
+        chebi2loci[chebi] = loci
+
+        references = chebi2references.get(chebi, set([]))
+        references.add(reference)
+        chebi2references[chebi] = references
+
+        if go_namespace.endswith('process'):
+            processes = chebi2processes.get(chebi, set([]))
+            processes.add(go_term)
+            chebi2processes[chebi] = processes
+        elif go_namespace.endswith('function'):
+            functions = chebi2functions.get(chebi, set([]))
+            functions.add(go_term)
+            chebi2functions[chebi] = functions
+        else:
+            components = chebi2components.get(chebi, set([]))
+            components.add(go_term)
+            chebi2components[chebi] = components
+    
     for item_key, item_v in list(_result.items()):
         if item_v is not None:
+            loci = chebi2loci.get(item_v.chebiid, set([]))
+            references = chebi2references.get(item_v.chebiid, set([]))
+            phenotypes = chebi2phenotypes.get(item_v.chebiid, set([]))
+            processes = chebi2processes.get(item_v.chebiid, set([]))
+            functions = chebi2functions.get(item_v.chebiid, set([]))
+            components = chebi2components.get(item_v.chebiid, set([]))
+            pathways = chemical2pathways.get(item_v.display_name.upper(), set([]))
             obj = {
                 "name": item_v.display_name,
                 "identifier": item_v.chebiid,
@@ -1209,6 +1348,13 @@ def index_chemicals():
                 "href": item_v.obj_url,
                 "description": item_v.description,
                 "category": "chemical",
+                "chemical_loci": sorted(list(loci)),
+                "references": sorted(list(references)),
+                "phenotypes": sorted(list(phenotypes)),
+                "pathways": sorted(list(pathways)),
+                "biological_process": sorted(list(processes)),
+                "molecular_function": sorted(list(functions)),
+                "cellular_component": sorted(list(components)),
                 "keys": [],
                 "chebiid": item_v.chebiid
             }
@@ -1289,9 +1435,8 @@ if __name__ == "__main__":
     cleanup()
     setup()
 
-    # index_strains()
-    # index_references()
-
+    # index_chemicals()
+    
     t1 = Thread(target=index_part_1)
     t2 = Thread(target=index_part_2)
     t1.start()

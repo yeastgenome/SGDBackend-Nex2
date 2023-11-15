@@ -307,6 +307,15 @@ mapping = {
                     }
                 }
             },
+            "pathways": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "diseases": {
                 "type": "keyword",
                 "fields": {
@@ -413,6 +422,17 @@ mapping = {
                 "analyzer": "keyword"
             },
             "phenotype_loci": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "chemical_loci": {
                 "type": "text",
                 "fielddata": True,
                 "analyzer": "keyword",
