@@ -10897,7 +10897,8 @@ class Complexdbentity(Dbentity):
         component = []
 
         foundComplex = {}
-        
+        foundSourceTargetPair = {}
+
         if go_annots:
             data['go'] = [g.go.to_dict() for g in go_annots]
             for x in go_annots:
@@ -10932,14 +10933,18 @@ class Complexdbentity(Dbentity):
                             preGoid = foundComplex[complex.format_name]
                             ## this is 2nd time we see this complex, we want to keep this complex
                             ## in the network so need to link "self" to preGoid as well as current goid
-                            network_edges.append({
+                            if (self.format_name, preGoid) not in foundSourceTargetPair:
+                                network_edges.append({
                                     "source": self.format_name,
                                     "target": preGoid
-                            })
-                            network_edges.append({
+                                })
+                                foundSourceTargetPair[(self.format_name, preGoid)] = 1
+                            if (self.format_name, go.go_id) not in foundSourceTargetPair:
+                                network_edges.append({
                                     "source": self.format_name,
                                     "target": go.go_id
-                            })
+                                })
+                                foundSourceTargetPair[(self.format_name, go.go_id)] = 1
                             
                             ### also need to add this complex to the network
 
