@@ -379,9 +379,28 @@ def get_strain_taxid_mapping():
              'Other':           "TAX:4932",
              'other':           "TAX:4932" }
 
+
+def _get_child_ids(nex_session, parent_id, all_complex_goids):
+
+    from src.models import GoRelation
+
+    for x in nex_session.query(GoRelation).filter_by(parent_id=parent_id):
+        if x.child.goid in all_complex_goids:
+            continue
+        all_complex_goids.add(x.child.goid)
+        _get_child_ids(nex_session, x.child_id, all_complex_goids)
+
+
 def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension=None, get_support=None):
 
     from src.models import Referencedbentity, Complexdbentity, Go, Eco, Ro
+
+    # 293865    GO:0032991      protein-containing complex
+    all_complex_goids = set()
+    go = nex_session.query(Go).filter_by(goid='GO:0032991').one_or_none()
+    go_id = go.go_id
+    all_complex_goids.add(go.goid)
+    _get_child_ids(nex_session, go_id, all_complex_goids)
 
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     ecoid_to_eco_id = dict([(x.ecoid, x.eco_id) for x in nex_session.query(Eco).all()])
@@ -403,6 +422,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
     read_line = {}
     data = []
 
+    bad_complex_annotations = set()
     for line in f:
 
         if line.startswith('!') or "NCBITaxon:559292" not in line:
@@ -436,7 +456,10 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
         if go_id is None:
             print("The GOID = ", goid, " is not in GO table.")
             continue
-
+        if goid in all_complex_goids:
+            bad_complex_annotations.add((complex_id, go_id))
+            continue
+            
         ## reference_id
         reference_id = None
         pmid = None
@@ -489,7 +512,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
                 entry['gosupport'] = gosupport
             data.append(entry)
 
-    return data
+    return (data, bad_complex_annotations)
         
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
