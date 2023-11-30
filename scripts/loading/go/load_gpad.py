@@ -126,9 +126,11 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
         fw.write(str(datetime.now()) + "\n")
         fw.write("reading complex portal gpad file...\n")
 
-        complex_data = read_complex_gpad_file(complex_gpad_file, nex_session,
-                                              foundAnnotation, yes_goextension,
-                                              yes_gosupport)
+        (complex_data, bad_complex_annots) = read_complex_gpad_file(complex_gpad_file,
+                                                                    nex_session,
+                                                                    foundAnnotation,
+                                                                    yes_goextension,
+                                                                    yes_gosupport)
         
         
     nex_session.close()
@@ -160,6 +162,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                 source_to_id,
                                 dbentity_id_with_new_pmid,
                                 dbentity_id_with_uniprot,
+                                bad_complex_annots,
                                 fw)
 
     if annotation_type == 'manually curated':
@@ -560,7 +563,7 @@ def all_go_annotations(nex_session, annotation_type):
     return key_to_annotation 
 
 
-def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect, annotation_update_log, source_to_id, dbentity_id_with_new_pmid, dbentity_id_with_uniprot, fw):
+def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect, annotation_update_log, source_to_id, dbentity_id_with_new_pmid, dbentity_id_with_uniprot, bad_complex_annots, fw):
 
     nex_session = get_session()
     
@@ -593,8 +596,9 @@ def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect
             # if x.eco_id == evidence_to_eco_id['ND'] and hasGoodAnnot.get((x.dbentity_id, aspect)) is None:
             #    ## still keep the ND annotation if there is no good annotation available yet 
             #    continue
-            if dbentity_id_with_uniprot.get(x.dbentity_id):
+            if dbentity_id_with_uniprot.get(x.dbentity_id) or (x.dbentity_id, x.go_id) in bad_complex_annots:
                 ## don't want to delete the annotations that are not in GPAD file yet
+                ## unless it is annotation for complex with a complex go component term
                 ## do we still have any annotations that are not in GPAD? but just in case
                 delete_extensions_evidences(nex_session, x.annotation_id)
                 nex_session.delete(x)
