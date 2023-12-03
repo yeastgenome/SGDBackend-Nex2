@@ -69,7 +69,7 @@ zope.interface==4.1.3
 zope.sqlalchemy==0.7.6
 psycopg2-binary==2.8.3
 elasticsearch==7.0.0
-numpy==1.16.2
+numpy==1.22.0
 pyramid_swagger==2.6.2
 pathlib==1.0.1
 biopython==1.68
