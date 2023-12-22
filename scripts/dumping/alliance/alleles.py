@@ -6,7 +6,7 @@ from src.models import Alleledbentity, DBSession
 from src.data_helpers import get_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_6.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'
@@ -14,49 +14,72 @@ DEFAULT_TAXID = '559292'
 def get_allele_information():
 
     print("getting Alleles")
-    alleleObjList = DBSession.query(Alleledbentity).all()
+    alleleObjList = DBSession.execute(
+        f"select ad.dbentity_id, db.sgdid,  ad.description, db.display_name, "
+        f"aa.display_name, s.display_name "
+        f"from nex.alleledbentity ad "
+        f"inner join nex.dbentity db on ad.dbentity_id = db.dbentity_id "
+        f"inner join nex.so s on ad.so_id = s.so_id "
+        f"left join nex.allele_alias aa on ad.dbentity_id = aa.allele_id "
+        f"left join nex.locus_allele la on la.allele_id = ad.dbentity_id ").fetchall()
+
     print(("computing " + str(len(alleleObjList)) + " alleles"))
     result = []
     if (len(alleleObjList) > 0):
 
         try:
             for alleleObj in alleleObjList:
-                simple_allele_obj = alleleObj.to_simple_dict()
-                if re.search("\<sub\>", simple_allele_obj["format_name"]) or not simple_allele_obj["affected_geneObjs"]:
-                    print("skipping: " + simple_allele_obj["format_name"])
+
+                if re.search("\<sub\>", alleleObj[3]) :
+                    print("skipping: " + alleleObj[3])
                     continue
                 obj = {}
-                obj["primaryId"] = "SGD:" + simple_allele_obj["sgdid"]
-                obj["symbolText"] = simple_allele_obj["format_name"]
-                obj["symbol"] = simple_allele_obj["display_name"]
+                obj["primaryId"] = "SGD:" + str(alleleObj[1])
+                obj["symbolText"] = alleleObj[3]
+                obj["symbol"] = alleleObj[3]
 
-                if simple_allele_obj["description"] is not None:
-                    if simple_allele_obj["description"] != "":
-                        obj["description"] = simple_allele_obj["description"]
+                if alleleObj[2] is not None:
+                    if alleleObj[2] != "":
+                        obj["description"] = alleleObj[2]
                 obj["taxonId"] = "NCBITaxon:" + DEFAULT_TAXID
 
-                if len(simple_allele_obj["references"]) > 0:
+                if alleleObj[4] is not None:
+                    obj["synonyms"] = [alleleObj[4]]
+
+                obj["crossReferences"] = [{
+                    "id": "SGD:" + str(alleleObj[1]),
+                    "pages": ["allele"]
+                }]
+
+                alleleRefList = DBSession.execute(
+                    f"select rdb.pmid "
+                    f"from nex.alleledbentity ad "
+                    f"left join nex.literatureannotation ar on ad.dbentity_id = ar.dbentity_id "
+                    f"left join nex.referencedbentity rdb on ar.reference_id = rdb.dbentity_id "
+                    f"where ad.dbentity_id ="+ str(alleleObj[0])).fetchall()
+
+                if alleleRefList:
                     obj['references'] = []
-                    print('getting refs:' + str(
-                        len(simple_allele_obj["references"])))
-                    for singlerefObj in simple_allele_obj["references"]:
-                        print("PMID:" + str(singlerefObj['pubmed_id']))
-                        if singlerefObj['pubmed_id'] not in obj['references']:
-                            obj['references'].append(
-                                "PMID:" + str(singlerefObj['pubmed_id']))
-                #TODO: alleleObj.affected_gene.sgdid doesn't have field sgdid; #skip for rdn25-C2925A, rdn25-C2942A, rdn25-U2861A, rdn25-A2941C
-                # maybe switch to 'sgdid' for affected gene so it will be faster?
-                #print ('this is test' + simple_allele_obj["affected_geneObjs"])
-                if len(simple_allele_obj["affected_geneObjs"]) > 0:
-                    for gene in simple_allele_obj["affected_geneObjs"]:
-                        affectedObject = gene.to_dict()
-                    # check the affected gene object; skip if None (should be None if no affected Gene or multiple affected Genes)
-                        obj["alleleObjectRelations"] = [{
-                            "objectRelation": {
-                            "associationType": "allele_of",
-                            "gene": "SGD:" + affectedObject["sgdid"]
-                            }
-                        }]
+                    for x in alleleRefList:
+                        if x not in obj['references'] and x is not None:
+                            obj['references'].append("PMID:" + str(x[0]))
+
+                alleleGeneList = DBSession.execute(
+                    f"select db.sgdid "
+                    f"from nex.alleledbentity ad "
+                    f"left join nex.locus_allele la on la.allele_id = ad.dbentity_id "
+                    f"inner join nex.dbentity db on db.dbentity_id = la.locus_id "
+                    f"where ad.dbentity_id ="+ str(alleleObj[0])).fetchall()
+
+                if alleleGeneList:
+                    for gene in alleleGeneList:
+                        if gene is not None:
+                            obj["alleleObjectRelations"] = [{
+                                "objectRelation": {
+                                "associationType": "allele_of",
+                                "gene": "SGD:" + str(gene[0])
+                                }
+                            }]
                 result.append(obj)
         except Exception as e:
             print(e)
@@ -69,7 +92,6 @@ def get_allele_information():
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
     DBSession.close()
-
 
 if __name__ == '__main__':
     get_allele_information()

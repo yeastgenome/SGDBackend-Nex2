@@ -9986,8 +9986,8 @@ class Alleledbentity(Dbentity):
             "allele_so_id": self.so.format_name,
             "description": self.description
         }
-        if self.get_aliases(reference_mapping, ref_order) is not NullType:
-            obj['aliases'] = self.get_aliases(reference_mapping, ref_order)
+        if self.get_only_aliases() is not NullType:
+            obj['aliases'] = self.get_only_aliases()
 
         obj['format_name'] = self.format_name
         obj['display_name'] = self.display_name
@@ -10202,7 +10202,14 @@ class Alleledbentity(Dbentity):
                           "references": references })
         return (objs, ref_order)
 
-    
+    def get_only_aliases(self):
+
+        alleleAliases = DBSession.query(AlleleAlias).filter_by(allele_id = self.dbentity_id, alias_type='Synonym').all()
+        objs = []
+        for x in alleleAliases:
+            objs.append(x)
+        return (objs)
+
     def allele_network(self):
 
         network_nodes =[]

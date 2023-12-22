@@ -1,13 +1,13 @@
 import os
 import json
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 import concurrent.futures
-from src.models import Dnasequenceannotation, DBSession, Locusdbentity, LocusAlias
+from src.models import Dnasequenceannotation, DBSession, Locusdbentity, LocusAlias, LocusReferences, Referencedbentity
 from src.data_helpers import get_pers_output, get_locus_synonyms, get_locus_crossrefs, get_locus_secondaryids
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.5')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'gene_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -30,7 +30,8 @@ def get_basic_gene_information():
             for item in combined_list:
                 obj = {
                     "taxon_curie": "NCBITaxon:559292",
-                    "internal": False
+                    "internal": False,
+                    "obsolete" : False
                 }
 
                 dna_seq_annotation_obj = DBSession.query(
@@ -46,42 +47,82 @@ def get_basic_gene_information():
                 else:
                     obj["gene_type_curie"] = dna_seq_annotation_obj[0].so.soid
 
+                pmids_results = DBSession.query(LocusReferences,Referencedbentity.pmid).filter(and_(LocusReferences.locus_id == item.dbentity_id,
+                         LocusReferences.reference_class == 'gene_name')).outerjoin(Referencedbentity).all()
 
-                obj["data_provider_dto"] = {"source_organization_abbreviation": "SGD",
-                                    "internal": False}
-                obj["gene_symbol_dto"] = {"name_type_name": "nomenclature_symbol",
-                                    "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
-                                    "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
-                                    "internal": False}
+                gene_name_pmids = ["PMID:"+str(x[1]) for x in pmids_results if str(x[1]) != 'None']
+
+                obj["data_provider_dto"] = {
+                    "created_by_curie" : "SGD",
+                    "updated_by_curie": "SGD",
+                    "cross_reference_dto": {
+                        "created_by_curie": "SGD",
+                        "display_name": item.gene_name if item.gene_name is not None else item.systematic_name,
+                        "internal": False,
+                        "obsolete": False,
+                        "page_area": "gene",
+                        "prefix": "SGD",
+                        "referenced_curie": "SGD:" + item.sgdid,
+                        "updated_by_curie": "SGD"
+                    },
+                    "source_organization_abbreviation": "SGD",
+                    "internal": False,
+                    "obsolete": False
+                }
+
+                obj["gene_symbol_dto"] = {
+                    "created_by_curie": "SGD",
+                    "updated_by_curie": "SGD",
+                    "name_type_name": "nomenclature_symbol",
+                    "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+                    "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+                    "internal": False,
+                    "obsolete": False,
+                    "synonym_scope_name": "exact",
+                }
+                # if (len(gene_name_pmids) > 0):
+                #     obj["gene_symbol_dto"].append({
+                #         "evidence_curies": gene_name_pmids
+                #     })
 
                 obj["gene_full_name_dto"] = {
                     "name_type_name": "full_name",
                     "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
                     "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
-                    "internal": False}
+                    "internal": False,
+                    "obsolete": False,
+                    "synonym_scope_name": "exact"
+                }
 
                 obj["gene_systematic_name_dto"] = {
                     "name_type_name": "systematic_name",
                     "format_text": item.systematic_name,
                     "display_text": item.systematic_name,
-                    "internal": False}
+                    "internal": False
+                }
+
                 # get locus alias info
-                locus_alias_data = DBSession.query(LocusAlias).filter(
-                        LocusAlias.locus_id == item.dbentity_id).all()
+                locus_alias_data = DBSession.query(LocusAlias).filter(LocusAlias.locus_id == item.dbentity_id).all()
 
                 if (len(locus_alias_data) > 0):
-                    obj["gene_synonym_dtos"]= get_locus_synonyms(
-                        locus_alias_data)
+                    objAlias = get_locus_synonyms(locus_alias_data)
+                    if(len(objAlias) > 0):
+                        obj["gene_synonym_dtos"] = objAlias
+                if (len(locus_alias_data) > 0):
+                    objCrossRefs = get_locus_crossrefs(locus_alias_data)
+                    if(len(objCrossRefs) > 0):
+                        obj["cross_reference_dtos"] = objCrossRefs
 
                 if (len(locus_alias_data) > 0):
-                    obj["cross_reference_dtos"]= get_locus_crossrefs(
-                        locus_alias_data)
-
-                if (len(locus_alias_data) > 0):
-                    obj["gene_secondary_id_dtos"]= get_locus_secondaryids(
-                        locus_alias_data)
+                    objSecondary = get_locus_secondaryids(locus_alias_data)
+                    if (len(objSecondary) > 0):
+                        obj["gene_secondary_id_dtos"] = objSecondary
 
                 obj["curie"] = "SGD:" + item.sgdid
+                obj["date_created"] = item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
+                obj["date_updated"] = item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
+                obj["created_by_curie"] = "SGD"
+                obj["updated_by_curie"] = "SGD"
 
                 result.append(obj)
 

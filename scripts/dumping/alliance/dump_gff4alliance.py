@@ -138,25 +138,30 @@ def dump_data():
         transSeqAnnot = DBSession.query(Dnasequenceannotation).filter_by(
             dbentity_id=transcriptObj.dbentity_id).first()
         sysName = transcriptObj.format_name.split("_")[0]
-        #log.info(sysName + " has transcript " + transcriptObj.display_name)
 
         transcriptConds = DBSession.query(Transcriptdbentity).filter_by(
             dbentity_id=transcriptObj.dbentity_id).first()
 
         tconditions = []
-        # log.info("YPD:" + str(transcriptConds.in_ypd) +
-        #         " GAL" + str(transcriptConds.in_gal))
+
         if str(transcriptConds.in_ypd) == 'True':
             tconditions.append('YPD')
-        #    log.info("in YPD")
         if str(transcriptConds.in_gal) == 'True':
             tconditions.append('GAL')
-        #    log.info("in GAL")
 
         if sysName in transcript_range:
             (start, stop) = transcript_range[sysName]
-            if transSeqAnnot.start_index < start or transSeqAnnot.end_index > stop:
-                transcript_range[sysName] = (transSeqAnnot.start_index, transSeqAnnot.end_index)
+            transcript_start = start
+            transcript_end = stop
+            if transSeqAnnot.start_index < start:
+                transcript_start = transSeqAnnot.start_index
+            if transSeqAnnot.end_index > stop:
+                transcript_end = transSeqAnnot.end_index
+            transcript_range[sysName] = (transcript_start, transcript_end)
+
+            #if sysName == 'YBL043W':
+            #    print(sysName, transSeqAnnot.start_index, transSeqAnnot.end_index)
+            #    print(sysName ,  transcript_range[sysName])
         else:
             transcript_range[sysName] = (transSeqAnnot.start_index, transSeqAnnot.end_index)
 

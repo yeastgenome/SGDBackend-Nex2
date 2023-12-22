@@ -9,8 +9,8 @@ engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.5')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_6.0.0_')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
 SUBMISSION_TYPE = "disease_gene_ingest_set"
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
 
