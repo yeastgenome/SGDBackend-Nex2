@@ -495,7 +495,18 @@ mapping = {
             },
             "synonyms": {
                 "type": "text",
-                "fielddata": True
+                "fielddata": True,
+                "fields": {
+                    "raw": {
+                        "type": "keyword",
+                        "index": False
+                    },
+                    "egram": {
+                        "type": "text",
+                        "analyzer": "alias_search",
+                        "search_analyzer": "alias_search"
+                    }
+                }
             },
             "go_id": {
                 "type": "text",

@@ -61,7 +61,7 @@ def search_autocomplete(request):
     )
 
     return {
-        "results": format_autocomplete_results(autocomplete_results, field)
+        "results": format_autocomplete_results(autocomplete_results, query, field)
     }
 
 @view_config(route_name='search', renderer='json', request_method='GET')

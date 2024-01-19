@@ -8,7 +8,7 @@ FIELD_MAP = mapping['mappings']['properties']
 def build_autocomplete_search_body_request(query,
                                            category='locus',
                                            field='name'):
-    _source_fields = ['name', 'identifier', 'reference_name', 'href', 'category', 'gene_symbol']
+    _source_fields = ['name', 'identifier', 'reference_name', 'href', 'category', 'gene_symbol', 'synonyms']
     if category == 'colleague':
         _source_fields = _source_fields + ['institution']
     es_query = {
@@ -25,6 +25,7 @@ def build_autocomplete_search_body_request(query,
                                 "identifier.autocomplete^15",
                                 "name_description",
                                 "author.white_space",
+                                "synonyms.egram^15",
                                 "aliases.egram^6",
                                 "keys",
                                 "cellular_component.engram",
@@ -70,7 +71,7 @@ def build_autocomplete_search_body_request(query,
     return es_query
 
 
-def format_autocomplete_results(es_response, field='name'):
+def format_autocomplete_results(es_response, query, field='name'):
     formatted_results = []
     if field != 'name':
         results = es_response['aggregations'][field]['buckets']
@@ -87,6 +88,16 @@ def format_autocomplete_results(es_response, field='name'):
                     name = hit['_source']['identifier'] + ": " + hit['_source']['reference_name']
                 else:
                     name = hit['_source']['identifier'] + ": " + name
+                    if hit['_source'].get('synonyms'):
+                        # name = hit['_source']['identifier'] + ": " + "|".join(hit['_source'].get('synonyms'))
+                        matchSynonym = None
+                        for s in hit['_source'].get('synonyms'):
+                            if query.lower() == s.lower():
+                                matchSynonym = s
+                            elif query.lower() in s.lower() and matchSynonym is None:
+                                matchSynonym = s
+                        if matchSynonym:
+                            name = name + "|" + matchSynonym
             obj = {
                 'name': name,
                 'href': hit['_source']['href'],
