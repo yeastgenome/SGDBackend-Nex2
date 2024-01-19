@@ -28,6 +28,7 @@ detail_json_url_template = "https://www.ebi.ac.uk/intact/complex-ws/complex/REPL
 
 log_file = "scripts/loading/complex/logs/load_complexbindingannotation.log"
 
+
 def load_complexbindingannotation():
 
     nex_session = get_session()
@@ -227,6 +228,28 @@ def get_json(url):
     except URLError:
         return 404
 
+def fix_a_few_interactors():
+
+    subunit2orfMapping = {
+        "rnk_yeast":   "YPR170W-B", 
+        "yhs2_yeast":  "YHR122W",   
+        "yg29_yeast":  "YGR066C",
+        "yl149_yeast": "YLR149C"
+    }
+    nex_session = get_session()
+    for subunit in subunit2orfMapping:
+        orf = subunit2orfMapping[subunit]
+        x = nex_session.query(Dbentity).filter_by(format_name=orf).one_or_none()
+        if x:
+            y = nex_session.query(Interactor).filter_by(display_name=subunit).one_or_none()
+            if y and y.locus_id != x.dbentity_id:
+                y.locus_id = x.dbentity_id
+                nex_session.commit()
+                print("Fixing locus_id for " + subunit)
+    nex_session.close()
+
+
 if __name__ == "__main__":
 
     load_complexbindingannotation()
+    fix_a_few_interactors()
