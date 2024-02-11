@@ -261,9 +261,18 @@ def dump_data():
                     alias_list = gene_name + "," + alias_list
                 else:
                     alias_list = gene_name
-            systematic_name = do_escape(systematic_name)
             start_index = x.start_index
             end_index = x.end_index
+            ###
+            if type == 'gene':
+                transcripts = systematic_name_to_transcripts.get(systematic_name, [])
+                for t in transcripts:
+                    if t['start'] < start_index:
+                        start_index = t['start']
+                    if t['end'] > end_index:
+                        end_index = t['end']
+            systematic_name = do_escape(systematic_name)
+
             if x.annotation_id in UTRs:
                 (utrStart, utrEnd) = UTRs[x.annotation_id]
                 if utrStart < start_index:
