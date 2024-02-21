@@ -104,6 +104,12 @@ def load_phenotypes():
             continue
         allele_name = pieces[0]
         allele_id = allele_to_id.get(allele_name.lower())
+
+        i += 1
+        if i % batch_commit_size == 0:
+            # nex_session.rollback()
+            nex_session.commit()
+            
         if allele_id is None:
             allele_id = alias_name_to_allele_id.get(allele_name.lower())
             if allele_id:
@@ -138,7 +144,7 @@ def load_phenotypes():
         if status:
             nex_session.rollback()
             continue
-    
+        
         values = pieces[1:]
         for index in range(3):
             (chemical_name, chemical_value, chemical_unit) = chemicals[index]
@@ -151,7 +157,6 @@ def load_phenotypes():
                 phenotype_id = increased_pheno_id
             else:
                 phenotype_id = pheno_id
-            i += 1
             key = (allele_id, dbentity_id, phenotype_id)
             annotation_id = key_to_annotation_id.get(key)
             if annotation_id is None:
@@ -164,14 +169,11 @@ def load_phenotypes():
                 continue
             key_to_annotation_id[key] = annotation_id
             insert_phenotypeannotation_cond(nex_session, annotation_id, 1, chemical_name, chemical_value, chemical_unit, allele_name)
-            if i % batch_commit_size == 0:
-                nex_session.rollback()
-                # nex_session.commit()
 
     f.close()
     fw.close()
-    nex_session.rollback()
-    # nex_session.commit()
+    # nex_session.rollback()
+    nex_session.commit()
     nex_session.close()
 
 
