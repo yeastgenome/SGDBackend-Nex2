@@ -5,6 +5,8 @@ from src.models import Apo, Dbentity, Locusdbentity, Referencedbentity, Phenotyp
     AlleleAlias, So, Alleledbentity, LocusAllele, LocusalleleReference
 from scripts.loading.database_session import get_session
 
+__author__ = 'sweng66'
+
 infile = "scripts/loading/phenotype/data/PMID36192463HTPpheno021424.tsv"
 logfile = "scripts/loading/phenotype/logs/PMID36192463HTPpheno021424.log"
 pmid = 36192463
@@ -23,6 +25,8 @@ def load_phenotypes():
  
     nex_session = get_session()
 
+    print("CREATED_BY=", CREATED_BY)
+    
     allele_to_id = dict([(x.format_name.lower(), x.dbentity_id) for x in nex_session.query(Dbentity).filter_by(
         subclass='ALLELE').all()])
 
@@ -108,13 +112,9 @@ def load_phenotypes():
             else:
                 print("ALLELE:", allele_name, "is not in the database.")
                 ## insert new allele into database
-                allele_id = insert_dbentity(nex_session, allele_name, source_id)
+                allele_id = insert_allele(nex_session, allele_name, source_id, so_id)
                 if allele_id is None:
-                    print("ALLELE:", allele_name, "is not added into the DBENTITY table.")
-                    continue
-                allele_id = insert_alleledbentity(nex_session, allele_id, so_id, allele_name)
-                if allele_id is None:
-                    print("ALLELE:", allele_name, "is not added into the ALLELEDBENTITY table.")
+                    print("ALLELE:", allele_name, "is not added into the database.")
                     continue
         gene_name = allele_name.split("-")[0]
         dbentity_id = name_to_locus_id.get(gene_name.lower())
@@ -138,6 +138,7 @@ def load_phenotypes():
         if status:
             nex_session.rollback()
             continue
+    
         values = pieces[1:]
         for index in range(3):
             (chemical_name, chemical_value, chemical_unit) = chemicals[index]
@@ -255,40 +256,26 @@ def insert_phenotypeannotation(nex_session, dbentity_id, source_id, taxonomy_id,
         print("An error occurred when inserting phenotypeannotation for allele: " + allele_name + " into the database. error=" + str(e))
         return None
 
-
-def insert_alleledbentity(nex_session, dbentity_id, so_id, allele_name):
-
-    print("alleledbentity:", dbentity_id, so_id, allele_name)
     
-    try:
-        x = Alleledbentity(dbentity_id = dbentity_id,
-                           so_id = so_id)
-        nex_session.add(x)
-        print("Adding new allele: " + allele_name + " into ALLELEDBENTITY table. NEW allele_id = " + str(dbentity_id))
-        return dbentity_id
-    except Exception as e:
-        print("An error occurred when inserting new allele " + allele_name + " into ALLELEDBENTITY table. error=" + str(e))
-        return None
+def insert_allele(nex_session, allele_name, source_id, so_id):
 
-    
-def insert_dbentity(nex_session, allele_name, source_id):
-
-    print("dbentity:", allele_name, source_id, CREATED_BY)
+    print("allele:", allele_name, source_id, so_id, CREATED_BY)
     try:
-        x = Dbentity(format_name = allele_name.replace(' ', '_'),
-                     display_name = allele_name,
-                     subclass = 'ALLELE',
-                     source_id = source_id,
-                     dbentity_status = 'Active',
-                     created_by = CREATED_BY)
+        x = Alleledbentity(format_name = allele_name.replace(' ', '_'),
+                           display_name = allele_name,
+                           subclass = 'ALLELE',
+                           source_id = source_id,
+                           dbentity_status = 'Active',
+                           so_id = so_id,
+                           created_by = CREATED_BY)
         nex_session.add(x)
         nex_session.flush()
         nex_session.refresh(x)
-        print("Adding new allele: " + allele_name + " into DBENTITY table. NEW allele_id = " + str(x.dbentity_id))
+        print("Adding new allele: " + allele_name + " into database. NEW allele_id = " + str(x.dbentity_id))
         return x.dbentity_id
     except Exception as e:
         traceback.print_exc()
-        print("An error occurred when inserting new allele " + allele_name + " into DBENTITY. error=" + str(e))
+        print("An error occurred when inserting new allele " + allele_name + " into database. error=" + str(e))
         return None
 
 
