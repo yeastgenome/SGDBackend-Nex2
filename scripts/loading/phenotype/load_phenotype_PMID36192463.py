@@ -96,8 +96,8 @@ def load_phenotypes():
 
         i += 1
         if i % batch_commit_size == 0:
-            # nex_session.rollback()
-            nex_session.commit()
+            nex_session.rollback()
+            # nex_session.commit()
             
         pieces = line.strip().split("\t")
         if pieces[0].lower() == 'allele':
@@ -152,8 +152,8 @@ def load_phenotypes():
             (chemical_name, chemical_value, chemical_unit) = chemicals[index]
             phenotype_id = None
             if values[index] == 'NA':
-                phenotype_id = pheno_id
-            elif float(values[index]) < 0:
+                continue
+            if float(values[index]) < 0:
                 phenotype_id = decreased_pheno_id
             elif float(values[index]) > 0:
                 phenotype_id = increased_pheno_id
@@ -176,9 +176,9 @@ def load_phenotypes():
 
     f.close()
     fw.close()
-    # nex_session.rollback()
-    nex_session.commit()
-    # nex_session.close()
+    nex_session.rollback()
+    # nex_session.commit()
+    nex_session.close()
 
 
 def insert_locusallele_reference(nex_session, source_id, locus_allele_id, reference_id, allele_name):
