@@ -2,7 +2,7 @@ import os
 import traceback
 from src.models import Apo, Dbentity, Locusdbentity, Referencedbentity, Phenotypeannotation, \
     PhenotypeannotationCond, Taxonomy, Chebi, Phenotype, Source, Straindbentity, LocusAlias, \
-    AlleleAlias, So, Alleledbentity, LocusAllele, LocusalleleReference
+    AlleleAlias, So, Alleledbentity, AlleleReference, LocusAllele, LocusalleleReference
 from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
@@ -31,8 +31,6 @@ def load_phenotypes():
         subclass='ALLELE').all()])
 
     alias_name_to_allele_id = dict([(x.display_name.lower(), x.allele_id) for x in nex_session.query(AlleleAlias).all()])
-
-    locus_id_alias_id_to_locus_allele_id = dict([((x.locus_id, x.allele_id), x.locus_allele_id) for x in nex_session.query(LocusAllele).all()])
     
     name_to_locus_id = {}
     for x in nex_session.query(Locusdbentity).all():
@@ -95,6 +93,12 @@ def load_phenotypes():
     chemicals = []
     key_to_annotation_id = {}
     for line in f:
+
+        i += 1
+        if i % batch_commit_size == 0:
+            # nex_session.rollback()
+            nex_session.commit()
+            
         pieces = line.strip().split("\t")
         if pieces[0].lower() == 'allele':
             for chemical in pieces[1:]:
@@ -103,13 +107,18 @@ def load_phenotypes():
                 chemicals.append((chebi.display_name, items[1], items[2]))
             continue
         allele_name = pieces[0]
+        gene_name = allele_name.split("-")[0]
+        dbentity_id = name_to_locus_id.get(gene_name.lower())
+        if dbentity_id is None:
+            dbentity_id = alias_name_to_locud_id.get(gene_name.lower())
+            if dbentity_id:
+                # cdc1, cdc46, hys2,
+                print("GENE:", gene_name, "is an alias name.")
+            else:
+                print("GENE:", gene_name, "is not in the database.")
+                continue
+        
         allele_id = allele_to_id.get(allele_name.lower())
-
-        i += 1
-        if i % batch_commit_size == 0:
-            # nex_session.rollback()
-            nex_session.commit()
-            
         if allele_id is None:
             allele_id = alias_name_to_allele_id.get(allele_name.lower())
             if allele_id:
@@ -122,30 +131,23 @@ def load_phenotypes():
                 if allele_id is None:
                     print("ALLELE:", allele_name, "is not added into the database.")
                     continue
-        gene_name = allele_name.split("-")[0]
-        dbentity_id = name_to_locus_id.get(gene_name.lower())
-        if dbentity_id is None:
-            dbentity_id = alias_name_to_locud_id.get(gene_name.lower())
-            if dbentity_id:
-                # cdc1, cdc46, hys2,
-                print("GENE:", gene_name, "is an alias name.")
-            else:
-                print("GENE:", gene_name, "is not in the database.")
-                continue
-        locus_allele_id = locus_id_alias_id_to_locus_allele_id.get((dbentity_id, allele_id))
-        if locus_allele_id is None:
-            locus_allele_id = insert_locus_allele(nex_session, source_id, dbentity_id,
-                                                  allele_id, allele_name)
-        if locus_allele_id is None:
-            nex_session.rollback()
-            continue
-        status = insert_locusallele_reference(nex_session, source_id, locus_allele_id,
-                                              reference_id, allele_name)
-        if status:
-            nex_session.rollback()
-            continue
-        
+                status = insert_allele_reference(nex_session, source_id, allele_id, reference_id, allele_name)
+                if status:
+                    nex_session.rollback()
+                    continue
+                locus_allele_id = insert_locus_allele(nex_session, source_id, dbentity_id,
+                                                      allele_id, allele_name, gene_name)
+                if locus_allele_id is None:
+                    nex_session.rollback()
+                    continue
+                status = insert_locusallele_reference(nex_session, source_id, locus_allele_id,
+                                                      reference_id, allele_name)
+                if status:
+                    nex_session.rollback()
+                    continue
+
         values = pieces[1:]
+        key_to_group_id = {}
         for index in range(3):
             (chemical_name, chemical_value, chemical_unit) = chemicals[index]
             phenotype_id = None
@@ -167,14 +169,16 @@ def load_phenotypes():
             if annotation_id is None:
                 nex_session.rollback()
                 continue
+            group_id = key_to_group_id.get(key, 0) + 1
             key_to_annotation_id[key] = annotation_id
-            insert_phenotypeannotation_cond(nex_session, annotation_id, 1, chemical_name, chemical_value, chemical_unit, allele_name)
+            insert_phenotypeannotation_cond(nex_session, annotation_id, group_id, chemical_name, chemical_value, chemical_unit, allele_name)
+            key_to_group_id[key] = group_id
 
     f.close()
     fw.close()
     # nex_session.rollback()
     nex_session.commit()
-    nex_session.close()
+    # nex_session.close()
 
 
 def insert_locusallele_reference(nex_session, source_id, locus_allele_id, reference_id, allele_name):
@@ -195,9 +199,9 @@ def insert_locusallele_reference(nex_session, source_id, locus_allele_id, refere
         return 1
 
 
-def insert_locus_allele(nex_session, source_id, locus_id, allele_id, allele_name):
+def insert_locus_allele(nex_session, source_id, locus_id, allele_id, allele_name, gene_name):
 
-    print("locus_allele:", source_id, locus_id, allele_id, allele_name, CREATED_BY)
+    print("locus_allele:", source_id, locus_id, allele_id, allele_name, gene_name, CREATED_BY)
     try:
         x = LocusAllele(source_id = source_id,
                         locus_id = locus_id,
@@ -206,13 +210,31 @@ def insert_locus_allele(nex_session, source_id, locus_id, allele_id, allele_name
         nex_session.add(x)
         nex_session.flush()
         nex_session.refresh(x)
-        print("Adding locus_allele for allele: " + allele_name + " into database.")
+        print("Adding locus_allele for allele: " + allele_name + ", gene_name: " + gene_name + " into database.")
         return x.locus_allele_id
     except Exception as e:
         traceback.print_exc()
-        print("An error occurred when inserting locus_allele for allele: " + allele_name + " into the database. error=" + str(e))
+        print("An error occurred when inserting locus_allele for allele: " + allele_name + ", gene_name: " + gene_name + " into the database. error=" + str(e))
         return None
+
     
+def insert_allele_reference(nex_session, source_id, allele_id, reference_id, allele_name):
+
+    print("allele_reference:", source_id, allele_id, reference_id, allele_name, CREATED_BY)
+
+    try:
+        x = AlleleReference(source_id = source_id,
+                            allele_id = allele_id,
+                            reference_id = reference_id,
+                            created_by = CREATED_BY)
+        nex_session.add(x)
+        print("Adding allele_reference for allele: " + allele_name + ", reference_id " + str(reference_id) + " into database.")
+        return 0
+    except Exception as e:
+        traceback.print_exc()
+        print("An error occurred when inserting allele_reference for allele: " + allele_name + ", reference_id " + str(reference_id) + " into the database. error=" + str(e))
+        return 1
+
 
 def insert_phenotypeannotation_cond(nex_session, annotation_id, group_id, condition_name, condition_value, condition_unit, allele_name):
 
