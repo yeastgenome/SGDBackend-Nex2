@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from src.models import Dbentity, DBSession, Locusdbentity, LocusAlias, Dnasequenceannotation, \
     Dnasubsequence, So, Contig, Go, Goannotation, Edam, Path, \
-    FilePath, Filedbentity, Source, Transcriptdbentity, TranscriptReference
+    FilePath, Filedbentity, Source, Transcriptdbentity
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
@@ -29,7 +29,8 @@ landmark_file = "/Users/kkarra/Dev/SGDBackend-Nex2/scripts/dumping/alliance/data
 chromosomes = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX',
                'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'Mito']
 
-## If transcript < gene start/stop then add start/stop as transcript and SKIP transcript in the database; workaround until transcripts fixed after updates ##
+## If transcript < gene start/stop then add start/stop as transcript and SKIP transcript in the database;
+# workaround until transcripts fixed after updates ##
 
 def dump_data():
 
@@ -126,6 +127,8 @@ def dump_data():
 
     ## get transcript data in database ##
     systematic_name_to_transcripts = {}
+    transcript_range = {}
+
     transcripts = DBSession.query(
         Dbentity).filter_by(subclass='TRANSCRIPT').all()
     log.info("num of transcript objs: " + str(len(transcripts)))
@@ -135,20 +138,32 @@ def dump_data():
         transSeqAnnot = DBSession.query(Dnasequenceannotation).filter_by(
             dbentity_id=transcriptObj.dbentity_id).first()
         sysName = transcriptObj.format_name.split("_")[0]
-        #log.info(sysName + " has transcript " + transcriptObj.display_name)
 
         transcriptConds = DBSession.query(Transcriptdbentity).filter_by(
             dbentity_id=transcriptObj.dbentity_id).first()
 
         tconditions = []
-        # log.info("YPD:" + str(transcriptConds.in_ypd) +
-        #         " GAL" + str(transcriptConds.in_gal))
+
         if str(transcriptConds.in_ypd) == 'True':
             tconditions.append('YPD')
-        #    log.info("in YPD")
         if str(transcriptConds.in_gal) == 'True':
             tconditions.append('GAL')
-        #    log.info("in GAL")
+
+        if sysName in transcript_range:
+            (start, stop) = transcript_range[sysName]
+            transcript_start = start
+            transcript_end = stop
+            if transSeqAnnot.start_index < start:
+                transcript_start = transSeqAnnot.start_index
+            if transSeqAnnot.end_index > stop:
+                transcript_end = transSeqAnnot.end_index
+            transcript_range[sysName] = (transcript_start, transcript_end)
+
+            #if sysName == 'YBL043W':
+            #    print(sysName, transSeqAnnot.start_index, transSeqAnnot.end_index)
+            #    print(sysName ,  transcript_range[sysName])
+        else:
+            transcript_range[sysName] = (transSeqAnnot.start_index, transSeqAnnot.end_index)
 
         if sysName in systematic_name_to_transcripts.keys():
             systematic_name_to_transcripts[sysName].append({"sgdid": "SGD:" + transcriptObj.sgdid,
@@ -253,8 +268,20 @@ def dump_data():
                 else:
                     end_index = utrEnd
 ## This is where you'd check to put something if you were to NOT write IF type is CDS AND there are Pelechano transcripts ??##
+            gene_start = start_index
+            gene_end = end_index
 
-            fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(start_index) + "\t" + str(end_index) +
+            if systematic_name in transcript_range:
+                (transcript_start, transcript_stop) = transcript_range[systematic_name]
+                if transcript_start < gene_start:
+                    gene_start = transcript_start
+                if transcript_stop > gene_end:
+                    gene_end = transcript_stop
+            if type == "gene":
+                fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(gene_start) + "\t" + str(gene_end) +
+                         "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + name_attribute)
+            else:
+                fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(start_index) + "\t" + str(end_index) +
                      "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + name_attribute)
 
             if gene_name:
@@ -562,7 +589,7 @@ def write_header(fw, datestamp):
     fw.write("##gff-version 3\n")
     fw.write("#!date-produced " + datestamp+"\n") #.split(".")[0] + "\n")
     fw.write("#!data-source SGD\n")
-    fw.write("#!assembly R64-3-1\n")
+    fw.write("#!assembly R64-4-1\n")
     fw.write("#!refseq-version GCF_000146045.2\n")
     fw.write("#\n")
     fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-3-1)\n")
