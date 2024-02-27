@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
 
 local_dir = 'scripts/dumping/alliance/data/'
 

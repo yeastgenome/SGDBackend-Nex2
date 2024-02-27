@@ -8,8 +8,8 @@ from src.models import Dbentity, DBSession, Straindbentity, Taxonomy
 from src.data_helpers import get_pers_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.5')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'
@@ -40,7 +40,6 @@ def get_agm_information():
                 obj["internal"] = False
                 obj["created_by_curie"] = "SGD"
                 obj["updated_by_curie"] = "SGD"
-                #obj["data_provider_name"] = "SGD"
                 obj["data_provider_dto"] = {
                     "source_organization_abbreviation": "SGD",
                     "internal": False}
