@@ -9,7 +9,8 @@ from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, \
     ComplexReference, Complexbindingannotation, Pathwaydbentity, \
     PathwayAlias, Pathwaysummary, PathwaysummaryReference, Pathwayannotation, \
     PathwayUrl, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, \
-    AlleleReference, LocusAllele, Literatureannotation
+    AlleleReference, LocusAllele, Literatureannotation, Dataset, DatasetKeyword, \
+    DatasetReference, Datasetsample, Taxonomy
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -70,7 +71,8 @@ def setup():
 
 
 def index_not_mapped_genes():
-    url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+    # url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+    url = "https://wiki.yeastgenome.org/index.php/Genetic_Loci"
     bulk_data = []
     with open("./scripts/search/not_mapped.json",
               "r") as json_data:
@@ -649,6 +651,90 @@ def index_go_terms():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
+def index_RNAcentralIDs():
+
+    all_rows = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()
+    print(("Indexing " + str(len(all_rows)) + " RNA central IDs"))
+
+    bulk_data = []
+    for x in all_rows:
+        obj = {
+            "name": x.display_name,
+            "identifier": x.display_name,
+            "category": "rnacentral_id",
+            "href": x.locus.obj_url,
+        }
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+    
+    
+def index_datasets():
+
+    all_datasets = DBSession.query(Dataset).all()
+    print(("Indexing " + str(len(all_datasets)) + " Datasets"))
+
+    bulk_data = []
+
+    taxonomy_id_to_dataset_id_count = {}
+    for d in all_datasets:
+
+        keywords = set([])
+        for dk in DBSession.query(DatasetKeyword).filter_by(
+                dataset_id=d.dataset_id).all():
+            keywords.add(dk.keyword.display_name)
+
+        references = set([])
+        for dr in DBSession.query(DatasetReference).filter_by(
+                dataset_id=d.dataset_id).all():
+            references.add(dr.reference.display_name)
+
+        taxonomy_ids = set([])
+        for ds in DBSession.query(Datasetsample).filter_by(
+                dataset_id=d.dataset_id).all():
+            if ds.taxonomy_id is None:
+                continue
+            taxonomy_ids.add(ds.taxonomy_id)
+
+        strains = []
+        for s in DBSession.query(Taxonomy).filter(
+                Taxonomy.taxonomy_id.in_(list(taxonomy_ids))).all():
+            strains.append(s.display_name)
+                    
+        obj = {
+            "name": d.display_name,
+            "identifier": d.dbxref_id,
+            "category": "dataset",
+            "href": d.obj_url,
+            "description": d.description,
+            "keywords": list(keywords),
+            "references": list(references),
+            "strains": strains
+        }
+
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+
+        if len(bulk_data) == 800:
+            es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+            bulk_data = []
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+
 def index_disease_terms():
     dos = DBSession.query(Disease).all()
 
@@ -1094,7 +1180,6 @@ def index_complex_names():
         for k in key_values:
             if k is not None:
                 keys.add(k.lower())
-
         obj = {
             "name": c.display_name,
             "identifier": c.complex_accession,
@@ -1169,7 +1254,7 @@ def index_alleles():
             "name": a.display_name,
             "allele_name": a.display_name,
             "href": "/allele/" + a.format_name,
-            "allele_description": a.description,
+            "description": a.description,
             "category": "Allele",
             "synonyms": [s[0] for s in synonyms],
             "allele_types": list(allele_types),
@@ -1375,6 +1460,9 @@ def index_chemicals():
 
 
 def index_part_1():
+
+    # index_RNAcentralIDs()
+    index_datasets()
     index_strains()
     index_references()
     index_phenotypes()
@@ -1435,8 +1523,8 @@ if __name__ == "__main__":
     cleanup()
     setup()
 
-    # index_chemicals()
-    
+    # index_datasets()
+
     t1 = Thread(target=index_part_1)
     t2 = Thread(target=index_part_2)
     t1.start()

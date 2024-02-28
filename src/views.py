@@ -148,6 +148,8 @@ def search(request):
         "strain": [("references", "references"),
                    ("diseases", "diseases"),
                    ("phenotypes", "phenotypes")],
+        "dataset": [("references", "references"),
+                    ("keywords", "keywords")],
         "pathway": [("references", "references"),
                     ("pathway_loci", "pathway_loci")],
         "complex": [("references", "references"),
@@ -181,6 +183,7 @@ def search(request):
         "name_description",
         "summary",
         "phenotypes",
+        "keywords",
         "cellular_component",
         "biological_process",
         "molecular_function",
@@ -248,7 +251,8 @@ def search(request):
         
         ## adding code to check if it is an unmapped gene
         is_unmapped = 0
-        unmapped_url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+        # unmapped_url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+        unmapped_url = "https://wiki.yeastgenome.org/index.php/Genetic_Loci"
         response = urlopen(unmapped_url)
         unmapped_data = response.read().decode('utf-8').split("\n")
         for line in unmapped_data:
@@ -330,6 +334,58 @@ def search(request):
 
     ## end of allele search section
 
+    ## dataset search section
+    dataset_dbxref_id_startwords = ["GSE", "E-TABM-", "E-MTAB-", "E-WMIT-", "E-MEXP-", "SRA"]
+    
+    if is_quick_flag:
+        maybe_dbxref_id = query.strip()
+        found = False
+        for text in dataset_dbxref_id_startwords:
+            if maybe_dbxref_id.upper().startswith(text):
+                rest_part = maybe_dbxref_id.upper().replace(text, "")
+                if rest_part.isdigit():
+                    found = True
+                    break
+        if found:
+            maybe_dataset_url = None
+            maybe_datasets = DBSession.query(Dataset).filter_by(dbxref_id=maybe_dbxref_id.upper()).all()
+            if len(maybe_datasets) > 0:
+                maybe_dataset_url = maybe_datasets[0].obj_url
+            if maybe_dataset_url:
+                dataset_search_obj = {
+                    'href': maybe_dataset_url,
+                    'is_quick': True
+                }
+                return {
+                    'total': 1,
+                    'results': [dataset_search_obj],
+                    'aggregations': []
+                }
+
+    ## end of dataset search section
+
+    ## adding code to check if it is a RNAcentral ID                                                             
+    if is_quick_flag:
+        maybe_rnaId = query.strip()
+        if maybe_rnaId.upper().startswith('URS00'):
+            maybe_rnaId_url = None
+            if not maybe_rnaId.endswith('_559292'):
+                maybe_rnaId = maybe_rnaId + "%"
+            maybe_rnaIds = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').filter(LocusAlias.display_name.ilike(maybe_rnaId)).all()
+            if maybe_rnaIds and len(maybe_rnaIds) == 1:
+                maybe_rnaId_url = maybe_rnaIds[0].locus.obj_url
+                if maybe_rnaId_url:
+                    rnaId_search_obj = {
+                        'href': maybe_rnaId_url,
+                        'is_quick': True
+                    }
+                    return {
+                        'total': 1,
+                        'results': [rnaId_search_obj],
+                        'aggregations': []
+                    }
+    ## end of RNAcentral ID check
+        
     ## check if it is a biocyc_id
     pathway_kws = ['PWY', 'YEAST', 'BIOSYNTHESIS', 'DEGRADATION', 'BYPASS', 'GLUCOSE-MANNOSYL', 'GLYCOLYSIS', 'HOMOCYS']
     maybe_biocyc_id = None
@@ -340,7 +396,7 @@ def search(request):
     if is_quick_flag and maybe_biocyc_id and not query.endswith('*') and not query.endswith('?'):
         query = query + "*"
     ## end of pathway search section       
-            
+
     limit = int(request.params.get('limit', 10))
     offset = int(request.params.get('offset', 0))
     category = request.params.get('category', '')

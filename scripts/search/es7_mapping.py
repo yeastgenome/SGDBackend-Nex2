@@ -316,7 +316,7 @@ mapping = {
                     }
                 }
             },
-            "diseases": {
+            "keywords": {
                 "type": "keyword",
                 "fields": {
                     "engram": {
@@ -325,6 +325,24 @@ mapping = {
                     }
                 }
             },
+            "strains": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "diseases": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },  
             "cellular_component": {
                 "type": "keyword",
                 "fields": {
