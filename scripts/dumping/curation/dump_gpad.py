@@ -1,9 +1,10 @@
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
-from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
-    Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
-    Gosupportingevidence, LocusAlias, Edam, Path, FilePath, \
-    Filedbentity, ReferenceAlias, Dnasequenceannotation, So
+from src.models import Dbentity, Locusdbentity, Complexdbentity, \
+    Referencedbentity, Taxonomy, Go, Ro, Eco, EcoAlias, Source, \
+    Goannotation, Goextension, Gosupportingevidence, LocusAlias, \
+    Edam, Path, FilePath, Filedbentity, ReferenceAlias, \
+    Dnasequenceannotation, So
 from urllib.request import urlretrieve
 from urllib.request import urlopen
 from datetime import datetime
@@ -42,6 +43,9 @@ def dump_data():
     ro_id_to_roid = dict([(x.ro_id, x.roid) for x in nex_session.query(Ro).all()])
     display_name_to_roid = dict([(x.display_name, x.roid) for x in nex_session.query(Ro).all()])
     dbentity_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter_by(subclass='LOCUS').all()])
+    dbentity_id_to_complex_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(Dbentity).filter_by(subclass='COMPLEX').all()])
+    # dbentity_id_to_complex = dict([(x.dbentity_id, (x.format_name, x.display_name))
+    #                               for x in nex_session.query(Complexdbentity).all()])
     reference_id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
     go_id_to_goid = dict([(x.go_id, (x.goid, x.go_namespace)) for x in nex_session.query(Go).all()])
     eco_id_to_ecoid = dict([(x.eco_id, x.format_name) for x in nex_session.query(Eco).all()])
@@ -70,9 +74,16 @@ def dump_data():
     curator_to_orcid_mapping = get_curator_to_orcid_mapping()
     
     for x in nex_session.query(Goannotation).all():
-        
+
+        sgdid = dbentity_id_to_sgdid.get(x.dbentity_id)
+        if sgdid is None:
+            sgdid = dbentity_id_to_complex_sgdid.get(x.dbentity_id)
+            if sgdid is None:
+                log.info("Warning: no SGDID (for LOCUS/COMPLEX) for dbentity_id = " + str(x.dbentity_id))
+                continue
+
         # col1: database ID
-        col1 = "SGD:" + dbentity_id_to_sgdid.get(x.dbentity_id)
+        col1 = "SGD:" + sgdid
         
         # col2: Negation
         col2 = ''
@@ -89,6 +100,10 @@ def dump_data():
                 go_qualifier = 'involved in'
             else:
                 go_qualifier = 'enables'
+        if go_qualifier in ['acts upstream of positive effect', 'acts upstream of negative effect']:
+            # acts upstream of, positive effect
+            # acts upstream of, negative effect
+            go_qualifier = go_qualifier.replace(" of ", " of, ")
         col3 = display_name_to_roid.get(go_qualifier)
         if col3 is None:
             log.info("Warning: NO ROID for go_qualifier: " + x.go_qualifier)
