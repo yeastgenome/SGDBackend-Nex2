@@ -10,13 +10,13 @@ from src.models import DBSession, Referencedbentity, Referencedeleted
 from src.data_helpers import get_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
 DBSession.configure(bind=engine)
 
-S3_BUCKET = os.environ['S3_BUCKET']
-session = boto3.Session()
-s3 = session.resource('s3')
-s3_dir = 'latest/'
+# S3_BUCKET = os.environ['S3_BUCKET']
+# session = boto3.Session()
+# s3 = session.resource('s3')
+# s3_dir = 'latest/'
 local_dir = 'scripts/dumping/alliance/data/'
 
 DEFAULT_TAXID = '559292'
@@ -211,7 +211,7 @@ def get_refs_information():
 
     print ('Processing Resources -- deleted PMIDS')
     local_refDeleted_file =  'SGD_false_positive_pmids.txt'
-    s3_refDeleted_file = s3_dir + 'SGD_false_positive_pmids.txt'
+    #s3_refDeleted_file = s3_dir + 'SGD_false_positive_pmids.txt'
     refDel_str = os.path.join(local_dir, local_refDeleted_file)
 
     deletedObjList = DBSession.query(Referencedeleted).filter(Referencedeleted.pmid != None).all()
@@ -228,7 +228,7 @@ def get_refs_information():
                 ref_deleted_result = str(deletedPMID) +"\n"
                 res_file.write(ref_deleted_result)
 
-    s3.meta.client.upload_file(refDel_str, S3_BUCKET, s3_refDeleted_file, ExtraArgs={'ACL': 'public-read'})
+    #s3.meta.client.upload_file(refDel_str, S3_BUCKET, s3_refDeleted_file, ExtraArgs={'ACL': 'public-read'})
     referencesObjList = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid != None).all()
 
     print("computing " + str(len(referencesObjList)) + " references")
@@ -283,27 +283,27 @@ def get_refs_information():
     if (len(ref_result) > 0):
         ref_output_obj = get_output(ref_result)
         local_ref_file_name =  'REFERENCE_SGD.json'
-        s3_ref_file = s3_dir + 'REFERENCE_SGD.json'
+        #s3_ref_file = s3_dir + 'REFERENCE_SGD.json'
         json_file_str = os.path.join(local_dir, local_ref_file_name)
         
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(ref_output_obj, indent=4, sort_keys=True))
 
-        print(local_ref_file_name, s3_ref_file)
-        s3.meta.client.upload_file(json_file_str, S3_BUCKET, s3_ref_file, ExtraArgs={'ACL': 'public-read'})
+        # print(local_ref_file_name, s3_ref_file)
+        # s3.meta.client.upload_file(json_file_str, S3_BUCKET, s3_ref_file, ExtraArgs={'ACL': 'public-read'})
 
     
     if (len(ref_exchange_result) > 0):
         refExch_obj = get_output(ref_exchange_result)
         local_refExch_file =  'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
-        s3_refExch_file = s3_dir + 'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
+        #s3_refExch_file = s3_dir + 'SGD' + SUBMISSION_VERSION + 'referenceExchange.json'
         refEx_str = os.path.join(local_dir, local_refExch_file)
 
         with open(refEx_str, 'w+') as res_file:
             res_file.write(json.dumps(refExch_obj, indent=4, sort_keys=True))
 
-        print(local_refExch_file, s3_refExch_file)
-        s3.meta.client.upload_file(refEx_str, S3_BUCKET, s3_refExch_file, ExtraArgs={'ACL': 'public-read'})
+        # print(local_refExch_file, s3_refExch_file)
+        # s3.meta.client.upload_file(refEx_str, S3_BUCKET, s3_refExch_file, ExtraArgs={'ACL': 'public-read'})
 
 
     print("end time:" + str(datetime.now()))

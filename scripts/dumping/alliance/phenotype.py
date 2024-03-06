@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
 
 local_dir = 'scripts/dumping/alliance/data/'
 
@@ -22,8 +22,8 @@ COND_TO_ZECO = {"treatment": "ZECO:0000105", #biological treatment
 
 def get_phenotypephenotype_data():
 
-    phenotype_data = DBSession.query(Phenotypeannotation).all()
-    #phenotype_data = DBSession.query(Phenotypeannotation).filter_by(dbentity_id='1285516').all() # RPB2 test
+    #phenotype_data = DBSession.query(Phenotypeannotation).all()
+    phenotype_data = DBSession.query(Phenotypeannotation).filter_by(allele_id='2242896').all() # RPB2 test  allele-2242896;  gene-1286026
     result = []
     print(("computing " + str(len(phenotype_data)) + " phenotypes"))
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
@@ -44,6 +44,7 @@ def get_phenotypephenotype_data():
                 }
 
             conditions = item.to_dict()[0]['properties']
+            print(conditions)
 
             if len(conditions) > 0 :
                 conditionList = []
