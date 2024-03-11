@@ -271,7 +271,7 @@ def index_genes():
     _phenos = IndexESHelper.get_locus_phenotypeannotation()
     _goids = IndexESHelper.get_locus_go_annotation()
     _aliases_raw = IndexESHelper.get_locus_dbentity_alias(
-        ["Uniform", "Non-uniform", "Retired name", "UniProtKB ID"])
+        ["Uniform", "Non-uniform", "Retired name", "UniProtKB ID", "RNAcentral ID"])
 
     ###################################
     # TODO: remove line below in the next release
@@ -355,13 +355,13 @@ def index_genes():
                 name = alias_item.display_name
                 if name not in merged_deleted:
                     alias_quick_direct_keys.append(name)
-                if alias_item.alias_type != "UniProtKB ID":
+                if alias_item.alias_type not in ["UniProtKB ID", "RNAcentral ID"]:
                     aliases.append(name)
         '''for d in aliases_raw:
             name = d[0]
             if name not in merged_deleted:
                 alias_quick_direct_keys.append(name)
-            if d[1] != "UniProtKB ID":
+            if d[1] not in ["UniProtKB ID", "RNAcentral ID"]:
                 aliases.append(name)'''
         # make everything in keys lowercase to ignore case
         keys = []
