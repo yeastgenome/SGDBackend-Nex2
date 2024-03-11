@@ -7,7 +7,7 @@ from src.data_helpers import get_output, get_locus_alias_data
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 local_dir = 'scripts/dumping/alliance/data/'
 SO_TYPES_TO_EXCLUDE = [
     'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296', 'SO:0005855',

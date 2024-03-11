@@ -9,7 +9,7 @@ from src.data_helpers import get_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'
 

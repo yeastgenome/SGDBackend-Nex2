@@ -6,7 +6,7 @@ from src.models import Dnasequenceannotation, DBSession, Locusdbentity, LocusAli
 from src.data_helpers import get_pers_output, get_locus_synonyms, get_locus_crossrefs, get_locus_secondaryids
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'gene_ingest_set'
@@ -39,8 +39,8 @@ def get_basic_gene_information():
                         Dnasequenceannotation.taxonomy_id == 274901,
                         Dnasequenceannotation.dna_type == "GENOMIC").all()
                 # IF it is a SO ID to exclude, then skip ('continue')
-                #if dna_seq_annotation_obj[0].so.soid in SO_TYPES_TO_EXCLUDE:
-                #    continue
+                if dna_seq_annotation_obj[0].so.soid in SO_TYPES_TO_EXCLUDE:
+                   continue
                 if dna_seq_annotation_obj[0].so.so_id == 263757:  #change ORF to gene SO ID
                     obj["gene_type_curie"] = "SO:0001217"
                 else:

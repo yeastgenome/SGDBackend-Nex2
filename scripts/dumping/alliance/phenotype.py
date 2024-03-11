@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 
 engine = create_engine(os.getenv('CURATE_NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 
 local_dir = 'scripts/dumping/alliance/data/'
 
@@ -42,16 +42,15 @@ def get_phenotypephenotype_data():
                 "phenotypeStatement": "",
                 "dateAssigned": ""
                 }
+            data = item.to_dict()   #[0]['properties']
 
-            conditions = item.to_dict()[0]['properties']
-            print(conditions)
-
-            if len(conditions) > 0 :
-                conditionList = []
-                combinedObj = []
-                for cond in conditions:
+            #if len(data) > 0 :
+            conditionList = []
+            combinedObj = []
+            for row in data:
+                for cond in row['properties']:
                     class_type = cond['class_type'].lower()
-                    print ('type-'+ class_type +"*")
+                    #print ('type-'+ class_type +"*")
                     if class_type == 'bioitem':
                         continue
                     else: 
@@ -60,7 +59,7 @@ def get_phenotypephenotype_data():
                             cObj["conditionStatement"] = class_type + ":" + cond['bioitem']['display_name']
 
                             if str(cond['bioitem']['link']) != 'None':
-                                print('url:' + str(cond['bioitem']['link']))
+                                #print('url:' + str(cond['bioitem']['link']))
                                 urllist= str(cond['bioitem']['link']).split("/")
                                 chebi_id = urllist[2].split("'")[0]
                                 cObj["chemicalOntologyId"] = chebi_id
@@ -73,7 +72,7 @@ def get_phenotypephenotype_data():
                                     cObj["conditionQuantity"] = cond["note"].split(", ")[1]
                                 else:
                                     cObj["conditionQuantity"] = cond["note"]
-                                    print ("COND:" + cond['note'])
+                                    #print ("COND:" + cond['note'])
                         combinedObj.append(cObj) 
                 conditionList.append({'conditionRelationType':'has_condition', 'conditions':combinedObj})
 
@@ -132,7 +131,7 @@ def get_phenotypephenotype_data():
             obj["objectId"] = "SGD:" + str(item.dbentity.sgdid)
             obj["phenotypeStatement"] = pString
 
-            print ('Annotation:' + pString) 
+            #print ('Annotation:' + pString)
 
             if item.reference.pmid:
                 pubId = "PMID:" + str(item.reference.pmid)

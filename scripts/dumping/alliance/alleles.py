@@ -6,7 +6,7 @@ from src.models import Alleledbentity, DBSession
 from src.data_helpers import get_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'
@@ -46,7 +46,7 @@ def get_allele_information():
                 #     obj["synonyms"] = [alleleObj[4]]
                 obj["crossReferences"] = [{
                     "id": "SGD:" + str(alleleObj[1]),
-                    "pages": ["allele"]
+                    "pages": ["allele", "allele/references"]
                 }]
                 alleleSynList = DBSession.execute(
                     f"select aa.display_name "
