@@ -407,6 +407,10 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
     roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
     complexAcc_to_complex_id = dict([(x.complex_accession, x.dbentity_id) for x in nex_session.query(Complexdbentity).all()])
 
+    all_complex_go_ids = set()
+    for goid in all_complex_goids:
+        all_complex_go_ids.add(goid_to_go_id[goid])
+
     sgdid_to_reference_id = {}
     pmid_to_reference_id = {}
     for x in nex_session.query(Referencedbentity).all():
@@ -512,7 +516,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
                 entry['gosupport'] = gosupport
             data.append(entry)
 
-    return (data, bad_complex_annotations)
+    return (data, bad_complex_annotations, all_complex_go_ids)
         
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
