@@ -26,17 +26,22 @@ def get_phenotypephenotype_data():
     phenotype_data = DBSession.query(Phenotypeannotation).filter_by(allele_id='2242896').all()
     result = []
     print(("computing " + str(len(phenotype_data)) + " phenotypes"))
+    row_count = 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         for item in phenotype_data:
             print('Phenoannotation ID:' + str(item.annotation_id))
             data = item.to_dict()
             for row in data:
                 obj = {
-                    "objectId": "",
-                    "phenotypeTermIdentifiers": [],
-                    "phenotypeStatement": "",
-                    "dateAssigned": ""
+                    "objectId": "SGD:" + str(item.dbentity.sgdid),
+                    "phenotypeTermIdentifiers": [],  # Add phenotype terms here as needed
+                    "phenotypeStatement": "",  # Construct phenotype statement as needed
+                    "dateAssigned": item.date_created.strftime("%Y-%m-%dT%H:%M:%S-00:00"),
+                    "evidence": {
+                        "publicationId": "PMID:" + str(item.reference.pmid) if item.reference.pmid else "SGD:" + str(item.reference.sgdid)
+                    }
                 }
+                alleleObj = None
                 if item.allele:
                     alleleObj = {
                         "objectId": "",
@@ -44,38 +49,32 @@ def get_phenotypephenotype_data():
                         "phenotypeStatement": "",
                         "dateAssigned": ""
                     }
-                for cond in row['properties']:
-                    class_type = cond['class_type'].lower()
-                    if class_type == 'bioitem':
-                        continue
-                    cObj = {"conditionClassId": COND_TO_ZECO[class_type]}
-                    if class_type == 'chemical':
-                        cObj["conditionStatement"] = class_type + ":" + cond['bioitem']['display_name']
-                        if str(cond['bioitem']['link']) != 'None':
-                            urllist = str(cond['bioitem']['link']).split("/")
-                            chebi_id = urllist[2].split("'")[0]
-                            cObj["chemicalOntologyId"] = chebi_id
-                        if cond['unit']:
-                            cObj["conditionQuantity"] = cond['concentration'] + " " + cond['unit']
-                    else:
-                        cObj["conditionStatement"] = class_type + ":" + cond['note']
-                        if cond['unit'] and class_type == 'temperature':
-                            if re.match(", ", cond['note']):
-                                cObj["conditionQuantity"] = cond["note"].split(", ")[1]
-                            else:
-                                cObj["conditionQuantity"] = cond["note"]
-                    
-                    # Add each condition as its own entry
-                    conditionList = [{'conditionRelationType': 'has_condition', 'conditions': [cObj]}]
-                    if item.allele:
-                        if 'conditionRelations' not in alleleObj:
-                            alleleObj["conditionRelations"] = []
-                        alleleObj["conditionRelations"].extend(conditionList)
-                    else:
-                        if 'conditionRelations' not in obj:
-                            obj["conditionRelations"] = []
-                        obj["conditionRelations"].extend(conditionList)
-
+                if 'properties' in row and row['properties']:
+                    for cond in row['properties']:
+                        class_type = cond['class_type'].lower()
+                        if class_type == 'bioitem':
+                            continue
+                        cObj = {"conditionClassId": COND_TO_ZECO[class_type]}
+                        if class_type == 'chemical':
+                            cObj["conditionStatement"] = class_type + ":" + cond['bioitem']['display_name']
+                            if str(cond['bioitem']['link']) != 'None':
+                                urllist = str(cond['bioitem']['link']).split("/")
+                                chebi_id = urllist[2].split("'")[0]
+                                cObj["chemicalOntologyId"] = chebi_id
+                            if cond['unit']:
+                                cObj["conditionQuantity"] = cond['concentration'] + " " + cond['unit']
+                        else:
+                            cObj["conditionStatement"] = class_type + ":" + cond['note']
+                            if cond['unit'] and class_type == 'temperature':
+                                if re.match(", ", cond['note']):
+                                    cObj["conditionQuantity"] = cond["note"].split(", ")[1]
+                                else:
+                                    cObj["conditionQuantity"] = cond["note"]
+                        conditionList = [{'conditionRelationType': 'has_condition', 'conditions': [cObj]}]
+                        if alleleObj:
+                            alleleObj.setdefault("conditionRelations", []).extend(conditionList)
+                        else:
+                            obj.setdefault("conditionRelations", []).extend(conditionList)
                 # Code for adding phenotype, evidence, and dateAssigned remains unchanged from your original script.
                 # Ensure to complete the obj and alleleObj properties as needed here.
                 if item.phenotype.qualifier:
@@ -148,11 +147,13 @@ def get_phenotypephenotype_data():
                     alleleObj["dateAssigned"] = item.date_created.strftime(
                         "%Y-%m-%dT%H:%m:%S-00:00")
                 
-                ### end here
+                row_count += 1
                 result.append(obj)
                 if item.allele:
                     result.append(alleleObj)
-                
+                print("row=", row_count, ", obj=", obj, "\n")
+                print("row=", row_count, ", alleleObj=", alleleObj, "\n")
+        
         if len(result) > 0:
             output_obj = get_output(result)
             file_name = 'SGD' + SUBMISSION_VERSION + 'phenotype.json'
