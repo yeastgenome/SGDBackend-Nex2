@@ -112,7 +112,8 @@ def read_panther_gene_list_file(source_to_id):
         lines = file.readlines()
         for line in lines:
             words = line.split()
-            
+            if len(words) == 0:
+                continue
             sgdid_list = words[1].split(",")
             pantherid = words[-1]
             if(pantherid.startswith('(PTHR')):

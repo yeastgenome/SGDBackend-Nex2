@@ -124,14 +124,14 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
         fw.write(str(datetime.now()) + "\n")
         fw.write("reading complex portal gpad file...\n")
 
-        (complex_data, bad_complex_annots) = read_complex_gpad_file(complex_gpad_file,
+        (complex_data, bad_complex_annots, all_complex_go_ids) = read_complex_gpad_file(complex_gpad_file,
                                                                     nex_session,
                                                                     foundAnnotation,
                                                                     yes_goextension,
                                                                     yes_gosupport)
         
     nex_session.close()
-
+    
     log.info(str(datetime.now()))
     log.info("Loading the new data into database...")
 
@@ -151,7 +151,10 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
 
     ## uncomment out the following when it is ready
     fw.write(str(datetime.now()) + "\n")
-    fw.write("deleting obsolete go_annotation entries...\n") 
+    fw.write("deleting obsolete go_annotation entries...\n")
+    if annotation_type != 'manually curated':
+        bad_complex_annots = None
+        all_complex_go_ids = None
     delete_obsolete_annotations(key_to_annotation, 
                                 hasGoodAnnot, 
                                 go_id_to_aspect,
@@ -160,6 +163,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                 dbentity_id_with_new_pmid,
                                 dbentity_id_with_uniprot,
                                 bad_complex_annots,
+                                all_complex_go_ids,
                                 fw)
 
     if annotation_type == 'manually curated':
@@ -560,12 +564,13 @@ def all_go_annotations(nex_session, annotation_type):
     return key_to_annotation 
 
 
-def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect, annotation_update_log, source_to_id, dbentity_id_with_new_pmid, dbentity_id_with_uniprot, bad_complex_annots, fw):
+def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect, annotation_update_log, source_to_id, dbentity_id_with_new_pmid, dbentity_id_with_uniprot, bad_complex_annots, all_complex_go_ids, fw):
 
     nex_session = get_session()
     
     evidence_to_eco_id = dict([(x.display_name, x.eco_id) for x in nex_session.query(EcoAlias).all()])
-
+    complex_id_to_name = dict([(x.dbentity_id, x.display_name) for x in nex_session.query(Dbentity).filter_by(subclass='COMPLEX').all()])
+    
     src_id = source_to_id['SGD']
 
     to_be_deleted = list(key_to_annotation.values())
@@ -582,7 +587,7 @@ def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect
 
             ## don't delete the annotations for the features with a pmid not in db yet 
             ## (so keep the old annotations for now) 
-            if dbentity_id_with_new_pmid.get(x.dbentity_id) is not None:
+            if x.dbentity_id not in complex_id_to_name and dbentity_id_with_new_pmid.get(x.dbentity_id) is not None:
                 continue
 
             ## ## don't delete PAINT annotations (they are not in GPAD files yet)                              
@@ -592,15 +597,24 @@ def delete_obsolete_annotations(key_to_annotation, hasGoodAnnot, go_id_to_aspect
             # aspect = go_id_to_aspect[x.go_id]
             # if x.eco_id == evidence_to_eco_id['ND'] and hasGoodAnnot.get((x.dbentity_id, aspect)) is None:
             #    ## still keep the ND annotation if there is no good annotation available yet 
-            #    continue
-            if dbentity_id_with_uniprot.get(x.dbentity_id) or (x.dbentity_id, x.go_id) in bad_complex_annots:
+            #    continue                
+            # if dbentity_id_with_uniprot.get(x.dbentity_id) or (x.dbentity_id, x.go_id) in bad_complex_annots:
+            # good one = if x.dbentity_id in complex_id_to_name or dbentity_id_with_uniprot.get(x.dbentity_id):
+            ok_to_delete = False
+            if all_complex_go_ids is None:
+                # computational annotations
+                ok_to_delete = True 
+            elif (x.dbentity_id in complex_id_to_name and x.go_id in all_complex_go_ids) or dbentity_id_with_uniprot.get(x.dbentity_id):
+                # manual curated annotations
+                ok_to_delete = True
+            if ok_to_delete:
                 ## don't want to delete the annotations that are not in GPAD file yet
                 ## unless it is annotation for complex with a complex go component term
                 ## do we still have any annotations that are not in GPAD? but just in case
                 delete_extensions_evidences(nex_session, x.annotation_id)
                 nex_session.delete(x)
                 nex_session.commit()
-                fw.write("DELETE GOANNOTATION: row=" + str(x) + "\n")
+                fw.write("DELETE GOANNOTATION: annotation_id=" + str(x.annotation_id) + "\n")
                 key = (x.annotation_type, 'annotation_deleted')
                 annotation_update_log[key] = annotation_update_log[key] + 1
     finally:
@@ -740,7 +754,7 @@ if __name__ == "__main__":
     gpadFile4noctua = os.stat(dated_noctua_gpad_file)
     gpadFile4complex = os.stat(dated_complex_gpad_file)
     
-    if gpadFileInfo.st_size < 1900000:
+    if gpadFileInfo.st_size < 1100000:
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
         exit()
 
@@ -748,11 +762,11 @@ if __name__ == "__main__":
         print("This week's GPI file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz")
         exit()
 
-    if gpadFile4noctua.st_size < 14000:
+    if gpadFile4noctua.st_size < 74000:
         print("This week's noctua GPAD file size is too small, please check: http://snapshot.geneontology.org/products/upstream_and_raw_data/noctua_sgd.gpad.gz")
         exit()
 
-    if gpadFile4complex.st_size < 2000000:
+    if gpadFile4complex.st_size < 2500000:
         print("This week's complex portal GPAD file size is too small, please check: http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/complex_portal.v2.gpad")
         exit()
 
