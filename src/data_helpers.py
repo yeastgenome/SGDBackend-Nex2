@@ -119,12 +119,17 @@ def get_locus_synonyms(locus_alias_list):
     obj = []
     for item in locus_alias_list:
         if (item.alias_type in aliases_types):
+            syn = ""
+            if item.alias_type == "Non-uniform":
+                syn = "non_uniform"
+            elif item.alias_type == "Uniform":
+                syn = "uniform"
             a_pmids = DBSession.query(LocusAliasReferences,
                                       Referencedbentity.pmid).filter(
                 LocusAliasReferences.alias_id == item.alias_id).outerjoin(Referencedbentity).all()
             alias_pmids_results = ["PMID:"+str(y[1]) for y in a_pmids if str(y[1]) != 'None']
             entry = {
-             "name_type_name": item.alias_type.lower(),
+             "name_type_name": syn #item.alias_type.lower(),
              "format_text": item.display_name,
              "display_text": item.display_name,
              "internal": False
@@ -184,7 +189,7 @@ def get_allele_synonyms(allele_alias_list):
             "display_text": item.display_name,
             "format_text": item.display_name,
             "synonym_scope_name": "exact",
-            "name_type_name": "unspecified",
+            "name_type_name": "uniform",
             "internal": False,
             "obsolete": False,
             "created_by_curie": "SGD",
