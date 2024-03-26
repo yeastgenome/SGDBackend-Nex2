@@ -218,7 +218,12 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
     key_to_annotation_id = {}
     annotation_id_to_extension = {}
     annotation_id_to_support = {}
-    for x in data + noctua_data + complex_data:
+    allData = None
+    if annotation_type == 'manually curated':
+        allData = noctua_data + complex_data
+    else:
+        allData = data
+    for x in allData:
         if x['annotation_type'] not in allowed_types:
             continue
         if x['dbentity_id'] in deleted_merged_dbentity_ids:
