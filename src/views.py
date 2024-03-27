@@ -878,7 +878,65 @@ def sgd_blast_metadata(request):
     datestamp = str(datetime.now()).split(" ")[0]
 
     taxon_id = "NCBITaxon:4932"
-    
+    version = "SGD:R64-4-1"
+    genus = "Saccharomyces"
+    species = "cerevisiae"
+    strain_to_bioproject = {
+        "S288C": "PRJNA128",
+        "AWRI1631": "PRJNA30553",
+        "AWRI796": "PRJNA48559",
+        "BC187": "PRJNA260311",
+        "BY4741": "PRJNA260311",
+        "BY4742": "PRJNA260311",
+        "CBS7960": "PRJNA60391",
+        "CEN.PK113-7D":	"PRJNA52955",
+        "CEN.PK2-1CA": "PRJNA260311",
+        "CLIB215": "PRJNA60143",
+        "CLIB324": "PRJNA60415",
+        "CLIB382": "PRJNA60145",
+        "D273-10B": "PRJNA260311",
+        "DBVPG6044": "PRJNA260311",
+        "EC1118": "PRJEA37863",
+        "EC9-8": "PRJNA73985",
+        "FL100": "PRJNA260311",
+        "FY1679": "PRJNA260311",
+        "FOSTERSB": "PRJNA48569",
+        "FOSTERSO": "PRJNA48567",
+        "JAY291": "PRJNA32809",
+        "JK9-3D": "PRJNA260311",
+        "K11": "PRJNA260311",
+        "KYOKAI7": "PRJDA45827",
+        "L1528": "PRJNA260311",
+        "LALVINQA23": "PRJNA48561",
+        "M22": "PRJNA28815",
+        "PW5": "PRJNA60181",
+        "RM11-1A": "PRJNA260311",
+        "REDSTAR": "PRJNA260311",
+        "SEY6210": "PRJNA260311",
+        "SK1": "PRJNA260311",
+        "SIGMA1278B-10560-6B": "PRJNA260311",
+        "SIGMA1278B": "PRJNA39317",
+        "T73": "PRJNA60195",
+        "T7": "PRJNA60387",
+        "UC5": "PRJNA60197",
+        "UWOPS05-217-3": "PRJNA260311",
+        "VL3": "PRJNA48565",
+        "VIN13": "PRJNA48563",
+        "W303": "PRJNA260311",
+        "X2180-1A": "PRJNA260311",
+        "Y10": "PRJNA60201",
+        "Y55": "PRJNA260311",
+        "YJM269": "PRJNA60389",
+        "YJM339": "PRJNA260311",
+        "YJM789": "PRJNA13304",
+        "YPH499": "PRJNA260311",
+        "YPS128": "PRJNA260311",
+        "YPS163": "PRJNA260311",
+        "YS9": "PRJNA260311",
+        "ZTW1": "PRJNA174065",
+        "YEAST": "PRJNA317579"
+    }
+                        
     try:
         data = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
@@ -887,25 +945,28 @@ def sgd_blast_metadata(request):
                 seqtype = 'prot'
             desc = x.description.replace('BLAST: ', '').split(' | ')
             description = desc[0]
-            version = ''
-            if len(desc) > 1:
-                version = desc[1]
-            data.append({'URI': x.s3_url,
-                         'md5sum': x.md5sum, 
-                         'description': description,
-                         'genus': 'Saccharomyces',
-                         'species': 'cerevisiae',
-                         'version': version,
-                         'blast_title': description,
-                         'seqtype': seqtype,
-                         'taxon_id': taxon_id 
-                       })
-        obj = { 'data': data,
-                'metaData': {
-                    'contact': 'sweng@stanford.edu',
-                    'dataProvider': 'SGD',
-                    'dateProduced': datestamp,
-                    'release': "SGD:" + datestamp 
+            title = description
+            strain = title.split(' ')[0]
+            bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
+            data.append({"bioproject": bioproject,
+                         "blast_title": title,
+                         "description": description,
+                         "genus": genus,
+                         "species": species,
+                         "md5sum": x.md5sum,
+                         "seqtype": seqtype,
+                         "taxon_id": taxon_id,
+                         "uri": x.s3_url,
+                         "version": version})
+        obj = { "data": data,
+                "metadata": {
+                    "contact": "sgd-helpdesk@lists.stanford.edu",
+                    "dataProvider": "SGD",
+                    "dateProduced": datestamp,
+                    "homepage_url" : "https://www.yeastgenome.org",
+                    "logo_url" : "https://yeastgenome.org/static/img/sgd-logo.png",
+                    "release": version,
+                    "public": True
                 }
         }
         return obj
@@ -914,7 +975,7 @@ def sgd_blast_metadata(request):
     finally:
         if DBSession:
             DBSession.remove()
-            
+           
             
 @view_config(route_name='reference_disease_details', renderer='json', request_method='GET')
 def reference_disease_details(request):
