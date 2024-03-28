@@ -933,8 +933,7 @@ def sgd_blast_metadata(request):
         "YPS128": "PRJNA260311",
         "YPS163": "PRJNA260311",
         "YS9": "PRJNA260311",
-        "ZTW1": "PRJNA174065",
-        "YEAST": "PRJNA317579"
+        "ZTW1": "PRJNA174065"
     }
                         
     try:
@@ -947,7 +946,7 @@ def sgd_blast_metadata(request):
             description = desc[0]
             title = description
             strain = title.split(' ')[0]
-            bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
+            bioproject = strain_to_bioproject.get(strain.upper(), 'unknown')
             data.append({"bioproject": bioproject,
                          "blast_title": title,
                          "description": description,
