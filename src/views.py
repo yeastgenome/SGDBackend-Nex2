@@ -313,7 +313,12 @@ def search(request):
     if is_quick_flag:
         allele_name = query.strip()
         maybe_allele_url = None
-        maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(query)).one_or_none()
+
+        maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(or_(
+            Dbentity.display_name.ilike(allele_name), 
+            Dbentity.sgdid==allele_name.upper().replace("SGD:", "")
+        )).one_or_none()
+        # maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(query)).one_or_none()
         if maybe_allele:
             maybe_allele_url = maybe_allele.obj_url
 
@@ -933,7 +938,8 @@ def sgd_blast_metadata(request):
         "YPS128": "PRJNA260311",
         "YPS163": "PRJNA260311",
         "YS9": "PRJNA260311",
-        "ZTW1": "PRJNA174065"
+        "ZTW1": "PRJNA174065",
+        "YEAST": "PRJNA317579"
     }
                         
     try:
@@ -946,7 +952,7 @@ def sgd_blast_metadata(request):
             description = desc[0]
             title = description
             strain = title.split(' ')[0]
-            bioproject = strain_to_bioproject.get(strain.upper(), 'unknown')
+            bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
             data.append({"bioproject": bioproject,
                          "blast_title": title,
                          "description": description,
@@ -2366,8 +2372,13 @@ def ambiguous_names(request):
 @view_config(route_name='complex', renderer='json', request_method='GET')
 def complex(request):
     try:
-        complexAC = request.matchdict['id']
-        complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
+        id = extract_id_request(request, 'complex', 'id', True)
+        complex = None
+        if id:
+            complex = DBSession.query(Complexdbentity).filter_by(dbentity_id=id).one_or_none()
+        else:
+            complexAC = request.matchdict['id']
+            complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
         if complex is not None:
             return complex.protein_complex_details()
         else:
@@ -2383,17 +2394,16 @@ def allele(request):
     try:
         # allele = allele.replace('%C3%8E%C2%94', 'Δ')
         # allele = request.matchdict['id'].replace('SGD:S', 'S').replace('Δ', 'delta')
-        allele = request.matchdict['id'].replace('SGD:S', 'S')
+        id = extract_id_request(request, 'allele', 'id', True)
         alleleObj = None
-        if allele.startswith('S0'):
-            alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+        if id:
+            alleleObj = DBSession.query(Alleledbentity).filter_by(dbentity_id=id).one_or_none()
         else:
-            alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
-        if alleleObj is None:
-            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele)).one_or_none()
-            if aa is not None:
-                alleleObj = aa.allele
-                
+            allele = request.matchdict['id'].upper().replace("SGD:", "")
+            alleleObj = DBSession.query(Alleledbentity).filter(or_(
+                Alleledbentity.display_name.ilike(allele), 
+                Alleledbentity.sgdid==allele 
+            )).one_or_none()
         if alleleObj is not None:
             return alleleObj.to_dict()
         else:
