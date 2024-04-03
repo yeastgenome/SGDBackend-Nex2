@@ -1,7 +1,8 @@
 from src.models import DBSession, Base, Colleague, ColleagueLocus, Locusdbentity, LocusAlias, Dnasequenceannotation, \
     So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, \
     Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, \
-    Referenceauthor, ReferenceAlias, Chebi, Proteindomain, Contig, Dataset, Keyword, Ec, Disease
+    Referenceauthor, ReferenceAlias, Chebi, Proteindomain, Contig, Dataset, Keyword, Ec, Disease, Alleledbentity, \
+    AlleleAlias, Complexdbentity, ComplexAlias
 
 from sqlalchemy import create_engine, and_
 import os
@@ -52,6 +53,56 @@ def load_locus():
             
     for gene in genes:
         table_set(str(gene.dbentity_id), gene.dbentity_id, "locus")
+
+def load_alleles():
+    
+    print("Loading alleles into Redis...")
+
+    alleles = DBSession.query(Alleledbentity).all()
+
+    aliases = DBSession.query(AlleleAlias.allele_id, AlleleAlias.display_name).all()
+    ids_to_aliases = {}
+    for alias in aliases:
+        if alias.allele_id in ids_to_aliases:
+            ids_to_aliases[alias.allele_id].append(alias.display_name)
+        else:
+            ids_to_aliases[alias.allele_id] = [alias.display_name]
+
+    for allele in alleles:
+        for alias in ids_to_aliases.get(allele.dbentity_id, []):
+            table_set(str(alias).upper(), allele.dbentity_id, "allele")
+
+    for allele in alleles:
+        table_set(str(allele.sgdid.upper()), allele.dbentity_id, "allele")
+        table_set(str(allele.display_name.upper()), allele.dbentity_id, "allele")
+        table_set(str(allele.dbentity_id), allele.dbentity_id, "allele")
+
+def load_complexes():
+    
+    print("Loading complexes into Redis...")
+
+    complexes = DBSession.query(Complexdbentity).all()
+
+    aliases = DBSession.query(ComplexAlias.complex_id, ComplexAlias.display_name).filter_by(alias_type = 'Synonym').all()
+    ids_to_aliases = {}
+    for alias in aliases:
+        if alias.complex_id in ids_to_aliases:
+            ids_to_aliases[alias.complex_id].append(alias.display_name)
+        else:
+            ids_to_aliases[alias.complex_id] = [alias.display_name]
+
+    for complex in complexes:
+        for alias in ids_to_aliases.get(complex.dbentity_id, []):
+            table_set(str(alias).upper(), complex.dbentity_id, "complex")
+
+    for complex in complexes:
+        table_set(str(complex.sgdid.upper()), complex.dbentity_id, "complex")
+        table_set(str(complex.systematic_name.upper()), complex.dbentity_id, "complex")
+        table_set(str(complex.display_name.upper()), complex.dbentity_id, "complex")
+        table_set(str(complex.intact_id.upper()), complex.dbentity_id, "complex")
+        table_set(str(complex.complex_accession.upper()), complex.dbentity_id, "complex")
+        table_set(str(complex.dbentity_id), complex.dbentity_id, "complex")
+    
 
 def load_reserved_names():
     print("Loading reserve names into Redis...")
@@ -213,6 +264,8 @@ def load_ec_numbers():
 if __name__ == "__main__":
     load_references()
     load_locus()
+    load_alleles()
+    load_complexes()
     load_reserved_names()
     load_author()
     load_chemical()
