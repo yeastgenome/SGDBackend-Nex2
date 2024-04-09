@@ -759,7 +759,7 @@ if __name__ == "__main__":
     gpadFile4noctua = os.stat(dated_noctua_gpad_file)
     gpadFile4complex = os.stat(dated_complex_gpad_file)
     
-    if gpadFileInfo.st_size < 1100000:
+    if gpadFileInfo.st_size < 1000000:
         print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
         exit()
 
