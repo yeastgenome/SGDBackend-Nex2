@@ -139,7 +139,8 @@ def main(global_config, **settings):
     config.add_route('get_keywords', '/get_keywords', request_method='GET')
 
     config.add_route('sgd_blast_metadata', '/sgd_blast_metadata', request_method='GET')
-    
+    config.add_route('fungal_blast_metadata', '/fungal_blast_metadata', request_method='GET')
+
     config.add_route('ecnumber', '/ecnumber/{id}', request_method='GET')
     config.add_route('ecnumber_locus_details', '/ecnumber/{id}/locus_details', request_method='GET')
 

@@ -875,7 +875,7 @@ def reference_phenotype_details(request):
         if DBSession:
             DBSession.remove()
 
-
+    
 @view_config(route_name='sgd_blast_metadata', renderer='json', request_method='GET')
 def sgd_blast_metadata(request):
 
@@ -980,8 +980,55 @@ def sgd_blast_metadata(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+
+@view_config(route_name='fungal_blast_metadata', renderer='json', request_method='GET')
+def fungal_blast_metadata(request):
+
+    from datetime import datetime
+    datestamp = str(datetime.now()).split(" ")[0]
+    taxon_id = "NCBITaxon:4751"
+    version = "SGD:2024-04-11"
+    try:
+        data = []
+        for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('FungalBlast: %')).order_by(Filedbentity.previous_file_name).all():
+            seqtype = 'nucl'
+            if 'protein' in x.previous_file_name:
+                seqtype = 'prot'
+            desc = x.description.replace('FungalBlast: ', '').split(' | ')
+            genus = desc[0]
+            title = desc[1]
+            description = desc[2]
+            bioproject = desc[3]
+            species = title.split(' ')[1]
+            data.append({"bioproject": bioproject,
+                         "blast_title": title,
+                         "description": description,
+                         "genus": genus,
+                         "species": species,
+                         "md5sum": x.md5sum,
+                         "seqtype": seqtype,
+                         "taxon_id": taxon_id,
+                         "uri": x.s3_url,
+                         "version": version})
+        obj = { "data": data,
+                "metadata": {
+                    "contact": "sgd-helpdesk@lists.stanford.edu",
+                    "dataProvider": "SGD",
+                    "dateProduced": datestamp,
+                    "homepage_url" : "https://www.yeastgenome.org",
+                    "logo_url" : "https://yeastgenome.org/static/img/sgd-logo.png",
+                    "release": version,
+                    "public": True
+                }
+        }
+        return obj
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
            
-            
 @view_config(route_name='reference_disease_details', renderer='json', request_method='GET')
 def reference_disease_details(request):
     try:
