@@ -4996,7 +4996,7 @@ class Locusdbentity(Dbentity):
         if not self.systematic_name.startswith('R00'):
             obj["urls"].append({
                 "category": "LOCUS_SEQUENCE",
-                "link": "https://browse.yeastgenome.org/?loc=" + self.systematic_name,
+                "link": "https://jbrowse.yeastgenome.org/?loc=" + self.systematic_name,
                 "display_name": "JBrowse"
             })
         if uniprotID:
