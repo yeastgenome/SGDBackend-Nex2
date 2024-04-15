@@ -9,7 +9,7 @@ from src.data_helpers import get_pers_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v2.2.1')
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'
@@ -33,7 +33,7 @@ def get_agm_information():
                 else:
                     taxon = strainobj.taxonomy.taxid.split(":")[1]
                 obj = {}
-                obj["curie"] = "SGD:" + item.sgdid
+                obj["mod_entity_id"] = "SGD:" + item.sgdid
                 obj["name"] = item.display_name
                 obj["subtype_name"] = "strain"
                 obj["taxon_curie"] = "NCBITaxon:" + taxon
@@ -51,7 +51,7 @@ def get_agm_information():
                 file_name = 'SGD' + SUBMISSION_VERSION + 'agmPersistent.json'
                 json_file_str = os.path.join(local_dir, file_name)
                 with open(json_file_str, 'w+') as res_file:
-                    res_file.write(json.dumps(output_obj, indent=4, sort_keys=False))
+                    res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
     DBSession.close()
 

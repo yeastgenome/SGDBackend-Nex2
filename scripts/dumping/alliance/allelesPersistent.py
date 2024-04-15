@@ -7,7 +7,7 @@ from src.data_helpers import get_pers_output, get_allele_synonyms
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION', '2.2.1')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'allele_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
@@ -51,7 +51,7 @@ def get_allele_information():
                 obj["obsolete"] = False
                 obj["updated_by_curie"]: "SGD"
                 obj["created_by_curie"]: "SGD"
-                obj["curie"] = "SGD:" + str(alleleObj[1])
+                obj["mod_entity_id"] = "SGD:" + str(alleleObj[1])
                 obj["data_provider_dto"] = {
                     "source_organization_abbreviation": "SGD",
                     "cross_reference_dto": {
@@ -94,17 +94,19 @@ def get_allele_information():
                 obj["date_created"] = alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00")
                 obj["date_updated"] = alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00")
 
-                # if str(alleleObj[2]) != "None":
-                #     obj["note_dtos"] = [{
-                #         "free_text": str(alleleObj[2]),
-                #         "note_type_name": "description",
-                #         "internal": False,
-                #         "obsolete": False,
-                #         "created_by_curie": "SGD",
-                #         "updated_by_curie": "SGD",
-                #         "date_created": alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00"),
-                #         "date_updated": alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00")
-                #     }]
+                if str(alleleObj[2]) != "None":
+                    if (str(alleleObj[2].strip()) and str(alleleObj[2].strip()) != "" and len(str(alleleObj[2])) != 0 ):
+                        print(str(alleleObj[2]))
+                        obj["note_dtos"] = [{
+                            "free_text": str(alleleObj[2]),
+                            "note_type_name": "comment",
+                            "internal": False,
+                            "obsolete": False,
+                            "created_by_curie": "SGD",
+                            "updated_by_curie": "SGD",
+                            "date_created": alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                            "date_updated": alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00")
+                        }]
                 alleleRefList = DBSession.execute(
                     f"select rdb.pmid "
                     f"from nex.alleledbentity ad "

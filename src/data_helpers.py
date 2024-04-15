@@ -129,7 +129,7 @@ def get_locus_synonyms(locus_alias_list):
                 LocusAliasReferences.alias_id == item.alias_id).outerjoin(Referencedbentity).all()
             alias_pmids_results = ["PMID:"+str(y[1]) for y in a_pmids if str(y[1]) != 'None']
             entry = {
-             "name_type_name": syn #item.alias_type.lower(),
+             "name_type_name": syn, #item.alias_type.lower(),
              "format_text": item.display_name,
              "display_text": item.display_name,
              "internal": False

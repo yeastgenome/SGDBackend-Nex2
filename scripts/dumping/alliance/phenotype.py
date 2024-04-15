@@ -55,7 +55,12 @@ def get_phenotypephenotype_data():
                         class_type = cond['class_type'].lower()
                         if class_type == 'bioitem':
                             continue
-                        cObj = {"conditionClassId": COND_TO_ZECO[class_type]}
+                        if class_type == 'media':
+                            cObj = {"conditionId": COND_TO_ZECO[class_type],
+                                    "conditionClassId": COND_TO_ZECO['chemical'] }
+                            #cObj = {"conditionClassId": COND_TO_ZECO['chemical']}
+                        else:
+                            cObj = {"conditionClassId": COND_TO_ZECO[class_type]}
                         if class_type == 'chemical':
                             cObj["conditionStatement"] = class_type + ":" + cond['bioitem']['display_name']
                             if str(cond['bioitem']['link']) != 'None':
@@ -126,8 +131,6 @@ def get_phenotypephenotype_data():
                             })
                 obj["objectId"] = "SGD:" + str(item.dbentity.sgdid)
                 obj["phenotypeStatement"] = pString
-                
-                #print ('Annotation:' + pString)
 
                 if item.reference.pmid:
                     pubId = "PMID:" + str(item.reference.pmid)

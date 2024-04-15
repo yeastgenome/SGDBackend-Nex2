@@ -44,7 +44,6 @@ def get_agm_information():
                     "id": "SGD:" + item.sgdid,
                     "pages": ["strain"]
                 }
-
                 result.append(obj)
 
             if (len(result) > 0):
