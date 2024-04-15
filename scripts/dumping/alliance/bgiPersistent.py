@@ -117,7 +117,7 @@ def get_basic_gene_information():
                     if (len(objSecondary) > 0):
                         obj["gene_secondary_id_dtos"] = objSecondary
 
-                obj["curie"] = "SGD:" + item.sgdid
+                obj["mod_entity_id6"] = "SGD:" + item.sgdid
                 obj["date_created"] = item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
                 obj["date_updated"] = item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
                 obj["created_by_curie"] = "SGD"
