@@ -268,6 +268,7 @@ def dump_data(noctua_gpad_file):
         ### check if the annotation is in nochua list. If yes, exclude it.
         key = (row[DBID], row[GOID], row[REFERENCE],
                id_to_ecoid[x.eco_id], x.annotation_type)
+        """
         if key in noctuaData:
             evidences = annotation_id_to_evidences.get(
                 x.annotation_id, {}).get(1, [])
@@ -279,7 +280,8 @@ def dump_data(noctua_gpad_file):
              noctua_extensions) = noctuaData[key]
             if noctua_qualifier == row[QUALIFIER] and noctua_evidences == ','.join(evidences) and noctua_extensions == ','.join(extensions):
                 continue
-
+        """
+        
         source = id_to_source[x.source_id]
         row[SOURCE] = source
 
@@ -495,7 +497,7 @@ def read_noctua_data(noctua_gpad_file):
 
 if __name__ == '__main__':
 
-    noctua_path = 'http://current.geneontology.org/products/annotations/'
+    noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
 
