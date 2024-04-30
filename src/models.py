@@ -2296,8 +2296,13 @@ class Referencedbentity(Dbentity):
                 "display_name": url.display_name,
                 "link": url.obj_url,
             })
+        if self.pmid:
+            ref_urls_obj.append({
+                "display_name": "PubTator",
+                "link": "https://www.ncbi.nlm.nih.gov/research/pubtator/?view=publication&pmid=" + str(self.pmid),
+            })
         obj["urls"] = ref_urls_obj
-
+        
         reference_types = DBSession.query(Referencetype).filter_by(reference_id=self.dbentity_id).all()
         obj["reftypes"] = []
         for type in reference_types:
