@@ -265,6 +265,7 @@ def dump_data(noctua_gpad_file):
             eco_code = "IKR"
         row[EVIDENCE] = eco_code
 
+        """
         ### check if the annotation is in nochua list. If yes, exclude it.
         key = (row[DBID], row[GOID], row[REFERENCE],
                id_to_ecoid[x.eco_id], x.annotation_type)
@@ -279,7 +280,8 @@ def dump_data(noctua_gpad_file):
              noctua_extensions) = noctuaData[key]
             if noctua_qualifier == row[QUALIFIER] and noctua_evidences == ','.join(evidences) and noctua_extensions == ','.join(extensions):
                 continue
-
+        """
+        
         source = id_to_source[x.source_id]
         row[SOURCE] = source
 
@@ -327,11 +329,14 @@ def dump_data(noctua_gpad_file):
 
     fw.close()
 
+
+    
+    """
     log.info("Uploading GAF file to S3...")
 
     update_database_load_file_to_s3(
         nex_session, gaf_file, True, source_to_id, edam_to_id, datestamp)
-
+    
     nex_session.close()
 
     ##### download sgd gaf from go central and upload it to S3
@@ -339,7 +344,10 @@ def dump_data(noctua_gpad_file):
     local_file = open(gaf_from_go, mode='rb')
     upload_one_file_to_s3(local_file, "latest/" + gaf_from_go)
     ## done
+    """
 
+
+    
     log.info(str(datetime.now()))
     log.info("Done!")
 
@@ -494,7 +502,7 @@ def read_noctua_data(noctua_gpad_file):
 
 
 if __name__ == '__main__':
-
+                   
     noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
     urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
