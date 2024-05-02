@@ -450,6 +450,28 @@ mapping = {
                     }
                 }
             },
+            "lab_locations": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "assays": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "phenotype_loci": {
                 "type": "text",
                 "fielddata": True,
