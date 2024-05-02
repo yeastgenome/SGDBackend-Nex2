@@ -325,6 +325,15 @@ mapping = {
                     }
                 }
             },
+            "labs": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "strains": {
                 "type": "keyword",
                 "fields": {
