@@ -441,8 +441,12 @@ mapping = {
             },
             "labs": {
                 "type": "text",
-                "fielddata": True,
-                "analyzer": "keyword"
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
             },
             "phenotype_loci": {
                 "type": "text",
