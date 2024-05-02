@@ -325,15 +325,6 @@ mapping = {
                     }
                 }
             },
-            "labs": {
-                "type": "keyword",
-                "fields": {
-                    "engram": {
-                        "type": "text",
-                        "analyzer": "other_search"
-                    }
-                }
-            },
             "strains": {
                 "type": "keyword",
                 "fields": {
@@ -444,6 +435,11 @@ mapping = {
                 "type": "keyword"
             },
             "references": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword"
+            },
+            "labs": {
                 "type": "text",
                 "fielddata": True,
                 "analyzer": "keyword"
