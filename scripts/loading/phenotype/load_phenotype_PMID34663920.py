@@ -79,12 +79,12 @@ def load_phenotypes():
     chemicals = []
     key_to_annotation_id = {}
     for line in f:
-
+        if line.startswith("Systematic_name"):
+            continue
         i += 1
         if i % batch_commit_size == 0:
-            nex_session.rollback()
-            # nex_session.commit()
-        print("record:", i)
+            # nex_session.rollback()
+            nex_session.commit()
         pieces = line.strip().split("\t")
         gene_name = pieces[0]
         dbentity_id = name_to_locus_id.get(gene_name.lower())
@@ -95,7 +95,6 @@ def load_phenotypes():
             else:
                 print("GENE:", gene_name, "is not in the database.")
                 continue
-        # observable = pieces[4]
         phenotype = pieces[4]
         if pieces[5]:
             phenotype = phenotype + ": " + pieces[5]
@@ -117,6 +116,7 @@ def load_phenotypes():
                 if allele_id is None:
                     print("ALLELE:", allele_name, "is not added into the database.")
                     continue
+                nex_session.commit()
                 allele_to_id[allele_name.lower()] = allele_id
                 status = insert_allele_reference(nex_session, source_id, allele_id, reference_id, allele_name)
                 if status:
@@ -143,6 +143,7 @@ def load_phenotypes():
             if annotation_id is None:
                 nex_session.rollback()
                 continue
+            nex_session.commit()
             key_to_annotation_id[key] = annotation_id
 
         chebiID = pieces[9]
@@ -160,8 +161,7 @@ def load_phenotypes():
 
     f.close()
     fw.close()
-    nex_session.rollback()
-    # nex_session.commit()
+    nex_session.commit()
     nex_session.close()
 
 
@@ -224,16 +224,11 @@ def insert_phenotypeannotation_cond(nex_session, annotation_id, group_id, condit
 
     print("phenotypeannotation_cond:", annotation_id, group_id, condition_name, condition_value, condition_unit, allele_name, CREATED_BY)
 
-    p = nex_session.query(Phenotypeannotation).filter_by(annotation_id = annotation_id).one_or_none()
-    if not p:
-        return
     pc = nex_session.query(PhenotypeannotationCond).filter_by(
         annotation_id = annotation_id, group_id =  group_id, condition_class = 'chemical',
-        condition_name = condition_name, condition_value = condition_value,
-        condition_unit = condition_unit).one_or_none()
+        condition_name = condition_name, condition_value = condition_value, condition_unit = condition_unit).one_or_none()
     if pc:
         return
-
     try:
         x = PhenotypeannotationCond(annotation_id = annotation_id,
                                     group_id =  group_id,   
