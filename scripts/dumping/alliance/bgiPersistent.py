@@ -39,8 +39,8 @@ def get_basic_gene_information():
                         Dnasequenceannotation.taxonomy_id == 274901,
                         Dnasequenceannotation.dna_type == "GENOMIC").all()
                 # IF it is a SO ID to exclude, then skip ('continue')
-                if dna_seq_annotation_obj[0].so.soid in SO_TYPES_TO_EXCLUDE:
-                   continue
+                #if dna_seq_annotation_obj[0].so.soid in SO_TYPES_TO_EXCLUDE:
+                #   continue
                 if dna_seq_annotation_obj[0].so.so_id == 263757:  #change ORF to gene SO ID
                     obj["gene_type_curie"] = "SO:0001217"
                 else:
@@ -117,7 +117,7 @@ def get_basic_gene_information():
                     if (len(objSecondary) > 0):
                         obj["gene_secondary_id_dtos"] = objSecondary
 
-                obj["mod_entity_id6"] = "SGD:" + item.sgdid
+                obj["mod_entity_id"] = "SGD:" + item.sgdid
                 obj["date_created"] = item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
                 obj["date_updated"] = item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
                 obj["created_by_curie"] = "SGD"

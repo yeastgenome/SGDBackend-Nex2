@@ -219,22 +219,22 @@ def get_locus_crossrefs(locus_alias_list):
     for item in locus_alias_list:
         if (item.alias_type == "UniProtKB ID"):
             obj.append({
-                "referenced_curie": item.display_name,
+                "referenced_curie": "UniProtKB:"+item.display_name,
                 "created_by_curie": "SGD",
                 "updated_by_curie": "SGD",
-                "page_area": "gene",
-                "prefix": "UniProtKB:",
-                "display_name": "",
+                "page_area": "default",
+                "prefix": "UniProtKB",
+                "display_name": "UniProtKB:"+item.display_name,
                 "internal": False
             })
         if (item.alias_type == "Gene ID" and item.source.display_name == 'NCBI'):
             obj.append({
-                "referenced_curie": item.display_name,
+                "referenced_curie": "NCBI_Gene:"+item.display_name,
                 "created_by_curie": "SGD",
                 "updated_by_curie": "SGD",
-                "page_area": "gene",
-                "prefix": "NCBI_Gene:",
-                "display_name": "",
+                "page_area": "default",
+                "prefix": "NCBI_Gene",
+                "display_name": "NCBI_Gene:"+item.display_name,
                 "internal": False
             })
     return obj
