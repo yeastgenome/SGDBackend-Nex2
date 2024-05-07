@@ -37,7 +37,7 @@ def load_phenotypes():
         if x.gene_name:
             name_to_locus_id[x.gene_name.lower()] = x.dbentity_id
 
-    alias_name_to_locud_id = dict([(x.display_name.lower(), x.locus_id) for x in nex_session.query(LocusAlias).filter_by(
+    alias_name_to_locus_id = dict([(x.display_name.lower(), x.locus_id) for x in nex_session.query(LocusAlias).filter_by(
         alias_type='Uniform').all()])
 
     phenotype_to_phenotype_id = dict([(x.display_name.lower(), x.phenotype_id) for x in nex_session.query(Phenotype).all()])
@@ -71,13 +71,17 @@ def load_phenotypes():
     so_id = so.so_id
 
     print("so_id=", so_id)
+
+    key_to_annotation_id = {}
+    for x in nex_session.query(Phenotypeannotation).all():
+        key = (x.reference_id, x.dbentity_id, x.phenotype_id, x.allele_id, x.mutant_id, x.experiment_id)
+        key_to_annotation_id[key] = x.annotation_id
     
     f = open(infile)
     fw = open(logfile, "w")
 
     i = 0
     chemicals = []
-    key_to_annotation_id = {}
     for line in f:
         if line.startswith("Systematic_name"):
             continue
@@ -89,7 +93,7 @@ def load_phenotypes():
         gene_name = pieces[0]
         dbentity_id = name_to_locus_id.get(gene_name.lower())
         if dbentity_id is None:
-            dbentity_id = alias_name_to_locud_id.get(gene_name.lower())
+            dbentity_id = alias_name_to_locus_id.get(gene_name.lower())
             if dbentity_id:
                 print("GENE:", gene_name, "is an alias name.")
             else:
@@ -133,7 +137,7 @@ def load_phenotypes():
                     nex_session.rollback()
                     continue
 
-        key = (allele_id, dbentity_id, phenotype_id)
+        key = (reference_id, dbentity_id, phenotype_id, allele_id, mutant_id, experiment_id)
         annotation_id = key_to_annotation_id.get(key)
         if annotation_id is None:
             annotation_id = insert_phenotypeannotation(nex_session, dbentity_id, source_id,
@@ -222,13 +226,14 @@ def insert_allele_reference(nex_session, source_id, allele_id, reference_id, all
 
 def insert_phenotypeannotation_cond(nex_session, annotation_id, group_id, condition_name, condition_value, condition_unit, allele_name):
 
-    print("phenotypeannotation_cond:", annotation_id, group_id, condition_name, condition_value, condition_unit, allele_name, CREATED_BY)
-
     pc = nex_session.query(PhenotypeannotationCond).filter_by(
         annotation_id = annotation_id, group_id =  group_id, condition_class = 'chemical',
         condition_name = condition_name, condition_value = condition_value, condition_unit = condition_unit).one_or_none()
     if pc:
         return
+
+    print("phenotypeannotation_cond:", annotation_id, group_id, condition_name, condition_value, condition_unit, allele_name, CREATED_BY)
+    
     try:
         x = PhenotypeannotationCond(annotation_id = annotation_id,
                                     group_id =  group_id,   
