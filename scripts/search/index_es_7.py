@@ -10,7 +10,7 @@ from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, \
     PathwayAlias, Pathwaysummary, PathwaysummaryReference, Pathwayannotation, \
     PathwayUrl, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, \
     AlleleReference, LocusAllele, Literatureannotation, Dataset, DatasetKeyword, \
-    DatasetReference, Datasetsample, Taxonomy
+    DatasetReference, Datasetsample, Datasetlab, Taxonomy
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -696,9 +696,19 @@ def index_datasets():
                 dataset_id=d.dataset_id).all():
             references.add(dr.reference.display_name)
 
+        labs = set([])
+        lab_locations = set([])
+        for dl in DBSession.query(Datasetlab).filter_by(
+                dataset_id=d.dataset_id).all():
+            labs.add(dl.lab_name)
+            lab_locations.add(dl.lab_location)
+
+        assays = set([])    
         taxonomy_ids = set([])
         for ds in DBSession.query(Datasetsample).filter_by(
                 dataset_id=d.dataset_id).all():
+            if ds.assay_id:
+                assays.add(ds.assay.display_name)
             if ds.taxonomy_id is None:
                 continue
             taxonomy_ids.add(ds.taxonomy_id)
@@ -716,6 +726,9 @@ def index_datasets():
             "description": d.description,
             "keywords": list(keywords),
             "references": list(references),
+            "assays": list(assays),
+            "labs": list(labs),
+            "lab_locations": list(lab_locations),
             "strains": strains
         }
 
