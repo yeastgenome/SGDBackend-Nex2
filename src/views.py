@@ -2422,6 +2422,63 @@ def ambiguous_names(request):
     return data
 
 
+@view_config(route_name='entity_validation', renderer='json', request_method='GET')
+def entity_validation(request):
+    try:
+        subclass = request.matchdict['entity_type']
+        entities = request.matchdict['ids'].split('|')
+        data = []
+        for entity in entities:
+            entity = entity.replace("+", " ")
+            if subclass == "complex":
+                complex = DBSession.query(Complexdbentity).filter(
+                    or_(Complexdbentity.format_name==entity.upper(),
+                        Complexdbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Complexdbentity.display_name.ilike(entity))).one_or_none()
+                if complex:
+                    data.append({"modEntityId": "SGD:" + complex.sgdid,
+                                 "display_name": complex.display_name,
+                                 "format_name": complex.format_name,
+                                 "query": entity})
+            elif subclass == "pathway":
+                pathway = DBSession.query(Pathwaydbentity).filter(
+                    or_(Pathwaydbentity.format_name.ilike(entity),
+                        Pathwaydbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Pathwaydbentity.display_name.ilike(entity),
+                        Pathwaydbentity.biocyc_id==entity.upper())).one_or_none()
+                if pathway:
+                    data.append({"modEntityId": "SGD:" + pathway.sgdid,
+                                 "display_name": pathway.display_name,
+                                 "format_name": pathway.format_name,
+                                 "biocyc_id": pathway.biocyc_id,
+                                 "query": entity})
+            elif subclass == "allele":
+                allele = DBSession.query(Allelebentity).filter(
+                    or_(Alleledbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Alleledbentity.display_name.ilike(entity))).one_or_none()
+                if allele:
+                    data.append({"modEntityId": "SGD:" + allele.sgdid,
+                                 "display_name": allele.display_name,
+                                 "format_name": allele.format_name,
+                                 "query": entity})
+            else:
+                locus = DBSession.query(Locusbentity).filter(
+                    or_(Locusdbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Locusdbentity.display_name.ilike(entity),
+                        Locusdbentity.format_name.ilike(entity))).one_or_none()
+                if locus:
+                    data.append({"modEntityId": "SGD:" + locus.sgdid,
+                                 "display_name": locus.display_name,
+                                 "format_name": locus.format_name,
+                                 "query": entity})
+        return data
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+
 @view_config(route_name='complex', renderer='json', request_method='GET')
 def complex(request):
     try:

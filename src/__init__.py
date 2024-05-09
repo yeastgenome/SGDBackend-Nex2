@@ -145,7 +145,8 @@ def main(global_config, **settings):
     config.add_route('ecnumber_locus_details', '/ecnumber/{id}/locus_details', request_method='GET')
 
     config.add_route('complex', '/complex/{id}', request_method='GET')
-
+    config.add_route('entity_validation', '/entity/{entity_type}/{ids}', request_method='GET')
+    
     config.add_route('goslim', '/goslim', request_method='GET')
 
     config.add_route('ambiguous_names', '/ambiguous_names', request_method='GET')
