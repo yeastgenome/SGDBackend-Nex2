@@ -82,6 +82,7 @@ def load_phenotypes():
 
     i = 0
     chemicals = []
+    key_to_group_id = {}
     for line in f:
         if line.startswith("Systematic_name"):
             continue
@@ -159,7 +160,8 @@ def load_phenotypes():
             chemical_value = pieces[10]
             if len(pieces) > 11:
                 chemical_unit = pieces[11]
-        group_id = 1
+        group_id = key_to_group_id.get(key, 0) + 1
+        key_to_group_id[key] = group_id
         insert_phenotypeannotation_cond(nex_session, annotation_id, group_id, chemical_name,
                                         chemical_value, chemical_unit, allele_name)
 
