@@ -4,14 +4,107 @@ import logging
 from datetime import datetime
 import matplotlib.pyplot as plt
 from Bio import Phylo
+from Bio.Phylo.BaseTree import Clade, Tree
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+seqtype = 'dna'
+key_name_color = 'red'
+other_name_color = 'blue'
+
+def reorder_clades(tree, target_clade_name):
+    """Reorder clades so that the target clade is at the top."""
+    target_clade = None
+    other_clades = []
+    
+    for clade in tree.get_terminals():
+        if clade.name == target_clade_name:
+            target_clade = clade
+        else:
+            other_clades.append(clade)
+    
+    if target_clade:
+        # Create a new tree with the target clade at the top
+        new_root = Clade()
+        new_root.clades.append(target_clade)
+        for clade in other_clades:
+            new_root.clades.append(clade)
+        return Tree(new_root)
+    else:
+        return tree
+
+def generate_tree_image(tree_file, image_file, gene_name):
+    """Generate a tree image from the tree file using Bio.Phylo and matplotlib."""
+
+    try:
+        if not os.path.exists(tree_file):
+            logging.error(f"Tree file {tree_file} not found for {gene_name}, skipping...")
+            return
+
+        logging.info(f"Generating tree image from {tree_file}")
+
+        # Read the Newick tree with Bio.Phylo
+        tree = Phylo.read(tree_file, "newick")
+
+        # Reorder the clades to have the target clade at the top
+        target_clade_name = f"{gene_name}_S288C"
+        tree = reorder_clades(tree, target_clade_name)
+
+        # Create a plot with increased figure size
+        fig, ax = plt.subplots(figsize=(12, 10))
+
+        # Get a list of all clades in the tree
+        clades = tree.get_terminals() + tree.get_nonterminals()
+
+        # Sort the clades based on their names
+        label_colors = {target_clade_name: key_name_color}
+        for clade in tree.find_clades():
+            if clade.name != target_clade_name:
+                label_colors[clade.name] = other_name_color
+
+        # Draw the tree with the label colors
+        Phylo.draw(tree, do_show=False, axes=ax, label_colors=label_colors)
+
+        # Add 'SGD' label to the bottom left corner
+        ax.text(-0.1, -0.1, 'SGD', color='black', fontsize=12, va='bottom', ha='left', transform=ax.transAxes)
+
+        # Add image generated date to bottom right corner
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        ax.text(1.1, -0.1, current_date, color='black', fontsize=12, va='bottom', ha='right', transform=ax.transAxes)
+
+        # Suppress the x- and y-labels
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        # Suppress the x- and y-tick marks and numbers
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        # Adjust layout to make more space for the tree
+        fig.tight_layout()
+
+        # Expand the tree toward the right side by adjusting the x-axis limits
+        x_min, x_max = ax.get_xlim()
+        ax.set_xlim([x_min, x_max * 2])  # Adjust the multiplier to control the expansion
+
+        # Save the plot to a file
+        plt.savefig(image_file, format='png', dpi=300, bbox_inches='tight')
+        plt.close(fig)
+
+        logging.info(f"Tree image saved to {image_file}")
+
+    except Exception as e:
+        logging.error(f"Error generating tree image: {e}")
+
+
 def run_clustal_omega(input_file, output_prefix):
     """Run Clustal Omega to generate alignment and tree files in Clustal format."""
-    aligned_file = f"{output_prefix}_aligned.aln"  # Use .aln extension for Clustal format
+    aligned_file = f"{output_prefix}.align"
     tree_file = f"{output_prefix}.dnd"
+    if seqtype == 'dna':
+        aligned_file = f"{output_prefix}_dna.align"
+        tree_file = f"{output_prefix}_dna.dnd"
     
     cmd = [
         "clustalo",
@@ -37,72 +130,7 @@ def run_clustal_omega(input_file, output_prefix):
     
     return aligned_file, tree_file
 
-def generate_tree_image(tree_file, image_file, gene_name):
-    """Generate a tree image from the tree file using Bio.Phylo and matplotlib."""
-    try:
-        if not os.path.exists(tree_file):
-            logging.error(f"Tree file {tree_file} not found for {gene_name}, skipping...")
-            return
-        
-        logging.info(f"Generating tree image from {tree_file}")
-        
-        # Read the Newick tree with Bio.Phylo
-        tree = Phylo.read(tree_file, "newick")
-        
-        # Create a plot
-        fig, ax = plt.subplots(figsize=(10, 10))
-        
-        # Collect the positions of the clades for annotation
-        def get_clade_positions(tree, branch_length=0.0, positions=None, max_height=1):
-            if positions is None:
-                positions = {}
-            if tree.is_terminal():
-                positions[tree] = (branch_length, max_height)
-                max_height += 1
-            else:
-                for clade in tree:
-                    max_height = get_clade_positions(clade, branch_length + (clade.branch_length or 0), positions, max_height)
-                positions[tree] = (branch_length, (positions[tree.clades[0]][1] + positions[tree.clades[-1]][1]) / 2)
-            return max_height
-        
-        positions = {}
-        get_clade_positions(tree.root, positions=positions)
-        
-        # Draw the branches
-        for clade in tree.find_clades(order='level'):
-            if clade.is_terminal():
-                x = positions[clade][0]
-                y = positions[clade][1]
-                ax.text(x, y, clade.name, verticalalignment='center', fontsize=10, color='red' if clade.name == f"{gene_name}_S288C" else 'black')
-            else:
-                for child in clade:
-                    x1, y1 = positions[clade]
-                    x2, y2 = positions[child]
-                    ax.plot([x1, x2], [y1, y2], color='black')
-                    ax.plot([x2, x2], [y2, y2], color='black')
-        
-        # Remove x and y labels
-        ax.set_xticks([])
-        ax.set_yticks([])
-        
-        # Remove default labels and box
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-        
-        # Add 'SGD' label to the bottom left corner
-        ax.text(-0.1, -0.1, 'SGD', color='black', fontsize=12, va='bottom', ha='left', transform=ax.transAxes)
-        
-        # Add image generated date to bottom right corner
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        ax.text(1.1, -0.1, current_date, color='black', fontsize=12, va='bottom', ha='right', transform=ax.transAxes)
-        
-        # Save the plot to a file
-        plt.savefig(image_file, format='png', dpi=300, bbox_inches='tight')
-        plt.close(fig)
-        
-        logging.info(f"Tree image saved to {image_file}")
-    except Exception as e:
-        logging.error(f"Error generating tree image: {e}")
+
 
 def process_gene_sequences(input_dir, output_dir):
     """Process all gene sequence files in the input directory."""
@@ -110,7 +138,7 @@ def process_gene_sequences(input_dir, output_dir):
         os.makedirs(output_dir)
     
     for file_name in os.listdir(input_dir):
-        if file_name.endswith("_protein.seq"):
+        if file_name.endswith(f"_{seqtype}.seq"):
             gene_name = file_name.split('_')[0]
             key_gene = f"{gene_name}_S288C"
             input_file = os.path.join(input_dir, file_name)
@@ -176,6 +204,8 @@ def process_gene_sequences(input_dir, output_dir):
             
             # Generate tree image
             image_file = f"{output_prefix}.png"
+            if seqtype == 'dna':
+                image_file = f"{output_prefix}_{seqtype}.png"
             generate_tree_image(tree_file, image_file, gene_name)
             logging.info(f"Generated alignment and tree image for {gene_name}")
             logging.info(f"Alignment file: {aligned_file}")
@@ -185,6 +215,6 @@ def process_gene_sequences(input_dir, output_dir):
             os.remove(temp_input_file)
 
 # Example usage
-input_dir = "data/protein_seq/"
-output_dir = "data/protein_align/"
+input_dir = f"data/{seqtype}_seq/"
+output_dir = f"data/{seqtype}_align/"
 process_gene_sequences(input_dir, output_dir)
