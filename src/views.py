@@ -888,7 +888,7 @@ def sgd_blast_metadata(request):
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
 
-    taxon_id = "NCBITaxon:4932"
+    # taxon_id = "NCBITaxon:4932"
     version = "SGD:R64-4-1"
     genus = "Saccharomyces"
     species = "cerevisiae"
@@ -947,7 +947,18 @@ def sgd_blast_metadata(request):
         "ZTW1": "PRJNA174065",
         "YEAST": "PRJNA317579"
     }
-                        
+
+    strain_taxon_id = {}
+    rows = DBSession.execute("select d.display_name, t.taxid "
+                             "from nex.dbentity d, nex.straindbentity s, nex.taxonomy t "
+                             "where d.dbentity_id = s.dbentity_id "
+                             "and s.taxonomy_id = t.taxonomy_id").fetchall()
+    for x in rows:
+        taxon_id = x['taxid'].replace("TAX:", "NCBITaxon:")
+        strain = x['display_name'].upper()
+        strain = strain.replace("'S B", "SB").replace("'S O", "SO")
+        strain_taxon_id[strain] = taxon_id
+
     try:
         data = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
@@ -959,6 +970,16 @@ def sgd_blast_metadata(request):
             title = description
             strain = title.split(' ')[0]
             bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
+            taxon_id = strain_taxon_id.get(strain.upper())
+            if taxon_id is None:
+                if strain.upper().startswith('CEN.PK'):
+                    taxon_id = strain_taxon_id['CEN.PK']
+                elif strain.upper().startswith('SIGMA1278B'):
+                    taxon_id = strain_taxon_id['SIGMA1278B']
+                elif strain.upper() == 'YEAST':
+                    taxon_id = "NTR:999"
+                else:
+                    taxon_id = "UNKNOWN"
             data.append({"bioproject": bioproject,
                          "blast_title": title,
                          "description": description,
