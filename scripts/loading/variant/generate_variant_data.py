@@ -11,8 +11,8 @@ strain_to_taxid = get_strain_taxid_mapping()
 strain_to_id = strain_to_id()
 taxon = strain_to_taxid['S288C']
 
-dataDir = 'scripts/loading/variant/data/'
-
+# dataDir = 'scripts/loading/variant/data/'
+dataDir = 'scripts/loading/variant/data_64-5/'
 dnaSeqAlignFile = dataDir + 'dna_sequence_alignment.txt'
 proteinSeqAlignFile = dataDir + 'protein_sequence_alignment.txt'
 dnaVariantFile = dataDir + 'dna_variant.txt'
