@@ -105,7 +105,7 @@ def create_seqs(strain):
         fw_mapping.write(seqID + "\t" + str(x.contig_id) + "\t" + str(start) + "\t" + str(end) + "\n")
 
         if strain == 'S288C':
-            defline = defline + ", Genome Release 64-2-1,"
+            defline = defline + ", Genome Release 64-5-1,"
         defline = defline + " between " + seqID.split('|')[0] + " and " + seqID.split('|')[1]    
         if strain == 'S288C':
             fw.write(defline + "\n")

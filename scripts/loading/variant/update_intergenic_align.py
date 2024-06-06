@@ -7,8 +7,11 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-mapping_file = "scripts/loading/variant/data/name_to_contig4intergenic_mapping.txt"
-data_file = "scripts/loading/variant/data/intergenic_sequence_alignment.txt"
+# mapping_file = "scripts/loading/variant/data/name_to_contig4intergenic_mapping.txt"
+# data_file = "scripts/loading/variant/data/intergenic_sequence_alignment.txt"
+
+mapping_file = "scripts/loading/variant/data_64-5/name_to_contig4intergenic_mapping.txt"
+data_file = "scripts/loading/variant/data_64-5/intergenic_sequence_alignment.txt"
 
 def update_data():
 

@@ -7,9 +7,14 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-dna_data_file = "scripts/loading/variant/data/dna_variant.txt"
-protein_data_file = "scripts/loading/variant/data/protein_variant.txt"
-intergenic_data_file = "scripts/loading/variant/data/intergenic_variant.txt"
+# dna_data_file = "scripts/loading/variant/data/dna_variant.txt"
+# protein_data_file = "scripts/loading/variant/data/protein_variant.txt"
+# intergenic_data_file = "scripts/loading/variant/data/intergenic_variant.txt"
+
+dna_data_file = "scripts/loading/variant/data_64-5/dna_variant.txt"
+protein_data_file = "scripts/loading/variant/data_64-5/protein_variant.txt"
+intergenic_data_file = "scripts/loading/variant/data_64-5/intergenic_variant.txt"
+
 
 def update_data():
 
@@ -103,6 +108,7 @@ def update_dna_data(nex_session):
             # nex_session.rollback()
             i = 0
 
+    """
     for key in key_to_x:
         print ("DNA: DELETE", key)
         x = key_to_x[key]
@@ -111,7 +117,8 @@ def update_dna_data(nex_session):
         if i > 500:
             nex_session.commit()
             # nex_session.rollback()
-        
+    """
+    
     nex_session.commit()
     # nex_session.rollback()
 
@@ -164,11 +171,13 @@ def update_protein_data(nex_session):
             # nex_session.rollback()
             i = 0
 
+    """
     for key in key_to_x:
         print ("protein: DELETE", key)
         x = key_to_x[key]
         nex_session.delete(x)
-
+    """
+    
     nex_session.commit()
     # nex_session.rollback()
 

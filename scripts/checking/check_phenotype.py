@@ -15,6 +15,10 @@ def check_data():
     nex_session = get_session()
 
     phenotypes = nex_session.query(Phenotype).all()
+
+    log.info("\n* Observables for classical phenotypes that should be associated with qualifier but are not:\n")
+    exclude_observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite']
+    check_classical_phenotypes(nex_session, phenotypes, exclude_observables)
     
     log.info("\n* Observables for classical phenotypes are associated with a qualifier:\n")
     observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite']
@@ -57,7 +61,20 @@ def check_chemical_for_observables(nex_session):
 
     if len(bad_annotations) > 0:
         log.info("\t" + "\n\t".join([str(x) for x in bad_annotations]))
-        
+
+    
+def check_classical_phenotypes(nex_session, phenotypes, exclude_observables):
+
+    bad_phenotypes = []
+    for x in phenotypes:
+        pieces = x.display_name.split(': ')
+        if pieces[0] in exclude_observables:
+            continue
+        if ": " not in x.display_name:
+            bad_phenotypes.append(x.display_name + "\t(phenotype_id = " + str(x.phenotype_id) + ")")
+    if len(bad_phenotypes) > 0:
+        log.info("\t" + "\n\t".join(bad_phenotypes))
+    
 def check_observables(nex_session, phenotypes, observables, observable_type):
 
     bad_phenotypes = []

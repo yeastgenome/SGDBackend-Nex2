@@ -11,7 +11,8 @@ strain_to_taxid = get_strain_taxid_mapping()
 strain_to_id = strain_to_id()
 taxon = strain_to_taxid['S288C']
 
-dataDir = 'scripts/loading/variant/data/'
+# dataDir = 'scripts/loading/variant/data/'
+dataDir = 'scripts/loading/variant/data_64-5/'
 
 seqAlignFile = dataDir + 'intergenic_sequence_alignment.txt'
 variantFile = dataDir + 'intergenic_variant.txt'

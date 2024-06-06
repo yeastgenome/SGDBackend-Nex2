@@ -7,8 +7,8 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-mapping_file = "scripts/loading/variant/data/name_to_contig_mapping.txt"
-data_file = "scripts/loading/variant/data/dna_sequence_alignment.txt"
+mapping_file = "scripts/loading/variant/data_64-5/name_to_contig_mapping.txt"
+data_file = "scripts/loading/variant/data_64-5/dna_sequence_alignment.txt"
 
 dna_type = 'genomic'
 

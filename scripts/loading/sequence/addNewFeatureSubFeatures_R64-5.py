@@ -16,7 +16,7 @@ datafile = 'scripts/loading/sequence/data/R64-5genomeUpdate050724.tsv'
 # insert into nex.genomerelease (format_name, display_name, obj_url, source_id,
 #                                sequence_release, annotation_release,
 #                                curation_release, release_date, created_by)
-# values ('64-5-1', '64-5-1', '/genomerelease/64-5-1', 834, 64, 5, 1, '2024-05-13', 'OTTO');
+# values ('64-5-1', '64-5-1', '/genomerelease/64-5-1', 834, 64, 5, 1, '2024-05-28', 'OTTO');
 
 
 def add_data():

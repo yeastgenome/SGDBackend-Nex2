@@ -22,7 +22,6 @@ taxonomy_id_to_strain = {}
 mapping_file = dataDir + 'name_to_contig_mapping.txt'
 
 fw_mapping = open(mapping_file, "w")
-
 fw_mapping.write("sequence_name\tcontig_id\tstart_index\tend_index\n")
 
 for strain in strain_to_id:
@@ -30,59 +29,52 @@ for strain in strain_to_id:
     taxonomy_id_list.append(taxon_to_taxonomy_id[taxon])
     taxonomy_id_to_strain[taxon_to_taxonomy_id[taxon]] = strain
 
-filename_to_count = {}
-found = {}
+filename_to_written_sequences = {}
+
+def write_sequence(filename, seqID, sequence):
+    if filename not in filename_to_written_sequences:
+        filename_to_written_sequences[filename] = set()
+    if seqID not in filename_to_written_sequences[filename]:
+        with open(filename, "a" if path.exists(filename) else "w") as fw:
+            fw.write(">" + seqID + "\n")
+            fw.write(sequence + "\n")
+        filename_to_written_sequences[filename].add(seqID)
+
+
+found_dna_sequences = set()
 for x in nex_session.query(Dnasequenceannotation).filter_by(dna_type='GENOMIC').filter(Dnasequenceannotation.taxonomy_id.in_(taxonomy_id_list)).all():
-    # if so_id_to_type[x.so_id] not in ['ORF', 'blocked reading frame', 'pseudogene']:
-    #    continue
     if x.dbentity_id not in dbentity_id_to_name:
         continue
     name = dbentity_id_to_name[x.dbentity_id]
     if name.startswith('Y') or name.startswith('Q'):
         seqID = name + "_" + taxonomy_id_to_strain[x.taxonomy_id]
-        if seqID in found:
+        if seqID in found_dna_sequences:
             continue
-        found[seqID] = 1        
+        found_dna_sequences.add(seqID)
         filename = dnaDir + name + "_dna.seq"
-        fw = None
-        if path.exists(filename):
-            fw = open(filename, "a")
-        else:
-            fw = open(filename, "w")
-        fw.write(">" + seqID + "\n")
-        fw.write(x.residues + "\n")
-        fw.close()
-        filename_to_count[filename] = filename_to_count.get(filename, 0) + 1
-
-        fw_mapping.write(seqID + "\t" + str(x.contig_id) + "\t" + str(x.start_index) + "\t" + str(x.end_index) + "\n") 
+        write_sequence(filename, seqID, x.residues)
+        fw_mapping.write(seqID + "\t" + str(x.contig_id) + "\t" + str(x.start_index) + "\t" + str(x.end_index) + "\n")
 
 fw_mapping.close()
 
-for filename in filename_to_count:
-    if filename_to_count[filename] == 1:
+# Clean up files with only one sequence
+for filename, sequences in filename_to_written_sequences.items():
+    if len(sequences) == 1:
         remove(filename)
 
-filename_to_count = {}
+filename_to_written_sequences = {}
 
-found = {}
+found_protein_sequences = set()
 for x in nex_session.query(Proteinsequenceannotation).filter(Proteinsequenceannotation.taxonomy_id.in_(taxonomy_id_list)).all():
     name = dbentity_id_to_name[x.dbentity_id]
     seqID = name + "_" + taxonomy_id_to_strain[x.taxonomy_id]
-    if seqID in found:
+    if seqID in found_protein_sequences:
         continue
-    found[seqID] = 1
+    found_protein_sequences.add(seqID)
     filename = proteinDir + name + "_protein.seq"
-    fw = None
-    if path.exists(filename):
-        fw = open(filename, "a")
-    else:
-        fw = open(filename, "w")
-    fw.write(">" + seqID + "\n")
-    fw.write(x.residues + "\n")
-    fw.close()
-    filename_to_count[filename] = filename_to_count.get(filename, 0) + 1
+    write_sequence(filename, seqID, x.residues)
 
-for filename in filename_to_count:
-    if filename_to_count[filename] == 1:
+# Clean up files with only one sequence
+for filename, sequences in filename_to_written_sequences.items():
+    if len(sequences) == 1:
         remove(filename)
-
