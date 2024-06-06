@@ -9,8 +9,8 @@ engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.7.5')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
+LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
 
 SUBMISSION_TYPE = "disease_gene_ingest_set"
 eco_code_dict = {"236289": "IGI", "236296": "IMP", "236356": "ISS"}
@@ -89,18 +89,18 @@ def get_disease_association_data():
 
                 if item.taxonomy_id and item.taxonomy.display_name != 'Saccharomyces cerevisiae':
                     strainObj = DBSession.query(Straindbentity).filter(Straindbentity.taxonomy_id == item.taxonomy_id).one() 
-                    obj["sgd_strain_background_curie"] = "SGD:" + strainObj.sgdid
+                    obj["sgd_strain_background_identifier"] = "SGD:" + strainObj.sgdid
                 elif item.taxonomy_id and item.taxonomy.display_name == 'Saccharomyces cerevisiae':
-                    obj["sgd_strain_background_curie"] = "SGD:S000203479"
+                    obj["sgd_strain_background_identifier"] = "SGD:S000203479"
 
                 if item.annotation_type == 'manually curated':
                     obj["annotation_type_name"] = 'manually_curated'
                 else:
                     obj["annotation_type_name"] = item.annotation_type
 
-                disSumObj = DBSession.query(Locussummary).filter(Locussummary.summary_type == 'Disease', Locussummary.locus_id==item.dbentity_id).one_or_none()
-                if disSumObj is not None:
-                    obj["note_dtos"] = [{"free_text":disSumObj.text, "note_type_name":"disease_summary","internal":False}]
+                # disSumObj = DBSession.query(Locussummary).filter(Locussummary.summary_type == 'Disease', Locussummary.locus_id==item.dbentity_id).one_or_none()
+                # if disSumObj is not None:
+                #     obj["note_dtos"] = [{"free_text":disSumObj.text, "note_type_name":"disease_summary","internal":False}]
                 
                 result[uniqkey] = obj
 

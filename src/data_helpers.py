@@ -2,8 +2,9 @@ import os
 import re
 import json
 from datetime import datetime
-from sqlalchemy import create_engine
-from src.models import DBSession, Eco, Locusdbentity
+from sqlalchemy import create_engine, and_
+from src.models import DBSession, Eco, Locusdbentity, LocusAliasReferences, Referencedbentity,\
+    AllelealiasReference, LocusReferences
 
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
@@ -118,11 +119,97 @@ def get_locus_synonyms(locus_alias_list):
     obj = []
     for item in locus_alias_list:
         if (item.alias_type in aliases_types):
-            obj.append({
-             "name_type_name": "unspecified",
+            syn = ""
+            if item.alias_type == "Non-uniform":
+                syn = "non_uniform"
+            elif item.alias_type == "Uniform":
+                syn = "uniform"
+            a_pmids = DBSession.query(LocusAliasReferences,
+                                      Referencedbentity.pmid).filter(
+                LocusAliasReferences.alias_id == item.alias_id).outerjoin(Referencedbentity).all()
+            alias_pmids_results = ["PMID:"+str(y[1]) for y in a_pmids if str(y[1]) != 'None']
+            entry = {
+             "name_type_name": syn, #item.alias_type.lower(),
              "format_text": item.display_name,
              "display_text": item.display_name,
              "internal": False
+            }
+            if len(alias_pmids_results) > 0:
+                entry["evidence_curies"] = alias_pmids_results
+            obj.append(entry)
+    return obj
+
+def get_locus_symbols(item):
+
+    obj = []
+    pmids_results = DBSession.query(LocusReferences,
+                                    Referencedbentity.pmid).filter(
+        and_(LocusReferences.locus_id == item.dbentity_id,
+             LocusReferences.reference_class == 'gene_name')).outerjoin(
+        Referencedbentity).all()
+    gene_name_pmids = ["PMID:" + str(x[1]) for x in pmids_results if str(x[1]) != 'None']
+
+    if (len(gene_name_pmids) == 0):
+        obj.append({
+        "created_by_curie": "SGD",
+        "updated_by_curie": "SGD",
+        "name_type_name": "nomenclature_symbol",
+        "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+        "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+        "internal": False,
+        "obsolete": False,
+        "synonym_scope_name": "exact"
+    })
+
+    if (len(gene_name_pmids) > 0):
+        obj.append({
+            "created_by_curie": "SGD",
+            "updated_by_curie": "SGD",
+            "name_type_name": "nomenclature_symbol",
+            "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+            "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+            "internal": False,
+            "obsolete": False,
+            "synonym_scope_name": "exact",
+            "evidence_curies": gene_name_pmids
+        })
+    return obj
+
+
+def get_allele_synonyms(allele_alias_list):
+    obj = []
+    for item in allele_alias_list:
+        a_pmids = DBSession.query(AllelealiasReference,
+                                  Referencedbentity.pmid).filter\
+            (AllelealiasReference.allele_alias_id == item.allele_alias_id).outerjoin(Referencedbentity).all()
+        alias_pmids_results = ["PMID:"+str(y[1]) for y in a_pmids if str(y[1]) != 'None']
+
+        if (len(alias_pmids_results) == 0):
+            obj.append({
+            "display_text": item.display_name,
+            "format_text": item.display_name,
+            "synonym_scope_name": "exact",
+            "name_type_name": "uniform",
+            "internal": False,
+            "obsolete": False,
+            "created_by_curie": "SGD",
+            "updated_by_curie": "SGD",
+            "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+            "date_updated": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
+            })
+        if (len(alias_pmids_results) > 0):
+            obj.append({
+            "display_text": item.display_name,
+            "format_text": item.display_name,
+            "synonym_scope_name": "exact",
+            "name_type_name": "unspecified",
+            "internal": False,
+            "obsolete": False,
+            "created_by_curie": "SGD",
+            "updated_by_curie": "SGD",
+            "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+            "date_updated": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+            "evidence_curies": alias_pmids_results
             })
     return obj
 
@@ -132,22 +219,22 @@ def get_locus_crossrefs(locus_alias_list):
     for item in locus_alias_list:
         if (item.alias_type == "UniProtKB ID"):
             obj.append({
-                "referenced_curie": item.display_name,
+                "referenced_curie": "UniProtKB:"+item.display_name,
                 "created_by_curie": "SGD",
                 "updated_by_curie": "SGD",
-                "page_area": "gene",
-                "prefix": "UniProtKB:",
-                "display_name": "",
+                "page_area": "default",
+                "prefix": "UniProtKB",
+                "display_name": "UniProtKB:"+item.display_name,
                 "internal": False
             })
         if (item.alias_type == "Gene ID" and item.source.display_name == 'NCBI'):
             obj.append({
-                "referenced_curie": item.display_name,
+                "referenced_curie": "NCBI_Gene:"+item.display_name,
                 "created_by_curie": "SGD",
                 "updated_by_curie": "SGD",
-                "page_area": "gene",
-                "prefix": "NCBI_Gene:",
-                "display_name": "",
+                "page_area": "default",
+                "prefix": "NCBI_Gene",
+                "display_name": "NCBI_Gene:"+item.display_name,
                 "internal": False
             })
     return obj
