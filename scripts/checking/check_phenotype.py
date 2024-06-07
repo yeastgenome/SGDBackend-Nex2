@@ -17,11 +17,13 @@ def check_data():
     phenotypes = nex_session.query(Phenotype).all()
 
     log.info("\n* Observables for classical phenotypes that should be associated with qualifier but are not:\n")
-    exclude_observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite']
+    exclude_observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite',
+                           'petite-negative', 'haploinsufficient', 'haploproficient']
     check_classical_phenotypes(nex_session, phenotypes, exclude_observables)
     
     log.info("\n* Observables for classical phenotypes are associated with a qualifier:\n")
-    observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite']
+    observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite', 'petite-negative',
+                   'haploinsufficient', 'haploproficient']
     check_observables(nex_session, phenotypes, observables, 'classical')
     
     log.info("\n* Phenotypes are curated by using top level observables:\n")
@@ -65,8 +67,13 @@ def check_chemical_for_observables(nex_session):
     
 def check_classical_phenotypes(nex_session, phenotypes, exclude_observables):
 
+    rows = nex_session.execute("SELECT distinct phenotype_id FROM nex.phenotypeannotation").fetchall()
+    phenotype_ids = [x[0] for x in rows]
+
     bad_phenotypes = []
     for x in phenotypes:
+        if x.phenotype_id not in phenotype_ids:
+            continue
         pieces = x.display_name.split(': ')
         if pieces[0] in exclude_observables:
             continue
