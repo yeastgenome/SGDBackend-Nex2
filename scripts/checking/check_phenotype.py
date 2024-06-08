@@ -84,9 +84,14 @@ def check_classical_phenotypes(nex_session, phenotypes, exclude_observables):
     
 def check_observables(nex_session, phenotypes, observables, observable_type):
 
+    rows = nex_session.execute("SELECT distinct phenotype_id FROM nex.phenotypeannotation").fetchall()
+    phenotype_ids = [x[0] for x in rows]
+
     bad_phenotypes = []
     for x in phenotypes:
         pieces = x.display_name.split(': ')
+        if x.phenotype_id not in phenotype_ids:
+            continue
         if observable_type == 'classical':
             if pieces[0] in observables and len(pieces) > 1:
                 bad_phenotypes.append(x.display_name + "\t(phenotype_id = " + str(x.phenotype_id) + ")")
