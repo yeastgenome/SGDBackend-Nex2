@@ -15,9 +15,15 @@ def check_data():
     nex_session = get_session()
 
     phenotypes = nex_session.query(Phenotype).all()
+
+    log.info("\n* Observables for classical phenotypes that should be associated with qualifier but are not:\n")
+    exclude_observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite',
+                           'petite-negative', 'haploinsufficient', 'haploproficient']
+    check_classical_phenotypes(nex_session, phenotypes, exclude_observables)
     
     log.info("\n* Observables for classical phenotypes are associated with a qualifier:\n")
-    observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite']
+    observables = ['viable', 'inviable', 'auxotrophy', 'sterile', 'petite', 'petite-negative',
+                   'haploinsufficient', 'haploproficient']
     check_observables(nex_session, phenotypes, observables, 'classical')
     
     log.info("\n* Phenotypes are curated by using top level observables:\n")
@@ -57,12 +63,35 @@ def check_chemical_for_observables(nex_session):
 
     if len(bad_annotations) > 0:
         log.info("\t" + "\n\t".join([str(x) for x in bad_annotations]))
-        
+
+    
+def check_classical_phenotypes(nex_session, phenotypes, exclude_observables):
+
+    rows = nex_session.execute("SELECT distinct phenotype_id FROM nex.phenotypeannotation").fetchall()
+    phenotype_ids = [x[0] for x in rows]
+
+    bad_phenotypes = []
+    for x in phenotypes:
+        if x.phenotype_id not in phenotype_ids:
+            continue
+        pieces = x.display_name.split(': ')
+        if pieces[0] in exclude_observables:
+            continue
+        if ": " not in x.display_name:
+            bad_phenotypes.append(x.display_name + "\t(phenotype_id = " + str(x.phenotype_id) + ")")
+    if len(bad_phenotypes) > 0:
+        log.info("\t" + "\n\t".join(bad_phenotypes))
+    
 def check_observables(nex_session, phenotypes, observables, observable_type):
+
+    rows = nex_session.execute("SELECT distinct phenotype_id FROM nex.phenotypeannotation").fetchall()
+    phenotype_ids = [x[0] for x in rows]
 
     bad_phenotypes = []
     for x in phenotypes:
         pieces = x.display_name.split(': ')
+        if x.phenotype_id not in phenotype_ids:
+            continue
         if observable_type == 'classical':
             if pieces[0] in observables and len(pieces) > 1:
                 bad_phenotypes.append(x.display_name + "\t(phenotype_id = " + str(x.phenotype_id) + ")")
