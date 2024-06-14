@@ -888,7 +888,7 @@ def sgd_blast_metadata(request):
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
 
-    # taxon_id = "NCBITaxon:4932"
+    ntr_root_taxon_id = "NCBITaxon:4932"
     version = "SGD:R64-4-1"
     genus = "Saccharomyces"
     species = "cerevisiae"
@@ -954,9 +954,13 @@ def sgd_blast_metadata(request):
                              "where d.dbentity_id = s.dbentity_id "
                              "and s.taxonomy_id = t.taxonomy_id").fetchall()
     for x in rows:
-        taxon_id = x['taxid'].replace("TAX:", "NCBITaxon:")
         strain = x['display_name'].upper()
         strain = strain.replace("'S B", "SB").replace("'S O", "SO")
+        taxon_id = x['taxid'].replace("TAX:", "NCBITaxon:")
+        if taxon_id == ntr_root_taxon_id:
+            taxon_id = ntr_root_taxon_id + "000"
+        elif taxon_id.startswith('NTR:'):
+            taxon_id = ntr_root_taxon_id + taxon_id.replace("NTR:", "")
         strain_taxon_id[strain] = taxon_id
 
     try:
@@ -977,7 +981,7 @@ def sgd_blast_metadata(request):
                 elif strain.upper().startswith('SIGMA1278B'):
                     taxon_id = strain_taxon_id['SIGMA1278B']
                 elif strain.upper() == 'YEAST':
-                    taxon_id = "NTR:999"
+                    taxon_id = ntr_root_taxon_id + "999"
                 else:
                     taxon_id = "UNKNOWN"
             data.append({"bioproject": bioproject,
