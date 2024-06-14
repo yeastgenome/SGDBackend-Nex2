@@ -6209,13 +6209,17 @@ class Straindbentity(Dbentity):
 
     @staticmethod
     def get_strains_by_taxon_id(taxon_id):
+        strain = DBSession.query(Straindbentity).filter_by(taxonomy_id=taxon_id).all()
+        return strain
+        """
         if taxon_id in Straindbentity.db_cache:
             return Straindbentity.db_cache[taxon_id]
         else:
             strain = DBSession.query(Straindbentity).filter_by(taxonomy_id=taxon_id).all()
             Straindbentity.db_cache[taxon_id] = strain
             return strain
-
+        """
+        
     def to_dict(self):
         obj = {
             "display_name": self.display_name,
