@@ -9,30 +9,9 @@ from Bio.Phylo.BaseTree import Clade, Tree
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-seqtype = 'dna'
+seqtype = 'protein'
 key_name_color = 'red'
 other_name_color = 'blue'
-
-def reorder_clades(tree, target_clade_name):
-    """Reorder clades so that the target clade is at the top."""
-    target_clade = None
-    other_clades = []
-    
-    for clade in tree.get_terminals():
-        if clade.name == target_clade_name:
-            target_clade = clade
-        else:
-            other_clades.append(clade)
-    
-    if target_clade:
-        # Create a new tree with the target clade at the top
-        new_root = Clade()
-        new_root.clades.append(target_clade)
-        for clade in other_clades:
-            new_root.clades.append(clade)
-        return Tree(new_root)
-    else:
-        return tree
 
 def generate_tree_image(tree_file, image_file, gene_name):
     """Generate a tree image from the tree file using Bio.Phylo and matplotlib."""
@@ -47,10 +26,6 @@ def generate_tree_image(tree_file, image_file, gene_name):
         # Read the Newick tree with Bio.Phylo
         tree = Phylo.read(tree_file, "newick")
 
-        # Reorder the clades to have the target clade at the top
-        target_clade_name = f"{gene_name}_S288C"
-        tree = reorder_clades(tree, target_clade_name)
-
         # Create a plot with increased figure size
         fig, ax = plt.subplots(figsize=(12, 10))
 
@@ -58,9 +33,11 @@ def generate_tree_image(tree_file, image_file, gene_name):
         clades = tree.get_terminals() + tree.get_nonterminals()
 
         # Sort the clades based on their names
-        label_colors = {target_clade_name: key_name_color}
+        label_colors = {}
         for clade in tree.find_clades():
-            if clade.name != target_clade_name:
+            if clade.name == f"{gene_name}_S288C":
+                label_colors[clade.name] = key_name_color
+            else:
                 label_colors[clade.name] = other_name_color
 
         # Draw the tree with the label colors
@@ -96,6 +73,7 @@ def generate_tree_image(tree_file, image_file, gene_name):
 
     except Exception as e:
         logging.error(f"Error generating tree image: {e}")
+
 
 
 def run_clustal_omega(input_file, output_prefix):
