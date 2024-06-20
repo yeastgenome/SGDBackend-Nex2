@@ -7,13 +7,9 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-# dna_data_file = "scripts/loading/variant/data/dna_variant.txt"
-# protein_data_file = "scripts/loading/variant/data/protein_variant.txt"
-# intergenic_data_file = "scripts/loading/variant/data/intergenic_variant.txt"
-
-dna_data_file = "scripts/loading/variant/data_64-5/dna_variant.txt"
-protein_data_file = "scripts/loading/variant/data_64-5/protein_variant.txt"
-intergenic_data_file = "scripts/loading/variant/data_64-5/intergenic_variant.txt"
+dna_data_file = "scripts/loading/variant/data/dna_variant.txt"
+protein_data_file = "scripts/loading/variant/data/protein_variant.txt"
+intergenic_data_file = "scripts/loading/variant/data/intergenic_variant.txt"
 
 
 def update_data():
@@ -93,6 +89,7 @@ def update_dna_data(nex_session):
                 x = key_to_x[key]
                 ## trigger error: couldn't update score
                 nex_session.delete(x)
+                # nex_session.rollback()
                 nex_session.commit()
                 if variant_type in ['Insertion', 'Deletion']:
                     add_row(nex_session, seqID, locus_id, seq_type, variant_type, score, start, end)
@@ -108,7 +105,6 @@ def update_dna_data(nex_session):
             # nex_session.rollback()
             i = 0
 
-    """
     for key in key_to_x:
         print ("DNA: DELETE", key)
         x = key_to_x[key]
@@ -117,8 +113,7 @@ def update_dna_data(nex_session):
         if i > 500:
             nex_session.commit()
             # nex_session.rollback()
-    """
-    
+
     nex_session.commit()
     # nex_session.rollback()
 
@@ -159,6 +154,7 @@ def update_protein_data(nex_session):
                 print ("protein: UPDATE: ", key)
                 x = key_to_x[key]
                 nex_session.delete(x)
+                # nex_session.rollback() 
                 nex_session.commit()
                 add_row(nex_session, seqID, locus_id, seq_type, variant_type, score, start, end)
             else:
@@ -171,12 +167,10 @@ def update_protein_data(nex_session):
             # nex_session.rollback()
             i = 0
 
-    """
     for key in key_to_x:
         print ("protein: DELETE", key)
         x = key_to_x[key]
         nex_session.delete(x)
-    """
     
     nex_session.commit()
     # nex_session.rollback()
@@ -240,6 +234,7 @@ def update_intergenic_data(nex_session):
                 print ("IGR: UPDATE: ", key)
                 x = key_to_x[key]
                 nex_session.delete(x)
+                # nex_session.rollback()
                 nex_session.commit()
                 add_row(nex_session, seqID, locus_id, seq_type, variant_type, score, start, end, snp_type)
             else:
@@ -263,6 +258,7 @@ def update_intergenic_data(nex_session):
                 x = key_to_x[key]
                 nex_session.delete(x)
                 nex_session.commit()
+                # nex_session.rollback()
                 add_row(nex_session, seqID, locus_id, seq_type, variant_type, score, start, end, snp_type)
             else:
                 print ("IGR: NO CHANGE: ", key)

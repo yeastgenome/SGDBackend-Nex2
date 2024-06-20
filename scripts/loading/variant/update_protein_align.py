@@ -7,8 +7,8 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-# data_file = "scripts/loading/variant/data/protein_sequence_alignment.txt"
-data_file = "scripts/loading/variant/data_64-5/protein_sequence_alignment.txt"
+data_file = "scripts/loading/variant/data/protein_sequence_alignment.txt"
+
 
 def update_data():
 

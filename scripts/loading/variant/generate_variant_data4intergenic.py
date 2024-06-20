@@ -12,7 +12,7 @@ strain_to_id = strain_to_id()
 taxon = strain_to_taxid['S288C']
 
 # dataDir = 'scripts/loading/variant/data/'
-dataDir = 'scripts/loading/variant/data_64-5/'
+dataDir = 'scripts/loading/variant/data/'
 
 seqAlignFile = dataDir + 'intergenic_sequence_alignment.txt'
 variantFile = dataDir + 'intergenic_variant.txt'
@@ -28,7 +28,9 @@ def generate_dna_data(name_to_dbentity_id, dbentity_id_to_name):
     fw2.write("intergenic_sequence_name\tdbentity_id_1\tdbentity_id_2\tsequence_type\tscore\tvariant_type\tsnp_type\tstart\tend\n")
 
     for filename in os.listdir(dnaDir):
-        name = filename.replace(".align", "")
+        if not filename.endswith(".align"):
+            continue
+        name = filename.replace("_dna.align", "")
         (strain_to_seq, variant_data, snp_seqs, block_sizes) = process_one_file(name, dnaDir+filename)
         
         if variant_data is None:

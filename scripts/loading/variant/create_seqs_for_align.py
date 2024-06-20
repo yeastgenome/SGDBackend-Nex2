@@ -36,8 +36,9 @@ def write_sequence(filename, seqID, sequence):
         filename_to_written_sequences[filename] = set()
     if seqID not in filename_to_written_sequences[filename]:
         with open(filename, "a" if path.exists(filename) else "w") as fw:
-            fw.write(">" + seqID + "\n")
-            fw.write(sequence + "\n")
+            if sequence:
+                fw.write(">" + seqID + "\n")
+                fw.write(sequence + "\n")
         filename_to_written_sequences[filename].add(seqID)
 
 

@@ -7,8 +7,8 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-mapping_file = "scripts/loading/variant/data_64-5/name_to_contig_mapping.txt"
-data_file = "scripts/loading/variant/data_64-5/dna_sequence_alignment.txt"
+mapping_file = "scripts/loading/variant/data/name_to_contig_mapping.txt"
+data_file = "scripts/loading/variant/data/dna_sequence_alignment.txt"
 
 dna_type = 'genomic'
 
@@ -74,6 +74,7 @@ def update_data():
                 ## trigger error when updating contig_end_index so change to drop/reload for updated row
                 x = key_to_x[key]
                 nex_session.delete(x)
+                # nex_session.rollback()
                 nex_session.commit()
                 insert_dnasequencealignment(nex_session, locus_id, contig_id, seqID, block_sizes,
                                             block_starts, start, end, aligned_seq, snp_seq)
@@ -91,14 +92,14 @@ def update_data():
             # nex_session.rollback()
             i = 0
             
-    # for key in key_to_values:
-    #    x = key_to_x[key]
-    #    print ("DELETE: ", key)
-    #    nex_session.delete(x)
+    for key in key_to_values:
+        x = key_to_x[key]
+        print ("DELETE: ", key)
+        nex_session.delete(x)
         
     nex_session.commit()
     # nex_session.rollback()
-    
+
 def insert_dnasequencealignment(nex_session, locus_id, contig_id, seqID, block_sizes, block_starts, start, end, aligned_seq, snp_seq):
            
     if 'S288C' in seqID:

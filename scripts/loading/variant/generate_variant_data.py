@@ -12,7 +12,7 @@ strain_to_id = strain_to_id()
 taxon = strain_to_taxid['S288C']
 
 # dataDir = 'scripts/loading/variant/data/'
-dataDir = 'scripts/loading/variant/data_64-5/'
+dataDir = 'scripts/loading/variant/data/'
 dnaSeqAlignFile = dataDir + 'dna_sequence_alignment.txt'
 proteinSeqAlignFile = dataDir + 'protein_sequence_alignment.txt'
 dnaVariantFile = dataDir + 'dna_variant.txt'
@@ -30,7 +30,9 @@ def generate_protein_data(name_to_dbentity_id):
     fw2.write("systematic_name\tdbentity_id\tsequence_type\tscore\tvariant_type\tsnp_type\tstart\tend\n")
 
     for filename in os.listdir(proteinDir):
-        name = filename.split('_')[0]
+        if not filename.endswith(".align"):
+            continue
+        name = filename.replace(".align", "")
         (strain_to_seq, variant_data) = process_one_file(name, 'protein', proteinDir+filename, [])
         if variant_data is None:
             continue
@@ -54,6 +56,8 @@ def generate_dna_data(name_to_dbentity_id, dbentity_id_to_name):
 
     name_to_introns = map_name_to_introns(dbentity_id_to_name)
     for filename in os.listdir(dnaDir):
+        if not filename.endswith(".align"):
+            continue
         name = filename.split('_')[0]
         # print (name)
         introns = name_to_introns.get(name)
@@ -117,7 +121,7 @@ def process_one_file(name, type, alignFile, introns):
     return (strain_to_seq, variant_data, snp_seqs, block_starts, block_sizes)
     
 def read_one_file(alignFile):
-    
+
     f = open(alignFile)
 
     strain_to_seq = {}
