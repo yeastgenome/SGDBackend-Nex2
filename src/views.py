@@ -2613,11 +2613,44 @@ def allele_network_graph(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='all_strain_alignment', renderer='json', request_method='GET')
+def all_strain_alignment(request):
+    try:
+        locus = request.matchdict['id']
+        files = DBSession.query(Filedbentity).filter(
+            Filedbentity.previous_file_name.like(locus+'%'), Filedbentity.description.like('%All Strains Sequence Alignment%')).all()
+        if len(files) > 0:
+            data = {}
+            for file in files:
+                s3_url = file.s3_url.split("?versionId=")[0]
+                if file.previous_file_name not in [locus+".png", locus+".align", locus+"_dna.png", locus+"_dna.align"]:
+                    continue
+                if '_dna' in file.previous_file_name:
+                    if ".png" in file.previous_file_name:
+                        data['dna_images_url'] = s3_url
+                    else:
+                        data['dna_align_url'] = s3_url
+                else:
+                    if ".png" in file.previous_file_name:
+                        data['protein_images_url'] = s3_url
+                    else:
+                        data['protein_align_url'] = s3_url
+            return data
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+            
 @view_config(route_name='alignment', renderer='json', request_method='GET')
 def alignment(request):
     try:
         locus = request.matchdict['id']
-        files = DBSession.query(Filedbentity).filter(Filedbentity.previous_file_name.like(locus+'%')).all()
+        files = DBSession.query(Filedbentity).filter(
+            Filedbentity.previous_file_name.like(locus+'%'), Filedbentity.description.like('%12 Strain Sequence Alignment%')).all()
 
         if len(files) > 0:
             data = {}
