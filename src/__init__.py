@@ -152,7 +152,8 @@ def main(global_config, **settings):
     config.add_route('ambiguous_names', '/ambiguous_names', request_method='GET')
 
     config.add_route('alignment', '/alignment/{id}', request_method='GET')
-
+    config.add_route('all_strain_alignment', '/all_strain_alignment/{id}', request_method='GET')
+    
     # config.add_route('primer3', '/primer3', request_method='POST')
     config.add_route('primer3', '/primer3', request_method='GET')
     
