@@ -2299,7 +2299,7 @@ class Referencedbentity(Dbentity):
         if self.pmid:
             ref_urls_obj.append({
                 "display_name": "PubTator",
-                "link": "https://www.ncbi.nlm.nih.gov/research/pubtator/?view=publication&pmid=" + str(self.pmid),
+                "link": "https://www.ncbi.nlm.nih.gov/research/pubtator3/publication/" + str(self.pmid) + "?text=" + str(self.pmid),
             })
         obj["urls"] = ref_urls_obj
         
