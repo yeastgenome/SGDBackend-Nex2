@@ -1577,20 +1577,32 @@ def locus_fungal_homolog_details(request):
     try:
         ## gene name can be gene name, orf name, sgdid
         gene_name = request.matchdict['id']
-        service = Service("https://yeastmine.yeastgenome.org/yeastmine/service")
+        if gene_name.startswith('S'):
+            id = gene_name.replace('S', '')
+            if len(id) == 9 and id.isdigit():
+                gene_name = 'SGD:' + gene_name
+        # service = Service("https://stage.alliancegenome.org/alliancemine/service")
+        service = Service("https://www.alliancegenome.org/alliancemine/service")
         query = service.new_query("Gene")
         query.add_view(
-            "secondaryIdentifier",
+            "symbol", "secondaryIdentifier", "name", "sgdAlias",
             "homologues.homologue.organism.shortName",
-            "homologues.homologue.primaryIdentifier",
-            "homologues.homologue.symbol",
+            "homologues.homologue.primaryIdentifier", "homologues.homologue.symbol",
             "homologues.dataSets.dataSource.name",
-            "homologues.homologue.briefDescription"
+            "homologues.homologue.briefDescription", "homologues.homologue.sgdAlias",
+            "homologues.type"
         )
+
         query.add_sort_order("Gene.homologues.homologue.organism.shortName", "ASC")
+
         query.add_constraint("homologues.homologue.organism.shortName", "ONE OF", ["A. flavus NRRL3357", "A. fumigatus Af293", "A. nidulans FGSC A4", "A. niger ATCC 1015", "C. albicans SC5314", "C. albicans WO-1", "C. dubliniensis CD36", "C. gattii R265", "C. gattii WM276", "C. glabrata CBS 138", "C. immitis H538.4", "C. immitis RS", "C. neoformans var. grubii H99", "C. neoformans var. neoformans JEC21", "C. parapsilosis CDC317", "C. posadasii C735 delta SOWgp", "M. oryzae 70-15", "N. crassa OR74A", "S. cerevisiae", "S. pombe", "T. marneffei ATCC 18224", "U. maydis 521"], code="C")
+
         query.add_constraint("organism.shortName", "=", "S. cerevisiae", code="B")
+
         query.add_constraint("Gene", "LOOKUP", gene_name, code="A")
+
+        query.set_logic("A and C and B")
+
         data = []
         for row in query.rows():
             data.append({ 'species': row["homologues.homologue.organism.shortName"],
@@ -1601,7 +1613,7 @@ def locus_fungal_homolog_details(request):
         
         #dataSortByID = sorted(data, key=lambda d: d['gene_id'])
         dataSortBySpecies = sorted(data, key=lambda d: d['species'])
-        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")        
+        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")
     except Exception as e:
         log.error(e)        
         
