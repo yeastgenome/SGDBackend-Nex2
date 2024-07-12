@@ -394,7 +394,7 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    url_path = 'http://purl.obolibrary.org/obo/'
+    url_path = 'http://snapshot.geneontology.org/ontology/'
     go_owl_file = 'go.owl'
     urllib.request.urlretrieve(url_path + go_owl_file, go_owl_file)
     
