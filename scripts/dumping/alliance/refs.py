@@ -10,7 +10,7 @@ from src.models import DBSession, Referencedbentity, Referencedeleted
 from src.data_helpers import get_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
-SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_7.0.0_')
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 DBSession.configure(bind=engine)
 
 # S3_BUCKET = os.environ['S3_BUCKET']

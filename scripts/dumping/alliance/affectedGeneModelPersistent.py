@@ -9,7 +9,7 @@ from src.data_helpers import get_pers_output
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v2.2.1')
+LINKML_VERSION = os.getenv('LINKML_VERSION')
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'

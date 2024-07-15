@@ -1,19 +1,25 @@
 import os
 import json
 import re, sys
+import requests
+
 from sqlalchemy import create_engine, and_
 from src.models import DBSession, AllelealiasReference, Referencedbentity, AlleleAlias
 from src.data_helpers import get_pers_output, get_allele_synonyms
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
-LINKML_VERSION = os.getenv('LINKML_VERSION', '2.2.1')
+LINKML_VERSION = os.getenv('LINKML_VERSION')
+CURATION_API_TOKEN = os.getenv('CURATION_API_TOKEN')
+
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'allele_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
-
 DEFAULT_TAXID = '559292'
-
+#please add your curation interface API token to prod_variables.sh
+headers = {
+    'Authorization': 'Bearer '+ CURATION_API_TOKEN + ''
+}
 def get_allele_information():
 
     print("getting Alleles")
@@ -96,7 +102,7 @@ def get_allele_information():
 
                 if str(alleleObj[2]) != "None":
                     if (str(alleleObj[2].strip()) and str(alleleObj[2].strip()) != "" and len(str(alleleObj[2])) != 0 ):
-                        print(str(alleleObj[2]))
+                        #print(str(alleleObj[2]))
                         obj["note_dtos"] = [{
                             "free_text": str(alleleObj[2]),
                             "note_type_name": "comment",
@@ -145,6 +151,19 @@ def get_allele_information():
         json_file_str = os.path.join(local_dir, file_name)
         with open(json_file_str, 'w+') as res_file:
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=False))
+
+        files = {
+            'ALLELE_SGD': open(json_file_str, 'rb'),
+        }
+        try:
+            response = requests.post('https://curation.alliancegenome.org/api/data/submit', files=files, headers=headers)
+            if response.status_code == 200:
+                print('File uploaded successfully')
+            else:
+                print('Failed to upload file. Status code:', response.status_code)
+                print('Response:', response.text)
+        except Exception as e:
+            print('An error occurred in file upload:', str(e))
 
     DBSession.close()
 

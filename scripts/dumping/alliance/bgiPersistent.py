@@ -7,7 +7,7 @@ from src.data_helpers import get_pers_output, get_locus_synonyms, get_locus_cros
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
-LINKML_VERSION = os.getenv('LINKML_VERSION', 'v1.11.0')
+LINKML_VERSION = os.getenv('LINKML_VERSION')
 DBSession.configure(bind=engine)
 SUBMISSION_TYPE = 'gene_ingest_set'
 local_dir = 'scripts/dumping/alliance/data/'
