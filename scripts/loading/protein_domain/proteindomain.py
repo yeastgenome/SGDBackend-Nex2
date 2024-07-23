@@ -54,6 +54,8 @@ def read_data_and_update_database(nex_session, fw):
             source = 'CDD'
         if source == 'Hamap':
             source = 'HAMAP'
+        if source == 'MobiDBLite':
+            source = 'MobiDB-lite'
         source_id = source_to_id.get(source)
         # if source_id is None:
         if source_id is None:
@@ -77,12 +79,9 @@ def read_data_and_update_database(nex_session, fw):
                                                  display_name, source_id, 
                                                  interpro_id, desc)
             if proteindomain_id:
-                status = insert_url(nex_session, fw, display_name, source,  proteindomain_id, 
-                                    source_id)
-                if status:
-                    nex_session.commit()
-                else:
-                    nex_session.rollback()
+                insert_url(nex_session, fw, display_name, source,  proteindomain_id, 
+                           source_id)
+                
         else:            
             print ("in DB:", format_name, display_name, source, source_id)
             if x.interpro_id != interpro_id or x.description != desc:
@@ -97,6 +96,8 @@ def read_data_and_update_database(nex_session, fw):
     f.close()
 
 def insert_new_domain(nex_session, fw, format_name, display_name, source_id, interpro_id, desc):
+
+    print("Inserting new domain:", format_name, display_name, source_id, interpro_id, desc)
 
     proteindomain_id = None
     try:
@@ -118,6 +119,8 @@ def insert_new_domain(nex_session, fw, format_name, display_name, source_id, int
     return proteindomain_id
 
 def insert_url(nex_session, fw, display_name, source, proteindomain_id, source_id):
+
+    print("Inserting domain URL: ", display_name, source, proteindomain_id, source_id)
     
     link = None
     if source == 'SMART':
@@ -146,20 +149,26 @@ def insert_url(nex_session, fw, display_name, source, proteindomain_id, source_i
         link = "http://hamap.expasy.org/profile/" + display_name
     elif source == 'CDD':
         link = "https://www.ncbi.nlm.nih.gov/Structure/cdd/" + display_name
+    elif source == 'MobiDB-lite':
+        link = "https://mobidb.bio.unipd.it/"
     if link is not None:
         try:
+            # use CDD for url_type for MobiDB-lite for now
+            if source == 'MobiDB-lite':
+                source = 'CDD'
             x = ProteindomainUrl(display_name = display_name,
                                  obj_url = link,
                                  source_id = source_id,
                                  proteindomain_id = proteindomain_id,
                                  url_type = source,
                                  created_by = CREATED_BY)
-            nex_session.add(x)        
+            nex_session.add(x)
+            nex_session.commit()
+            print("Add URL: " + link + " for " + display_name)
             fw.write("Add URL: " + link + " for " + display_name + "\n")
-            return True
         except Exception as e:
             fw.write("Error adding " + link + " for " + display_name + ". error=" + str(e) + "\n")
-            return False
+
     
 if __name__ == "__main__":
         
