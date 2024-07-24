@@ -54,8 +54,6 @@ def read_data_and_update_database(nex_session, fw):
             source = 'CDD'
         if source == 'Hamap':
             source = 'HAMAP'
-        if source == 'MobiDBLite':
-            source = 'MobiDB-lite'
         source_id = source_to_id.get(source)
         # if source_id is None:
         if source_id is None:
@@ -149,12 +147,12 @@ def insert_url(nex_session, fw, display_name, source, proteindomain_id, source_i
         link = "http://hamap.expasy.org/profile/" + display_name
     elif source == 'CDD':
         link = "https://www.ncbi.nlm.nih.gov/Structure/cdd/" + display_name
-    elif source == 'MobiDB-lite':
-        link = "https://mobidb.bio.unipd.it/"
+    elif source == 'MobiDBLite':
+        link = "https://mobidb.bio.unipd.it/browse?proteome=UP000002311"
     if link is not None:
         try:
             # use CDD for url_type for MobiDB-lite for now
-            if source == 'MobiDB-lite':
+            if source == 'MobiDBLite':
                 source = 'CDD'
             x = ProteindomainUrl(display_name = display_name,
                                  obj_url = link,
