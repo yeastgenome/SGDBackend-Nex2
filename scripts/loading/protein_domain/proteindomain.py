@@ -38,13 +38,12 @@ def read_data_and_update_database(nex_session, fw):
     count = 0
     for line in f:
         items = line.strip().split("\t")
-        display_name = items[4]
+        display_name = items[4]        
         format_name = display_name.replace(' ', '_')
         domain_name = items[5]
         if format_name in found:
             continue
         found[format_name] = 1
-
         source = items[3]
         if source in ['ProSiteProfiles', 'ProSitePatterns']:
             source = 'PROSITE'
@@ -54,6 +53,9 @@ def read_data_and_update_database(nex_session, fw):
             source = 'CDD'
         if source == 'Hamap':
             source = 'HAMAP'
+        if source == 'MobiDBLite':
+            display_name = source
+            format_name = source
         source_id = source_to_id.get(source)
         # if source_id is None:
         if source_id is None:
@@ -97,12 +99,16 @@ def insert_new_domain(nex_session, fw, format_name, display_name, source_id, int
 
     print("Inserting new domain:", format_name, display_name, source_id, interpro_id, desc)
 
+    obj_url = '/domain/' + display_name.replace(' ', '_')
+    if display_name.startswith("MobiDB"):
+        obj_url = "https://mobidb.bio.unipd.it/browse?proteome=UP000002311"
+
     proteindomain_id = None
     try:
         x = Proteindomain(display_name = display_name,
                           format_name = format_name,
                           source_id = source_id,
-                          obj_url = '/domain/' + display_name.replace(' ', '_'),
+                          obj_url = obj_url,
                           interpro_id = interpro_id,
                           description = desc,
                           created_by = CREATED_BY)
