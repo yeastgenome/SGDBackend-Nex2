@@ -9552,7 +9552,7 @@ class Proteindomain(Base):
 
     def to_dict(self):
         urls = DBSession.query(ProteindomainUrl).filter_by(proteindomain_id=self.proteindomain_id).all()
-
+        
         obj = {
             "id": self.proteindomain_id,
             "link": self.obj_url,
@@ -9668,11 +9668,19 @@ class Proteindomainannotation(Base):
 
         count = DBSession.query(Proteindomainannotation).distinct(Proteindomainannotation.dbentity_id).filter_by(proteindomain_id=self.proteindomain_id).count()
 
+        domain_link_url = proteindomain.obj_url
+        if "mobidb" in domain_link_url:
+            uniprotID = None
+            aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
+            if aliases:
+                uniprotID = aliases[0].display_name
+            if uniprotID:
+                domain_link_url = domain_link_url.split('/browse')[0] + "/" + uniprotID
         return {
             "id": self.annotation_id,
             "domain": {
                 "id": proteindomain.proteindomain_id,
-                "link": proteindomain.obj_url,
+                "link": domain_link_url,
                 "display_name": proteindomain.display_name,
                 "count": count,
                 "description": proteindomain.description
