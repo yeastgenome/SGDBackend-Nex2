@@ -55,6 +55,8 @@ def read_data_and_update_database(nex_session, fw):
             print("The systematic_name ", name, " is not in the LOCUSDBENTITY table.")
             continue
         domain_name = items[4].replace(' ', '_')
+        if domain_name == "mobidb-lite":
+            domain_name = "MobiDBLite"
         proteindomain_id = format_name_to_id.get(domain_name)
         if proteindomain_id is None:
             print("The domain name:", domain_name, " is not in the PROTEINDOMAIN table.")
