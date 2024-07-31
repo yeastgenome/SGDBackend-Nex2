@@ -34,6 +34,7 @@ otherGenomic1KFile = "scripts/dumping/sequence_update/data/sequence_for_download
 
 TAXON = "TAX:559292"
 SEQ_FORMAT = 'fasta'
+strain = 'S288C'
 
 def dump_data():
 
@@ -58,18 +59,20 @@ def dump_data():
     dbentity_id_to_defline = {}
     dbentity_id_list = []
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                          so_id_to_display_name, allCodingFile, 'CODING', SEQ_FORMAT, FILE_TYPE,
-                          dbentity_id_to_defline, dbentity_id_list)
+                          so_id_to_display_name, allCodingFile, 'CODING', SEQ_FORMAT, strain,
+                          FILE_TYPE, dbentity_id_to_defline, dbentity_id_list)
 
     generate_dubious_none_dubious_files(allCodingFile, codingFile, dubiousCodingFile)
     
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                          so_id_to_display_name, allGenomicFile, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, allGenomicFile, 'GENOMIC', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
     generate_dubious_none_dubious_files(allGenomicFile, genomicFile, dubiousGenomicFile)
     
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                          so_id_to_display_name, allGenomic1KFile, '1KB', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, allGenomic1KFile, '1KB', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
     generate_dubious_none_dubious_files(allGenomic1KFile, genomic1KFile, dubiousGenomic1KFile)
 
@@ -84,15 +87,18 @@ def dump_data():
     FILE_TYPE = 'RNA'
     
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                          so_id_to_display_name, rnaCodingFile, 'CODING', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, rnaCodingFile, 'CODING', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
 
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                          so_id_to_display_name, rnaGenomicFile, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, rnaGenomicFile, 'GENOMIC', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
 
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                          so_id_to_display_name, rnaGenomic1KFile, '1KB', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, rnaGenomic1KFile, '1KB', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
 
     ### dump sequences for other features
@@ -100,12 +106,13 @@ def dump_data():
     FILE_TYPE = 'other'
     
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                                    so_id_to_display_name, otherGenomicFile, 'GENOMIC', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, otherGenomicFile, 'GENOMIC', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
     generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_id_to_chr,
-                                    so_id_to_display_name, otherGenomic1KFile, '1KB', SEQ_FORMAT, FILE_TYPE)
+                          so_id_to_display_name, otherGenomic1KFile, '1KB', SEQ_FORMAT, strain,
+                          FILE_TYPE)
 
-    
     nex_session.close()
 
 def generate_dubious_none_dubious_files(allSeqFile, seqFile, dubiousSeqFile):

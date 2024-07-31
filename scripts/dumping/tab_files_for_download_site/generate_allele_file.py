@@ -29,6 +29,8 @@ def dump_data():
                                "ORDER BY allele_id, display_name").fetchall()
     allele_id_to_aliases = {}
     for x in rows:
+        if x['display_name'].startswith("S000"):
+            continue
         aliases = allele_id_to_aliases.get(x['allele_id'], [])
         aliases.append(x['display_name'])
         allele_id_to_aliases[x['allele_id']] = aliases
