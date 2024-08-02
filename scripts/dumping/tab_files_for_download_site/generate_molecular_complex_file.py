@@ -53,7 +53,8 @@ def dump_data():
             pmids.append(pmid)
             complex_id_to_pmids[x[0]] = pmids
                                
-    rows = nex_session.execute("SELECT cba.complex_id, cba.stoichiometry, i.format_name, i.display_name "  
+    rows = nex_session.execute("SELECT cba.complex_id, cba.stoichiometry, i.format_name, "
+                               "       i.display_name, i.locus_id "  
                                "FROM nex.complexbindingannotation cba, nex.interactor i "
                                "WHERE cba.interactor_id = i.interactor_id").fetchall()
 
@@ -63,11 +64,12 @@ def dump_data():
         complex_id = x[0]
         stoichiometry = x[1] if x[1] else ""
         subunit = x[3] if x[3] else x[2]
+        locus_id = x[4]
         
-        """
         if locus_id and locus_id in locus_id_to_data:
             (sgdid, systematic_name, gene_name, qualifier, genetic_position, desc) = locus_id_to_data[locus_id]
-        """
+            subunit = gene_name if gene_name else systematic_name
+
         subunit_list = complex_id_to_subunit_list.get(complex_id, [])
         stoichiometry_list = complex_id_to_stoichiometry_list.get(complex_id, [])
         if subunit not in subunit_list:
