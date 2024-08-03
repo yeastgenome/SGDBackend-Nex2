@@ -1,7 +1,7 @@
 #! /bin/sh
 
-cd /data/www/SGDBackend-Nex2
-source /data/www/venv/bin/activate 
+cd /data/www/SGDBackend-Nex2/current/
+source /data/envs/sgd3/bin/activate 
 source prod_variables.sh
 
 python scripts/dumping/tab_files_for_download_site/generate_allele_file.py
