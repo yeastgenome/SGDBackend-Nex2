@@ -13,6 +13,9 @@ s3_lit_dir = s3_top_dir + "literature/"
 s3_chr_feat_dir = s3_top_dir + "chromosomal_feature/"
 s3_protein_dir = s3_top_dir + "calculated_protein_info/"
 
+S3_LATEST_BUCKET = os.environ['S3_BUCKET']
+s3_latest_dir = "latest/"
+
 lit_files = [
     "regulation.tab",
     "phenotype_data.tab",
@@ -61,6 +64,10 @@ def upload_files():
             print (local_file, s3_file)
             s3.meta.client.upload_file(local_file, S3_BUCKET, s3_file, ExtraArgs={'ACL': 'public-read'})
 
+            ### upload files to latest directory
+            s3_latest_file = s3_latest_dir + filename
+            s3.meta.client.upload_file(local_file, S3_LATEST_BUCKET, s3_latest_file, ExtraArgs={'ACL': 'public-read'})
+            
             ### upload files to archive directories
             filename_with_datestamp = filename + "_" + datestamp
             local_file_with_datestamp = local_dir + filename_with_datestamp 
