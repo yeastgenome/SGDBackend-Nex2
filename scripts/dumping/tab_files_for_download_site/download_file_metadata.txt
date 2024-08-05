@@ -1,0 +1,19 @@
+File Name	Topic EDAM ID	Topic Name	Data EDAM ID	Data Name	Format EDAM ID	Format Name
+domains.tab	EDAM:0089	Protein domains	EDAM:2551	Protein domains and motifs	EDAM:3475	TSV
+interaction_data.tab.gz	EDAM:0085	Protein interactions	EDAM:0085	Protein interactions	EDAM:3768	GZipped tabular data
+SGD_features.tab	EDAM:3511	Nucleic acid sites, features and motifs	EDAM:1276	Nucleic acid features	EDAM:3475	TSV
+functional_complementation.tab	EDAM:0084	Gene function	EDAM:3460	Functional complementation	EDAM:3475	TSV
+interaction_data_PMID:20093466.tab.gz	EDAM:0085	Protein interactions	EDAM:0085	Protein interactions	EDAM:3768	GZipped tabular data
+phenotype_data.tab	EDAM:3068	Phenotypes	EDAM:3068	Phenotype data	EDAM:3475	TSV
+alleles.tab	EDAM:0081	Genetic variants	EDAM:3516	Allele data	EDAM:3475	TSV
+gene_literature.tab	EDAM:0108	Literature and references	EDAM:0108	Literature references	EDAM:3475	TSV
+interaction_data_PMID:27708008.tab.gz	EDAM:0085	Protein interactions	EDAM:0085	Protein interactions	EDAM:3768	GZipped tabular data
+protein_properties.tab	EDAM:0123	Protein properties	EDAM:0897	Protein properties data	EDAM:3475	TSV
+biochemical_pathways.tab	EDAM:0602	Metabolic pathways	EDAM:1157	Pathway data	EDAM:3475	TSV
+go_protein_complex_slim.tab	EDAM:0128	Protein interactions	EDAM:2877	Protein complex data	EDAM:3475	TSV
+go_terms.tab	EDAM:0089	Gene Ontology	EDAM:2527	Gene ontology terms	EDAM:3475	TSV
+molecularComplexes.tab	EDAM:0128	Protein interactions	EDAM:2877	Protein complex data	EDAM:3475	TSV
+dbxref.tab	EDAM:2559	Cross-references	EDAM:2559	Database cross-references	EDAM:3475	TSV
+deleted_merged_features.tab	EDAM:3511	Nucleic acid sites, features and motifs	EDAM:1276	Nucleic acid features	EDAM:3475	TSV
+regulation.tab	EDAM:0204	Gene regulation	EDAM:3112	Regulation data	EDAM:3475	TSV
+yeastHumanDisease.tab	EDAM:0089	Disease data	EDAM:3462	Disease associations	EDAM:3475	TSV
