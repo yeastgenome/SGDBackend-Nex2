@@ -1,4 +1,6 @@
 from datetime import datetime
+import gzip
+import shutil
 from scripts.loading.database_session import get_session
 from scripts.dumping.tab_files_for_download_site import dbentity_id_to_data_mapping, \
     reference_id_to_data_mapping, phenotype_id_to_phenotype_mapping
@@ -6,8 +8,10 @@ from scripts.dumping.tab_files_for_download_site import dbentity_id_to_data_mapp
 __author__ = 'sweng66'
 
 interactionFile = "scripts/dumping/tab_files_for_download_site/data/interaction_data.tab"
+interactionFile20093466 = "scripts/dumping/tab_files_for_download_site/data/interaction_data_PMID:20093466.tab" 
+interactionFile27708008 = "scripts/dumping/tab_files_for_download_site/data/interaction_data_PMID:27708008.tab"
 
-    
+
 def dump_data():
 
     """
@@ -48,6 +52,8 @@ def dump_data():
     # taxonomy_id_to_strain_name = taxonomy_id_to_strain_mapping(nex_session)
     
     fw = open(interactionFile, "w")
+    fw2 = open(interactionFile20093466, "w")
+    fw3 = open(interactionFile27708008, "w")
     
     rows = nex_session.execute("SELECT * FROM nex.physinteractionannotation").fetchall()
     count = 0
@@ -111,12 +117,31 @@ def dump_data():
         if count % 1000 == 0:
             print(str(count) + ": generating genetic interaction data")
         fw.write(systematic_name + "\t" + gene_name + "\t" + systematic_name2 + "\t" + gene_name2 + "\t" + x['biogrid_experimental_system'] + "\tgenetic interactions\tBioGRID" + "\t" + x['annotation_type'] + "\t" + note + "\t" + phenotype + "\t" + reference + "\t" + citation + "\n")
+        if "PMID:20093466" in reference:
+            fw2.write(systematic_name + "\t" + gene_name + "\t" + systematic_name2 + "\t" + gene_name2 + "\t" + x['biogrid_experimental_system'] + "\tgenetic interactions\tBioGRID" + "\t" + x['annotation_type'] + "\t" + note + "\t" + phenotype + "\t" + reference + "\t" + citation + "\n")
+        if "PMID:27708008" in reference:
+            fw3.write(systematic_name + "\t" + gene_name + "\t" + systematic_name2 + "\t" + gene_name2 + "\t" + x['biogrid_experimental_system'] + "\tgenetic interactions\tBioGRID" + "\t" + x['annotation_type'] + "\t" + note + "\t" + phenotype + "\t" + reference + "\t" + citation + "\n")
 
-    fw.close()
     nex_session.close()
+    
+    fw.close()
+    fw2.close()
+    fw3.close()
+
+    gzip_file(interactionFile)
+    gzip_file(interactionFile20093466)
+    gzip_file(interactionFile27708008)
+
     print(datetime.now())
     print("DONE!")
 
+def gzip_file(file):
+
+    gzip_file = file + ".gz"
+    with open(file, 'rb') as f_in:
+        with gzip.open(gzip_file, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    
 
 if __name__ == '__main__':
     
