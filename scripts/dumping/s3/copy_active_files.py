@@ -6,6 +6,7 @@ from src.boto3_upload import boto3_copy_file
 from src.models import Filedbentity, Dbentity
 from scripts.loading.database_session import get_session
 
+
 def copy_files():
    
     nex_session = get_session()
@@ -137,6 +138,9 @@ def copy_sgd_gpad_gpi(nex_session):
             print (gpad.dbentity_status, srcFile, dstFile)
             boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
 
+            # copy file to https://downloads.yeastgenome.org/latest   
+            boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET, dstFile)
+            
     all_gpi = nex_session.query(Filedbentity).filter(Filedbentity.previous_file_name.like('gpi.sgd%.gz')).filter(Filedbentity.dbentity_status=='Active').all()
     
     if len(all_gpi) > 0:
@@ -150,6 +154,10 @@ def copy_sgd_gpad_gpi(nex_session):
             print (gpi.dbentity_status, srcFile, dstFile)
             boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET2, dstFile)
 
+            # copy file to https://downloads.yeastgenome.org/latest
+            boto3_copy_file(S3_BUCKET, srcFile, S3_BUCKET, dstFile)
+
+            
 def copy_gpi(nex_session):
 
     dstDir = "curation/literature/"
