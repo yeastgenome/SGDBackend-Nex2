@@ -3432,16 +3432,18 @@ class Locusdbentity(Dbentity):
         main_strain_coding = None
         main_strain_1KB = None
         main_strain_protein = None
-        
+
+        orf_strand_in_S288C = None
+        genomic_dna_other_strians = []
         for dna in dnas:
             dna_dict = dna.to_dict()
-
             if dna_dict:
                 if dna.dna_type == "GENOMIC":
                     if dna.taxonomy_id == taxonomy_id:
                         main_strain_genomic = dna_dict
+                        orf_strand_in_S288C = dna_dict['strand']
                     else:
-                        obj["genomic_dna"].append(dna_dict)
+                        genomic_dna_other_strians.append(dna_dict)
                 elif dna.dna_type == "CODING":
                     if dna.taxonomy_id == taxonomy_id:
                         main_strain_coding = dna_dict
@@ -3453,6 +3455,27 @@ class Locusdbentity(Dbentity):
                     else:
                         obj["1kb"].append(dna_dict)
 
+        for dna_dict in genomic_dna_other_strians:
+            if dna_dict['strand'] != orf_strand_in_S288C:
+                orf_start = dna_dict['start']
+                orf_end = dna_dict['end']
+                orf_length = dna_dict['end'] - dna_dict['start'] + 1
+                orf_relative_start = 1
+                orf_relative_end = dna_dict['end'] - dna_dict['start'] + 1
+                new_tags = []
+                for tag in dna_dict['tags']:
+                    relative_beg = orf_length - tag['relative_end'] + 1
+                    relative_end = relative_beg + tag['relative_end'] - tag['relative_start']
+                    chr_beg = orf_start + relative_beg - 1
+                    chr_end = orf_start + relative_end - 1
+                    tag['relative_start'] = relative_beg
+                    tag['relative_end'] = relative_end
+                    tag['chromosomal_start'] = chr_beg
+                    tag['chromosomal_end'] = chr_end
+                    new_tags.append(tag)
+                dna_dict['tags'] = new_tags
+            obj["genomic_dna"].append(dna_dict)
+                    
         if main_strain_genomic is not None:
             obj["genomic_dna"].insert(0, main_strain_genomic)
         if main_strain_coding is not None:
