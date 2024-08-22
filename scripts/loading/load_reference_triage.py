@@ -20,7 +20,7 @@ __author__ = 'sweng66'
 
 TERMS = ['yeast', 'cerevisiae']
 URL = 'http://www.ncbi.nlm.nih.gov/pubmed/'
-DAY = 14
+DAY = 1825
 RETMAX = 10000
 MAX = 500
 
