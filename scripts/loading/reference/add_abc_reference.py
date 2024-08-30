@@ -309,12 +309,13 @@ def insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year, volum
     return x.dbentity_id
 
 
-def convert_publication_status(pubStatu):
+def convert_publication_status(pubStatus):
 
-    if pubStatu == 'aheadoflogger.info':
-        return 'Epub ahead of logger.info'
-    if pubStatu in ['ppublish', 'epublish']:
+    if pubStatus in ['ppublish', 'epublish']:
         return 'Published'
+    elif pubStatus == 'aheadofprint':
+        return 'Epub ahead of print'
+    return pubStatus
 
 
 def get_journal_id(nex_session, record, source_id=None):
@@ -334,13 +335,13 @@ def get_journal_id(nex_session, record, source_id=None):
     j = Journal(display_name = journal_full_name,
                 format_name = format_name,
                 title = journal_full_name,
-                med_abbr = journal,
+                med_abbr = journal_abbr,
                 source_id = source_id,
                 obj_url = '/journal/'+format_name,
                 created_by = CREATED_BY)
     nex_session.add(j)
     nex_session.flush()
-    nex_session.refresh(x)
+    nex_session.refresh(j)
     return j.journal_id, j.med_abbr, journal_full_name
 
 
