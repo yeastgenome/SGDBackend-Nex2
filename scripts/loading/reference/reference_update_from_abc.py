@@ -4,7 +4,8 @@ from src.models import Referencedbentity, Referenceauthor, ReferenceUrl, Referen
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.pubmed import set_cite
 from scripts.loading.util import link_gene_names
-import json
+# import json
+import ujson
 from datetime import datetime
 from bs4 import BeautifulSoup
 from os import environ
@@ -548,8 +549,9 @@ def read_reference_data_from_abc():
     json_data = dict()
     with gzip.open(json_file, 'rb') as f:
         json_str = f.read()
-        json_data = json.loads(json_str)
-
+        # json_data = json.loads(json_str)
+        json_data = ujson.loads(json_str)
+        
     pmid_to_json_data = {}
     for x in json_data['data']:
         if "cross_references" not in x:
@@ -577,13 +579,17 @@ def get_child(nex_session, reference_id):
                                "FROM nex.reference_relation " + \
                                "WHERE parent_id = {}".format(reference_id)).fetchall()
     return rows
-    
-def convert_publication_status(pubStatu):
 
-    if pubStatu == 'aheadoflogger.info':
-        return 'Epub ahead of logger.info'
-    if pubStatu in ['ppublish', 'epublish']:
+
+def convert_publication_status(pubStatus):
+
+    if pubStatus in ['ppublish', 'epublish']:
         return 'Published'
+    elif pubStatus == 'aheadofprint':
+        return 'Epub ahead of print'
+    else:
+        return pubStatus
+    
     
 def remove_html_tags(text):
 
