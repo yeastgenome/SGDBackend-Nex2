@@ -1754,6 +1754,7 @@ class CurationReference(Base):
     created_by = Column(String(12), nullable=False)
     curator_comment = Column(String(2000))
     json = Column(Text)
+    topic_entity_tag_id = Column(BigInteger)
 
     dbentity = relationship('Dbentity')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
