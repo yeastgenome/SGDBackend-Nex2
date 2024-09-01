@@ -32,6 +32,7 @@ def load_data():
 
     topic_atp_to_curation_tag = get_atp_to_curation_tag()
     display_tag_to_lit_topic = get_display_tag_to_lit_topic()
+    email_id_to_created_by = email_id_to_dbuser_mapping()
 
     ref_gene_to_topic = {}
     ref_to_topic = {}
@@ -46,6 +47,11 @@ def load_data():
         if taxonomy_id is None:
             taxonomy_id = get_taxonomy_id(nex_session, taxon)
             taxon_to_taxonomy_id[taxon] = taxonomy_id
+        created_by = None
+        if tag['email'] and "@" in tag['email']:
+            created_by = email_id_to_created_by.get(tag['email'].split('@')[0])
+        if created_by is None:
+            created_by = CREATED_BY
         reference_sgdid = tag['curie'].replace("SGD:", "")
         entity_sgdid = tag['entity'].replace("SGD:", "")
         reference_id = sgdid_to_reference_id.get(reference_sgdid)
@@ -59,7 +65,8 @@ def load_data():
             topic_atp_to_curation_tag.get(tag['topic']),
             reference_id,
             dbentity_id,
-            tag['note']
+            tag['note'],
+            created_by
         )
         lit_topic = display_tag_to_lit_topic.get(tag['display_tag_name'])
         if lit_topic is None:
@@ -82,7 +89,8 @@ def load_data():
                                                    dbentity_id, taxonomy_id)
         if annotation_id is None:
             insert_into_literatureannotation(nex_session, source_id, taxonomy_id,
-                                             reference_id, dbentity_id, lit_topic)
+                                             reference_id, dbentity_id, lit_topic,
+                                             created_by)
         elif lit_topic == 'Reviews' and topic_in_db != 'Reviews':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
         elif lit_topic == 'Primary Literature' and topic_in_db not in ['Primary Literature', 'Reviews']:
@@ -93,7 +101,8 @@ def load_data():
                                                    None, taxonomy_id)
         if annotation_id is None:
             insert_into_literatureannotation(nex_session, source_id, taxonomy_id,
-                                             reference_id, None, lit_topic)
+                                             reference_id, None, lit_topic,
+                                             created_by)
 
         elif lit_topic == 'Reviews' and topic_in_db != 'Reviews':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
@@ -120,7 +129,7 @@ def update_literatureannotation(nex_session, annotation_id, lit_topic):
         print("An error occurred when updating literatureannotation.topic to '" + lit_topic + "' for annotation_id = " + str(annotation_id) + " error = " + str(e))
         
                                             
-def insert_into_literatureannotation(nex_session, source_id, taxonomy_id, reference_id, dbentity_id, lit_topic):
+def insert_into_literatureannotation(nex_session, source_id, taxonomy_id, reference_id, dbentity_id, lit_topic, created_by):
 
     print("insert_into_literatureannotation: ", reference_id, dbentity_id, lit_topic)
 
@@ -130,7 +139,7 @@ def insert_into_literatureannotation(nex_session, source_id, taxonomy_id, refere
                                  taxonomy_id = taxonomy_id,
                                  reference_id = reference_id,
                                  topic = lit_topic,
-                                 created_by = CREATED_BY)
+                                 created_by = created_by)
         nex_session.add(x)
         print("Adding literatureannotation row for reference_id = " + str(reference_id) + ", dbentity_id = " + str(dbentity_id) + ", topic = " + lit_topic)
     except Exception as e:
@@ -162,7 +171,8 @@ def insert_into_curation_reference(
     curation_tag,
     reference_id,
     dbentity_id,
-    note
+    note,
+    created_by
 ):
 
     print("insert_into_curation_reference:", source_id, tet_id, curation_tag, reference_id, dbentity_id, note)
@@ -174,7 +184,7 @@ def insert_into_curation_reference(
                               reference_id = reference_id,
                               dbentity_id = dbentity_id,
                               curator_comment = note,
-                              created_by = CREATED_BY)
+                              created_by = created_by)
         nex_session.add(x)
         print("Adding a new tag '" + curation_tag + "' for reference_id = " + str(reference_id) + " and dbentity_id = " + str(dbentity_id) + " curation_reference table")
     except Exception as e:
@@ -307,6 +317,15 @@ def get_display_tag_to_lit_topic():
         "primary display": "Primary Literature"
     }
 
+def email_id_to_dbuser_mapping():
+
+    return {
+        "edwong": "EDITH",
+        "rnash": "NASH",
+        "stacia": "STACIA",
+        "suzia": "SUZIA",
+        "sweng": "SHUAI'
+    }
 
 """
 "curie": "SGD:S100000038",
