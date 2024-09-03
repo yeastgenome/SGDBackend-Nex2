@@ -16,7 +16,7 @@ def load_data():
 
     nex_session = get_session()
 
-    # download_json_file()
+    download_json_file()
     tet_ids = fetch_all_tets_loaded_past_week(nex_session)
 
     sgdids = fetch_all_new_sgdids(nex_session)
@@ -53,21 +53,25 @@ def load_data():
         if created_by is None:
             created_by = CREATED_BY
         reference_sgdid = tag['curie'].replace("SGD:", "")
-        entity_sgdid = tag['entity'].replace("SGD:", "")
+        entity_sgdid = None
+        if tag['entity']:
+            entity_sgdid = tag['entity'].replace("SGD:", "")
         reference_id = sgdid_to_reference_id.get(reference_sgdid)
         dbentity_id = None
         if entity_sgdid:
             dbentity_id = sgdid_to_dbentity_id.get(entity_sgdid)
-        insert_into_curation_reference(
-            nex_session,
-            source_id,
-            tag['topic_entity_tag_id'],
-            topic_atp_to_curation_tag.get(tag['topic']),
-            reference_id,
-            dbentity_id,
-            tag['note'],
-            created_by
-        )
+        if topic_atp_to_curation_tag.get(tag['topic']) != 'None':
+            # not 'review', not 'other primary info', not 'other additional info'
+            insert_into_curation_reference(
+                nex_session,
+                source_id,
+                tag['topic_entity_tag_id'],
+                topic_atp_to_curation_tag.get(tag['topic']),
+                reference_id,
+                dbentity_id,
+                tag['note'],
+                created_by
+            )
         lit_topic = display_tag_to_lit_topic.get(tag['display_tag_name'])
         if lit_topic is None:
             print("ERROR no lit_topic found for " + str(tag['display_tag_name']))
@@ -75,9 +79,7 @@ def load_data():
         
         if dbentity_id:
             if (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
-                if lit_topic == 'Reviews':
-                    ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = lit_topic
-                elif lit_topic == 'Primary Literature' and ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] != 'Reviews':
+                if lit_topic == 'Primary Literature' and ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] == 'Additional Literature':
                     ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = lit_topic
             else:
                 ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = lit_topic
@@ -85,30 +87,29 @@ def load_data():
             ref_to_topic[(reference_id, taxonomy_id)] = lit_topic
 
     for (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
+        lit_topic = ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    dbentity_id, taxonomy_id)
         if annotation_id is None:
             insert_into_literatureannotation(nex_session, source_id, taxonomy_id,
                                              reference_id, dbentity_id, lit_topic,
                                              created_by)
-        elif lit_topic == 'Reviews' and topic_in_db != 'Reviews':
-            update_literatureannotation(nex_session, annotation_id, lit_topic)
-        elif lit_topic == 'Primary Literature' and topic_in_db not in ['Primary Literature', 'Reviews']:
+        if lit_topic == 'Primary Literature' and topic_in_db == 'Additional Literature':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
 
     for (reference_id, taxonomy_id) in ref_to_topic:
+        lit_topic = ref_to_topic[(reference_id, taxonomy_id)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    None, taxonomy_id)
         if annotation_id is None:
             insert_into_literatureannotation(nex_session, source_id, taxonomy_id,
                                              reference_id, None, lit_topic,
                                              created_by)
-
         elif lit_topic == 'Reviews' and topic_in_db != 'Reviews':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
         elif lit_topic == 'Omics' and topic_in_db not in ['Reviews', 'Omics']:
             update_literatureannotation(nex_session, annotation_id, lit_topic)
-
+        
     # nex_session.rollback()
     nex_session.commit()
     nex_session.close()
@@ -278,7 +279,8 @@ def read_reference_data_from_abc(tet_ids, sgdids):
             continue
         tet_ids_from_abc.add(tet_id)
         reference_sgdids.add(sgdid)
-        locus_sgdids.add(x['entity'].replace("SGD:", ""))
+        if x['entity']:
+            locus_sgdids.add(x['entity'].replace("SGD:", ""))
         data.append(x)
 
     return (data, reference_sgdids, locus_sgdids)
@@ -286,13 +288,12 @@ def read_reference_data_from_abc(tet_ids, sgdids):
 
 def get_atp_to_curation_tag():
 
-    # "ATP:0000128": "Complexes",
     return {
         "ATP:0000012": "GO information",
         "ATP:0000079": "Classical phenotype information",
         "ATP:0000129": "Headline information",
-        "other primary info": "other primary information",
-        "review": "reviews",
+        "ATP:0000147": "None",
+        "ATP:0000130": "None",
         "ATP:0000085": "HTP phenotype",
         "ATP:0000150": "Non-phenotype HTP",
         "ATP:0000011": "Homology/Disease",
@@ -302,7 +303,7 @@ def get_atp_to_curation_tag():
         "ATP:0000149": "Engineering",
         "ATP:0000054": "Gene model",
         "ATP:0000006": "Alleles",
-        "other additional literature": "other additional literature"
+        "ATP:0000132": "None"
     }
 
 
@@ -324,7 +325,7 @@ def email_id_to_dbuser_mapping():
         "rnash": "NASH",
         "stacia": "STACIA",
         "suzia": "SUZIA",
-        "sweng": "SHUAI'
+        "sweng": "SHUAI"
     }
 
 """
