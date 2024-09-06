@@ -19,12 +19,10 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
-
 gpi_file = "scripts/dumping/curation/data/gpi.sgd"
-
 TAXON = 'taxon:559292'
-
 TAXID = 'TAX:559292'
+
 
 def dump_data():
 
@@ -51,6 +49,7 @@ def dump_data():
     dbentity_id_to_ncbi_protein_name = {}
     dbentity_id_to_uniprot = {}
     dbentity_id_to_refseq_ids = {}
+    dbentity_id_to_rnacentral_id = {}
     for x in nex_session.query(LocusAlias).all():
         if x.alias_type == 'Uniform':
             alias_names = []
@@ -68,6 +67,8 @@ def dump_data():
                 refseq_ids = dbentity_id_to_refseq_ids[x.locus_id]
             refseq_ids.append("RefSeq:" + x.display_name)
             dbentity_id_to_refseq_ids[x.locus_id] = refseq_ids
+        elif x.alias_type == 'RNAcentral ID':
+            dbentity_id_to_rnacentral_id[x.locus_id] = x.display_name.replace("_559292", "")
 
     dbentity_id_to_date_assigned = {}
     for x in nex_session.query(Goannotation).filter_by(source_id=source_id, annotation_type='manually curated').all():
@@ -137,6 +138,9 @@ def dump_data():
         dbxrefs = dbentity_id_to_refseq_ids.get(x.dbentity_id, [])
         if x.dbentity_id in dbentity_id_to_uniprot:
             dbxrefs = [dbentity_id_to_uniprot[x.dbentity_id]] + dbxrefs
+        if x.dbentity_id in dbentity_id_to_rnacentral_id:
+            dbxrefs.append(dbentity_id_to_rnacentral_id[x.dbentity_id])
+
         col10 = ''
         if len(dbxrefs) > 0:
             col10 = '|'.join(dbxrefs)
