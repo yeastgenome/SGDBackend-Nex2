@@ -2490,8 +2490,9 @@ def entity_validation(request):
                                  "biocyc_id": pathway.biocyc_id,
                                  "query": entity})
             elif subclass == "allele":
-                allele = DBSession.query(Allelebentity).filter(
-                    or_(Alleledbentity.sgdid==entity.upper().replace("SGD:", ""),
+                allele = DBSession.query(Alleledbentity).filter(
+                    or_(Alleledbentity.format_name.ilike(entity),
+                        Alleledbentity.sgdid==entity.upper().replace("SGD:", ""),
                         Alleledbentity.display_name.ilike(entity))).one_or_none()
                 if allele:
                     data.append({"modEntityId": "SGD:" + allele.sgdid,
@@ -2499,10 +2500,10 @@ def entity_validation(request):
                                  "format_name": allele.format_name,
                                  "query": entity})
             else:
-                locus = DBSession.query(Locusbentity).filter(
-                    or_(Locusdbentity.sgdid==entity.upper().replace("SGD:", ""),
-                        Locusdbentity.display_name.ilike(entity),
-                        Locusdbentity.format_name.ilike(entity))).one_or_none()
+                locus = DBSession.query(Locusdbentity).filter(
+                    or_(Locusdbentity.systematic_name.ilike(entity),
+                        Locusdbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Locusdbentity.display_name.ilike(entity))).one_or_none()
                 if locus:
                     data.append({"modEntityId": "SGD:" + locus.sgdid,
                                  "display_name": locus.display_name,
