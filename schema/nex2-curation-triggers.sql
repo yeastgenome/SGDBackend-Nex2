@@ -316,7 +316,7 @@ BEGIN
   ELSIF (TG_OP = 'DELETE') THEN
 
     v_row := OLD.curation_id || '[:]' || OLD.reference_id || '[:]' ||
-             OLD.source_id || '[:]' || coalesce(OLD.locus_id,0) || '[:]' ||
+             OLD.source_id || '[:]' || coalesce(OLD.dbentity_id,0) || '[:]' ||
              OLD.curation_tag || '[:]' || OLD.date_created || '[:]' || 
              OLD.created_by  || '[:]' || coalesce(OLD.curator_comment,'') || '[:]' ||
              coalesce(OLD.json,'') || '[:]' || OLD.topic_entity_tag_id;
