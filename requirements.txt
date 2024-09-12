@@ -1,6 +1,7 @@
 amqp==5.0.6
 apply==1.5	
 anyjson==0.3.3	
+ujson==5.10.0
 backports-abc==0.5
 backports.ssl-match-hostname==3.7.0.1
 billiard==3.6.4.0
