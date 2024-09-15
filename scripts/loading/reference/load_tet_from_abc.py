@@ -39,7 +39,7 @@ def load_data():
     # all primary and additional display tags need an entity
     taxon_to_taxonomy_id = {}
     for tag in newTags:
-        if not topic_atp_to_curation_tag.get(tag['topic']):
+        if not topic_atp_to_curation_tag.get(tag['topic']) and tag['topic'] != tag['entity_type'] and tag['topic_name'] != 'topic tag':
             print("The '" + tag['topic_name'] + "' is not allowed 'curation_tag'")
             continue
         taxon = tag['species'].replace("NCBITaxon:", "TAX:")
@@ -60,7 +60,7 @@ def load_data():
         dbentity_id = None
         if entity_sgdid:
             dbentity_id = sgdid_to_dbentity_id.get(entity_sgdid)
-        if topic_atp_to_curation_tag.get(tag['topic']) != 'None':
+        if topic_atp_to_curation_tag.get(tag['topic']) and tag['topic'] != tag['entity_type']:
             # not 'review', not 'other primary info', not 'other additional info'
             insert_into_curation_reference(
                 nex_session,
@@ -239,13 +239,14 @@ def fetch_all_tets_loaded_past_week(nex_session):
                                "FROM nex.deletelog "
                                "WHERE tab_name = 'CURATION_REFERENCE' "
                                "AND date_created >= CURRENT_DATE - INTERVAL '7 days'").fetchall()
-    """
     for x in rows:
+        # 194314[:]2752226[:]834[:]1268334[:]Headline information[:]2024-09-03 15:23:25.283666[:]SHUAI[:][:][:]197577
         pieces = x[0].split("[:]")
-        tet_ids_set.add(pieces[-1])
-        # 55183[:]374151[:]834[:]1282521[:]Fast Track[:]2014-03-07 00:00:00[:]DIANE[:]Mutations in VMS1, which is a conserved but ill-defined cytoplasmic protein, compromise proteasome assembly and substrate delivery to the proteasome[:]
-    """
-    
+        tet_id = pieces[-1]
+        print(x, "tet_id=", tet_id)
+        if tet_id:
+            tet_ids_set.add(int(tet_id))
+                
     return tet_ids_set
 
 
@@ -292,8 +293,6 @@ def get_atp_to_curation_tag():
         "ATP:0000012": "GO information",
         "ATP:0000079": "Classical phenotype information",
         "ATP:0000129": "Headline information",
-        "ATP:0000147": "None",
-        "ATP:0000130": "None",
         "ATP:0000085": "HTP phenotype",
         "ATP:0000150": "Non-phenotype HTP",
         "ATP:0000011": "Homology/Disease",
@@ -302,8 +301,7 @@ def get_atp_to_curation_tag():
         "ATP:0000022": "Pathways",
         "ATP:0000149": "Engineering",
         "ATP:0000054": "Gene model",
-        "ATP:0000006": "Alleles",
-        "ATP:0000132": "None"
+        "ATP:0000006": "Alleles"
     }
 
 
