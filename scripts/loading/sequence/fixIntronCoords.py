@@ -72,8 +72,8 @@ def fix_intron_coords():
 
     f.close()
     
-    db_session.rollback()
-    # db_session.commit()
+    # db_session.rollback()
+    db_session.commit()
     db_session.close()
     
 
