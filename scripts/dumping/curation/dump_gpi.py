@@ -189,10 +189,8 @@ def dump_data():
         
     fw.close()
 
-    """
     log.info("Uploading GPI file to S3...")
     update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to_id, datestamp)
-    """
     
     nex_session.close()
 
