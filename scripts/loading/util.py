@@ -12,6 +12,23 @@ import sys
 
 __author__ = 'sweng66'
 
+
+allowed_go_qualifier_list = [
+    "located in",
+    "acts upstream of positive effect",
+    "acts upstream of",
+    "colocalizes with",
+    "contributes to",
+    "acts upstream of negative effect",
+    "is active in",
+    "enables",
+    "part of",
+    "involved in",
+    "acts upstream of or within",
+    "acts upstream of or within positive effect"
+]
+
+
 def prepare_schema_connection(dbtype, dbhost, dbname, schema, dbuser, dbpass):
     class Base(object):
         __table_args__ = {'schema': schema, 'extend_existing':True}
@@ -451,7 +468,7 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
         roid = field[2]
         go_qualifier = roid_to_display_name.get(roid)
         if go_qualifier is None:
-            print ("The ROID = ", roid, " is not in RO table.")
+            print ("The ROID = ", roid, " is not in RO table from 'read_complex_gpad_file' function.")
             continue
 
         ## go_id
@@ -520,12 +537,13 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
         
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
-    from src.models import Referencedbentity, Dbentity, Go, Eco, Referencedeleted
+    from src.models import Referencedbentity, Dbentity, Go, Eco, Referencedeleted, Ro
     
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
     deleted_pmid_to_sgdid = dict([(x.pmid, x.sgdid) for x in nex_session.query(Referencedeleted).all()])
-    
+    roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
+
     pmid_to_reference_id = {}
 
     sgdid_to_reference_id = {}
@@ -557,19 +575,26 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         read_line[line] = 1
 
         ## SGDID
-        sgdid = field[1]
+        sgdid = field[0].split(":")[1]
         dbentity_id = sgdid_to_dbentity_id.get(sgdid)
         if dbentity_id is None:
             print ("The sgdid = ", sgdid, " is not in DBENTITY table or is not for LOCUS/COMPLEX.")
             continue
- 
-        ## go_qualifier
-        go_qualifier = field[2]
-        if 'NOT' in go_qualifier:
-            go_qualifier = 'NOT'
-        else: 
-            go_qualifier = go_qualifier.replace('_', ' ')
 
+        ## go_qualifier
+        if field[1] and field[1] == 'NOT':
+            go_qualifier = 'NOT'
+        else:
+            go_qualifier = roid_to_display_name.get(field[2])
+            if go_qualifier is None:
+                print ("The ROID = ", field[2], " is not in RO table FROM 'read_noctua_gpad_file' function")
+                continue
+        go_qualifier = go_qualifier.replace(",", "").replace("_", " ")
+        go_qualifier = go_qualifier.replace("|", " ")
+        if go_qualifier not in allowed_go_qualifier_list:
+            print("WARNING: new go_qualifier=", go_qualifier)
+            continue
+        
         ## go_id
         goid = field[3]
         go_id = goid_to_go_id.get(goid)
@@ -618,7 +643,8 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             continue
 
         ## date_created
-        date_created = str(field[8][0:4]) + '-' + str(field[8][4:6]) + '-' + str(field[8][6:])
+        # date_created = str(field[8][0:4]) + '-' + str(field[8][4:6]) + '-' + str(field[8][6:])
+        date_created = field[8]
         date_assigned = sgdid_to_date_assigned.get(sgdid)
         if date_assigned is None:
             date_assigned = date_created
@@ -654,12 +680,13 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
 
 def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_sgdid_list, foundAnnotation, get_extension=None, get_support=None, dbentity_with_uniprot=None, bad_ref=None):
 
-    from src.models import Referencedbentity, Locusdbentity, Go, EcoAlias
+    from src.models import Referencedbentity, Locusdbentity, Go, EcoAlias, Ro
     # import src.scripts.loading.config
 
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     evidence_to_eco_id = dict([(x.display_name, x.eco_id) for x in nex_session.query(EcoAlias).all()])
-
+    roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
+    
     pmid_to_reference_id = {}
     sgdid_to_reference_id = {}
     for x in nex_session.query(Referencedbentity).all():
@@ -694,13 +721,22 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
         ## uniprot ID & SGDIDs                                                                              
         uniprotID = field[1]
 
-        ## go_qualifier                                                                                     
-        go_qualifier = field[2]
-        if 'NOT' in go_qualifier:
+        ## go_qualifier
+        if field[2] and field[2] == 'NOT':
             go_qualifier = 'NOT'
         else:
-            go_qualifier = go_qualifier.replace('_', ' ')
+            if field[2].startswith('RO:'):
+                go_qualifier = roid_to_display_name.get(field[2])
+                if go_qualifier is None:
+                    print ("The ROID = ", field[2], " is not in RO table from 'read_gpad_file' function.")
+                    continue
+            else:
+                go_qualifier = field[2].replace('_', ' ').replace("|", " ")
 
+        if go_qualifier not in allowed_go_qualifier_list:
+            print("WARNING: go qualifier=", go_qualifier, " is not allowed")
+            continue
+                  
         ## go_id                                                                                            
         goid = field[3]
         go_id = goid_to_go_id.get(goid)
@@ -767,8 +803,12 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
         # eg, SGD for manual cuartion + HTP;
         # Interpro, UniPathway, UniProtKB, GOC, RefGenome for computational annotation
         # taxon_id = field[7]                  
+
+        if "_" in str(field[8]):
+            date_created = field[8]
+        else:
+            date_created = str(field[8][0:4]) + '-' + str(field[8][4:6]) + '-' + str(field[8][6:])
         
-        date_created = str(field[8][0:4]) + '-' + str(field[8][4:6]) + '-' + str(field[8][6:])
         if source == 'SGD':
             # date_assigned = uniprot_to_date_assigned.get(uniprotID)
             if go_evidence.startswith('H'):
@@ -840,6 +880,7 @@ def read_gpi_file(filename):
 
         # same uniprot ID for multiple RNA entries                                                  
         
+        # uniprotID = field[0].split(":")[1]
         uniprotID = field[1]
         sgdidlist = field[8].replace('SGD:', '')
         sgdid_list = [] if uniprot_to_sgdid_list.get(uniprotID) is None else uniprot_to_sgdid_list.get(uniprotID)
@@ -1059,7 +1100,7 @@ def read_obo(ontology, filename, key_switch, parent_to_children, is_obsolete_id,
                     parent_child_pair[(parent, term['goid'])] = 1
                     ro_id = get_relation_to_ro_id(relation_type)
                     if ro_id is None:
-                        print(relation_type, " is not in RO table")
+                        print(relation_type, " is not in RO table from 'read_obo' function.")
                         continue
                     if parent not in parent_to_children:
                         parent_to_children[parent] = []
@@ -1294,6 +1335,7 @@ def get_relation_to_ro_id(relation_type, nex_session=None):
         relation_to_ro_id = {}
         for relation in nex_session.query(Ro).all():
             relation_to_ro_id[relation.display_name] = relation.ro_id
+            relation_to_ro_id[relation.format_name] = relation.ro_id
     return None if relation_type not in relation_to_ro_id else relation_to_ro_id[relation_type]
 
 

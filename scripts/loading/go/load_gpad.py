@@ -96,9 +96,10 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     	   	          uniprot_to_sgdid_list, foundAnnotation, 
                           yes_goextension, yes_gosupport,
                           dbentity_id_with_uniprot, bad_ref)
-
+    
     noctua_data = []
     complex_data = []
+    
     if annotation_type == 'manually curated':
         log.info(str(datetime.now()))
         log.info("Reading noctua GPAD file...")
@@ -118,6 +119,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                             yes_goextension, yes_gosupport, new_pmids, 
                                             dbentity_id_with_new_pmid,
                                             dbentity_id_with_uniprot, bad_ref)
+        
         log.info(str(datetime.now()))
         log.info("Reading complex portal GPAD file...")
 
@@ -129,7 +131,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                                                     foundAnnotation,
                                                                     yes_goextension,
                                                                     yes_gosupport)
-        
+
     nex_session.close()
     
     log.info(str(datetime.now()))
