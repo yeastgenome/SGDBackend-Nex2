@@ -319,7 +319,7 @@ BEGIN
              OLD.source_id || '[:]' || coalesce(OLD.dbentity_id,0) || '[:]' ||
              OLD.curation_tag || '[:]' || OLD.date_created || '[:]' || 
              OLD.created_by  || '[:]' || coalesce(OLD.curator_comment,'') || '[:]' ||
-             coalesce(OLD.json,'') || '[:]' || OLD.topic_entity_tag_id;
+             coalesce(OLD.json,'') || '[:]' || coalesce(OLD.topic_entity_tag_id,0);
 
           PERFORM nex.insertdeletelog('CURATION_REFERENCE'::text, OLD.curation_id, v_row, USER);
 

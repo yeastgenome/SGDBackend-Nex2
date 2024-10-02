@@ -44,6 +44,7 @@ CREATE TABLE nex.curation_reference (
     created_by varchar(12) NOT NULL,
     curator_comment varchar(2000),
     json text,
+    topic_entity_tag_id bigint,
     CONSTRAINT curationreference_pk PRIMARY KEY (curation_id)
 ) ;
 COMMENT ON TABLE nex.curation_reference IS 'Tags and notes associated with reference curation.';
