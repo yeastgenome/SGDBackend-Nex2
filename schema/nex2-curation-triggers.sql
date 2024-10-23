@@ -589,4 +589,3 @@ $BODY$ LANGUAGE 'plpgsql';
 CREATE TRIGGER curatoractivity_biur
 BEFORE INSERT OR UPDATE ON nex.curatoractivity FOR EACH ROW
 EXECUTE PROCEDURE trigger_fct_curatoractivity_biur();
-insert
