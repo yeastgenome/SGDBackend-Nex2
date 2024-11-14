@@ -403,8 +403,12 @@ COMMENT ON COLUMN nex.goannotation.dbentity_id IS 'FK to DBENTITY.DBENTITY_ID.';
 COMMENT ON COLUMN nex.goannotation.go_qualifier IS 'Qualifier of the GO annotation (enables, involved in, part of, NOT, colocalizes_with, contributed_to).';
 COMMENT ON COLUMN nex.goannotation.date_assigned IS 'Date the GO annotation was assigned or last reviewed.';
 ALTER TABLE nex.goannotation ADD CONSTRAINT goannotation_uk UNIQUE (dbentity_id,go_id,eco_id,reference_id,annotation_type,go_qualifier,source_id);
-ALTER TABLE nex.goannotation ADD CONSTRAINT goanno_qualifier_ck CHECK (GO_QUALIFIER IN ('acts upstream of', 'acts upstream of negative effect', 'acts upstream of or within', 
-'acts upstream of or within positive effect', 'enables', 'involved in', 'is active in', 'part of', 'NOT', 'colocalizes with', 'contributes to', 'located in'));
+ALTER TABLE nex.goannotation ADD CONSTRAINT goanno_qualifier_ck CHECK (GO_QUALIFIER IN ('located in','NOT located in','acts upstream of, positive effect',
+	'does NOT act upstream of, positive effect','acts upstream of','does NOT act upstream of','colocalizes with','does NOT colocalize with','contributes to',
+	'does NOT contribute to','acts upstream of, negative effect','does NOT act upstream of, negative effect','is active in','NOT active in','enables',
+	'does NOT enable','part of','NOT part of','involved in','NOT involved in','acts upstream of or within','does NOT act upstream of or within',
+	'acts upstream of or within, positive effect','does NOT act upstream of or within, positive effect','acts upstream of or within, negative effect',
+	'does NOT act upstream of or within, negative effect'));
 ALTER TABLE nex.goannotation ADD CONSTRAINT goanno_annotation_type_ck CHECK (ANNOTATION_TYPE IN ('high-throughput', 'manually curated', 'computational'));
 CREATE INDEX goanno_eco_fk_index ON nex.goannotation (eco_id);
 CREATE INDEX goanno_tax_fk_index ON nex.goannotation (taxonomy_id);

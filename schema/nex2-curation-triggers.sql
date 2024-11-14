@@ -14,8 +14,8 @@ DECLARE
 BEGIN
   IF (TG_OP = 'UPDATE') THEN
 
-    IF (OLD.reference_id != NEW.reference_id) THEN
-        PERFORM nex.insertupdatelog('AUTHORRESPONSE'::text, 'REFERENCE_ID'::text, OLD.curation_id, OLD.reference_id::text, NEW.reference_id::text, USER);
+    IF (OLD.pmid != NEW.pmid) THEN
+        PERFORM nex.insertupdatelog('AUTHORRESPONSE'::text, 'PMID'::text, OLD.curation_id, OLD.pmid::text, NEW.pmid::text, USER);
     END IF;
 
      IF (OLD.source_id != NEW.source_id) THEN
