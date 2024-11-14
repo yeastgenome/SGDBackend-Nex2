@@ -1560,9 +1560,15 @@ def locus_homolog_details(request):
     try:
         sgdid = request.matchdict['id']
         allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + sgdid + "/orthologs?limit=10000"
-        req = Request(allianceAPI)
-        res = urlopen(req)
-        records = json.loads(res.read().decode('utf-8'))
+        foundException = 0
+        try:
+            req = Request(allianceAPI)
+            res = urlopen(req, timeout=5) # 5 sec timeout
+            records = json.loads(res.read().decode('utf-8'))
+        except Exception as e:
+            log.error("Request to Alliance genome service timed out.")
+            return []
+
         data = []
         for record in records['results']:
             homolog = record['homologGene']
@@ -1571,7 +1577,8 @@ def locus_homolog_details(request):
         return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")
     except Exception as e:
         log.error(e)
-    
+
+
 @view_config(route_name='locus_fungal_homolog_details', renderer='json', request_method='GET')
 def locus_fungal_homolog_details(request):
     try:
@@ -1581,7 +1588,6 @@ def locus_fungal_homolog_details(request):
             id = gene_name.replace('S', '')
             if len(id) == 9 and id.isdigit():
                 gene_name = 'SGD:' + gene_name
-        # service = Service("https://stage.alliancegenome.org/alliancemine/service")
         service = Service("https://www.alliancegenome.org/alliancemine/service")
         query = service.new_query("Gene")
         query.add_view(
