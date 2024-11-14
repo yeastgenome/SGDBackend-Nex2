@@ -4761,6 +4761,7 @@ class Locusdbentity(Dbentity):
             "gene_name": self.gene_name,
             "link": self.obj_url,
             "sgdid": self.sgdid,
+            "uniprot_id": '',
             "qualities": [],
             "aliases": [],
             "references": [],
@@ -4813,10 +4814,17 @@ class Locusdbentity(Dbentity):
                                     "WB":   allianceSearchUrl + "Caenorhabditis%20elegans",
                                     "HGNC": allianceSearchUrl + "Homo%20sapiens" }
             allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + self.sgdid + "/orthologs?limit=10000"
+            records = None
+            foundException = 0
             try:
                 req = Request(allianceAPI)
-                res = urlopen(req)
+                res = urlopen(req, timeout=5) # 5 sec timeout
                 records = json.loads(res.read().decode('utf-8'))
+            except Exception as e:
+                foundException = 1
+
+            linkData = []
+            if foundException == 0: 
                 mod_to_ids = {}
                 for record in records['results']:
                     homolog = record['homologGene']
@@ -4827,7 +4835,6 @@ class Locusdbentity(Dbentity):
                     if len(ids) < 100:
                         ids.append(homolog['id'])
                     mod_to_ids[mod] = ids
-                linkData = []
                 for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
                     if mod in mod_to_ids:
                         if len(mod_to_ids[mod]) > 1:
@@ -4837,14 +4844,11 @@ class Locusdbentity(Dbentity):
                         else:
                             linkData.append({"mod": mod,
                                              "icon_url": allianceSearchRootUrl + "gene/" + mod_to_ids[mod][0]})
-                # linkData.insert(0, {"mod": 'SGD',
-                #                "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
-                linkData.append({"mod": 'SGD',                                                                                  
-                                "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
-                obj['alliance_icon_links'] = linkData
-            except Exception as e:
-                print('error fetching alliance homolog data:' + str(e))
-                
+            
+            linkData.append({"mod": 'SGD',
+                             "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
+            obj['alliance_icon_links'] = linkData
+                            
         sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Sequence").one_or_none()
         if sequence_summary:
             obj["sequence_summary"] = sequence_summary.html
@@ -4862,7 +4866,11 @@ class Locusdbentity(Dbentity):
 
         if self.genetic_position:
             obj["genetic_position"] = self.genetic_position
-            
+
+        rows = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
+        if len(rows) > 0:
+            obj["uniprot_id"] = rows[0].display_name
+
         # summaries and paragraphs
         summaries = DBSession.query(Locussummary.summary_id, Locussummary.html, Locussummary.date_created,Locussummary.summary_order,Locussummary.summary_type).filter_by(locus_id=self.dbentity_id).all()
         summary_types = {}
