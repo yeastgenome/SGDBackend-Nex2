@@ -14,18 +14,32 @@ __author__ = 'sweng66'
 
 
 allowed_go_qualifier_list = [
-    "located in",
-    "acts upstream of positive effect",
-    "acts upstream of",
-    "colocalizes with",
-    "contributes to",
-    "acts upstream of negative effect",
-    "is active in",
-    "enables",
-    "part of",
-    "involved in",
-    "acts upstream of or within",
-    "acts upstream of or within positive effect"
+  "located in",
+  "NOT located in",
+  "acts upstream of, positive effect",
+  "does NOT act upstream of, positive effect",
+  "acts upstream of",
+  "does NOT act upstream of",
+  "colocalizes with",
+  "does NOT colocalize with",
+  "contributes to",
+  "does NOT contribute to",
+  "acts upstream of, negative effect",
+  "does NOT act upstream of, negative effect",
+  "is active in",
+  "NOT active in",
+  "enables",
+  "does NOT enable",
+  "part of",
+  "NOT part of",
+  "involved in",
+  "NOT involved in",
+  "acts upstream of or within",
+  "does NOT act upstream of or within",
+  "acts upstream of or within, positive effect",
+  "does NOT act upstream of or within, positive effect",
+  "acts upstream of or within, negative effect",
+  "does NOT act upstream of or within, negative effect"
 ]
 
 
@@ -534,7 +548,28 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
             data.append(entry)
 
     return (data, bad_complex_annotations, all_complex_go_ids)
-        
+
+
+def add_NOT_to_go_qualifer(go_qualifier):
+
+    not_mapping = {
+        "acts upstream of, positive effect": "does NOT act upstream of, positive effect",
+        "acts upstream of": "does NOT act upstream of",
+        "colocalizes with": "does NOT colocalize with",
+        "contributes to": "does NOT contribute to",
+        "acts upstream of, negative effect": "does NOT act upstream of, negative effect",
+        "enables": "does NOT enable",
+        "acts upstream of or within": "does NOT act upstream of or within",
+        "acts upstream of or within, positive effect": "does NOT act upstream of or within, positive effect",
+        "acts upstream of or within, negative effect": "does NOT act upstream of or within, negative effect"
+    }
+    if go_qualifier in ["located in", "part of", "involved in"]:
+        return "NOT " + go_qualifier
+    if go_qualifier == "is active in":
+        return "NOT active in"
+    return not_mapping.get(go_qualifier)
+    
+    
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
     from src.models import Referencedbentity, Dbentity, Go, Eco, Referencedeleted, Ro
@@ -582,15 +617,27 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             continue
 
         ## go_qualifier
-        if field[1] and field[1] == 'NOT':
-            go_qualifier = 'NOT'
+        if not field[2]:
+            print("No go qualifier is provided")
+            continue
+        is_a_NOT = False
+        go_qualifier = None
+        roid = None
+        if 'NOT' in field[2]:
+            is_a_NOT = True
+            roid = field[2].replace('NOT|', '')
         else:
-            go_qualifier = roid_to_display_name.get(field[2])
+            roid = field[2]
+        go_qualifier = roid_to_display_name.get(roid)
+        if go_qualifier is None:
+            print ("The ROID = ", field[2], " is not in RO table FROM 'read_noctua_gpad_file' function")
+            continue
+        go_qualifier = go_qualifier.replace("_", " ")
+        if is_a_NOT:
+            go_qualifier = add_NOT_to_go_qualifer(go_qualifier)
             if go_qualifier is None:
-                print ("The ROID = ", field[2], " is not in RO table FROM 'read_noctua_gpad_file' function")
+                print("go_qualifier=", go_qualifier, " is not in NOT mapping list")
                 continue
-        go_qualifier = go_qualifier.replace(",", "").replace("_", " ")
-        go_qualifier = go_qualifier.replace("|", " ")
         if go_qualifier not in allowed_go_qualifier_list:
             print("WARNING: new go_qualifier=", go_qualifier)
             continue
@@ -720,23 +767,34 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
 
         ## uniprot ID & SGDIDs                                                                              
         uniprotID = field[1]
-
+        
         ## go_qualifier
-        if field[2] and field[2] == 'NOT':
-            go_qualifier = 'NOT'
-        else:
-            if field[2].startswith('RO:'):
-                go_qualifier = roid_to_display_name.get(field[2])
-                if go_qualifier is None:
-                    print ("The ROID = ", field[2], " is not in RO table from 'read_gpad_file' function.")
-                    continue
-            else:
-                go_qualifier = field[2].replace('_', ' ').replace("|", " ")
-
-        if go_qualifier not in allowed_go_qualifier_list:
-            print("WARNING: go qualifier=", go_qualifier, " is not allowed")
+        if field[2] is None:
+            print("No go qualifier is provided")
             continue
-                  
+        is_a_NOT = False
+        go_qualifier = None
+        roid = None
+        if 'NOT' in field[2]:
+            is_a_NOT = True
+            roid = field[2].replace('NOT|', '')
+        else:
+            roid = field[2]
+        if ":" in roid:
+            go_qualifier = roid_to_display_name.get(roid)
+            if go_qualifier is None:
+                go_qualifier = roid.replace("_", " ")
+        else:
+            go_qualifier = roid.replace("_", " ")
+        if is_a_NOT:
+            go_qualifier = add_NOT_to_go_qualifer(go_qualifier)
+            if go_qualifier is None:
+                print("go_qualifier=", go_qualifier, " is not in NOT mapping list")
+                continue
+        if go_qualifier not in allowed_go_qualifier_list:
+            print("WARNING: new go_qualifier=", go_qualifier)
+            continue
+        
         ## go_id                                                                                            
         goid = field[3]
         go_id = goid_to_go_id.get(goid)
