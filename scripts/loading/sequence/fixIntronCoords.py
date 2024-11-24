@@ -10,8 +10,8 @@ from scripts.loading.database_session import get_session
 __author__ = 'sweng66'
 
 
-coordFile = "scripts/loading/sequence/data/intron_coords_to_be_fixed_automatically.txt"
-
+# coordFile = "scripts/loading/sequence/data/intron_coords_to_be_fixed_automatically.txt"
+coordFile = "scripts/loading/sequence/data/intronChanges2make112224sw.txt"
 
 """
 D273-10B         275315
