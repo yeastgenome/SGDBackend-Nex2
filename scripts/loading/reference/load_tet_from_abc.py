@@ -213,7 +213,7 @@ def download_json_file():
         with open(json_file, 'wb') as fh:
             fh.write(data)
     except Exception as e:
-        print("Error downloading the file: " + file + ". Error=" + str(e))
+        print("Error downloading the fil. Error=" + str(e))
 
 def get_source_id(nex_session):
 
