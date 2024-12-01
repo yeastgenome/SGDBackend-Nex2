@@ -1,35 +1,30 @@
 import sys
+import json
+from urllib import request
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.add_abc_reference import add_paper
+from scripts.loading.reference.load_tet_from_abc import download_json_file
 import json
 from os import environ
-import boto3
-from botocore.exceptions import ClientError
-import gzip
-import os
 
 __author__ = 'sweng66'
 
-AWS_REGION = 'us-east-1'
-
-json_file = 'reference_new_SGD.json.gz'
-bucketname = 'agr-literature'
-## change to 'prod/reference/dumps/latest/' + json_file' when it is ready
-s3_file_location = 'develop/reference/dumps/latest/' + json_file
+# url = "https://stage-literature-rest.alliancegenome.org/reference/new_references/SGD?days=3"
+# url = "https://dev4006-literature-rest.alliancegenome.org/reference/new_references/SGD"
+url = "https://stage-literature-rest.alliancegenome.org/reference/new_references/SGD"
+json_file = "scripts/loading/reference/data/reference_new_SGD.json"
 
 
 def load_data():
 
-    print("Downloading ABC reference_new_SGD.json file...")
+    download_json_file()
     
-    download_reference_json_file_from_alliance_s3()
-
     print("Reading ABC reference_SGD.json file...")
     
     nex_session = get_session()
     
     json_data = dict()
-    with gzip.open(json_file, 'rb') as f:
+    with open(json_file, "r") as f:
         json_str = f.read()
         json_data = json.loads(json_str)
     
@@ -72,19 +67,16 @@ def is_paper_in_db(nex_session, cross_references):
     return (sgdid, pmid, dbentity_id, is_obsolete_sgdid)
 
 
-def download_reference_json_file_from_alliance_s3():
-    
-    s3_client = boto3.client('s3',
-                             region_name=AWS_REGION,
-                             aws_access_key_id=environ['ABC_AWS_ACCESS_KEY_ID'],
-                             aws_secret_access_key=environ['ABC_AWS_SECRET_ACCESS_KEY'])
+def download_json_file():
+
     try:
-        response = s3_client.download_file(bucketname, s3_file_location, json_file)
-        if response is not None:
-            logger.info("boto3 downloaded response: %s", response)
-    except ClientError as e:
-        logging.error(e)
-        return False
+        print("Downloading " + url)
+        req = request.urlopen(url)
+        data = req.read()
+        with open(json_file, 'wb') as fh:
+            fh.write(data)
+    except Exception as e:
+        print("Error downloading the file: " + json_file + ". Error=" + str(e))
 
 
 if __name__ == '__main__':
