@@ -9,9 +9,9 @@ from os import environ
 
 __author__ = 'sweng66'
 
-# url = "https://stage-literature-rest.alliancegenome.org/reference/new_references/SGD?days=3"
-# url = "https://dev4006-literature-rest.alliancegenome.org/reference/new_references/SGD"
-url = "https://stage-literature-rest.alliancegenome.org/reference/new_references/SGD"
+
+# url = "https://stage-literature-rest.alliancegenome.org/reference/get_recently_sorted_references/SGD?days=2"
+url = "https://stage-literature-rest.alliancegenome.org/reference/get_recently_sorted_references/SGD"
 json_file = "scripts/loading/reference/data/reference_new_SGD.json"
 
 
