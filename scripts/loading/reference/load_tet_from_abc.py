@@ -40,7 +40,7 @@ def load_data():
     taxon_to_taxonomy_id = {}
     for tag in newTags:
         if not topic_atp_to_curation_tag.get(tag['topic']) and tag['topic'] != tag['entity_type'] and tag['topic_name'] != 'topic tag':
-            print("The '" + tag['topic_name'] + "' is not allowed 'curation_tag'")
+            # print("The '" + tag['topic_name'] + "' is not allowed 'curation_tag'")
             continue
         taxon = tag['species'].replace("NCBITaxon:", "TAX:")
         taxonomy_id = taxon_to_taxonomy_id.get(taxon)
