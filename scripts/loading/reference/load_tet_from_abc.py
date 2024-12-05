@@ -72,9 +72,9 @@ def load_data():
                 tag['note'],
                 created_by
             )
-        lit_topic = display_tag_to_lit_topic.get(tag['display_tag_name'])
+        lit_topic = display_tag_to_lit_topic.get(tag['display_tag'])
         if lit_topic is None:
-            print("ERROR no lit_topic found for " + str(tag['display_tag_name']))
+            print("ERROR no lit_topic found for " + str(tag['display_tag']))
             continue
         
         if dbentity_id:
@@ -310,10 +310,10 @@ def get_display_tag_to_lit_topic():
     # display_tag_name": "primary display"
     
     return {
-        "OMICs display": "Omics",
-        "review display": "Reviews",
-        "additional display": "Additional Literature",
-        "primary display": "Primary Literature"
+        "ATP:0000148": "Omics",
+        "ATP:0000130": "Reviews",
+        "ATP:0000132": "Additional Literature",
+        "ATP:0000147": "Primary Literature"
     }
 
 def email_id_to_dbuser_mapping():
