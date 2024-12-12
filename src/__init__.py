@@ -1,3 +1,8 @@
+# src/__init__.py
+
+import logging
+import logging.handlers
+import requests 
 from wsgiref.simple_server import make_server
 from pyramid.config import Configurator
 from sqlalchemy import create_engine
@@ -5,9 +10,46 @@ import os
 
 from pyramid.events import NewRequest
 
-from src.models import DBSession, Base
-from src.stats import requests_timing_hook
+from .models import DBSession, Base
+from .stats import requests_timing_hook
 
+# ------------------------------------------------------------------------------
+# Logging Configuration
+# ------------------------------------------------------------------------------
+
+def setup_logging():
+    """
+    Configures logging for the application.
+    Logs performance metrics to 'performance.log' with rotation.
+    """
+    logger = logging.getLogger('src')
+    logger.setLevel(logging.INFO)
+
+    # Create a rotating file handler
+    fh = logging.handlers.RotatingFileHandler(
+        'performance.log',
+        maxBytes=10*1024*1024,  # 10 MB
+        backupCount=5
+    )
+    fh.setLevel(logging.INFO)
+
+    # Create a console handler for WARNING and above
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.WARNING)
+
+    # Create a formatter and set it for both handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # Add handlers to the logger
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
+
+# ------------------------------------------------------------------------------
+# CORS Headers Subscriber
+# ------------------------------------------------------------------------------
 
 def add_cors_headers_response_callback(event):
     """
@@ -24,12 +66,50 @@ def add_cors_headers_response_callback(event):
     event.request.add_response_callback(cors_headers)
 
 
+# ------------------------------------------------------------------------------
+# Monkey Patching `requests.get` to Include Timing Hook
+# ------------------------------------------------------------------------------
+
+def monkey_patch_requests():
+    """
+    Monkey patches the requests.get method to include the timing hook automatically.
+    """
+    original_get = requests.get
+
+    def timed_get(*args, **kwargs):
+        hooks = kwargs.get('hooks', {})
+        hooks['response'] = requests_timing_hook()
+        kwargs['hooks'] = hooks
+        return original_get(*args, **kwargs)
+
+    requests.get = timed_get
+
+
+# ------------------------------------------------------------------------------
+# Main Function to Configure and Return the WSGI Application
+# ------------------------------------------------------------------------------
+
 def main(global_config, **settings):
     """
     This function returns a Pyramid WSGI application.
     """
+    # Setup Logging
+    setup_logging()
+
+    # Monkey Patch the requests.get method
+    monkey_patch_requests()
+
     # Setup SQLAlchemy Engine
-    engine = create_engine(os.environ['NEX2_URI'], echo=False, pool_recycle=3600, pool_size=100)
+    nex2_uri = os.environ.get('NEX2_URI')
+    if not nex2_uri:
+        raise EnvironmentError("Environment variable 'NEX2_URI' is not set.")
+    
+    engine = create_engine(
+        nex2_uri,
+        echo=False,
+        pool_recycle=3600,
+        pool_size=100
+    )
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
 
@@ -40,11 +120,19 @@ def main(global_config, **settings):
     config.add_subscriber(add_cors_headers_response_callback, NewRequest)
 
     # **Include the Timing Module**
-    config.include('.stats.stats')
+    config.include('.stats')  # Correct relative path to include stats.py
 
+    # ------------------------------------------------------------------------------
     # Define Routes
+    # ------------------------------------------------------------------------------
+    
+    # Home and Healthcheck Routes
     config.add_route('home', '/')
+    config.add_route('healthcheck', '/healthcheck')
+
+    # Annotations Routes
     config.add_route('get_recent_annotations', '/annotations')
+
     # Search Routes
     config.add_route('search', '/get_search_results')
     config.add_route('autocomplete_results', '/autocomplete_results')
@@ -335,7 +423,6 @@ def main(global_config, **settings):
     config.add_route('complements_by_filters', '/get_complements', request_method='POST')
     config.add_route('complement_delete', '/complement/{id}/{dbentity_id}', request_method='DELETE')
     config.add_route('complement_file', '/complement_file', request_method='POST')
-    config.add_route('get_all_ro', '/ro', request_method='GET')
 
     # Author Response Routes
     config.add_route('add_author_response', '/add_author_response', request_method='POST')
@@ -348,16 +435,19 @@ def main(global_config, **settings):
     config.add_route('get_reference_annotations', '/reference_annotations/{id}', request_method='GET')
     config.add_route('delete_reference', '/reference/{id}/delete_reference', request_method='DELETE')
 
-    # Healthcheck Route
-    config.add_route('healthcheck', '/healthcheck')
-
     # Swagger and Static Assets
     # config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_route('api_portal', '/api', request_method='GET')
     config.add_static_view(name='assets', path='./build')
 
+    # ------------------------------------------------------------------------------
     # Scan for View Callables
+    # ------------------------------------------------------------------------------
+
     config.scan()
 
+    # ------------------------------------------------------------------------------
     # Create WSGI Application
+    # ------------------------------------------------------------------------------
+
     return config.make_wsgi_app()
