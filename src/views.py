@@ -1568,6 +1568,8 @@ def locus_homolog_details(request):
         except Exception as e:
             log.error("Request to Alliance genome service timed out.")
             return []
+        if not records.get('results'):
+            return []
 
         data = []
         for record in records['results']:
