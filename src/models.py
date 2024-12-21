@@ -4823,6 +4823,11 @@ class Locusdbentity(Dbentity):
             except Exception as e:
                 foundException = 1
 
+            # Check if 'results' exists and contains data
+            if not records.get('results'):
+                # If 'results' is empty or missing, treat it as an error
+                foundException = 1
+                
             linkData = []
             if foundException == 0: 
                 mod_to_ids = {}
