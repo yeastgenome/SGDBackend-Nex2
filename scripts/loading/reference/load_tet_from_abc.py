@@ -319,7 +319,7 @@ def get_display_tag_to_lit_topic():
 def email_id_to_dbuser_mapping():
 
     return {
-        "edwong": "EDITH",
+        "edwong57": "EDITH",
         "rnash": "NASH",
         "stacia": "STACIA",
         "suzia": "SUZIA",
