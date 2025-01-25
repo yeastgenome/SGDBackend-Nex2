@@ -80,32 +80,32 @@ def load_data():
         if dbentity_id:
             if (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
                 if lit_topic == 'Primary Literature' and ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] == 'Additional Literature':
-                    ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = lit_topic
+                    ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id, created_by)] = lit_topic
             else:
-                ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = lit_topic
+                ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id, created_by)] = lit_topic
         else:
-            ref_to_topic[(reference_id, taxonomy_id)] = lit_topic
+            ref_to_topic[(reference_id, taxonomy_id, created_by)] = lit_topic
 
-    for (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
-        lit_topic = ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)]
+    for (reference_id, dbentity_id, taxonomy_id, created_by) in ref_gene_to_topic:
+        lit_topic = ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id, created_by)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    dbentity_id, taxonomy_id)
         if annotation_id is None:
             insert_into_literatureannotation(nex_session, source_id, taxonomy_id,
                                              reference_id, dbentity_id, lit_topic,
                                              created_by)
-        if lit_topic == 'Primary Literature' and topic_in_db == 'Additional Literature':
+        elif lit_topic == 'Primary Literature' and topic_in_db == 'Additional Literature':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
 
-    for (reference_id, taxonomy_id) in ref_to_topic:
-        lit_topic = ref_to_topic[(reference_id, taxonomy_id)]
+    for (reference_id, taxonomy_id, created_by) in ref_to_topic:
+        lit_topic = ref_to_topic[(reference_id, taxonomy_id, created_by)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    None, taxonomy_id)
         if annotation_id is None:
             insert_into_literatureannotation(nex_session, source_id, taxonomy_id,
                                              reference_id, None, lit_topic,
                                              created_by)
-        elif lit_topic == 'Reviews' and topic_in_db != 'Reviews':
+        elif lit_topic == 'Reviews' and topic_in_db == 'Omics':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
         elif lit_topic == 'Omics' and topic_in_db not in ['Reviews', 'Omics']:
             update_literatureannotation(nex_session, annotation_id, lit_topic)
@@ -149,19 +149,22 @@ def insert_into_literatureannotation(nex_session, source_id, taxonomy_id, refere
                             
 def get_lit_topic(nex_session, reference_id, dbentity_id, taxonomy_id):
 
-    row = None
     if dbentity_id:
         row = nex_session.execute("SELECT annotation_id, topic FROM nex.literatureannotation "
                                   "WHERE reference_id = " + str(reference_id) + " "
                                   "AND taxonomy_id = " + str(taxonomy_id) + " "
                                   "AND dbentity_id = " + str(dbentity_id)).fetchone()
-    else:
-        row = nex_session.execute("SELECT annotation_id, topic FROM nex.literatureannotation "
-                                  "WHERE reference_id = " + str(reference_id) + " "
-                                  "AND taxonomy_id = " + str(taxonomy_id)).fetchone()
-        
-    if row:
-        return row['annotation_id'], row['topic']
+        if row:
+            return row[0], row[1]
+        return None, None
+    
+    rows = nex_session.execute("SELECT annotation_id, topic, dbentity_id "
+                               "FROM nex.literatureannotation "
+                               "WHERE reference_id = " + str(reference_id) + " "
+                               "AND taxonomy_id = " + str(taxonomy_id)).fetchall()
+    for row in rows:
+        if not row[2]:
+            return row[0], row[1]
     return None, None
 
     
