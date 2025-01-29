@@ -1,6 +1,7 @@
 import sys
 import json
 from urllib import request
+from scripts.loading.reference.add_abc_reference import email_id_to_dbuser_mapping
 from scripts.loading.database_session import get_session
 from src.models import CurationReference, Literatureannotation
 
@@ -317,16 +318,6 @@ def get_display_tag_to_lit_topic():
         "ATP:0000130": "Reviews",
         "ATP:0000132": "Additional Literature",
         "ATP:0000147": "Primary Literature"
-    }
-
-def email_id_to_dbuser_mapping():
-
-    return {
-        "edwong57": "EDITH",
-        "rnash": "NASH",
-        "stacia": "STACIA",
-        "suzia": "SUZIA",
-        "sweng": "SHUAI"
     }
 
 """
