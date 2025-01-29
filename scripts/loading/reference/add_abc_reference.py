@@ -24,12 +24,19 @@ def add_paper(record, nex_session=None):
 
     source_id = get_source_id(nex_session, 'NCBI')
 
-    (sgdid, display_name, pubStatus, citation, pmid, pmcid, doi, pubdate, year, volume,
-     issue, page, title, author_list, journal, journal_title, journal_id) = extract_data(nex_session, record)
+    (sgdid, display_name, pubStatus, citation, pmid, pmcid, doi, pubdate, year,
+     volume, issue, page, title, author_list, journal, journal_title, journal_id,
+     curator_email_id) = extract_data(nex_session, record)
 
+    email_id_to_created_by = email_id_to_dbuser_mapping()
+    
+    created_by = CREATED_BY
+    if curator_email_id:
+        created_by = email_id_to_created_by.get(curator_email_id, CREATED_BY)
+        
     print("Inserting into sgdid table:")
 
-    insert_sgdid(nex_session, sgdid, source_id)
+    insert_sgdid(nex_session, sgdid, source_id, created_by)
         
     try:
         
@@ -38,24 +45,25 @@ def add_paper(record, nex_session=None):
         dbentity_id = insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year,
                                                volume, issue, page, title, citation,
                                                journal_id, pubStatus, source_id, sgdid,
-                                               display_name)
+                                               display_name, created_by)
 
         print("Inserting into author table:")
 
-        insert_authors(nex_session, dbentity_id, author_list, source_id)
+        insert_authors(nex_session, dbentity_id, author_list, source_id, created_by)
 
         print("Inserting into referencetype table:")
 
-        insert_pubtypes(nex_session, pmid, dbentity_id, record.get('pubmed_types', []), source_id)
+        insert_pubtypes(nex_session, pmid, dbentity_id, record.get('pubmed_types', []),
+                        source_id, created_by)
 
         print("Inserting into URL table:")
 
-        insert_urls(nex_session, pmid, dbentity_id, doi, pmcid, source_id)
+        insert_urls(nex_session, pmid, dbentity_id, doi, pmcid, source_id, created_by)
 
         print("Inserting into abstract table:")
 
         insert_abstract(nex_session, pmid, dbentity_id, record,
-                        source_id, journal, journal_title, author_list)
+                        source_id, journal, journal_title, author_list, created_by)
         
         nex_session.commit()
         return dbentity_id
@@ -66,14 +74,14 @@ def add_paper(record, nex_session=None):
         return None
         
 
-def insert_urls(nex_session, pmid, reference_id, doi, pmcid, source_id):
+def insert_urls(nex_session, pmid, reference_id, doi, pmcid, source_id, created_by):
     
     x = ReferenceUrl(display_name = 'PubMed',
                      obj_url = pubmed_root + str(pmid),
                      reference_id = reference_id,
                      url_type = 'PubMed',
                      source_id = source_id,
-                     created_by = CREATED_BY)
+                     created_by = created_by)
     nex_session.add(x)
     if doi:
         doi_url = doi_url = doi_root + doi
@@ -82,7 +90,7 @@ def insert_urls(nex_session, pmid, reference_id, doi, pmcid, source_id):
                          reference_id = reference_id,
                          url_type = 'DOI full text',
                          source_id = source_id,
-                         created_by= CREATED_BY)
+                         created_by= created_by)
         nex_session.add(x)
     if pmcid:
         pmc_url = pmc_root + pmcid
@@ -91,26 +99,26 @@ def insert_urls(nex_session, pmid, reference_id, doi, pmcid, source_id):
                         reference_id = reference_id,
                         url_type = 'PMC full text',
                         source_id = source_id,
-                        created_by= CREATED_BY)
+                        created_by= created_by)
     nex_session.add(x)
     nex_session.flush()
     nex_session.refresh(x)
 
 
-def insert_pubtypes(nex_session, pmid, reference_id, pubtypes, source_id):
+def insert_pubtypes(nex_session, pmid, reference_id, pubtypes, source_id, created_by):
     
     for type in pubtypes:
         x = Referencetype(display_name = type,
                           obj_url = '/referencetype/'+ type.replace(' ', '_'),
                           source_id = source_id,
                           reference_id = reference_id,
-                          created_by = CREATED_BY)
+                          created_by = created_by)
         nex_session.add(x)
     nex_session.flush()
     nex_session.refresh(x)
 
 
-def insert_abstract(nex_session, pmid, reference_id, record, source_id, journal_abbrev, journal_title, authors):
+def insert_abstract(nex_session, pmid, reference_id, record, source_id, journal_abbrev, journal_title, authors, created_by):
 
     text = record.get('abstract', '')
 
@@ -122,7 +130,7 @@ def insert_abstract(nex_session, pmid, reference_id, record, source_id, journal_
                           reference_id = reference_id,
                           text = text,
                           html = link_gene_names(text, {}, nex_session),
-                          created_by = CREATED_BY)
+                          created_by = created_by)
     nex_session.add(x)
     
     entries = create_bibentry(pmid, record, journal_abbrev, journal_title, authors)
@@ -131,7 +139,7 @@ def insert_abstract(nex_session, pmid, reference_id, record, source_id, journal_
                           reference_id = reference_id,
                           text = '\n'.join([key + ' - ' + str(value) for key, value in entries if value is not None]),
                           html = '\n'.join([key + ' - ' + str(value) for key, value in entries if value is not None]),
-                          created_by = CREATED_BY)
+                          created_by = created_by)
     nex_session.add(y)
     nex_session.flush()
     nex_session.refresh(x)
@@ -172,7 +180,7 @@ def create_bibentry(pmid, record, journal_abbrev, journal_title, authors):
     return entries
 
 
-def insert_authors(nex_session, reference_id, authors, source_id):
+def insert_authors(nex_session, reference_id, authors, source_id, created_by):
 
     if len(authors) == 0:
         return
@@ -186,7 +194,7 @@ def insert_authors(nex_session, reference_id, authors, source_id):
                             reference_id = reference_id,
                             author_order = i,
                             author_type = 'Author', 
-                            created_by = CREATED_BY)
+                            created_by = created_by)
         nex_session.add(x)
     nex_session.flush()
     nex_session.refresh(x)
@@ -256,11 +264,30 @@ def extract_data(nex_session, record):
     citation = set_cite(title, author_list, year, journal, volume, issue, page)
     display_name = citation.split(')')[0] + ")"
 
+    mca_rows = record.get('mod_corpus_associations', [])
+    mca_row = mca_rows[0]
+    curator_email = mca_row['updated_by_email']
+    curator_email_id = None
+    if curator_email and "@" in curator_email:
+        curator_email_id = curator_email.split('@')[0]
+        
     return (sgdid, display_name, pubStatus, citation, pmid, pmcid, doi, pubdate, year, volume,
-            issue, page, title, author_list, journal, journal_title, journal_id)
+            issue, page, title, author_list, journal, journal_title, journal_id,
+            curator_email_id)
     
 
-def insert_sgdid(nex_session, sgdid, source_id):
+def email_id_to_dbuser_mapping():
+
+    return {
+        "edwong57": "EDITH",
+        "rnash": "NASH",
+        "stacia": "STACIA",
+        "suzia": "SUZIA",
+        "sweng": "SHUAI"
+    }
+
+
+def insert_sgdid(nex_session, sgdid, source_id, created_by):
 
     row = nex_session.query(Sgdid).filter_by(display_name = sgdid).one_or_none()
     if row is None:
@@ -270,12 +297,12 @@ def insert_sgdid(nex_session, sgdid, source_id):
                   source_id = source_id,
                   subclass = 'REFERENCE',
                   sgdid_status = 'Primary',
-                  created_by = CREATED_BY)
+                  created_by = created_by)
         nex_session.add(x)
         nex_session.commit()
     
 
-def insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year, volume, issue, page, title, citation, journal_id, pubStatus, source_id, sgdid, display_name): 
+def insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year, volume, issue, page, title, citation, journal_id, pubStatus, source_id, sgdid, display_name, created_by): 
 
     print("inserting referencedbentity:", pmid, pmcid, doi, pubdate, year, volume, issue, page, title, citation, journal_id, pubStatus, source_id, sgdid, display_name)
     
@@ -286,7 +313,7 @@ def insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year, volum
                           subclass = 'REFERENCE',
                           dbentity_status = 'Active',
                           obj_url = '/reference/' + sgdid,
-                          created_by = CREATED_BY,
+                          created_by = created_by,
                           method_obtained = 'Curator triage',
                           publication_status = pubStatus,
                           fulltext_status = pdf_status,
