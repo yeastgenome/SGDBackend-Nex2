@@ -166,23 +166,21 @@ def dump_data():
     complex_id_to_member_sgdids = {}
     for x in rows:
         member_sgdids = complex_id_to_member_sgdids.get(x[0], [])
-        member_sgdids.append(x[1])
+        member_sgdids.append("SGD:" + x[1])
         complex_id_to_member_sgdids[x[0]] = member_sgdids
     
     for x in nex_session.query(Complexdbentity).all():
 
         col1 = 'SGD:' + x.sgdid
-        # col2 = x.systematic_name
         col2 = x.complex_accession
         col3 = x.display_name
-        col4 = ''
+        col4 = x.systematic_name
         col5 = 'GO:0032991'
         col6 = TAXON
         col7 = ''
         col8 = ''
         col9 = "|".join(complex_id_to_member_sgdids.get(x.dbentity_id, []))
-        # col10 = "ComplexPortal:" + x.complex_accession
-        col10 = "ComplexPortal:" + x.systematic_name
+        col10 = "ComplexPortal:" + x.complex_accession
         col11 = ''
 
         fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t")
