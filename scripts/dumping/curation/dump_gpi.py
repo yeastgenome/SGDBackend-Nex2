@@ -178,7 +178,7 @@ def dump_data():
         col5 = 'GO:0032991'
         col6 = TAXON
         col7 = ''
-        col8 = ''
+        col8 = col1
         col9 = "|".join(complex_id_to_member_sgdids.get(x.dbentity_id, []))
         col10 = "ComplexPortal:" + x.complex_accession
         col11 = ''
