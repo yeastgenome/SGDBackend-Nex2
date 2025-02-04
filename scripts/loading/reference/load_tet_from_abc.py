@@ -247,7 +247,7 @@ def fetch_all_tets_loaded_past_week(nex_session):
         # 194314[:]2752226[:]834[:]1268334[:]Headline information[:]2024-09-03 15:23:25.283666[:]SHUAI[:][:][:]197577
         pieces = x[0].split("[:]")
         tet_id = pieces[-1]
-        print(x, "tet_id=", tet_id)
+        # print(x, "tet_id=", tet_id)
         if tet_id:
             tet_ids_set.add(int(tet_id))
                 
