@@ -20,7 +20,7 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 gpi_file = "scripts/dumping/curation/data/gpi.sgd"
-TAXON = 'taxon:559292'
+TAXON = '559292'
 TAXID = 'TAX:559292'
 
 
@@ -123,13 +123,13 @@ def dump_data():
             col5 = 'SO:0000704'
 
         # col6: taxon
-        col6 = TAXON
+        col6 = "NCBITaxon:" + TAXON
 
         # col7: Encoded by
         col7 = ''
         
         # col8: Parent protein
-        col8 = ''
+        col8 = col1
 
         # col9: Protein Containing Complex Members
         col9 = ''
@@ -139,7 +139,7 @@ def dump_data():
         if x.dbentity_id in dbentity_id_to_uniprot:
             dbxrefs = [dbentity_id_to_uniprot[x.dbentity_id]] + dbxrefs
         if x.dbentity_id in dbentity_id_to_rnacentral_id:
-            dbxrefs.append(dbentity_id_to_rnacentral_id[x.dbentity_id])
+            dbxrefs.append("RNAcentral:" + dbentity_id_to_rnacentral_id[x.dbentity_id])
 
         col10 = ''
         if len(dbxrefs) > 0:
