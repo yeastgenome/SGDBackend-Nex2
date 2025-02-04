@@ -20,7 +20,7 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 gpi_file = "scripts/dumping/curation/data/gpi.sgd"
-TAXON = '559292'
+TAXON = 'NCBItaxon:559292'
 TAXID = 'TAX:559292'
 
 
@@ -123,7 +123,7 @@ def dump_data():
             col5 = 'SO:0000704'
 
         # col6: taxon
-        col6 = "NCBITaxon:" + TAXON
+        col6 = TAXON
 
         # col7: Encoded by
         col7 = ''
