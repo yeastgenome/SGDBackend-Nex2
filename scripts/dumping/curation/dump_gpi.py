@@ -20,7 +20,7 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 gpi_file = "scripts/dumping/curation/data/gpi.sgd"
-TAXON = 'NCBItaxon:559292'
+TAXON = 'NCBITaxon:559292'
 TAXID = 'TAX:559292'
 
 
