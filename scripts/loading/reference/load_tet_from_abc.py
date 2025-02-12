@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 from urllib import request
 from scripts.loading.reference.add_abc_reference import email_id_to_dbuser_mapping
 from scripts.loading.database_session import get_session
@@ -8,7 +9,8 @@ from src.models import CurationReference, Literatureannotation
 __author__ = 'sweng66'
 
 
-url = "https://stage-literature-rest.alliancegenome.org/topic_entity_tag/by_mod/SGD"
+ABC_API_ROOT_URL = os.environ['ABC_API_ROOT_URL']
+url = ABC_API_ROOT_URL + "topic_entity_tag/by_mod/SGD"
 json_file = "scripts/loading/reference/data/SGD_new_tet.json"
 CREATED_BY = 'OTTO'
 
