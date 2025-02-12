@@ -35,6 +35,8 @@ def load_data():
         # print(sgdid, pmid, reference_id, is_obsolete_sgdid)
         if reference_id or is_obsolete_sgdid:
             continue
+        if sgdid is None:
+            continue
         print("\nAdding paper for SGD:" + sgdid + "\n")
         add_paper(record, nex_session)
 
