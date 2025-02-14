@@ -3,7 +3,6 @@ import json
 from urllib import request
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.add_abc_reference import add_paper
-from scripts.loading.reference.load_tet_from_abc import download_json_file
 import json
 from os import environ
 
