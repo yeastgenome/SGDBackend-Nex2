@@ -29,6 +29,9 @@ def load_data():
         sgdids
     )
 
+    if len(reference_sgdids) == 0:
+        return
+
     sgdid_to_reference_id = fetch_dbentity_ids_for_sgdids(nex_session, reference_sgdids)
     sgdid_to_dbentity_id = fetch_dbentity_ids_for_sgdids(nex_session, dbentity_sgdids)
     source_id = get_source_id(nex_session)
