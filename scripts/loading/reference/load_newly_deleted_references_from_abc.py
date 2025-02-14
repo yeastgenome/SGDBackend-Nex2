@@ -131,7 +131,7 @@ def delete_reference(db, reference_id, pmid, created_by):
         print('{} records being deleted from {} for reference_id = {}'.format(count, "Dbentity/Referencedbentity", reference_id))
         db.commit()
         x = Referencedeleted(pmid=pmid,
-                             reason_deleted='This paper was deleted by ' + created_by,
+                             reason_deleted='This paper was deleted by a curator.',
                              created_by=created_by)
         db.add(x)
         db.commit()
