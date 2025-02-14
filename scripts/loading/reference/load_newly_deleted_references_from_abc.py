@@ -4,14 +4,14 @@ import json
 from os import environ
 from urllib import request
 from scripts.loading.database_session import get_session
-from scripts.loading.reference.load_tet_from_abc import download_json_file
 from scripts.loading.reference.add_abc_reference import email_id_to_dbuser_mapping
 from src.models import Referencedbentity, CuratorActivity, ReferenceFile, Referenceunlink, \
     Referencetype, Referencedocument, Referenceauthor, ReferenceUrl, ReferenceAlias, \
     StrainsummaryReference, Reservedname, PathwaysummaryReference, LocussummaryReference, \
     LocusRelationReference, LocusnoteReference, LocusAliasReferences, LocusReferences, \
     DatasetReference, CurationReference, ColleagueReference, Physinteractionannotation, \
-    Goannotation, Geninteractionannotation, Literatureannotation, Referencedeleted
+    Goannotation, Geninteractionannotation, Literatureannotation, Referencedeleted, \
+    AlleleReference, LocusalleleReference, Phenotypeannotation
 
 __author__ = 'sweng66'
 
@@ -44,8 +44,9 @@ def load_data():
         good_pmids_in_db[x[1]] = x[0]
 
     email_id_to_created_by = email_id_to_dbuser_mapping()
-   
-    for record in json_data['data']:
+
+    records = json_data['data']
+    for record in records:
         pmid = int(record['pmid'].replace("PMID:", ""))
         email = record['updated_by_email']
         created_by = None
@@ -53,7 +54,7 @@ def load_data():
             created_by = email_id_to_created_by.get(email.split('@')[0])
         if created_by is None:
             created_by = CREATED_BY
-            
+
         updated_by = record['updated_by_okta_id']
         if pmid in deleted_pmids_in_db:
             continue
@@ -86,9 +87,12 @@ def delete_reference(db, reference_id, pmid, created_by):
 
     try:
         delete_helper(db, reference_id, Literatureannotation, 'Literatureannotation')
+        delete_helper(db, reference_id, Phenotypeannotation, 'Phenotypeannotation')
         delete_helper(db, reference_id, Geninteractionannotation, 'Geninteractionannotation')
         delete_helper(db, reference_id, Goannotation, 'Goannotation')
         delete_helper(db, reference_id, Physinteractionannotation, 'Physinteractionannotation')
+        delete_helper(db, reference_id, AlleleReference, 'AlleleReference')
+        delete_helper(db, reference_id, LocusalleleReference, 'LocusalleleReference')
         delete_helper(db, reference_id, ColleagueReference, 'ColleagueReference')
         delete_helper(db, reference_id, CurationReference, 'CurationReference')
         delete_helper(db, reference_id, DatasetReference, 'DatasetReference')
@@ -116,6 +120,7 @@ def delete_reference(db, reference_id, pmid, created_by):
         reference = db.query(Referencedbentity).filter_by(dbentity_id=reference_id).one_or_none()
         db.delete(reference)
         print('{} records being deleted from {} for reference_id = {}'.format(count, "Dbentity/Referencedbentity", reference_id))
+        db.commit()
         x = Referencedeleted(pmid=pmid,
                              reason_deleted='This paper was deleted by ' + created_by,
                              created_by=created_by)
@@ -123,6 +128,18 @@ def delete_reference(db, reference_id, pmid, created_by):
         db.commit()
     except Exception as e:
         print("Error deleting PMID:" + str(pmid) + ": " + str(e))
+
+
+def download_json_file():
+    
+    try:
+        print("Downloading " + url)
+        req = request.urlopen(url)
+        data = req.read()
+        with open(json_file, 'wb') as fh:
+            fh.write(data)
+    except Exception as e:
+        print("Error downloading the fil. Error=" + str(e))
         
 
 if __name__ == '__main__':
