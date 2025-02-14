@@ -11,7 +11,8 @@ from src.models import Referencedbentity, CuratorActivity, ReferenceFile, Refere
     LocusRelationReference, LocusnoteReference, LocusAliasReferences, LocusReferences, \
     DatasetReference, CurationReference, ColleagueReference, Physinteractionannotation, \
     Goannotation, Geninteractionannotation, Literatureannotation, Referencedeleted, \
-    AlleleReference, LocusalleleReference, Phenotypeannotation
+    AlleleReference, LocusalleleReference, Phenotypeannotation, Posttranslationannotation, \
+    ReferenceRelation, Regulationannotation
 
 __author__ = 'sweng66'
 
@@ -88,6 +89,8 @@ def delete_reference(db, reference_id, pmid, created_by):
     try:
         delete_helper(db, reference_id, Literatureannotation, 'Literatureannotation')
         delete_helper(db, reference_id, Phenotypeannotation, 'Phenotypeannotation')
+        delete_helper(db, reference_id, Regulationannotation, 'Regulationannotation')
+        delete_helper(db, reference_id, Posttranslationannotation, 'Posttranslationannotation')
         delete_helper(db, reference_id, Geninteractionannotation, 'Geninteractionannotation')
         delete_helper(db, reference_id, Goannotation, 'Goannotation')
         delete_helper(db, reference_id, Physinteractionannotation, 'Physinteractionannotation')
@@ -117,6 +120,12 @@ def delete_reference(db, reference_id, pmid, created_by):
         if count > 0:
             db.query(CuratorActivity).filter_by(dbentity_id = reference_id).delete()
             print('{} records being deleted from {} for reference_id = {}'.format(count, "CuratorActivity", reference_id))
+        count = db.query(ReferenceRelation).filter_by(child_id = reference_id).count()
+        if count > 0:
+            db.query(ReferenceRelation).filter_by(child_id = reference_id).delete()
+        count =	db.query(ReferenceRelation).filter_by(parent_id = reference_id).count()
+        if count > 0:
+            db.query(ReferenceRelation).filter_by(parent_id = reference_id).delete()
         reference = db.query(Referencedbentity).filter_by(dbentity_id=reference_id).one_or_none()
         db.delete(reference)
         print('{} records being deleted from {} for reference_id = {}'.format(count, "Dbentity/Referencedbentity", reference_id))
