@@ -10,7 +10,7 @@ boto==2.38.0
 boto3==1.9.240
 certifi==2019.6.16
 cffi==1.12.3
-cryptography==2.7
+cryptography==39.0.1
 factory-boy==2.6.0
 fake-factory==0.5.3
 Flask==0.12.3
