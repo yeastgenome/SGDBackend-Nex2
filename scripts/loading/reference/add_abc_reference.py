@@ -106,8 +106,12 @@ def insert_urls(nex_session, pmid, reference_id, doi, pmcid, source_id, created_
 
 
 def insert_pubtypes(nex_session, pmid, reference_id, pubtypes, source_id, created_by):
-    
+
+    if pubtypes is None:
+        return
     for type in pubtypes:
+        if type is None:
+            continue
         x = Referencetype(display_name = type,
                           obj_url = '/referencetype/'+ type.replace(' ', '_'),
                           source_id = source_id,
@@ -168,8 +172,9 @@ def create_bibentry(pmid, record, journal_abbrev, journal_title, authors):
     for author in authors:
         entries.append(('AU', author))
     pubtypes = record.get('pubmed_types', [])
-    for pubtype in pubtypes:
-        entries.append(('PT', pubtype))
+    if pubtypes:
+        for pubtype in pubtypes:
+            entries.append(('PT', pubtype))
     if record.get('abstract') is not None:
         entries.append(('AB', record.get('abstract')))
  

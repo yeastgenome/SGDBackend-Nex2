@@ -53,7 +53,7 @@ def is_paper_in_db(nex_session, cross_references):
             if x['is_obsolete']:
                 is_obsolete_sgdid = x['is_obsolete']
             sgdid = x['curie'].replace('SGD:', '')
-        elif x['curie'].startswith('PMID'):
+        elif x['curie'].startswith('PMID') and x['is_obsolete'] is False:
             pmid = x['curie'].replace('PMID:', '')
     if sgdid is None or is_obsolete_sgdid:
         return (sgdid, pmid, None, is_obsolete_sgdid)
