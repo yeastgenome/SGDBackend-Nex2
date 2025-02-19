@@ -29,12 +29,10 @@ def load_data():
     for record in json_data['data']:
         if "cross_references" not in record:
             continue
-        (sgdid, pmid, reference_id, is_obsolete_sgdid) = is_paper_in_db(nex_session, record["cross_references"])
+        (sgdid, pmid, reference_id) = is_paper_in_db(nex_session, record["cross_references"])
 
-        # print(sgdid, pmid, reference_id, is_obsolete_sgdid)
-        if reference_id or is_obsolete_sgdid:
-            continue
-        if sgdid is None:
+        # print(sgdid, pmid, reference_id)
+        if reference_id or sgdid is None:
             continue
         print("\nAdding paper for SGD:" + sgdid + "\n")
         add_paper(record, nex_session)
@@ -47,24 +45,21 @@ def is_paper_in_db(nex_session, cross_references):
 
     sgdid = None
     pmid = None
-    is_obsolete_sgdid = False
     for x in cross_references:
-        if x['curie'].startswith('SGD:S1'):
-            if x['is_obsolete']:
-                is_obsolete_sgdid = x['is_obsolete']
+        if x['curie'].startswith('SGD:S1') and x['is_obsolete'] is False:
             sgdid = x['curie'].replace('SGD:', '')
         elif x['curie'].startswith('PMID') and x['is_obsolete'] is False:
             pmid = x['curie'].replace('PMID:', '')
-    if sgdid is None or is_obsolete_sgdid:
-        return (sgdid, pmid, None, is_obsolete_sgdid)
+    if sgdid is None:
+        return (sgdid, pmid, None)
     rows = nex_session.execute("SELECT dbentity_id from nex.dbentity WHERE sgdid = '" + sgdid + "'").fetchall()
     if len(rows) == 0:
-        return (sgdid, pmid, None, is_obsolete_sgdid)
+        return (sgdid, pmid, None)
     dbentity_id = rows[0][0]
     rows = nex_session.execute("SELECT pmid from nex.referencedbentity WHERE dbentity_id = " + str(dbentity_id)).fetchall()
     if len(rows) == 0:
-        return (sgdid, pmid, None, is_obsolete_sgdid)
-    return (sgdid, pmid, dbentity_id, is_obsolete_sgdid)
+        return (sgdid, pmid, None)
+    return (sgdid, pmid, dbentity_id)
 
 
 def download_json_file():
