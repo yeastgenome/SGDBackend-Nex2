@@ -185,6 +185,24 @@ def insert_into_curation_reference(
     created_by
 ):
 
+    # Check if the record already exists
+    if dbentity_id is None:
+        existing = nex_session.query(CurationReference).filter_by(
+            reference_id=reference_id,
+            curation_tag=curation_tag
+        ).filter(CurationReference.dbentity_id.is_(None)).first()
+    else:
+        existing = nex_session.query(CurationReference).filter_by(
+            reference_id=reference_id,
+            curation_tag=curation_tag,
+            dbentity_id=dbentity_id
+        ).first()
+    
+    if existing:
+        print("The curation tag row for reference_id=", reference_id, ", curation_tag =", curation_tag, ", dbentity_id =", dbentity_id, " already exists. Skipping insert.")
+        return
+
+    
     print("insert_into_curation_reference:", source_id, tet_id, curation_tag, reference_id, dbentity_id, note)
     
     try:
