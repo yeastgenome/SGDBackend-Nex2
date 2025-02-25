@@ -138,6 +138,23 @@ def update_literatureannotation(nex_session, annotation_id, lit_topic):
                                             
 def insert_into_literatureannotation(nex_session, source_id, taxonomy_id, reference_id, dbentity_id, lit_topic, created_by):
 
+    # Check if the record already exists
+    if dbentity_id is None:
+        existing = nex_session.query(Literatureannotation).filter_by(
+            reference_id=reference_id,
+            topic=lit_topic
+        ).filter(Literatureannotation.dbentity_id.is_(None)).first()
+    else:
+        existing = nex_session.query(Literatureannotation).filter_by(
+            reference_id=reference_id,
+            topic=lit_topic,
+            dbentity_id=dbentity_id
+        ).first()
+
+    if existing:
+        print("The Literatureannotation row for reference_id=", reference_id, ", topic =", lit_topic, ", dbentity_id =", dbentity_id, " already exists. Skipping insert.")
+        return
+
     print("insert_into_literatureannotation: ", reference_id, dbentity_id, lit_topic)
 
     try:
