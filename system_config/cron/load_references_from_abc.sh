@@ -17,6 +17,10 @@ echo " load_tet_from_abc.py start:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 python scripts/loading/reference/load_tet_from_abc.py | /bin/tee -a $OUTPUT_FILE
 
 echo "----------" | /bin/tee -a $OUTPUT_FILE
+echo " load_newly_deleted_references_from_abc.py:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
+python scripts/loading/reference/load_newly_deleted_references_from_abc.py | /bin/tee -a $OUTPUT_FILE
+
+echo "----------" | /bin/tee -a $OUTPUT_FILE
 echo "load_references_from_abc.sh end:  `/bin/date`" | /bin/tee -a $OUTPUT_FILE
 
 /usr/bin/aws sns publish \
