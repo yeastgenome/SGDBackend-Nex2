@@ -1479,7 +1479,7 @@ def index_part_1():
     index_strains()
     index_references()
     index_phenotypes()
-    index_not_mapped_genes()
+    # index_not_mapped_genes()
     index_colleagues()
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
