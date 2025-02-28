@@ -56,7 +56,7 @@ def extract_id_request(request, prefix, param_name='id', safe_return=False):
 
     db_id = disambiguation_table.get(("/" + prefix + "/" + id).upper())
 
-    if db_id is None and prefix == 'reference' and id.startswith('S00'):
+    if db_id is None and prefix == 'reference' and (id.startswith('S00') or id.startswith('S10')):
         reference = DBSession.query(Dbentity).filter_by(subclass='REFERENCE', sgdid=id).one_or_none()
         if reference:
             db_id = reference.dbentity_id
