@@ -14,7 +14,8 @@ from scripts.loading.database_session import get_session
 from src.helpers import upload_file
 from scripts.loading.util import get_relation_to_ro_id, read_gpi_file, \
                                  read_gpad_file, read_noctua_gpad_file, \
-                                 read_complex_gpad_file, get_go_extension_link
+                                 read_complex_gpad_file, get_go_extension_link, \
+                                 send_email
 
 __author__ = 'sweng66'
 
@@ -724,73 +725,76 @@ def write_summary_and_send_email(annotation_update_log, new_pmids, bad_ref, fw, 
     log.info(summary)
 
 
-if __name__ == "__main__":
+def send_report(email_message):
+
+    email_subject = "Error: Unable to load GO annotations"
+    email_recipients = os.environ['EMAIL_RECIPIENTS']
+    sender_email = os.environ['SENDER_EMAIL']
+    sender_password = os.environ['SENDER_PASSWORD']
+    reply_to = os.environ['REPLY_TO']
+    (email_status, message) = send_email(email_subject, email_recipients, email_message,
+                                         sender_email, sender_password, reply_to)
+    if email_status == 'error':
+        print("Failed sending email to " + email_recipients + ": " + message + "\n")
+
         
-    # ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz
-    # ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz
-    # old: http://current.geneontology.org/products/annotations/noctua_sgd.gpad.gz
-    # http://current.geneontology.org/products/upstream_and_raw_data/noctua_sgd.gpad.gz
+if __name__ == "__main__":
     
     datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
-
     url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
     gpad_file = 'gp_association.559292_sgd.gz'
-    dated_gpad_file = 'gp_association.559292_sgd_' + datestamp + '.gpad.gz' 
     gpi_file = 'gp_information.559292_sgd.gz'
-    dated_gpi_file = 'gp_information.559292_sgd_' + datestamp + '.gpi.gz'
-    urllib.request.urlretrieve(url_path + gpad_file, dated_gpad_file)
-    urllib.request.urlcleanup()
-    urllib.request.urlretrieve(url_path + gpi_file, dated_gpi_file)
-
-    # noctua_path = 'http://current.geneontology.org/products/upstream_and_raw_data/'
-    noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
-    dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
-    urllib.request.urlcleanup()
-    urllib.request.urlretrieve(noctua_path + noctua_gpad_file, dated_noctua_gpad_file)
-
-    # complex_path = 'http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/' 
-    complex_path = 'http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/'
     complex_gpad_file = 'complex_portal.v2.gpad'
-    dated_complex_gpad_file = 'complex_portal.v2.gpad_' + datestamp 
-    urllib.request.urlcleanup()
-    urllib.request.urlretrieve(complex_path + complex_gpad_file, dated_complex_gpad_file)
+    
+    dated_gpad_file = 'gp_association.559292_sgd_' + datestamp + '.gpad.gz'
+    dated_gpi_file = 'gp_information.559292_sgd_' + datestamp + '.gpi.gz'
+    dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
+    dated_complex_gpad_file = 'complex_portal.v2.gpad_' + datestamp
 
-    gpadFileInfo = os.stat(dated_gpad_file)
-    gpiFileInfo = os.stat(dated_gpi_file)
-    gpadFile4noctua = os.stat(dated_noctua_gpad_file)
-    gpadFile4complex = os.stat(dated_complex_gpad_file)
-    1085361
-    if gpadFileInfo.st_size < 1000000:
-        print("This week's GPAD file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_association.559292_sgd.gz")  
-        exit()
-
-    if gpiFileInfo.st_size < 340000:
-        print("This week's GPI file size is too small, please check: ftp://ftp.ebi.ac.uk/pub/contrib/goa/gp_information.559292_sgd.gz")
-        exit()
-
-    if gpadFile4noctua.st_size < 74000:
-        print("This week's noctua GPAD file size is too small, please check: http://snapshot.geneontology.org/products/upstream_and_raw_data/noctua_sgd.gpad.gz")
-        exit()
-
-    if gpadFile4complex.st_size < 2500000:
-        print("This week's complex portal GPAD file size is too small, please check: http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/go/complex_portal.v2.gpad")
-        exit()
-
+    retrieval_file_list = [
+        (url_path + gpad_file, dated_gpad_file),
+        (url_path + gpi_file, dated_gpi_file),
+        ('http://snapshot.geneontology.org/products/upstream_and_raw_data/' + noctua_gpad_file, dated_noctua_gpad_file),
+        ('http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/various/go/' + complex_gpad_file, dated_complex_gpad_file)
+    ]
+    for (retrieval_url, file) in retrieval_file_list:
+        try:
+            urllib.request.urlretrieve(retrieval_url, file)
+        except Exception as e:
+            error_msg = "Failed to download " + retrieval_url + " <p> " + str(e)
+            print(error_msg)
+            send_report(error_msg)
+            exit()
+    file_sizes = {
+        dated_gpad_file: 1100000,
+        dated_gpi_file: 350000,
+        dated_noctua_gpad_file: 790000,
+        dated_complex_gpad_file: 2700000
+    }
+    
+    for file, min_size in file_sizes.items():
+        try:
+            if os.stat(file).st_size < min_size:
+                error_msg = "The file '" + file + "' appears to be smaller than expected. Please verify that we have the correct version."
+                print(error_msg)
+                send_report(error_msg)
+                exit()
+        except FileNotFoundError:
+            error_msg = "The file " + file + " is missing. Please check the source."
+            print(error_msg)
+            send_report(error_msg)
+            exit()
+    
     if len(sys.argv) >= 2:
         annotation_type = sys.argv[1]
     else:
-        # annotation_type = "manually curated"
-        print("Usage:         python load_gpad.py annotation_type[manually curated|computational]")
-        print("Usage example: python load_gpad.py 'manually curated'")
-        print("Usage example: python load_gpad.py computational")
+        print("Usage: python load_gpad.py annotation_type[manually curated|computational]")
         exit()
+
     
     log_file = "scripts/loading/go/logs/GPAD_loading_" + annotation_type.replace(" ", "-") + ".log"
-
     load_go_annotations(dated_gpad_file, dated_noctua_gpad_file, dated_complex_gpad_file,
                         dated_gpi_file, annotation_type, log_file)
-
-
     
         
