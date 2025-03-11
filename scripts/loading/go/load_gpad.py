@@ -741,7 +741,8 @@ def send_report(email_message):
 if __name__ == "__main__":
     
     datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
-    url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
+    # url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
+    url_path = 'https://ftp.ebi.ac.uk/pub/contrib/goa/'
     gpad_file = 'gp_association.559292_sgd.gz'
     gpi_file = 'gp_information.559292_sgd.gz'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
