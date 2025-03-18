@@ -245,8 +245,10 @@ def search(request):
     ]
 
 
-    
-        
+    # set is_quick_flag to false so it always search ES instead of DB
+    is_quick_flag = 'false'
+    #################################################################
+
     # see if we can search for a simple gene name in db without using ES
 
     aliases_count = 0
