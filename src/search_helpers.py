@@ -19,7 +19,7 @@ def build_autocomplete_search_body_request(query,
                         "multi_match": {
                             "query": query,
                             "fields": [
-                                "locus_name.engram^15",
+                                "locus_name.engram^50",
                                 "colleague_name.engram^7",
                                 "name.autocomplete^8",
                                 "identifier.autocomplete^15",
