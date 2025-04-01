@@ -7977,7 +7977,7 @@ class Goannotation(Base):
     dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
     taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
     eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
     annotation_type = Column(String(40), nullable=False)
@@ -7986,10 +7986,10 @@ class Goannotation(Base):
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    dbentity = relationship('Dbentity')
+    dbentity = relationship('Dbentity', foreign_keys=[dbentity_id])
     eco = relationship('Eco')
     go = relationship('Go')
-    reference = relationship('Referencedbentity', foreign_keys=[reference_id])
+    reference = relationship('Dbentity', foreign_keys=[reference_id])
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
 
@@ -8063,6 +8063,18 @@ class Goannotation(Base):
         date_created = self.date_created
         if self.annotation_type == 'computational':
             date_created = self.date_assigned
+
+        reference_link = self.reference.obj_url
+        pmid = None
+        if "pathway" in reference_link:
+            pathwayObj = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
+            if pathwayObj:
+                reference_link = "https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=" + pathwayObj.biocyc_id + "&detail-level=2"
+                pmid = "SGD_PWY:" + pathwayObj.biocyc_id
+                experiment_name = 'IEA'
+        else:
+            refObj = DBSession.query(Referencedbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
+            pmid = "PMID:" + str(refObj.pmid)
         go_obj = {
             "id": self.annotation_id,
             "annotation_type": self.annotation_type,
@@ -8083,8 +8095,8 @@ class Goannotation(Base):
             },
             "reference": {
                 "display_name": self.reference.display_name,
-                "link": self.reference.obj_url,
-                "pubmed_id": self.reference.pmid
+                "link": reference_link,
+                "pubmed_id": pmid
             },
             "source": {
                 "display_name": self.source.display_name

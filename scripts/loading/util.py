@@ -613,12 +613,13 @@ def add_NOT_to_go_qualifer(go_qualifier):
     
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
-    from src.models import Referencedbentity, Dbentity, Go, Eco, Referencedeleted, Ro
+    from src.models import Referencedbentity, Pathwaydbentity, Dbentity, Go, Eco, Referencedeleted, Ro
     
     goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
     deleted_pmid_to_sgdid = dict([(x.pmid, x.sgdid) for x in nex_session.query(Referencedeleted).all()])
     roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
+    biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])
 
     pmid_to_reference_id = {}
 
@@ -713,6 +714,9 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
             if int(pmid) in deleted_pmid_to_sgdid:
                 continue
             reference_id = pmid_to_reference_id.get(int(pmid))
+        elif field[4].startswith('SGD_PWY:'):
+            biocyc_id = field[4][8:]
+            reference_id = biocyc_id_to_dbentity_id.get(biocyc_id)
         else:
             ref_sgdid = go_ref_mapping.get(field[4])
             if ref_sgdid is None:
