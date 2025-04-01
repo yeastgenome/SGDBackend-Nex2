@@ -1,7 +1,7 @@
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, Locusdbentity, Complexdbentity, \
-    Referencedbentity, Taxonomy, Go, Ro, Eco, EcoAlias, Source, \
+    Referencedbentity, Pathwaydbentity, Taxonomy, Go, Ro, Eco, EcoAlias, Source, \
     Goannotation, Goextension, Gosupportingevidence, LocusAlias, \
     Edam, Path, FilePath, Filedbentity, ReferenceAlias, \
     Dnasequenceannotation, So
@@ -47,6 +47,8 @@ def dump_data():
     # dbentity_id_to_complex = dict([(x.dbentity_id, (x.format_name, x.display_name))
     #                               for x in nex_session.query(Complexdbentity).all()])
     reference_id_to_pmid = dict([(x.dbentity_id, x.pmid) for x in nex_session.query(Referencedbentity).all()])
+    reference_id_to_biocyc_id = dict([(x.dbentity_id, x.biocyc_id) for x in nex_session.query(Pathwaydbentity).all()])
+    
     go_id_to_goid = dict([(x.go_id, (x.goid, x.go_namespace)) for x in nex_session.query(Go).all()])
     eco_id_to_ecoid = dict([(x.eco_id, x.format_name) for x in nex_session.query(Eco).all()])
     source_to_id = dict([(x.display_name, x.source_id) for x in nex_session.query(Source).all()])
@@ -117,6 +119,8 @@ def dump_data():
         col5 = ''
         if pmid is not None:
             col5 = "PMID:" + str(pmid)
+        elif reference_id_to_biocyc_id.get(x.reference_id):
+            col5 = "SGD_PWY:" + reference_id_to_biocyc_id.get(x.reference_id)
         elif x.reference_id in reference_id_to_GO_REF:
             col5 = reference_id_to_GO_REF[x.reference_id]
         else:
