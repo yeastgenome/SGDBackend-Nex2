@@ -1,8 +1,8 @@
 from src.helpers import upload_file
 from src.boto3_upload import upload_one_file_to_s3
 from scripts.loading.database_session import get_session
-from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
-    Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
+from src.models import Dbentity, Locusdbentity, Referencedbentity, Pathwaydbentity, \
+    Taxonomy, Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
     Gosupportingevidence, LocusAlias, Edam, Path, FilePath, Complexdbentity, \
     Filedbentity, ReferenceAlias, Dnasequenceannotation, So, ComplexAlias
 from urllib.request import urlretrieve
@@ -97,6 +97,8 @@ def dump_data(noctua_gpad_file):
                      for x in nex_session.query(Go).all()])
     id_to_pmid = dict([(x.dbentity_id, x.pmid)
                        for x in nex_session.query(Referencedbentity).all()])
+    id_to_biocyc_id = dict([(x.dbentity_id, x.biocyc_id)
+                            for x in nex_session.query(Pathwaydbentity).all()])
     id_to_uniprot = dict([(x.locus_id, x.display_name)
                        for x in nex_session.query(LocusAlias).filter_by(alias_type='UniProtKB ID').all()])
     id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
@@ -234,6 +236,8 @@ def dump_data(noctua_gpad_file):
         reference = ""
         if id_to_pmid.get(x.reference_id) is not None:
             reference = "PMID:" + str(id_to_pmid.get(x.reference_id))
+        elif id_to_biocyc_id.get(x.reference_id) is not None:
+            reference = "SGD_PWY:" + id_to_biocyc_id.get(x.reference_id)
         else:
             reference = id_to_go_ref[x.reference_id]
         row[REFERENCE] = reference
@@ -255,6 +259,8 @@ def dump_data(noctua_gpad_file):
         row[ASPECT] = namespace_to_code[go_aspect]
 
         eco_code = id_to_eco.get(x.eco_id)
+        if reference.startswith('SGD_PWY:'):
+            eco_code = 'IEA'
         if eco_code is None:
             if x.eco.display_name.startswith('biological system reconstruction '):
                 eco_code = 'BSR'
