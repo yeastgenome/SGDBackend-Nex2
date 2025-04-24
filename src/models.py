@@ -4829,28 +4829,34 @@ class Locusdbentity(Dbentity):
                 foundException = 1
                 
             linkData = []
-            """
-            if foundException == 0: 
-                mod_to_ids = {}                
-                for record in records['results']:
-                    homolog = record['homologGene']
-                    mod = homolog['id'].split(':')[0]
-                    ids = []
-                    if mod in mod_to_ids:
-                        ids = mod_to_ids[mod]
-                    if len(ids) < 100:
-                        ids.append(homolog['id'])
-                    mod_to_ids[mod] = ids
-                for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
-                    if mod in mod_to_ids:
-                        if len(mod_to_ids[mod]) > 1:
-                            ids = "+".join(mod_to_ids[mod])
-                            linkData.append({"mod": mod,
-                                             "icon_url": mod_to_template_url[mod].replace("_SUBSTITUTE_", ids)})
-                        else:
-                            linkData.append({"mod": mod,
-                                             "icon_url": allianceSearchRootUrl + "gene/" + mod_to_ids[mod][0]})
-            """
+            if foundException == 0:
+                try:
+                    mod_to_ids = {}                
+                    for record in records['results']:
+                        if 'geneToGeneOrthologyGenerated' not in record:
+                            continue
+                        if 'objectGene' not in record['geneToGeneOrthologyGenerated']:
+                            continue
+                        if 'primaryExternalId' not in record['geneToGeneOrthologyGenerated']['objectGene']:
+                            continue
+                        mod_id = record['geneToGeneOrthologyGenerated']['objectGene']['primaryExternalId']
+                        mod = mod_id.split(':')[0]
+                        if mod:
+                            ids = mod_to_ids.get(mod, [])
+                            if len(ids) < 100:
+                                ids.append(mod_id)
+                            mod_to_ids[mod] = ids
+                    for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
+                        if mod in mod_to_ids:
+                            if len(mod_to_ids[mod]) > 1:
+                                ids = "+".join(mod_to_ids[mod])
+                                linkData.append({"mod": mod,
+                                                 "icon_url": mod_to_template_url[mod].replace("_SUBSTITUTE_", ids)})
+                            else:
+                                linkData.append({"mod": mod,
+                                                 "icon_url": allianceSearchRootUrl + "gene/" + mod_to_ids[mod][0]})
+                except Exception as e:
+                    linkData = []
             linkData.append({"mod": 'SGD',
                              "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
             obj['alliance_icon_links'] = linkData
