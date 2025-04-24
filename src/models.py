@@ -4829,8 +4829,9 @@ class Locusdbentity(Dbentity):
                 foundException = 1
                 
             linkData = []
+            """
             if foundException == 0: 
-                mod_to_ids = {}
+                mod_to_ids = {}                
                 for record in records['results']:
                     homolog = record['homologGene']
                     mod = homolog['id'].split(':')[0]
@@ -4849,7 +4850,7 @@ class Locusdbentity(Dbentity):
                         else:
                             linkData.append({"mod": mod,
                                              "icon_url": allianceSearchRootUrl + "gene/" + mod_to_ids[mod][0]})
-            
+            """
             linkData.append({"mod": 'SGD',
                              "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
             obj['alliance_icon_links'] = linkData
