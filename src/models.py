@@ -4824,7 +4824,7 @@ class Locusdbentity(Dbentity):
                 foundException = 1
 
             # Check if 'results' exists and contains data
-            if not records.get('results'):
+            if not records or not records.get('results'):
                 # If 'results' is empty or missing, treat it as an error
                 foundException = 1
                 
