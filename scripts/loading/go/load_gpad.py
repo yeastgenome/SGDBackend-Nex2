@@ -99,29 +99,27 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                           yes_goextension, yes_gosupport,
                           dbentity_id_with_uniprot, bad_ref)
     
-    noctua_data = []
+    log.info(str(datetime.now()))
+    log.info("Reading noctua GPAD file...")
+
+    fw.write(str(datetime.now()) + "\n")
+    fw.write("reading noctua gpad file...\n")
+
+    sgdid_to_date_assigned = {}
+    for uniprot in uniprot_to_date_assigned:
+        date_assigned = uniprot_to_date_assigned[uniprot]
+        sgdid_list = uniprot_to_sgdid_list.get(uniprot, [])
+        for sgdid in sgdid_list:
+            sgdid_to_date_assigned[sgdid] = date_assigned
+
+    noctua_data = read_noctua_gpad_file(noctua_gpad_file, nex_session, 
+                                        sgdid_to_date_assigned, foundAnnotation,
+                                        yes_goextension, yes_gosupport, new_pmids, 
+                                        dbentity_id_with_new_pmid,
+                                        dbentity_id_with_uniprot, bad_ref)
+
     complex_data = []
-    
     if annotation_type == 'manually curated':
-        log.info(str(datetime.now()))
-        log.info("Reading noctua GPAD file...")
-
-        fw.write(str(datetime.now()) + "\n")
-        fw.write("reading noctua gpad file...\n")
-
-        sgdid_to_date_assigned = {}
-        for uniprot in uniprot_to_date_assigned:
-            date_assigned = uniprot_to_date_assigned[uniprot]
-            sgdid_list = uniprot_to_sgdid_list.get(uniprot, [])
-            for sgdid in sgdid_list:
-                sgdid_to_date_assigned[sgdid] = date_assigned
-
-        noctua_data = read_noctua_gpad_file(noctua_gpad_file, nex_session, 
-                                            sgdid_to_date_assigned, foundAnnotation,
-                                            yes_goextension, yes_gosupport, new_pmids, 
-                                            dbentity_id_with_new_pmid,
-                                            dbentity_id_with_uniprot, bad_ref)
-        
         log.info(str(datetime.now()))
         log.info("Reading complex portal GPAD file...")
 
@@ -226,7 +224,7 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
     if annotation_type == 'manually curated':
         allData = noctua_data + complex_data
     else:
-        allData = data
+        allData = data + noctua_data
     for x in allData:
         if x['annotation_type'] not in allowed_types:
             continue
@@ -335,7 +333,7 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
                     nex_session.flush()
                 except IntegrityError as e:
                     nex_session.rollback()
-                    log.info(f"Skipping duplicate GOANNOTATION insert for key={key}")
+                    log.info("Skipping duplicate GOANNOTATION insert for key=" + str(key))
                     continue
                 annotation_id = thisAnnot.annotation_id
                 count_key= (x['annotation_type'], 'annotation_added')
@@ -354,6 +352,7 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
                 annotation_id_to_support[annotation_id] = (x['gosupport'], x['date_created'], created_by, x['annotation_type'])
 
             hasGoodAnnot[(dbentity_id, go_id_to_aspect[go_id])] = 1
+        
         except Exception:
             nex_session.rollback()
             raise
