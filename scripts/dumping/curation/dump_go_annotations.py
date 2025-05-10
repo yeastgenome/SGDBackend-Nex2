@@ -335,9 +335,6 @@ def dump_data(noctua_gpad_file):
 
     fw.close()
 
-
-    
-    """
     log.info("Uploading GAF file to S3...")
 
     update_database_load_file_to_s3(
@@ -350,9 +347,6 @@ def dump_data(noctua_gpad_file):
     local_file = open(gaf_from_go, mode='rb')
     upload_one_file_to_s3(local_file, "latest/" + gaf_from_go)
     ## done
-    """
-
-
     
     log.info(str(datetime.now()))
     log.info("Done!")
