@@ -708,6 +708,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
                 
         ## reference_id
         reference_id = None
+        annotation_type = 'manually curated'
         pmid = None
         if field[4].startswith('PMID:'):
             pmid = field[4][5:]    # PMID:1234567; need to be 1234567
@@ -717,6 +718,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         elif field[4].startswith('SGD_PWY:'):
             biocyc_id = field[4][8:]
             reference_id = biocyc_id_to_dbentity_id.get(biocyc_id)
+            annotation_type = 'computational'
         else:
             ref_sgdid = go_ref_mapping.get(field[4])
             if ref_sgdid is None:
@@ -740,7 +742,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         date_assigned = sgdid_to_date_assigned.get(sgdid)
         if date_assigned is None:
             date_assigned = date_created
-        annotation_type = 'manually curated'
+        # annotation_type = 'manually curated'
 
         key = (dbentity_id, go_id, reference_id, go_qualifier, eco_id, field[6], field[10])
 
