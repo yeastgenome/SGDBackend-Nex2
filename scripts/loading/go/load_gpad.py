@@ -1,4 +1,5 @@
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 import urllib.request, urllib.parse, urllib.error
 import gzip
 import shutil
@@ -329,8 +330,13 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
                                          date_assigned = x['date_assigned'], 
                                          date_created = x['date_created'], 
                                          created_by = created_by)
-                nex_session.add(thisAnnot)
-                nex_session.flush()
+                try:
+                    nex_session.add(thisAnnot)
+                    nex_session.flush()
+                except IntegrityError as e:
+                    nex_session.rollback()
+                    log.info(f"Skipping duplicate GOANNOTATION insert for key={key}")
+                    continue
                 annotation_id = thisAnnot.annotation_id
                 count_key= (x['annotation_type'], 'annotation_added')
                 annotation_update_log[count_key] = annotation_update_log[count_key] + 1
@@ -348,8 +354,10 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
                 annotation_id_to_support[annotation_id] = (x['gosupport'], x['date_created'], created_by, x['annotation_type'])
 
             hasGoodAnnot[(dbentity_id, go_id_to_aspect[go_id])] = 1
-        
-        finally:
+        except Exception:
+            nex_session.rollback()
+            raise
+        else:
             nex_session.commit()
 
     nex_session.close()
