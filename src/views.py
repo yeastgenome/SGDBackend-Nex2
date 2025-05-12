@@ -1559,74 +1559,157 @@ def locus_complement_details(request):
 
 @view_config(route_name='locus_homolog_details', renderer='json', request_method='GET')
 def locus_homolog_details(request):
+    sgdid = request.matchdict['id']
+    if not sgdid:
+        log.error("locus_homolog_details: missing 'id' in path")
+        return HTTPBadRequest(json_body={"error": "Missing 'id' parameter"})
+    alliance_root = "https://www.alliancegenome.org/"
+    alliance_api = "https://www.alliancegenome.org/api/gene/SGD:" + sgdid + "/orthologs?limit=10000"
+    
     try:
-        sgdid = request.matchdict['id']
-        allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + sgdid + "/orthologs?limit=10000"
-        foundException = 0
-        try:
-            req = Request(allianceAPI)
-            res = urlopen(req, timeout=5) # 5 sec timeout
-            records = json.loads(res.read().decode('utf-8'))
-        except Exception as e:
-            log.error("Request to Alliance genome service timed out.")
-            return []
-        if not records.get('results'):
-            return []
-
-        data = []
-        for record in records['results']:
-            homolog = record['homologGene']
-            data.append(homolog)
-        dataSortBySpecies = sorted(data, key=lambda d: d['species']['name'])
-        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")
+        req = Request(alliance_api)
+        with urlopen(req, timeout=5) as res:
+            raw = res.read()
+    except HTTPError as e:
+        log.error("Alliance HTTP error (%s): %s", alliance_api, e)
+        return []
+    except URLError as e:
+        log.error("Alliance unreachable (%s): %s", alliance_api, e)
+        return []
     except Exception as e:
-        log.error(e)
+        log.error("Unexpected error fetching from Alliance: %s", e, exc_info=True)
+        return []
+    try:
+        records = json.loads(raw.decode("utf-8"))
+    except (ValueError, TypeError) as e:
+        log.error("Invalid JSON from Alliance: %s", e)
+        return []
+    results = records.get("results", [])
+    if not isinstance(results, list):
+        log.warning("No 'results' list in Alliance response for SGD:%s", sgdid)
+        return []
+    data = []
+    for rec in results:
+        try:
+            obj = rec["geneToGeneOrthologyGenerated"]["objectGene"]
+            gene_id   = obj["primaryExternalId"]
+            gene_name = obj["geneSymbol"]["displayText"]
+            species   = obj["taxon"]["name"]
+        except (KeyError, TypeError) as e:
+            log.warning("Skipping malformed record: %s", e)
+            continue
+        data.append({
+            "species":   species,
+            "source":    "Alliance",
+            "gene_id":   gene_id,
+            "gene_name": gene_name,
+            "description": ''
+        })
+    data_sorted = sorted(
+        data,
+        key=lambda d: (d['species'], d['gene_name'])
+    )
+    return HTTPOk(body=json.dumps(data_sorted), content_type="text/json")
 
 
 @view_config(route_name='locus_fungal_homolog_details', renderer='json', request_method='GET')
 def locus_fungal_homolog_details(request):
+    # 1) Validate and extract the gene identifier
+    gene_name = request.matchdict.get('id')
+    if not gene_name:
+        log.error("locus_fungal_homolog_details: missing 'id' in path")
+        return HTTPBadRequest(json_body={"error": "Missing 'id' parameter"})
+    
+    # 2) Normalize SGD IDs (strip leading 'S' if it's a 9-digit number)
+    if gene_name.startswith('S'):
+        core = gene_name[1:]
+        if len(core) == 9 and core.isdigit():
+            gene_name = f"SGD:{gene_name}"
+
+    # 3) Build the AllianceMine query
     try:
-        ## gene name can be gene name, orf name, sgdid
-        gene_name = request.matchdict['id']
-        if gene_name.startswith('S'):
-            id = gene_name.replace('S', '')
-            if len(id) == 9 and id.isdigit():
-                gene_name = 'SGD:' + gene_name
         service = Service("https://www.alliancegenome.org/alliancemine/service")
         query = service.new_query("Gene")
+        # specify which columns to fetch
         query.add_view(
             "symbol", "secondaryIdentifier", "name", "sgdAlias",
             "homologues.homologue.organism.shortName",
-            "homologues.homologue.primaryIdentifier", "homologues.homologue.symbol",
+            "homologues.homologue.primaryIdentifier",
+            "homologues.homologue.symbol",
             "homologues.dataSets.dataSource.name",
-            "homologues.homologue.briefDescription", "homologues.homologue.sgdAlias",
+            "homologues.homologue.briefDescription",
+            "homologues.homologue.sgdAlias",
             "homologues.type"
         )
-
-        query.add_sort_order("Gene.homologues.homologue.organism.shortName", "ASC")
-
-        query.add_constraint("homologues.homologue.organism.shortName", "ONE OF", ["A. flavus NRRL3357", "A. fumigatus Af293", "A. nidulans FGSC A4", "A. niger ATCC 1015", "C. albicans SC5314", "C. albicans WO-1", "C. dubliniensis CD36", "C. gattii R265", "C. gattii WM276", "C. glabrata CBS 138", "C. immitis H538.4", "C. immitis RS", "C. neoformans var. grubii H99", "C. neoformans var. neoformans JEC21", "C. parapsilosis CDC317", "C. posadasii C735 delta SOWgp", "M. oryzae 70-15", "N. crassa OR74A", "S. cerevisiae", "S. pombe", "T. marneffei ATCC 18224", "U. maydis 521"], code="C")
-
-        query.add_constraint("organism.shortName", "=", "S. cerevisiae", code="B")
-
+        # sort by species
+        query.add_sort_order(
+            "Gene.homologues.homologue.organism.shortName", "ASC"
+        )
+        # constrain to fungal homologs of interest
+        query.add_constraint(
+            "homologues.homologue.organism.shortName",
+            "ONE OF",
+            [
+                "A. flavus NRRL3357", "A. fumigatus Af293",
+                "A. nidulans FGSC A4", "A. niger ATCC 1015",
+                "C. albicans SC5314",  "C. albicans WO-1",
+                "C. dubliniensis CD36", "C. gattii R265",
+                "C. gattii WM276", "C. glabrata CBS 138",
+                "C. immitis H538.4", "C. immitis RS",
+                "C. neoformans var. grubii H99",
+                "C. neoformans var. neoformans JEC21",
+                "C. parapsilosis CDC317",
+                "C. posadasii C735 delta SOWgp",
+                "M. oryzae 70-15", "N. crassa OR74A",
+                "S. cerevisiae", "S. pombe",
+                "T. marneffei ATCC 18224", "U. maydis 521"
+            ],
+            code="C"
+        )
+        # ensure we’re in S. cerevisiae background
+        query.add_constraint(
+            "organism.shortName", "=", "S. cerevisiae", code="B"
+        )
+        # lookup our gene
         query.add_constraint("Gene", "LOOKUP", gene_name, code="A")
-
         query.set_logic("A and C and B")
-
-        data = []
-        for row in query.rows():
-            data.append({ 'species': row["homologues.homologue.organism.shortName"],
-                          'gene_id': row["homologues.homologue.primaryIdentifier"],
-                          'gene_name': row["homologues.homologue.symbol"],
-                          'source': row["homologues.dataSets.dataSource.name"],
-                          'description': row["homologues.homologue.briefDescription"] })
-        
-        #dataSortByID = sorted(data, key=lambda d: d['gene_id'])
-        dataSortBySpecies = sorted(data, key=lambda d: d['species'])
-        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")
     except Exception as e:
-        log.error(e)        
-        
+        log.error("Error constructing AllianceMine query: %s", e, exc_info=True)
+        return []
+
+    # 4) Execute the query
+    try:
+        rows = query.rows()
+    except Exception as e:
+        log.error("Error executing AllianceMine query: %s", e, exc_info=True)
+        return []
+
+    # 5) Pull out our columns, skipping any malformed rows
+    data = []
+    for row in rows:
+        try:
+            species    = row["homologues.homologue.organism.shortName"]
+            gene_id    = row["homologues.homologue.primaryIdentifier"]
+            gene_sym   = row["homologues.homologue.symbol"]
+            source     = row["homologues.dataSets.dataSource.name"]
+            descr      = row["homologues.homologue.briefDescription"]
+        except (KeyError, TypeError) as e:
+            log.warning("Skipping malformed homolog row: %s", e)
+            continue
+
+        data.append({
+            "species":    species,
+            "gene_id":    gene_id,
+            "gene_name":  gene_sym,
+            "source":     source,
+            "description": descr
+        })
+
+    # 6) Sort by species then gene_name and return
+    data_sorted = sorted(data, key=lambda d: (d["species"], d["gene_name"]))
+    return data_sorted
+
+
 @view_config(route_name='locus_literature_details', renderer='json', request_method='GET')
 def locus_literature_details(request):
     try:

@@ -896,19 +896,24 @@ class Chebi(Base):
         return pathwaysSorted
     
     def get_structure_url(self):
-        chebiURL = "https://www.ebi.ac.uk/chebi/"
+        base_url = "https://www.ebi.ac.uk/chebi/"
         try:
-            timeout = 0.5 # half second
-            response = requests.get(chebiURL, timeout=timeout)
-            if response.status_code != 200:
+            # quick health-check of the CHEBI site
+            resp = requests.get(base_url, timeout=0.5)
+            if resp.status_code != 200:
                 return ''
-        except:
-            return ''
-        url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "") + "&dimensions=200"
-        response = urlopen(url)
-        res = response.read()
-        if len(res) > 0:
-            return url
+            
+            # build the image URL
+            image_url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "") + "&dimensions=200"
+
+            # verify that the image actually exists
+            with urlopen(image_url, timeout=0.5) as img_resp:
+                data = img_resp.read()
+                if data:
+                    return image_url
+        except (requests.RequestException, HTTPError, URLError, Exception):
+            # catches timeouts, connection errors, HTTP errors, URL errors, etc.
+            return ""
         return ""
 
     def get_pharmGKB_url(self):
@@ -4806,7 +4811,10 @@ class Locusdbentity(Dbentity):
 
         if len(rows) > 0:
             allianceSearchRootUrl = "https://www.alliancegenome.org/"
-            allianceSearchUrl = allianceSearchRootUrl + "search/?biotypes=protein_coding_gene&category=gene&q=_SUBSTITUTE_&species="
+            allianceSearchUrl = (
+                allianceSearchRootUrl +
+                "search/?biotypes=protein_coding_gene&category=gene&q=_SUBSTITUTE_&species="
+            )
             mod_to_template_url = { "ZFIN": allianceSearchUrl + "Danio%20rerio",
                                     "RGD":  allianceSearchUrl + "Rattus%20norvegicus",
                                     "MGI":  allianceSearchUrl + "Mus%20musculus",
@@ -4814,49 +4822,36 @@ class Locusdbentity(Dbentity):
                                     "WB":   allianceSearchUrl + "Caenorhabditis%20elegans",
                                     "HGNC": allianceSearchUrl + "Homo%20sapiens" }
             allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + self.sgdid + "/orthologs?limit=10000"
-            records = None
-            foundException = 0
+            linkData = []
             try:
                 req = Request(allianceAPI)
-                res = urlopen(req, timeout=5) # 5 sec timeout
-                records = json.loads(res.read().decode('utf-8'))
-            except Exception as e:
-                foundException = 1
-
-            # Check if 'results' exists and contains data
-            if not records or not records.get('results'):
-                # If 'results' is empty or missing, treat it as an error
-                foundException = 1
-                
-            linkData = []
-            if foundException == 0:
-                try:
-                    mod_to_ids = {}                
-                    for record in records['results']:
-                        if 'geneToGeneOrthologyGenerated' not in record:
-                            continue
-                        if 'objectGene' not in record['geneToGeneOrthologyGenerated']:
-                            continue
-                        if 'primaryExternalId' not in record['geneToGeneOrthologyGenerated']['objectGene']:
-                            continue
-                        mod_id = record['geneToGeneOrthologyGenerated']['objectGene']['primaryExternalId']
-                        mod = mod_id.split(':')[0]
-                        if mod:
-                            ids = mod_to_ids.get(mod, [])
-                            if len(ids) < 100:
-                                ids.append(mod_id)
-                            mod_to_ids[mod] = ids
-                    for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
-                        if mod in mod_to_ids:
-                            if len(mod_to_ids[mod]) > 1:
-                                ids = "+".join(mod_to_ids[mod])
-                                linkData.append({"mod": mod,
-                                                 "icon_url": mod_to_template_url[mod].replace("_SUBSTITUTE_", ids)})
-                            else:
-                                linkData.append({"mod": mod,
-                                                 "icon_url": allianceSearchRootUrl + "gene/" + mod_to_ids[mod][0]})
-                except Exception as e:
-                    linkData = []
+                with urlopen(req, timeout=5) as res:
+                    records = json.loads(res.read().decode("utf-8"))
+                results = records.get("results") or []
+                mod_to_ids = {}
+                for rec in results:
+                    try:
+                        mod_id = rec["geneToGeneOrthologyGenerated"]["objectGene"]["primaryExternalId"]
+                    except (KeyError, TypeError):
+                        continue
+                    mod = mod_id.split(':', 1)[0]
+                    if mod:
+                        mod_to_ids.setdefault(mod, []).append(mod_id)
+        
+                for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
+                    ids = mod_to_ids.get(mod)
+                    if not ids:
+                        continue
+                    if len(ids) > 1:
+                        substitute = "+".join(ids)
+                        url = mod_to_template_url[mod].replace("_SUBSTITUTE_", substitute)
+                    else:
+                        url = allianceSearchRootUrl + "gene/" + ids[0]
+                    linkData.append({"mod": mod, "icon_url": url})    
+            except Exception:
+                # anything goes wrong (timeout, HTTP error, JSON issues…),
+                # we’ll just skip to the fallback
+                linkData = []
             linkData.append({"mod": 'SGD',
                              "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
             obj['alliance_icon_links'] = linkData
@@ -4985,23 +4980,27 @@ class Locusdbentity(Dbentity):
         obj["urls"] = [u.to_dict() for u in urls]
 
         # get RNACentral URS ID from EBI
-        # https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/id_mapping/database_mappings/sgd.tsv
         if "RNA" in obj["locus_type"]:
             url_path = 'https://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/id_mapping/database_mappings/'
             mapping_file = 'sgd.tsv'
-            urllib.request.urlretrieve(url_path + mapping_file, mapping_file)
-            f = open(mapping_file)
-            for line in f:
-                pieces = line.split('\t')
-                if pieces[2] == self.sgdid:
-                    try:
-                        content = urlopen("https://rnacentral.org/api/v1/rna/" + pieces[0] + "/2d/svg/")
-                    except:
+            error_download = False
+            try:
+                urllib.request.urlretrieve(url_path + mapping_file, mapping_file)
+            except:
+                error_download = True
+            if error_download is False:
+                f = open(mapping_file)
+                for line in f:
+                    pieces = line.split('\t')
+                    if pieces[2] == self.sgdid:
+                        try:
+                            content = urlopen("https://rnacentral.org/api/v1/rna/" + pieces[0] + "/2d/svg/")
+                        except:
+                            break
+                        obj["URS_ID"] = pieces[0]
                         break
-                    obj["URS_ID"] = pieces[0]
-                    break
-            f.close()
-            os.remove(mapping_file)
+                f.close()
+                os.remove(mapping_file)
         
         uniprotID = None
         aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
