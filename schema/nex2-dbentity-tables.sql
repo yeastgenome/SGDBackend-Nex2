@@ -186,12 +186,12 @@ COMMENT ON COLUMN nex.locus_homology.created_by IS 'Username of the person who e
 COMMENT ON COLUMN nex.locus_homology.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.locus_homology.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.locus_homology.gene_id IS 'Homologue dbxref.';
-COMMENT ON COLUMN nex.locus_homolog.homolog_desc IS 'Description of homologue';
+COMMENT ON COLUMN nex.locus_homology.homolog_desc IS 'Description of homologue';
 COMMENT ON COLUMN nex.locus_homology.taxonomy_id IS 'FK to TAXONOMY.TAXONOMY_ID';
 COMMENT ON COLUMN nex.locus_homology.homology_id IS 'Unique identifier (serial number).';
 ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_uk UNIQUE (locus_id, gene_id, taxonomy_id);
 ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_locus_id_fkey FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id);
-ALTER TABLE nex.locus_homololgy ADD CONSTRAINT locus_homology_source_id_fkey FOREIGN KEY (source_id) REFERENCES source(source_id);
+ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_source_id_fkey FOREIGN KEY (source_id) REFERENCES source(source_id);
 ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_taxonomy_id_fkey FOREIGN KEY (taxonomy_id) REFERENCES taxonomy(taxonomy_id);
 CREATE INDEX locushomology_locus_fk_index ON nex.locus_homology (locus_id);
 
