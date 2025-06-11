@@ -190,8 +190,10 @@ COMMENT ON COLUMN nex.locus_homolog.homolog_desc IS 'Description of homologue';
 COMMENT ON COLUMN nex.locus_homology.taxonomy_id IS 'FK to TAXONOMY.TAXONOMY_ID';
 COMMENT ON COLUMN nex.locus_homology.homology_id IS 'Unique identifier (serial number).';
 ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_uk UNIQUE (locus_id, gene_id, taxonomy_id);
-CREATE INDEX locushomology_source_fk_index ON nex.locus_homology (source_id);
-
+ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_locus_id_fkey FOREIGN KEY (locus_id) REFERENCES locusdbentity(dbentity_id);
+ALTER TABLE nex.locus_homololgy ADD CONSTRAINT locus_homology_source_id_fkey FOREIGN KEY (source_id) REFERENCES source(source_id);
+ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_taxonomy_id_fkey FOREIGN KEY (taxonomy_id) REFERENCES taxonomy(taxonomy_id);
+CREATE INDEX locushomology_locus_fk_index ON nex.locus_homology (locus_id);
 
 DROP TABLE IF EXISTS nex.locus_relation CASCADE; 
 CREATE TABLE nex.locus_relation (
