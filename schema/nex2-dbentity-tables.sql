@@ -164,6 +164,35 @@ ALTER TABLE nex.locusalias_reference ADD CONSTRAINT locusalias_reference_uk UNIQ
 CREATE INDEX locusaliasreference_source_fk_index ON nex.locusalias_reference (source_id);
 CREATE INDEX locusaliasreference_ref_fk_index ON nex.locusalias_reference (reference_id);
 
+DROP TABLE IF EXISTS nex.locus_homology CASCADE; 
+CREATE TABLE nex.locus_homology (
+	homology_id bigint NOT NULL DEFAULT nextval('homology_seq'),
+	locus_id bigint NOT NULL,
+	gene_id bigint NOT NULL,
+	gene_name varchar(500) NOT NULL,
+	homolog_desc varchar(200),
+	obj_url varchar(500),
+	source_id bigint NOT NULL,
+	taxonomy_id bigint NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT locus_homology_pk PRIMARY KEY (homology_id)
+) ;
+COMMENT ON TABLE nex.locus_homology IS 'Homologue names, synonyms, or dbxrefs for a feature or gene.';
+COMMENT ON COLUMN nex.locus_homology.gene_name IS 'Public display name of the homologous gene.';
+COMMENT ON COLUMN nex.locus_homology.obj_url IS 'URL of the object (relative for local links or complete for external links).';
+COMMENT ON COLUMN nex.locus_homology.locus_id IS 'FK to LOCUSDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.locus_homology.created_by IS 'Username of the person who entered the record into the database.';
+COMMENT ON COLUMN nex.locus_homology.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.locus_homology.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.locus_homology.gene_id IS 'Homologue dbxref.';
+COMMENT ON COLUMN nex.locus_homolog_desc IS 'Description of homologue';
+COMMENT ON COLUMN nex.locus_homology.taxonomy_id IS 'FK to TAXONOMY.TAXONOMY_ID';
+COMMENT ON COLUMN nex.locus_homology.homology_id IS 'Unique identifier (serial number).';
+ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_uk UNIQUE (locus_id, gene_id, taxonomy_id);
+CREATE INDEX locushomology_source_fk_index ON nex.locus_homology (source_id);
+
+
 DROP TABLE IF EXISTS nex.locus_relation CASCADE; 
 CREATE TABLE nex.locus_relation (
 	relation_id bigint NOT NULL DEFAULT nextval('relation_seq'),
