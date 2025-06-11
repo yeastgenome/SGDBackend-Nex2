@@ -9,6 +9,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 	npm \
 	postfix \
         python3-pip \
+	python3-virtualenv \
 	tzdata \
 	unzip \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -24,7 +25,6 @@ WORKDIR /data/www/logs
 
 WORKDIR /data/www/SGDBackend-Nex2
 RUN git checkout master_docker \
-    && pip3 install virtualenv \
     && virtualenv venv \
     && . venv/bin/activate \
     && pip3 install -U setuptools==57.5.0 \
