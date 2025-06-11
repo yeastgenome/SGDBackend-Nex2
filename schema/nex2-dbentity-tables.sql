@@ -186,7 +186,7 @@ COMMENT ON COLUMN nex.locus_homology.created_by IS 'Username of the person who e
 COMMENT ON COLUMN nex.locus_homology.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.locus_homology.date_created IS 'Date the record was entered into the database.';
 COMMENT ON COLUMN nex.locus_homology.gene_id IS 'Homologue dbxref.';
-COMMENT ON COLUMN nex.locus_homolog_desc IS 'Description of homologue';
+COMMENT ON COLUMN nex.locus_homolog.homolog_desc IS 'Description of homologue';
 COMMENT ON COLUMN nex.locus_homology.taxonomy_id IS 'FK to TAXONOMY.TAXONOMY_ID';
 COMMENT ON COLUMN nex.locus_homology.homology_id IS 'Unique identifier (serial number).';
 ALTER TABLE nex.locus_homology ADD CONSTRAINT locus_homology_uk UNIQUE (locus_id, gene_id, taxonomy_id);
