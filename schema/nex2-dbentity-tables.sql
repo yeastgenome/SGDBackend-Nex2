@@ -170,7 +170,7 @@ CREATE TABLE nex.locus_homology (
 	locus_id bigint NOT NULL,
 	gene_id varchar(30) NOT NULL,
 	gene_name varchar(50) NOT NULL,
-	homolog_desc varchar(200),
+	homolog_desc varchar(500),
 	obj_url varchar(500),
 	source_id bigint NOT NULL,
 	taxonomy_id bigint NOT NULL,
