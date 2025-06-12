@@ -168,8 +168,8 @@ DROP TABLE IF EXISTS nex.locus_homology CASCADE;
 CREATE TABLE nex.locus_homology (
 	homology_id bigint NOT NULL DEFAULT nextval('homology_seq'),
 	locus_id bigint NOT NULL,
-	gene_id bigint NOT NULL,
-	gene_name varchar(500) NOT NULL,
+	gene_id varchar(30) NOT NULL,
+	gene_name varchar(50) NOT NULL,
 	homolog_desc varchar(200),
 	obj_url varchar(500),
 	source_id bigint NOT NULL,
