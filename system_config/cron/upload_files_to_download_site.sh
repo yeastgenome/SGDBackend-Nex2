@@ -19,4 +19,5 @@ python scripts/dumping/tab_files_for_download_site/generate_protein_properties.p
 python scripts/dumping/tab_files_for_download_site/generate_regulation_file.py
 python scripts/dumping/tab_files_for_download_site/generate_sgd_features.py
 python scripts/dumping/tab_files_for_download_site/generate_yeast_human_disease_file.py
+python scripts/dumping/tab_files_for_download_site/generate_posttranslational_modifications_file.py
 python scripts/dumping/s3/upload_files_for_download_site.py
