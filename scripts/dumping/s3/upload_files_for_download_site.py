@@ -29,7 +29,8 @@ lit_files = [
     "functional_complementation.tab",
     "biochemical_pathways.tab",
     "alleles.tab",
-    "yeastHumanDisease.tab"
+    "yeastHumanDisease.tab",
+    "posttranslational_modifications.tab"
 ]
 
 feat_files = [
