@@ -4821,37 +4821,29 @@ class Locusdbentity(Dbentity):
                                     "FB":   allianceSearchUrl + "Drosophila%20melanogaster",
                                     "WB":   allianceSearchUrl + "Caenorhabditis%20elegans",
                                     "HGNC": allianceSearchUrl + "Homo%20sapiens" }
-            allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + self.sgdid + "/orthologs?limit=10000"
+
+            linkRows = DBSession.execute(f"SELECT display_name "
+                                         f"FROM nex.locus_alias "
+                                         f"WHERE alias_type = 'Alliance ID' "
+                                         f"AND locus_id = {self.dbentity_id}").fetchall()
+            mod_to_ids = {}
             linkData = []
-            try:
-                req = Request(allianceAPI)
-                with urlopen(req, timeout=5) as res:
-                    records = json.loads(res.read().decode("utf-8"))
-                results = records.get("results") or []
-                mod_to_ids = {}
-                for rec in results:
-                    try:
-                        mod_id = rec["geneToGeneOrthologyGenerated"]["objectGene"]["primaryExternalId"]
-                    except (KeyError, TypeError):
-                        continue
-                    mod = mod_id.split(':', 1)[0]
-                    if mod:
-                        mod_to_ids.setdefault(mod, []).append(mod_id)
+            for x in linkRows:
+                mod_id = x[0]
+                mod = mod_id.split(':', 1)[0]
+                if mod:
+                    mod_to_ids.setdefault(mod, []).append(mod_id)
         
-                for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
-                    ids = mod_to_ids.get(mod)
-                    if not ids:
-                        continue
-                    if len(ids) > 1:
-                        substitute = "+".join(ids)
-                        url = mod_to_template_url[mod].replace("_SUBSTITUTE_", substitute)
-                    else:
-                        url = allianceSearchRootUrl + "gene/" + ids[0]
-                    linkData.append({"mod": mod, "icon_url": url})    
-            except Exception:
-                # anything goes wrong (timeout, HTTP error, JSON issues…),
-                # we’ll just skip to the fallback
-                linkData = []
+            for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
+                ids = mod_to_ids.get(mod)
+                if not ids:
+                    continue
+                if len(ids) > 1:
+                    substitute = "+".join(ids)
+                    url = mod_to_template_url[mod].replace("_SUBSTITUTE_", substitute)
+                else:
+                    url = allianceSearchRootUrl + "gene/" + ids[0]
+                linkData.append({"mod": mod, "icon_url": url})    
             linkData.append({"mod": 'SGD',
                              "icon_url": allianceSearchRootUrl + "gene/SGD:" + self.sgdid})
             obj['alliance_icon_links'] = linkData
