@@ -133,8 +133,11 @@ def insert_url(nex_session, fw, display_name, source, proteindomain_id, source_i
         link = "http://pfam.xfam.org/family/" + display_name
     elif source in ['GENE3D', 'Gene3D', 'FunFam']:
         source = 'GENE3D'
-        linkID = display_name[6:].split(':FF:')[0]
-        link = "http://www.cathdb.info/version/latest/superfamily/" + display_name[6:]
+        # linkID = display_name[6:].split(':FF:')[0]
+        if ':FF:' in display_name:
+            link = "http://www.cathdb.info/version/latest/funfam/" + display_name[6:]
+        else:
+            link = "http://www.cathdb.info/version/latest/superfamily/" + display_name[6:]
     elif source == 'SUPERFAMILY':
         link = "http://supfam.org/SUPERFAMILY/cgi-bin/scop.cgi?ipid=" + display_name
     elif source == 'PANTHER':
