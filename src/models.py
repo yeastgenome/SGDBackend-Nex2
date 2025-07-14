@@ -10338,9 +10338,14 @@ class Alleledbentity(Dbentity):
         obj['affected_gene'] = self.get_gene_name()  
         (obj['allele_type'], ref_order) = self.get_basic_info(self.so.display_name, 'so_term', reference_mapping, ref_order)
         (obj['description'], ref_order) = self.get_basic_info(self.description, 'allele_description', reference_mapping, ref_order)
+        """
         obj['phenotype'] = self.phenotype_to_dict()
         obj['interaction'] = self.interaction_to_dict()
         obj['network_graph'] = self.allele_network()
+        """
+        obj['phenotype'] = self.phenotype_to_dict(check_count=True)
+        obj['interaction'] = self.interaction_to_dict(check_count=True)
+        obj['network_graph'] = self.allele_network(check_count=True) 
         obj['references'] = self.get_references()
         obj['phenotype_references'] = self.get_phenotype_references(unique_references)
         obj['interaction_references'] = self.get_interaction_references(unique_references)
@@ -10477,8 +10482,19 @@ class Alleledbentity(Dbentity):
                 
         return references
 
-    def interaction_to_dict(self):
+    def interaction_to_dict(self, check_count=False):
 
+        if check_count:
+            exists = DBSession.query(AlleleGeninteraction) \
+                              .filter(
+                                  or_(
+                                      AlleleGeninteraction.allele1_id == self.dbentity_id,
+                                      AlleleGeninteraction.allele2_id == self.dbentity_id
+                                  )
+                              ) \
+                              .first() is not None
+            return [{}] if exists else []
+    
         interaction_ids = []
         for x in DBSession.query(AlleleGeninteraction).distinct(AlleleGeninteraction.interaction_id).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).all():
             interaction_ids.append(x.interaction_id)
@@ -10492,10 +10508,16 @@ class Alleledbentity(Dbentity):
         return obj
 
     
-    def phenotype_to_dict(self):
-        
+    def phenotype_to_dict(self, check_count=False):
+
+        if check_count:
+            exists = DBSession.query(Phenotypeannotation) \
+                              .filter_by(allele_id=self.dbentity_id) \
+                              .first() is not None
+            return [{}] if exists else []
+    
         annotations = DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all()
-        
+
         obj = []
         for annotation in annotations:
             obj += annotation.to_dict()
@@ -10543,7 +10565,31 @@ class Alleledbentity(Dbentity):
         return (objs, ref_order)
 
     
-    def allele_network(self):
+    def allele_network(self, check_count=False):
+
+        # --- EARLY EXIT FOR COUNT CHECKS ---
+        if check_count:
+            # Quick check for any phenotype annotation on this allele
+            has_pheno = DBSession.query(Phenotypeannotation) \
+                                 .filter_by(allele_id=self.dbentity_id) \
+                                 .first() is not None
+
+            # Quick check for any genetic interaction on this allele
+            has_interaction = DBSession.query(AlleleGeninteraction) \
+                                       .filter(
+                                           or_(
+                                               AlleleGeninteraction.allele1_id == self.dbentity_id,
+                                               AlleleGeninteraction.allele2_id == self.dbentity_id
+                                           )
+                                       ) \
+                                       .first() is not None
+
+            if has_pheno or has_interaction:
+                # Non‐empty edges list signals “yes, there is at least one edge”
+                return {"edges": [{}], "nodes": []}
+            else:
+                return {"edges": [], "nodes": []}
+            # --- END EARLY EXIT ---
 
         network_nodes =[]
         network_edges =[]
@@ -10630,7 +10676,7 @@ class Alleledbentity(Dbentity):
                             "target": pheno_id
                         })
                         network_edges_added[(allele_format_name, pheno_id)] = True
-                                        
+            
         ## interaction 
 
         allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(Dbentity).filter_by(subclass='ALLELE').all()])
