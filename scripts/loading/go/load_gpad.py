@@ -777,7 +777,7 @@ if __name__ == "__main__":
     file_sizes = {
         dated_gpad_file: 1100000,
         dated_gpi_file: 340000,
-        dated_noctua_gpad_file: 790000,
+        dated_noctua_gpad_file: 780000,
         dated_complex_gpad_file: 2700000
     }
     
