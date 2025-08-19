@@ -84,16 +84,21 @@ def load_data():
             continue
         
         if dbentity_id:
-            if (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
-                if lit_topic == 'Primary Literature' and ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] == 'Additional Literature':
-                    ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = (lit_topic, created_by)
+            key = (reference_id, dbentity_id, taxonomy_id)
+            new_topic = lit_topic
+            new_created_by = created_by
+            prev = ref_gene_to_topic.get(key)
+            if prev is None:
+                ref_gene_to_topic[key] = (new_topic, new_created_by)
             else:
-                ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = (lit_topic, created_by)
+                prev_topic, _prev_created_by = prev
+                if new_topic == 'Primary Literature' and prev_topic == 'Additional Literature':
+                    ref_gene_to_topic[key] = (new_topic, new_created_by)
+                # else keep existing (already Primary or same)
         else:
-            ref_to_topic[(reference_id, taxonomy_id] = (lit_topic, created_by)
-
-    for (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
-        (lit_topic, created_by) = ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)]
+            ref_to_topic[(reference_id, taxonomy_id)] = (lit_topic, created_by)
+            
+    for (reference_id, dbentity_id, taxonomy_id), (lit_topic, created_by) in ref_gene_to_topic.items():
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    dbentity_id, taxonomy_id)
         if annotation_id is None:
@@ -104,7 +109,7 @@ def load_data():
             update_literatureannotation(nex_session, annotation_id, lit_topic)
 
     for (reference_id, taxonomy_id) in ref_to_topic:
-        (lit_topic. created_by) = ref_to_topic[(reference_id, taxonomy_id)]
+        (lit_topic, created_by) = ref_to_topic[(reference_id, taxonomy_id)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    None, taxonomy_id)
         if annotation_id is None:
