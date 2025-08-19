@@ -86,14 +86,14 @@ def load_data():
         if dbentity_id:
             if (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
                 if lit_topic == 'Primary Literature' and ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] == 'Additional Literature':
-                    ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id, created_by)] = lit_topic
+                    ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = (lit_topic, created_by)
             else:
-                ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id, created_by)] = lit_topic
+                ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)] = (lit_topic, created_by)
         else:
-            ref_to_topic[(reference_id, taxonomy_id, created_by)] = lit_topic
+            ref_to_topic[(reference_id, taxonomy_id] = (lit_topic, created_by)
 
-    for (reference_id, dbentity_id, taxonomy_id, created_by) in ref_gene_to_topic:
-        lit_topic = ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id, created_by)]
+    for (reference_id, dbentity_id, taxonomy_id) in ref_gene_to_topic:
+        (lit_topic, created_by) = ref_gene_to_topic[(reference_id, dbentity_id, taxonomy_id)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    dbentity_id, taxonomy_id)
         if annotation_id is None:
@@ -103,8 +103,8 @@ def load_data():
         elif lit_topic == 'Primary Literature' and topic_in_db == 'Additional Literature':
             update_literatureannotation(nex_session, annotation_id, lit_topic)
 
-    for (reference_id, taxonomy_id, created_by) in ref_to_topic:
-        lit_topic = ref_to_topic[(reference_id, taxonomy_id, created_by)]
+    for (reference_id, taxonomy_id) in ref_to_topic:
+        (lit_topic. created_by) = ref_to_topic[(reference_id, taxonomy_id)]
         annotation_id, topic_in_db = get_lit_topic(nex_session, reference_id,
                                                    None, taxonomy_id)
         if annotation_id is None:
