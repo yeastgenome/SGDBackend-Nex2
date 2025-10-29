@@ -883,73 +883,103 @@ def reference_phenotype_details(request):
         if DBSession:
             DBSession.remove()
 
+def _generate_blast_title_etc(desc):
+
+    text = desc or ""
+    s = text.lower()
     
+    alternative_ref_strains = [
+        'cen.pk2-1ca', 'd273-10b', 'fl100', 'jk9-3d',
+        'rm11-1a', 'sey6210', 'sigma1278b',
+        'sk1', 'w303', 'x2180-1a', 'y55'
+    ]
+    genus = "Saccharomyces"
+    species = "cerevisiae"
+
+    # ---- S288C Reference ----
+    if s.startswith("s288c reference"):
+    
+        # Genomic DNA buckets
+        if ("nuclear chromosome" in s) or ("mitochondrial chromosome" in s) or ("mitochrondrial chromosome" in s) or ("2-micron plasmid" in s):
+            seqcol_type = "S288C Reference Strain|Genomic DNA"
+            if "nuclear chromosome" in s:
+                title = "Nuclear chromosomes"
+            elif ("mitochondrial chromosome" in s) or ("mitochrondrial chromosome" in s):
+                title = "Mitochondrial chromosome"
+            else:
+                title = "2-micron plasmid"
+        # Protein sequences
+        elif "protein sequences" in s:
+            seqcol_type = "S288C Reference Strain|ORF protein sequences"
+            title = "Protein sequences"
+        # ORFs (DNA only)
+        elif ("orf coding" in s) or ("orf genomic" in s):
+            seqcol_type = "S288C Reference Strain|ORFs (DNA only)"
+            if "+/-" in s:
+                title = "ORFs with 1000 bp upstream/downstream"
+            elif "coding" in s:
+                title = "ORF coding"
+            else:
+                title = "ORFs with introns"
+        # RNA
+        elif "rna" in s:
+            seqcol_type = "S288C Reference Strain|RNA"
+            if "coding" in s:
+                title = "RNA coding"
+            elif "+/-" in s:
+                title = "RNA with 1000 bp upstream/downstream"
+            else:
+                title = "RNA coding with introns"
+        # Non-genic DNA
+        elif "non-genic" in s:
+            seqcol_type = "S288C Reference Strain|Non-genic DNA"
+            title = "Intergenic sequences (between ORFs, RNAs, LTRs, Tys"
+
+    # ---- Vectors (S288C) ----
+    elif "vector" in s:
+        seqcol_type = "S288C Reference Strain|Vectors"
+        title = "Yeast cloning vector collection"
+
+    # ---- Alternative reference strains (SGD) ----
+    elif "sgd" in s:
+        matched_alt = any(alt in s for alt in alternative_ref_strains)
+        if matched_alt:
+            if "contig" in s:
+                seqcol_type = "Alternative Reference Strains|Genomic DNA"
+            elif "coding" in s:
+                seqcol_type = "Alternative Reference Strains|Coding DNA"
+            else:
+                seqcol_type = "Alternative Reference Strains"
+        else:
+            # Fall back if "SGD" appears but not in the alternative strain list
+            seqcol_type = "Other S. cerevisiae Strains"
+        title = (text.split('|', 1)[0] or text).strip()
+
+    # ---- Other strains ----
+    else:
+        if "contig" in s:
+            seqcol_type = "Other Strains|Genomic DNA"
+        elif "orf coding" in s:
+            seqcol_type = "Other Strains|Coding DNA"
+        else:
+            seqcol_type = "Other S. cerevisiae Strains"
+        title = (text.split('|', 1)[0] or text).strip()
+
+    # Final safety fallbacks
+    title = title or (text.split('|', 1)[0].strip() if text else "")
+
+    return genus, species, title, seqcol_type
+
 @view_config(route_name='sgd_blast_metadata', renderer='json', request_method='GET')
 def sgd_blast_metadata(request):
 
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
 
-    ntr_root_taxon_id = "NCBITaxon:4932"
-    version = "SGD:R64-4-1"
-    genus = "Saccharomyces"
-    species = "cerevisiae"
-    strain_to_bioproject = {
-        "S288C": "PRJNA128",
-        "AWRI1631": "PRJNA30553",
-        "AWRI796": "PRJNA48559",
-        "BC187": "PRJNA260311",
-        "BY4741": "PRJNA260311",
-        "BY4742": "PRJNA260311",
-        "CBS7960": "PRJNA60391",
-        "CEN.PK113-7D":	"PRJNA52955",
-        "CEN.PK2-1CA": "PRJNA260311",
-        "CLIB215": "PRJNA60143",
-        "CLIB324": "PRJNA60415",
-        "CLIB382": "PRJNA60145",
-        "D273-10B": "PRJNA260311",
-        "DBVPG6044": "PRJNA260311",
-        "EC1118": "PRJEA37863",
-        "EC9-8": "PRJNA73985",
-        "FL100": "PRJNA260311",
-        "FY1679": "PRJNA260311",
-        "FOSTERSB": "PRJNA48569",
-        "FOSTERSO": "PRJNA48567",
-        "JAY291": "PRJNA32809",
-        "JK9-3D": "PRJNA260311",
-        "K11": "PRJNA260311",
-        "KYOKAI7": "PRJDA45827",
-        "L1528": "PRJNA260311",
-        "LALVINQA23": "PRJNA48561",
-        "M22": "PRJNA28815",
-        "PW5": "PRJNA60181",
-        "RM11-1A": "PRJNA260311",
-        "REDSTAR": "PRJNA260311",
-        "SEY6210": "PRJNA260311",
-        "SK1": "PRJNA260311",
-        "SIGMA1278B-10560-6B": "PRJNA260311",
-        "SIGMA1278B": "PRJNA39317",
-        "T73": "PRJNA60195",
-        "T7": "PRJNA60387",
-        "UC5": "PRJNA60197",
-        "UWOPS05-217-3": "PRJNA260311",
-        "VL3": "PRJNA48565",
-        "VIN13": "PRJNA48563",
-        "W303": "PRJNA260311",
-        "X2180-1A": "PRJNA260311",
-        "Y10": "PRJNA60201",
-        "Y55": "PRJNA260311",
-        "YJM269": "PRJNA60389",
-        "YJM339": "PRJNA260311",
-        "YJM789": "PRJNA13304",
-        "YPH499": "PRJNA260311",
-        "YPS128": "PRJNA260311",
-        "YPS163": "PRJNA260311",
-        "YS9": "PRJNA260311",
-        "ZTW1": "PRJNA174065",
-        "YEAST": "PRJNA317579"
-    }
-
+    ntr_root_taxon_id = "4932"
+    version = "SGD:R64-5-1"
+    # genus = "Saccharomyces"
+     
     strain_taxon_id = {}
     rows = DBSession.execute("select d.display_name, t.taxid "
                              "from nex.dbentity d, nex.straindbentity s, nex.taxonomy t "
@@ -958,7 +988,7 @@ def sgd_blast_metadata(request):
     for x in rows:
         strain = x['display_name'].upper()
         strain = strain.replace("'S B", "SB").replace("'S O", "SO")
-        taxon_id = x['taxid'].replace("TAX:", "NCBITaxon:")
+        taxon_id = x['taxid'].replace("TAX:", "")
         if taxon_id == ntr_root_taxon_id:
             taxon_id = ntr_root_taxon_id + "000"
         elif taxon_id.startswith('NTR:'):
@@ -975,7 +1005,7 @@ def sgd_blast_metadata(request):
             description = desc[0]
             title = description
             strain = title.split(' ')[0]
-            bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
+            # bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
             taxon_id = strain_taxon_id.get(strain.upper())
             if taxon_id is None:
                 if strain.upper().startswith('CEN.PK'):
@@ -985,16 +1015,18 @@ def sgd_blast_metadata(request):
                 elif strain.upper() == 'YEAST':
                     taxon_id = ntr_root_taxon_id + "999"
                 else:
-                    taxon_id = "UNKNOWN"
-            data.append({"bioproject": bioproject,
-                         "blast_title": title,
-                         "description": description,
+                    taxon_id = strain
+            genus, species, title, seqcol_type = _generate_blast_title_etc(description)
+
+            data.append({"blast_title": title,
+                         "description": description.split('|')[0],
                          "genus": genus,
                          "species": species,
                          "md5sum": x.md5sum,
                          "seqtype": seqtype,
                          "taxon_id": taxon_id,
                          "uri": x.s3_url,
+                         "seqcol_type": seqcol_type,
                          "version": version})
         obj = { "data": data,
                 "metadata": {
@@ -1015,13 +1047,124 @@ def sgd_blast_metadata(request):
             DBSession.remove()
 
 
+def _taxon_to_seqcol_type_mapping():
+
+    return {
+        "559292": "Saccharomyces",
+        "1080349": "Saccharomyces",
+        "226230": "Saccharomyces",
+        "226126": "Saccharomyces",
+        "27291": "Saccharomyces",
+        "237561": "Candida",
+        "291208": "Candida",
+        "498019": "Candida",
+        "573826": "Candida",
+        "1136231": "Candida",
+        "1071382": "Other Saccharomycetales (budding yeasts)",
+        "1071383": "Other Saccharomycetales (budding yeasts)",
+        "1064592": "Other Saccharomycetales (budding yeasts)",
+        "1071378": "Other Saccharomycetales (budding yeasts)",
+        "1071380": "Other Saccharomycetales (budding yeasts)",
+        "1071381": "Other Saccharomycetales (budding yeasts)",
+        "5478":   "Other Saccharomycetales (budding yeasts)",
+        "28985":  "Other Saccharomycetales (budding yeasts)",
+        "1003335":"Other Saccharomycetales (budding yeasts)",
+        "559295": "Other Saccharomycetales (budding yeasts)",
+        "45286":  "Other Saccharomycetales (budding yeasts)",
+        "284811": "Other Saccharomycetales (budding yeasts)",
+        "931890": "Other Saccharomycetales (budding yeasts)",
+        "4950":   "Other Saccharomycetales (budding yeasts)",
+        "48254":  "Other Saccharomycetales (budding yeasts)",
+        "4956":   "Other Saccharomycetales (budding yeasts)",
+        "42260":  "Other Saccharomycetales (budding yeasts)",
+        "4909":   "Other Saccharomycetales (budding yeasts)",
+        "644223": "Other Saccharomycetales (budding yeasts)",
+        "871575": "Other Saccharomycetales (budding yeasts)",
+        "36914":  "Other Saccharomycetales (budding yeasts)",
+        "284592": "Other Saccharomycetales (budding yeasts)",
+        "284591": "Other Saccharomycetales (budding yeasts)",
+        "322104": "Other Saccharomycetales (budding yeasts)",
+        "796027": "Other Saccharomycetales (budding yeasts)",
+        "5007":   "Other Saccharomycetales (budding yeasts)",
+        "13502":  "Other Saccharomycetales (budding yeasts)",
+        "36035":  "Other Saccharomycetales (budding yeasts)",
+        "182096": "Aspergillus (Eurotiales)",
+        "227321": "Aspergillus (Eurotiales)",
+        "330879": "Aspergillus (Eurotiales)",
+        "332952": "Aspergillus (Eurotiales)",
+        "510516": "Aspergillus (Eurotiales)",
+        "1069201":"Aspergillus (Eurotiales)",
+        "1220207":"Aspergillus (Eurotiales)",
+        "69781":  "Penicillium (Eurotiales)",
+        "37727":  "Other Eurotiales (Talaromyces & allies)",
+        "121627": "Other Eurotiales (Talaromyces & allies)",
+        "578455": "Other Eurotiales (Talaromyces & allies)",
+        "573729": "Other Eurotiales (Talaromyces & allies)",
+        "36050":  "Hypocreales - Fusarium complex",
+        "56646":  "Hypocreales - Fusarium complex",
+        "195108": "Hypocreales - Fusarium complex",
+        "229533": "Hypocreales - Fusarium complex",
+        "334819": "Hypocreales - Fusarium complex",
+        "660027": "Hypocreales - Fusarium complex",
+        "1028729":"Hypocreales - Fusarium complex",
+        "1042133":"Hypocreales - Fusarium complex",
+        "1279085":"Hypocreales - Fusarium complex",
+        "1328300":"Hypocreales - Fusarium complex",
+        "2034170":"Hypocreales - Trichoderma",
+        "2231603":"Hypocreales - Entomopathogens",
+        "2060973":"Hypocreales - Entomopathogens",
+        "1380566":"Hypocreales - Entomopathogens",
+        "98403":  "Hypocreales - Entomopathogens",
+        "34406":  "Glomerellales (Colletotrichum)",
+        "145971": "Glomerellales (Colletotrichum)",
+        "759273": "Glomerellales (Colletotrichum)",
+        "148305": "Magnaporthales (Pyricularia)",
+        "242507": "Magnaporthales (Pyricularia)",
+        "1578925":"Magnaporthales (Pyricularia)",
+        "367110": "Sordariales (Neurospora/Podospora)",
+        "2093777":"Sordariales (Neurospora/Podospora)",
+        "2093779":"Sordariales (Neurospora/Podospora)",
+        "2093780":"Sordariales (Neurospora/Podospora)",
+        "2609844":"Sordariales (Neurospora/Podospora)",
+        "5454":   "Dothideomycetes",
+        "122368": "Dothideomycetes",
+        "336722": "Dothideomycetes",
+        "5499":   "Dothideomycetes",
+        "332648": "Leotiomycetes (Botrytis)",
+        "214684": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "294750": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "367775": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "564305": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "279322": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "143232": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "237631": "Ustilaginomycetes (smuts)",
+        "280036": "Ustilaginomycetes (smuts)",
+        "1159556":"Ustilaginomycetes (smuts)",
+        "168172": "Pucciniomycetes (rust fungi)",
+        "208348": "Pucciniomycetes (rust fungi)",
+        "181124": "Agaricomycetes (mushrooms & allies)",
+        "181762": "Agaricomycetes (mushrooms & allies)",
+        "456999": "Agaricomycetes (mushrooms & allies)",
+        "76775":  "Malasseziomycetes",
+        "223818": "Malasseziomycetes",
+        "2020962":"Malasseziomycetes",
+        "4896":   "Taphrinomycotina (Schizosaccharomyces)",
+        "2545709":"Taphrinomycotina (Schizosaccharomyces)",
+        "284813": "Microsporidia",
+        "876142": "Microsporidia",
+        "907965": "Microsporidia",
+        "1178016":"Microsporidia"
+    }
+
+
 @view_config(route_name='fungal_blast_metadata', renderer='json', request_method='GET')
 def fungal_blast_metadata(request):
 
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
-    taxon_id = "NCBITaxon:4751"
+    root_taxon_id = "NCBITaxon:4751"
     version = "SGD:2024-04-11"
+    taxon2seqcolTypeMapping = _taxon_to_seqcol_type_mapping()
     try:
         data = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('FungalBlast: %')).order_by(Filedbentity.previous_file_name).all():
@@ -1033,7 +1176,9 @@ def fungal_blast_metadata(request):
             title = desc[1]
             description = desc[2]
             bioproject = desc[3]
+            taxon_id = desc[4]
             species = title.split(' ')[1]
+            seqcol_type = taxon2seqcolTypeMapping.get(taxon_id.replace('NCBITaxon:', ''), 'Other Fungi')
             data.append({"bioproject": bioproject,
                          "blast_title": title,
                          "description": description,
@@ -1042,6 +1187,7 @@ def fungal_blast_metadata(request):
                          "md5sum": x.md5sum,
                          "seqtype": seqtype,
                          "taxon_id": taxon_id,
+                         "seqcol_type": seqcol_type,
                          "uri": x.s3_url,
                          "version": version})
         obj = { "data": data,
