@@ -110,8 +110,7 @@ def dump_data():
         if so_id is None:
             for y in nex_session.query(Dnasequenceannotation).filter_by(dbentity_id=x.dbentity_id, dna_type='GENOMIC').all():
                 so_id = y.so_id 
-                break
-            
+                break            
         if so_id:
             type = so_id_to_type.get(so_id)
             if type is None:
@@ -120,7 +119,8 @@ def dump_data():
             if col5 is None:
                 continue
         else:
-            col5 = 'SO:0000704'
+            # col5 = 'SO:0000704'
+            col5 = 'PR:000000001'
 
         # col6: taxon
         col6 = TAXON
@@ -139,14 +139,17 @@ def dump_data():
         if x.dbentity_id in dbentity_id_to_uniprot:
             dbxrefs = [dbentity_id_to_uniprot[x.dbentity_id]] + dbxrefs
         if x.dbentity_id in dbentity_id_to_rnacentral_id:
-            dbxrefs.append("RNAcentral:" + dbentity_id_to_rnacentral_id[x.dbentity_id])
+            dbxrefs.append("RNAcentral:" + dbentity_id_to_rnacentral_id[x.dbentity_id] + "_559292")
 
         col10 = ''
         if len(dbxrefs) > 0:
             col10 = '|'.join(dbxrefs)
             
         # col11: Gene_Product_Properties
-        col11 = "db_subset=Swiss-Prot|go_annotation_complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
+        col11 = ''
+        if x.dbentity_id not in dbentity_id_to_rnacentral_id:
+            col11 = "db_subset=Swiss-Prot|"
+        col11 = col11 + "go_annotation_complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
         if x.dbentity_id in dbentity_id_to_function:
             col11 = col11 + "|go_annotation_summary=" + dbentity_id_to_function[x.dbentity_id]
         if x.dbentity_id in dbentity_id_to_uniprot:
@@ -223,14 +226,14 @@ def type_mapping():
     
     return { 'ORF': 'PR:000000001',
              'transposable element gene': 'PR:000000001',
-             'blocked reading frame': 'SO:0000704',
-             'ncRNA gene': 'SO:0000655',
+             'blocked reading frame': 'SO:0000718',
+             'ncRNA gene': 'SO:0001263',
              'snoRNA gene': 'SO:0001263',
              'snRNA gene': 'SO:0001263',
              'tRNA gene': 'SO:0001263',
              'rRNA gene': 'SO:0001263',
              'telomerase RNA gene': 'SO:0001263',
-             'disabled reading frame': 'SO:0000704' }
+             'disabled reading frame': 'PR:000000001' }
 
 
 
