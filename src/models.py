@@ -1,7 +1,8 @@
+import logging
+import functools
 from sqlalchemy import Column, BigInteger, UniqueConstraint, Float, Boolean, SmallInteger, Integer, DateTime, ForeignKey, Index, Numeric, String, Text, text, FetchedValue, func, or_, and_, distinct, inspect
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-# from zope.sqlalchemy import ZopeTransactionExtension
 from zope.sqlalchemy import register
 from elasticsearch import Elasticsearch
 import os
@@ -20,6 +21,7 @@ import hashlib
 import urllib.request, urllib.parse, urllib.error
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
+from urllib.parse import quote
 
 from src.curation_helpers import ban_from_cache, get_author_etc, link_gene_names, get_curator_session, clear_list_empty_values
 from scripts.loading.util import link_gene_complex_names
@@ -31,6 +33,14 @@ register(DBSession)
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
 ALLIANCE_API_BASE_URL = "https://www.alliancegenome.org/api/gene/"
+
+_http = requests.Session()
+
+UNICHEM_BASE = "https://www.ebi.ac.uk/unichem/api/v1"
+PUBCHEM_BASE = "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
+CIR_BASE     = "https://cactus.nci.nih.gov/chemical/structure"
+
+
 QUERY_LIMIT = 25000
 SGD_SOURCE_ID = 834
 DIRECT_SUBMISSION_SOURCE_ID = 759
@@ -40,6 +50,8 @@ TAXON_ID = 274901
 S3_BUCKET = os.environ['S3_BUCKET']
 S3_ACCESS_KEY = ''
 S3_SECRET_KEY = ''
+
+logger = logging.getLogger(__name__)  # REAL logger (fixes .exception crash)
 
 # get list of URLs to visit from comma-separated ENV variable cache_urls 'url1, url2'
 cache_urls = None
@@ -894,27 +906,36 @@ class Chebi(Base):
         pathwaysSorted = sorted(pathways, key=lambda p: p['display_name'])
         
         return pathwaysSorted
-    
-    def get_structure_url(self):
-        base_url = "https://www.ebi.ac.uk/chebi/"
-        try:
-            # quick health-check of the CHEBI site
-            resp = requests.get(base_url, timeout=0.5)
-            if resp.status_code != 200:
-                return ''
-            
-            # build the image URL
-            image_url = "https://www.ebi.ac.uk/chebi/displayImage.do?defaultImage=true&imageIndex=0&chebiId=" + self.format_name.replace("CHEBI:", "") + "&dimensions=200"
 
-            # verify that the image actually exists
-            with urlopen(image_url, timeout=0.5) as img_resp:
-                data = img_resp.read()
-                if data:
-                    return image_url
-        except (requests.RequestException, HTTPError, URLError, Exception):
-            # catches timeouts, connection errors, HTTP errors, URL errors, etc.
-            return ""
+    def get_structure_url(self):
+        """
+        Return a direct depiction URL (PNG) without storing structure keys.
+        A) UniChem: CHEBI -> PubChem CID -> PNG
+        B) CIR:    CHEBI -> SMILES      -> PNG
+        C) PubChem: name -> CID         -> PNG
+        D) Else: ""
+        """
+        try:
+            # A) Fast path via UniChem
+            cid = _chebi_to_pubchem_cid_cached(self.format_name)  # e.g., "CHEBI:16750"
+            if cid:
+                return _pubchem_png_from_cid(cid, size=200)
+
+            # B) SMILES via CIR -> depiction
+            smiles = _smiles_from_chebi_via_cir(self.format_name)
+            if smiles:
+                return _pubchem_png_from_smiles(smiles, size=200)
+
+            # C) Last resort: name -> CID
+            cid2 = _pubchem_cid_from_name(self.display_name)
+            if cid2:
+                return _pubchem_png_from_cid(cid2, size=200)
+
+        except Exception:
+            logger.exception("get_structure_url failed for %s", self.format_name)
+
         return ""
+
 
     def get_pharmGKB_url(self):
         rows = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id, alias_type='PharmGKB ID').all()
@@ -12749,3 +12770,117 @@ def map_id_species(id):
         return 'Danio rerio'
     else:
         return ''
+
+
+## chemical structure related functions
+def _strip_chebi_num(chebi_id: str) -> str:
+    m = re.match(r"^(?:CHEBI:)?(\d+)$", (chebi_id or "").strip(), flags=re.I)
+    if not m:
+        raise ValueError(f"Invalid ChEBI ID: {chebi_id!r}")
+    return m.group(1)
+
+def _as_source_list(js):
+    if isinstance(js, list):
+        return js
+    if isinstance(js, dict):
+        if isinstance(js.get("sources"), list):
+            return js["sources"]
+        for v in js.values():
+            if isinstance(v, list) and v and isinstance(v[0], dict) and "shortName" in v[0]:
+                return v
+    return []
+
+@functools.lru_cache(maxsize=1)
+def _unichem_source_ids():
+    """Best-effort discovery of UniChem numeric source IDs for ChEBI and PubChem."""
+    try:
+        r = _http.get(f"{UNICHEM_BASE}/sources", timeout=5)
+        r.raise_for_status()
+        chebi_sid = pubchem_sid = None
+        for src in _as_source_list(r.json()):
+            name = (src.get("shortName") or src.get("longName") or "").lower()
+            if "chebi" in name and chebi_sid is None:
+                chebi_sid = int(src["id"])
+            if "pubchem" in name and pubchem_sid is None:
+                pubchem_sid = int(src["id"])
+        if chebi_sid is None or pubchem_sid is None:
+            logger.warning("UniChem sources not found; skipping UniChem path.")
+            return None
+        return {"chebi": chebi_sid, "pubchem": pubchem_sid}
+    except Exception:
+        logger.exception("UniChem /sources failed; skipping UniChem path.")
+        return None
+
+@functools.lru_cache(maxsize=4096)
+def _chebi_to_pubchem_cid_cached(chebi_format_name: str):
+    """Resolve 'CHEBI:nnnnn' -> PubChem CID via UniChem. Returns None if mapping unavailable."""
+    src = _unichem_source_ids()
+    if not src:
+        return None
+    chebi_num = _strip_chebi_num(chebi_format_name)
+    url = f"{UNICHEM_BASE}/compounds"
+    payloads = [
+        {"type": "sourceID", "compound": f"CHEBI:{chebi_num}", "sourceID": src["chebi"]},
+        {"type": "sourceID", "compound": chebi_num,            "sourceID": src["chebi"]},
+    ]
+    for payload in payloads:
+        try:
+            r = _http.post(url, json=payload, timeout=6)
+            if r.status_code == 404:
+                continue
+            r.raise_for_status()
+            js = r.json()
+            compounds = js if isinstance(js, list) else js.get("compounds") or []
+            for comp in compounds:
+                for s in comp.get("sources", []):
+                    if (s.get("shortName") or "").lower().startswith("pubchem"):
+                        cid = s.get("compoundID")
+                        if cid is not None:
+                            return int(cid)
+        except Exception:
+            logger.exception("UniChem lookup failed for %s payload=%r", chebi_format_name, payload)
+    return None
+
+def _pubchem_png_from_cid(cid: int, size: int = 200) -> str:
+    return f"{PUBCHEM_BASE}/compound/cid/{cid}/PNG?record_type=2d&image_size={size}x{size}"
+
+def _pubchem_png_from_smiles(smiles: str, size: int = 200) -> str:
+    return f"{PUBCHEM_BASE}/compound/smiles/{quote(smiles)}/PNG?record_type=2d&image_size={size}x{size}"
+
+@functools.lru_cache(maxsize=4096)
+def _pubchem_cid_from_name(name: str):
+    """Best-effort: resolve a chemical name to a PubChem CID."""
+    try:
+        q = quote((name or "").strip())
+        if not q:
+            return None
+        url = f"{PUBCHEM_BASE}/compound/name/{q}/cids/JSON"
+        r = _http.get(url, timeout=5)
+        if r.status_code != 200:
+            return None
+        js = r.json()
+        cids = (js.get("IdentifierList") or {}).get("CID") or []
+        return int(cids[0]) if cids else None
+    except Exception:
+        logger.exception("PubChem name->CID failed for %r", name)
+        return None
+
+@functools.lru_cache(maxsize=4096)
+def _smiles_from_chebi_via_cir(chebi_format_name: str):
+    """
+    Get SMILES by CHEBI:ID using NIH CIR.
+    Tries 'CHEBI:nnnnn' and bare 'nnnnn'. Returns None if not found.
+    """
+    candidates = [chebi_format_name, _strip_chebi_num(chebi_format_name)]
+    for ident in candidates:
+        try:
+            url = f"{CIR_BASE}/{quote(ident)}/smiles"
+            r = _http.get(url, timeout=5)
+            if r.status_code == 200:
+                smiles = (r.text or "").strip()
+                if smiles and "Not Found" not in smiles:
+                    return smiles
+        except Exception:
+            logger.exception("CIR SMILES lookup failed for %r", ident)
+    return None
+
