@@ -122,6 +122,9 @@ def dump_data():
             # col5 = 'SO:0000704'
             col5 = 'PR:000000001'
 
+        if col5 == "SO:0000718":
+            col5 = "PR:000000001"
+            
         # col6: taxon
         col6 = TAXON
 
