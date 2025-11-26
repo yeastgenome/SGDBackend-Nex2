@@ -110,10 +110,8 @@ def load_complex():
         complexAC = x['complexAC']
         complexName = x['complexName']
 
-
         print("Getting data for", complexAC)
         print(datetime.now())
-
 
         detailUrl = detail_json_url_template.replace("REPLACE_ID_HERE", complexAC)
         
@@ -205,62 +203,109 @@ def load_complex():
                                  source_id, complex_id_to_reference_id_list.get(complex_id))
 
         update_complex_alias(nex_session, fw, dbentity_id, aliases, source_id, complex_id_to_alias_list.get(complex_id))
-        
-        seqUrl = seq_json_url_template.replace("REPLACE_ID_HERE", intact_id)
-        s = get_json(seqUrl)
+
+        # Try both CPX-... and EBI-... just in case
+        seq_ids = []
+        if complexAC:
+            seq_ids.append(complexAC)        # CPX-1717
+        if intact_id and intact_id not in seq_ids:
+            seq_ids.append(intact_id)        # EBI-2435077
+
+        s = 404
+        for seq_id in seq_ids:
+            seqUrl = seq_json_url_template.replace("REPLACE_ID_HERE", seq_id)
+            print(complexAC, ": Trying seq export:", seqUrl)
+            s = get_json(seqUrl)
+            if s != 404:
+                break
+
         if s == 404:
-            print("Can't access:", seqUrl)
-            continue
-        
+            print("Can't access sequence export for", complexAC,
+                  "– continuing without sequences.")
+            s = {"data": []}   # no sequences, but don't skip participants
+       
         seq4id = {}
-        for seqObj in s['data']:
+        for seqObj in s.get('data', []):
             if seqObj['object'] == 'interactor':
                 id = seqObj['identifier']['id']
                 seq4id[id] = seqObj.get('sequence')
 
-        # interactor_list = []
-        interactor_to_id = {}
-        for p in y['participants']:
-            format_name = p['identifier']
-            display_name = p.get('name')
-            obj_url = p.get('identifierLink')
-            if obj_url is None:
-                if format_name.startswith("EBI-"):
-                    obj_url = "https://www.ebi.ac.uk/complexportal/complex/search?query=" + format_name
-                if format_name.startswith("NP_"):
-                    obj_url = "https://www.ncbi.nlm.nih.gov/protein/" + format_name
-            desc = p.get('description')
-            locus_id = gene_name_to_locus_id.get(display_name)
-            type_id = format_name_to_psimi_id.get(p.get('interactorTypeMI'))
-            role_id = format_name_to_psimi_id.get(p.get('bioRoleMI'))
-            # stoichiometry = p.get('stochiometry')
-            # if stoichiometry is not None and stoichiometry == 'null':
-            #    stoichiometry = None
-            # elif stoichiometry is not None and "maxValue" in stoichiometry:
-            #    stoichiometry = int(stoichiometry.split("maxValue: ")[1])
+        participants = y.get('participants', [])
+        print(f"Participants for {complexAC} : {len(participants)}")
 
-            seq = seq4id.get(format_name)
-            
-            if display_name is None or display_name == 'null':
-                locusAlias = nex_session.query(LocusAlias).filter_by(display_name=format_name, alias_type='UniProtKB ID').one_or_none()
-                if locusAlias is not None:
-                    display_name = locusAlias.locus.systematic_name
-                    print("GETTING DISPLAY_NAME from database for ", format_name, " display_name=", display_name)
+        interactor_to_id = {} 
+        for idx, p in enumerate(participants, start=1):
+            try:
+                print(f"  RAW participant {idx}: {p}")
+
+                format_name = p.get('identifier')
+                display_name = p.get('name')
+                obj_url = p.get('identifierLink')
+
+                if obj_url is None and format_name:
+                    if format_name.startswith("EBI-"):
+                        obj_url = "https://www.ebi.ac.uk/complexportal/complex/search?query=" + format_name
+                    elif format_name.startswith("NP_"):
+                        obj_url = "https://www.ncbi.nlm.nih.gov/protein/" + format_name
+
+                desc = p.get('description') or ""   # <- avoid None.split() crashes
+
+                locus_id = gene_name_to_locus_id.get(display_name)
+                type_id = format_name_to_psimi_id.get(p.get('interactorTypeMI'))
+                role_id = format_name_to_psimi_id.get(p.get('bioRoleMI'))
+
+                seq = seq4id.get(format_name) if format_name else None
+
+                print(
+                    "    -> parsed: format_name=", format_name,
+                    " display_name=", display_name, 
+                    " locus_id=", locus_id, " type_id=", type_id, " role_id=", role_id,
+                    " has_seq=", bool(seq)
+                )
+
+                # your existing fallback for missing display_name, but safer:
+                if not display_name or display_name == 'null':
+                    locusAlias = nex_session.query(LocusAlias).filter_by(
+                        display_name=format_name,
+                        alias_type='UniProtKB ID'
+                    ).one_or_none()
+                    if locusAlias is not None and locusAlias.locus is not None:
+                        display_name = locusAlias.locus.systematic_name
+                        print("    -> DISPLAY_NAME from DB:", display_name)
+                    elif desc:
+                        display_name = desc.split(' ')[-1]
+                        print("    -> DISPLAY_NAME from DESC:", display_name)
+                    else:
+                        print("    -> WARNING: no desc; leaving display_name as None")
+
+                # your existing interactor logic:
+                if format_name in interactor_added:
+                    interactor_to_id[format_name] = interactor_added[format_name]
+                    print("    -> reusing interactor_added id", interactor_added[format_name])
+                elif format_name in format_name_to_interactor:
+                    i = format_name_to_interactor[format_name]
+                    interactor_to_id[format_name] = i.interactor_id
+                    print("    -> updating existing interactor id", i.interactor_id)
+                    update_interactor(
+                        nex_session, fw,
+                        format_name, display_name, obj_url,
+                        locus_id, desc, type_id, role_id, seq, i
+                    )
                 else:
-                    display_name = desc.split(' ')[-1]
-                    print("GETTING DISPLAY_NAME from DESCRIPTION for ", format_name, " and desc=", desc, " display_name=", display_name)
+                    print("    -> inserting new interactor")
+                    interactor_id = insert_interactor(
+                        nex_session, fw,
+                        format_name, display_name, obj_url,
+                        desc, source_id, locus_id, type_id, role_id, seq
+                    )
+                    interactor_added[format_name] = interactor_id
+                    interactor_to_id[format_name] = interactor_id
 
-            if format_name in interactor_added:
-                interactor_to_id[format_name] = interactor_added[format_name]
-            elif format_name in format_name_to_interactor:
-                i = format_name_to_interactor[format_name]
-                interactor_to_id[format_name] = i.interactor_id
-                update_interactor(nex_session, fw, format_name, display_name, obj_url, locus_id, desc, type_id, role_id, seq, i)
-            else:
-                interactor_id = insert_interactor(nex_session, fw, format_name, display_name, obj_url, desc, source_id, locus_id, type_id, role_id, seq)
-                interactor_added[format_name] = interactor_id
-                interactor_to_id[format_name] = interactor_id
-                       
+            except Exception as e:
+                import traceback
+                print(f"ERROR while processing participant {idx} for {complexAC}: {repr(e)}")
+                traceback.print_exc()
+                break
         nex_session.commit()  
 
     ## mark deleted Complex as "Deleted' 
