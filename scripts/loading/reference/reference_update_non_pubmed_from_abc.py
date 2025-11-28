@@ -13,7 +13,19 @@ We match:
 """
 
 import sys
+import re
+from datetime import datetime
+from os import environ
+import logging
+import gzip
+
+import ujson
+from bs4 import BeautifulSoup
+import boto3
+from botocore.exceptions import ClientError
+
 from src.models import (
+    Dbentity,
     Referencedbentity,
     Referenceauthor,
     ReferenceUrl,
@@ -23,17 +35,9 @@ from src.models import (
     Referencedocument,
 )
 from scripts.loading.database_session import get_session
-    # reuse existing citation builder
+# reuse existing citation builder
 from scripts.loading.reference.pubmed import set_cite
 from scripts.loading.util import link_gene_names
-import ujson
-from datetime import datetime
-from bs4 import BeautifulSoup
-from os import environ
-import boto3
-from botocore.exceptions import ClientError
-import logging
-import gzip
 
 __author__ = 'sweng66'
 
@@ -71,6 +75,86 @@ logging.basicConfig(
     ],
     level=logging.INFO
 )
+
+
+def _parse_author_for_citation(author):
+    """
+    Convert various author name formats into 'Lastname Initials'.
+
+    - If the name is already in 'Lastname Initials' form (e.g., 'Gros J'),
+      return as-is.
+    - If the name is like 'Bart Deplancke' → 'Deplancke B'
+    - If the name is like 'M F Bauer'     → 'Bauer MF'
+    - If the name is like 'H Efsun Arda'  → 'Arda HE'
+    """
+    author = author.strip().rstrip(',')
+    if not author:
+        return ""
+
+    parts = author.split()
+
+    # --- CASE 1: Already 'Lastname Initials' ---
+    # Pattern: <LastName> <1–3 initials> (e.g., "Gros J", "Smith AB", "Deplancke B")
+    if (
+        len(parts) == 2
+        and re.fullmatch(r"[A-Za-z][A-Za-z\-'’]*", parts[0])           # Last name
+        and re.fullmatch(r"[A-Z](?:[A-Z])?", parts[1])                 # Initials, 1–2 letters
+    ):
+        return author   # SAFE: already formatted correctly
+
+    # --- CASE 2: Multi-initial prefix + last name ---
+    # Example: "M F Bauer" → initials = ["M","F"], last="Bauer"
+    if len(parts) > 2 and all(len(p) == 1 and p.isalpha() and p.isupper() for p in parts[:-1]):
+        last = parts[-1]
+        initials = "".join(parts[:-1])
+        return f"{last} {initials}"
+
+    # --- CASE 3: First name(s) then last name ---
+    # Example: "H Efsun Arda" → last="Arda", initials="H"+"E"
+    last = parts[-1]
+    initials = "".join([p[0].upper() for p in parts[:-1] if p])
+    return f"{last} {initials}"
+
+
+def generate_citation_and_display_name_from_citation(citation):
+    """
+    From a full citation like:
+        'Bart Deplancke; Vanessa Vermeirssen, (2006) ...'
+    generate:
+        new_citation: 'Deplancke B, et al. (2006) ...'
+        display_name: 'Deplancke B, et al. (2006)'
+
+    If parsing fails, returns (None, None).
+    """
+    if not citation:
+        return None, None
+
+    m = re.search(r"\(\s*\d{4}\s*\)", citation)
+    if not m:
+        return None, None
+
+    year_str = m.group(0).strip("()")
+
+    authors_part = citation[:m.start()].strip().rstrip(",")
+    rest = citation[m.end():].lstrip()
+
+    raw_authors = [a.strip() for a in authors_part.split(";") if a.strip()]
+    if not raw_authors:
+        return None, None
+
+    parsed_authors = [_parse_author_for_citation(a) for a in raw_authors]
+
+    if len(parsed_authors) == 1:
+        author_str = parsed_authors[0]
+    elif len(parsed_authors) == 2:
+        author_str = f"{parsed_authors[0]} and {parsed_authors[1]}"
+    else:
+        author_str = f"{parsed_authors[0]}, et al."
+
+    new_citation = f"{author_str} ({year_str}) {rest}"
+    display_name = f"{author_str} ({year_str})"
+
+    return new_citation, display_name
 
 
 def update_non_pubmed_data():
@@ -192,6 +276,10 @@ def update_non_pubmed_data():
                 )
                 continue
 
+            print(sgdid, "citationCleaned=", citationABC)
+            
+            # continue
+            
             try:
                 update_reference_table(
                     nex_session,
@@ -353,6 +441,15 @@ def update_reference_table(nex_session, fw, ident, x, titleABC, yearABC, volumeA
                            citationABC, journalIdABC):
 
     message = ''
+
+    # NEW: derive new_citation + display_name from citationABC
+    new_citation, new_display_name = generate_citation_and_display_name_from_citation(
+        citationABC
+    )
+    citation_to_use = new_citation if new_citation else citationABC
+    print(ident, "citation_to_use=", citation_to_use)
+    print(ident, "display_name=", new_display_name)
+    
     if titleABC and x.title != titleABC:
         message = "TITLE updated from '{}' to '{}'. ".format(x.title, titleABC)
         x.title = titleABC
@@ -379,14 +476,32 @@ def update_reference_table(nex_session, fw, ident, x, titleABC, yearABC, volumeA
             x.publication_status, pubStatusABC
         )
         x.publication_status = pubStatusABC
-    if citationABC and x.citation != citationABC:
-        message = message + "CITATION updated from '{}' to '{}'. ".format(x.citation, citationABC)
-        x.citation = citationABC
+
+    # Use newly formatted citation
+    if citation_to_use and x.citation != citation_to_use:
+        message = message + "CITATION updated from '{}' to '{}'. ".format(
+            x.citation, citation_to_use
+        )
+        x.citation = citation_to_use
+
     if x.book_id is None and journalIdABC and x.journal_id != journalIdABC:
         message = message + "JOURNAL_ID updated from '{}' to '{}'. ".format(
             x.journal_id, journalIdABC
         )
         x.journal_id = journalIdABC
+
+    # NEW: update Dbentity.display_name based on new_display_name
+    if new_display_name:
+        dbentity_row = nex_session.query(Dbentity).filter_by(
+            dbentity_id=x.dbentity_id
+        ).one_or_none()
+        if dbentity_row and dbentity_row.display_name != new_display_name:
+            message = message + "DBENTITY.DISPLAY_NAME updated from '{}' to '{}'. ".format(
+                dbentity_row.display_name, new_display_name
+            )
+            dbentity_row.display_name = new_display_name
+            nex_session.add(dbentity_row)
+
     if message:
         nex_session.add(x)
         fw.write(
@@ -690,8 +805,10 @@ def parse_process_json_data(json_data, journalIdDB,
     if journalId2 and journalId2 == journalIdDB:
         journalId = journalId2
 
-    citation = set_cite(title, author_list, year, journalAbbr, volume, issue, page)
-
+    # citation = set_cite(title, author_list, year, journalAbbr, volume, issue, page)
+    citation = json_data.get('citation', '')
+    citation = re.sub(r"\s+", " ", citation)
+    
     return (
         title,
         year,
