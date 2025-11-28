@@ -14,18 +14,37 @@ echo "reference_update.sh start:  `/bin/date`" | /bin/tee $OUTPUT_FILE
 export AWS_ACCESS_KEY_ID=$ABC_AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$ABC_AWS_SECRET_ACCESS_KEY
 
+# ----------------------------------------------------------------------
+# 1) Update PubMed-based references from ABC
+# ----------------------------------------------------------------------
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_from_abc.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
 grep -v '_abstract=' $LOG_FILE >> $OUTPUT_FILE
+
+# ----------------------------------------------------------------------
+# 2) Update non-PubMed references from ABC (NEW)
+# ----------------------------------------------------------------------
+/usr/bin/cp /dev/null $LOG_FILE
+python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_update_non_pubmed_from_abc.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
+# if you want to filter out large abstract lines like above, use grep; otherwise cat:
+grep -v '_abstract=' $LOG_FILE >> $OUTPUT_FILE
+# or, if you prefer to keep everything:
+# cat $LOG_FILE >> $OUTPUT_FILE
 
 # use IAM for further permissions rather than access keys
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 
+# ----------------------------------------------------------------------
+# 3) Update display_name (depends on updated references)
+# ----------------------------------------------------------------------
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/loading/reference/reference_display_name_update.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
 
+# ----------------------------------------------------------------------
+# 4) Dump gene–PMID pairs
+# ----------------------------------------------------------------------
 /usr/bin/cp /dev/null $LOG_FILE
 python /data/www/SGDBackend-Nex2/scripts/dumping/ncbi/dump_gene_pmid_pair.py 2>&1 | /usr/bin/tee -a $OUTPUT_FILE
 cat $LOG_FILE >> $OUTPUT_FILE
