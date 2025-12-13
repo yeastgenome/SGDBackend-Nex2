@@ -5085,9 +5085,14 @@ class Locusdbentity(Dbentity):
 
     def references_overview_to_dict(self, summary_ids):
         blacklist = (551590,)
-        references = DBSession.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, ~LocusReferences.reference_id.in_(blacklist))).all()
 
-        obj = {}
+        # Base references from LocusReferences (qualities)
+        references = DBSession.query(LocusReferences).filter(
+            and_(LocusReferences.locus_id == self.dbentity_id,
+                 ~LocusReferences.reference_id.in_(blacklist))
+        ).all()
+
+        obj: dict = {}
 
         obj["qualities"] = {
             "gene_name": {
@@ -5111,11 +5116,12 @@ class Locusdbentity(Dbentity):
         }
 
         obj["sgdid_ref"] = {}
-
         obj["references"] = []
 
-        reference_ids = set([])
+        # keep a set of reference_ids we've already added
+        reference_ids: set[int] = set()
 
+        # 1) references from LocusReferences (qualities)
         for ref in references:
             ref_dict = ref.reference.to_dict_citation()
 
@@ -5132,34 +5138,91 @@ class Locusdbentity(Dbentity):
             elif ref.reference_class == "systematic_name":
                 obj["qualities"]["id"]["references"].append(ref_dict)
             else:
+                # ignore other reference_class values
                 continue
 
             if ref.reference_id not in reference_ids:
-                if(ref_dict not in obj["references"]):
+                if ref_dict not in obj["references"]:
                     obj["references"].append(ref_dict)
 
+                # this is only used for <reference:SGDID> in paragraphs
                 obj["sgdid_ref"][ref.reference.sgdid] = ref.reference
 
-            reference_ids.add(ref.reference_id)
+                reference_ids.add(ref.reference_id)
 
-        summary_references = DBSession.query(LocussummaryReference).filter(and_(LocussummaryReference.summary_id.in_(summary_ids), ~LocussummaryReference.reference_id.in_(blacklist))).order_by(LocussummaryReference.reference_order).all()
+        # 2) alias references (add AFTER LocusReferences, BEFORE paralogs)
+        alias_refs = (
+            DBSession.query(LocusAliasReferences)
+            .join(LocusAlias, LocusAlias.alias_id == LocusAliasReferences.alias_id)
+            .filter(LocusAlias.locus_id == self.dbentity_id,
+                    ~LocusAliasReferences.reference_id.in_(blacklist))
+            .all()
+        )
+
+        for ar in alias_refs:
+            ref = ar.reference
+            if ref.dbentity_id in reference_ids:
+                continue
+
+            ref_dict = ref.to_dict_citation()
+            if ref_dict not in obj["references"]:
+                obj["references"].append(ref_dict)
+
+            # alias refs don't affect qualities; optionally populate sgdid_ref
+            if ref.sgdid:
+                obj["sgdid_ref"][ref.sgdid] = ref
+
+            reference_ids.add(ref.dbentity_id)
+
+        # 3) paralog references (AFTER alias refs, BEFORE summary_references)
+        #    Here we reuse the data returned by paralogs_to_dict(), assuming each
+        #    paralog entry has a "references" list of citation dicts.
+        paralogs = self.paralogs_to_dict() or []
+        for p in paralogs:
+            for ref_dict in p.get("references", []):
+                ref_id = ref_dict.get("id")
+                if not ref_id or ref_id in reference_ids or ref_id in blacklist:
+                    continue
+
+                if ref_dict not in obj["references"]:
+                    obj["references"].append(ref_dict)
+
+                # We *could* look up the ORM object here if needed for sgdid_ref,
+                # but it's not required for paragraph tooltips, which only use
+                # summary refs.
+                reference_ids.add(ref_id)
+
+        # 4) summary references (existing logic)
+        summary_references = (
+            DBSession.query(LocussummaryReference)
+            .filter(
+                and_(LocussummaryReference.summary_id.in_(summary_ids),
+                     ~LocussummaryReference.reference_id.in_(blacklist))
+            )
+            .order_by(LocussummaryReference.reference_order)
+            .all()
+        )
+
         for s in summary_references:
-            if s.reference_id not in reference_ids:
-                temp_ref = s.reference.to_dict_citation()
-                if(temp_ref not in obj["references"]):
-                    obj["references"].append(temp_ref)
+            if s.reference_id in reference_ids:
+                continue
 
-                obj["sgdid_ref"][s.reference.sgdid] = s.reference
-                reference_ids.add(s.reference_id)
+            temp_ref = s.reference.to_dict_citation()
+            if temp_ref not in obj["references"]:
+                obj["references"].append(temp_ref)
 
+            obj["sgdid_ref"][s.reference.sgdid] = s.reference
+            reference_ids.add(s.reference_id)
+
+        # 5) build reference_mapping in final order
         obj["reference_mapping"] = {}
-
         order = 1
         for reference in obj["references"]:
             obj["reference_mapping"][reference["id"]] = order
             order += 1
 
         return obj
+
 
     def regulation_overview_to_dict(self, summary_regulation):
         blacklist = (551590,)
@@ -5189,7 +5252,7 @@ class Locusdbentity(Dbentity):
         PARALOG_RO_ID = 169738
         paralog_relations = DBSession.query(LocusRelation).filter(and_(LocusRelation.ro_id == PARALOG_RO_ID, or_(LocusRelation.parent_id == self.dbentity_id, LocusRelation.child_id == self.dbentity_id))).all()
         return [a.to_dict(self.dbentity_id) for a in paralog_relations]
-    
+
     def complements_to_dict(self):
         complement_relations = DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id=self.dbentity_id).all()
         return [a.to_dict(self.dbentity_id) for a in complement_relations]
@@ -7086,9 +7149,22 @@ class Dnasubsequence(Base):
         if strand == "-":
             start, end = end, start
 
+        relative_start = self.relative_start_index
+        relative_end = self.relative_end_index
+        # new fix for 5' UTR
+        if self.display_name == "five_prime_UTR_intron" and strand == '-':
+            rows = DBSession.execute("SELECT relative_end_index "
+                                     "FROM nex.dnasubsequence "
+                                     "WHERE display_name = 'CDS' "
+                                     "AND annotation_id = " + str(self.annotation_id)).fetchall()
+            row = rows[0]
+            cds_end = row[0]
+            relative_end = cds_end - self.relative_start_index
+            relative_start = cds_end - self.relative_end_index
+        ## end of the fix
         return {
-            "relative_end": self.relative_end_index,
-            "relative_start": self.relative_start_index,
+            "relative_end": relative_end,
+            "relative_start": relative_start,
             "display_name": self.display_name,
             "chromosomal_start": start,
             "chromosomal_end": end,
@@ -8611,6 +8687,7 @@ class LocusRelation(Base):
     ro = relationship('Ro')
     source = relationship('Source')
 
+    """
     def to_dict(self, real_parent_id):
         # the parent should be the gene in the real_parent_id parameter, not parent_id column bc relatinships are only represented once
         parent = self.parent
@@ -8629,7 +8706,42 @@ class LocusRelation(Base):
             'references': refs,
             'source': self.source.to_dict()
         }
+    """
 
+    def to_dict(self, real_parent_id):
+        # the parent should be the gene in the real_parent_id parameter, not parent_id column bc relatinships are only represented once
+        parent = self.parent
+        child = self.child
+        if self.child_id == real_parent_id:
+            parent = self.child
+            child = self.parent
+
+        # get full citation dicts for references
+        locusrelation_refs = (
+            DBSession.query(LocusRelationReference)
+            .filter_by(relation_id=self.relation_id)
+            .all()
+        )
+
+        refs = []
+        for lr in locusrelation_refs:
+            # assume LocusRelationReference has a relationship `reference`
+            ref = lr.reference
+            if ref is not None:
+                # THIS is the important change:
+                ref_dict = ref.to_dict_citation()
+                refs.append(ref_dict)
+
+        return {
+            'id': self.relation_id,
+            'parent': parent.to_dict_analyze(),
+            'child': child.to_dict_analyze(),
+            'date_created': self.date_created.strftime("%Y-%m-%d"),
+            'relation_type': self.ro.display_name,
+            'references': refs,
+            'source': self.source.to_dict()
+        }
+    
 class LocusUrl(Base):
     __tablename__ = 'locus_url'
     __table_args__ = (
