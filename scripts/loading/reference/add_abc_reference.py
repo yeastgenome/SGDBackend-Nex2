@@ -208,11 +208,11 @@ def insert_authors(nex_session, reference_id, authors, source_id, created_by):
 def extract_data(nex_session, record):
 
     journal_id, journal, journal_title = get_journal_id(nex_session, record)
-    pubdate = record.get('date_published', '')
+    pubdate = record.get('date_published')
     year = pubdate
-    if year is None:
-        year = ''
-    elif year:
+    if year == "None":
+        year = None
+    if year:
         year = int(year[0:4])
     title = record.get('title', '')
     if title is None:
@@ -262,7 +262,7 @@ def extract_data(nex_session, record):
                 
     pubStatus = record['pubmed_publication_status'] if 'pubmed_publication_status' in record else ''
     if pubStatus is None:
-        pubStatus = ''
+        pubStatus = 'Published'
     else:
         pubStatus = convert_publication_status(pubStatus)
 
@@ -363,6 +363,8 @@ def get_journal_id(nex_session, record, source_id=None):
     if source_id is None:
         source_id = get_source_id(nex_session, 'PubMed')
 
+    if journal_full_name is None:
+        return None, '', ''
     format_name = journal_full_name.replace(' ', '_') + journal_abbr.replace(' ', '_')
     j = Journal(display_name = journal_full_name,
                 format_name = format_name,

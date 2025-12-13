@@ -871,10 +871,12 @@ def get_chr_to_num_mapping():
 def clean_up_desc(desc):
 
     desc = desc.replace('“', "'").replace('"', "'").replace("’", "'")
+    desc = desc.replace("'", "'").replace("′", "'")
     desc = desc.replace('”', "'").replace("<i>", "").replace("</i>", "")
     desc = desc.replace('δ', 'delta')
     desc = desc.replace('β', 'beta')
     desc = desc.replace('α', 'alpha')
+    desc = desc.replace('ρ', 'p')
     desc = desc.replace('°', '')
     desc = desc.replace('–', '-')
     desc = desc.replace('‐', '-')
