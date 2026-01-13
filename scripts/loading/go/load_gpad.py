@@ -29,6 +29,7 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
+NOCTUA_MIN_ROWS = 56000
 CREATED_BY = os.environ['DEFAULT_USER']
 
 def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file, annotation_type, log_file):
@@ -117,7 +118,14 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                         yes_goextension, yes_gosupport, new_pmids, 
                                         dbentity_id_with_new_pmid,
                                         dbentity_id_with_uniprot, bad_ref)
+    noctua_row_count = len(noctua_data)
+    log.info(f"Noctua GPAD rows read: {noctua_row_count}")
+    fw.write(f"Noctua GPAD rows read: {noctua_row_count}\n")
 
+    if noctua_row_count < NOCTUA_MIN_ROWS:
+       fw.close()
+       return
+    
     complex_data = []
     if annotation_type == 'manually curated':
         log.info(str(datetime.now()))
@@ -157,6 +165,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     if annotation_type != 'manually curated':
         bad_complex_annots = None
         all_complex_go_ids = None
+    """
     delete_obsolete_annotations(key_to_annotation, 
                                 hasGoodAnnot, 
                                 go_id_to_aspect,
@@ -167,6 +176,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                 bad_complex_annots,
                                 all_complex_go_ids,
                                 fw)
+    """
 
     if annotation_type == 'manually curated':
 

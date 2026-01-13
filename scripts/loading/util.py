@@ -700,6 +700,17 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         
         ## source
         source = field[9]
+        if source == 'MGI' or 'informatics.jax'in source:
+            continue
+        if 'yeastgenome' in source:
+            source = 'SGD'
+        elif 'uniprot' in source:
+            source = 'UniProt'
+        elif 'geneontology.org' in source:
+            source = 'GOC'
+        if source not in ['SGD', 'UniProt', 'GOC']:
+            print("Unknown source: " + source)
+            continue
 
         ## created_by
         annot_prop_dict = annot_prop_to_dict(field[11])
