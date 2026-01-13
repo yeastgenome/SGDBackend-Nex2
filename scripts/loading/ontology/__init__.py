@@ -377,7 +377,10 @@ def read_owl(filename, ontology, is_sgd_term=None):
             is_obsolete_id = 1
         if ontology == 'APO' and '<oboInOwl:inSubset rdf:resource=' in line and '#SGD' in line and is_sgd_term is not None:
             is_sgd_term[id] = 1
-        elif ontology == 'CHEBI' and '<oboInOwl:inSubset rdf:resource=' in line and '#3_STAR' in line and is_sgd_term is not None:
+        elif (ontology == 'CHEBI'
+              and '<oboInOwl:inSubset rdf:resource=' in line
+              and ('#3_STAR' in line or '/3_STAR' in line)
+              and is_sgd_term is not None):
             is_sgd_term[id] = 1
 
     f.close()
