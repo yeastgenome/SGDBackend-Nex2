@@ -30,14 +30,14 @@ namespace_mapping = { 'biological process' : 'go_process',
                       'cellular component' : 'go_component',
                       'molecular function' : 'go_function' }
 
-orf_to_tpa_acc = { "YEL066W": "DAA07588.2",   "YJR012C": "DAA08804.2",   "YMR147W": "DAA10043.2",
-                   "YNL260C": "DAA10299.2",   "YHR052C-B": "DAD54801.1", "YHR054C-B": "DAD54802.1",
-                   "YBR266C": "DAD54803.1",   "YEL059W": "DAD54804.1",   "YJL142C": "DAD54805.1",
-                   "YJL075C": "DAD54806.1",   "YJR107C-A": "DAD54807.1", "YKL104W-A": "DAD54808.1",
-                   "YLR379W-A": "DAD54809.1", "YMR008C-A": "DAD54810.1", "YMR075C-A": "DAD54811.1",
-                   "YPR038W": "DAD54812.1",   "YGR227C-A": "DAF84567.1", "YHL045W": "DAZ92295.1",
-                   "YMR106W-A": "DBA54441.1", "YFR035W-A": "DBA54438.1", "YNL155C-A": "DBA54442.1",
-                   "YGR016C-A": "DBA54439.1", "YIL059C":   "DBA54440.1", "YNL040C-A": "DBA54443.1" } 
+orf_to_tpa_acc = { "YEL066W": "DAA07588",   "YJR012C": "DAA08804",   "YMR147W": "DAA10043",
+                   "YNL260C": "DAA10299",   "YHR052C-B": "DAD54801", "YHR054C-B": "DAD54802",
+                   "YBR266C": "DAD54803",   "YEL059W": "DAD54804",   "YJL142C": "DAD54805",
+                   "YJL075C": "DAD54806",   "YJR107C-A": "DAD54807", "YKL104W-A": "DAD54808",
+                   "YLR379W-A": "DAD54809", "YMR008C-A": "DAD54810", "YMR075C-A": "DAD54811",
+                   "YPR038W": "DAD54812",   "YGR227C-A": "DAF84567", "YHL045W": "DAZ92295",
+                   "YMR106W-A": "DBA54441", "YFR035W-A": "DBA54438", "YNL155C-A": "DBA54442",
+                   "YGR016C-A": "DBA54439", "YIL059C":   "DBA54440", "YNL040C-A": "DBA54443" } 
 
 MITO_ID = "KP263414.1"
 
@@ -90,9 +90,9 @@ def dump_data():
         elif x.alias_type == 'NCBI protein name':
             locus_id_to_ncbi_protein_name[x.locus_id] = TABS + "product\t" + x.display_name.strip().replace('  ', ' ')
         elif x.alias_type == 'TPA protein version ID':
-            chr1to16_locus_id_to_protein_id[x.locus_id] = TABS + "protein_id\t" + x.display_name
+            chr1to16_locus_id_to_protein_id[x.locus_id] = TABS + "protein_id\t" + x.display_name.split('.')[0]
         elif x.alias_type == 'Protein version ID' and x.display_name.startswith('AIZ988'):
-            mito_locus_id_to_protein_id[x.locus_id] = TABS + "transl_table" + "\t" + "3\n" + TABS + "protein_id\tgb|" + x.display_name + "|"
+            mito_locus_id_to_protein_id[x.locus_id] = TABS + "transl_table" + "\t" + "3\n" + TABS + "protein_id\tgb|" + x.display_name.split('.')[0] + "|"
             
     log.info(str(datetime.now()))
     log.info("Getting GO data from the database...")
@@ -525,7 +525,7 @@ def add_ORF_features(files, annotation_id, locus_id, sgdid, chrnum, systematic_n
         if protein_id is None:
             protein_id = locus_id_to_protein_id.get(locus_id)
             if protein_id is None and systematic_name == 'YPR099C':
-                protein_id = TABS + "protein_id\tDAC85312.1"
+                protein_id = TABS + "protein_id\tDAC85312"
         else:
             protein_id = TABS + "protein_id\t" + protein_id
     else:
@@ -814,16 +814,16 @@ def get_go_data(nex_session):
 
 def get_protein_id_for_duplicate_gene():
 
-    return { 'S000000214' : 'DAA07131.1', # HHT1                   
-             'S000004976' : 'DAA10514.1', # HHT2                   
-             'S000000213' : 'DAA07130.1', # HHF1                   
-             'S000004975' : 'DAA10515.1', # HHF2                   
-             'S000000322' : 'DAA07236.1', # TEF2                   
-             'S000006284' : 'DAA11498.1', # TEF1                   
-             'S000003674' : 'DAA08662.1', # TIF2                   
-             'S000001767' : 'DAA09210.1', # TIF1                   
-             'S000002793' : 'DAA12229.1', # EFT2                   
-             'S000005659' : 'DAA10907.1' }  # EFT1                   
+    return { 'S000000214' : 'DAA07131', # HHT1                   
+             'S000004976' : 'DAA10514', # HHT2                   
+             'S000000213' : 'DAA07130', # HHF1                   
+             'S000004975' : 'DAA10515', # HHF2                   
+             'S000000322' : 'DAA07236', # TEF2                   
+             'S000006284' : 'DAA11498', # TEF1                   
+             'S000003674' : 'DAA08662', # TIF2                   
+             'S000001767' : 'DAA09210', # TIF1                   
+             'S000002793' : 'DAA12229', # EFT2                   
+             'S000005659' : 'DAA10907' }  # EFT1                   
 
     
 def get_col4_5_for_code():
