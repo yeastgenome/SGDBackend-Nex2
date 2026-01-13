@@ -119,9 +119,8 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                         dbentity_id_with_new_pmid,
                                         dbentity_id_with_uniprot, bad_ref)
     noctua_row_count = len(noctua_data)
-    log.info(f"Noctua GPAD rows read: {noctua_row_count}")
-    fw.write(f"Noctua GPAD rows read: {noctua_row_count}\n")
-
+    log.info("Noctua GPAD rows read: " + str(noctua_row_count))
+    
     if noctua_row_count < NOCTUA_MIN_ROWS:
        fw.close()
        return
