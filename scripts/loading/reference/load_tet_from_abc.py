@@ -243,7 +243,8 @@ def insert_into_curation_reference(
     
 def fetch_dbentity_ids_for_sgdids(nex_session, sgdids):
         
-    sgdid_list = ','.join(f"'{sgdid}'" for sgdid in sgdids)
+    # sgdid_list = ','.join(f"'{sgdid}'" for sgdid in sgdids)
+    sgdid_list = ','.join("'{}'".format(sgdid) for sgdid in sgdids)
 
     rows = nex_session.execute("SELECT sgdid, dbentity_id "
                                "FROM nex.dbentity "
