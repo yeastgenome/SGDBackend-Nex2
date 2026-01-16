@@ -615,7 +615,7 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
 
     from src.models import Referencedbentity, Pathwaydbentity, Dbentity, Go, Eco, Referencedeleted, Ro
     
-    goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    goid_to_go_id = dict([(x.goid, (x.go_id, x.is_obsolete)) for x in nex_session.query(Go).all()])
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
     deleted_pmid_to_sgdid = dict([(x.pmid, x.sgdid) for x in nex_session.query(Referencedeleted).all()])
     roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
@@ -686,11 +686,14 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         
         ## go_id
         goid = field[3]
-        go_id = goid_to_go_id.get(goid)
-        if go_id is None:
+        if goid not in goid_to_go_id:
             print("The GOID = ", goid, " is not in GO table.")
             continue
-
+        (go_id, is_obsolete) = goid_to_go_id.get(goid)
+        if is_obsolete is True:
+            print("The GOID = ", goid, " is obsolete")
+            continue
+        
         ## eco_id
         eco = field[5]
         eco_id = format_name_to_eco_id.get(eco)
