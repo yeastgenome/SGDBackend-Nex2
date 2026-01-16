@@ -164,7 +164,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     if annotation_type != 'manually curated':
         bad_complex_annots = None
         all_complex_go_ids = None
-    """
+
     delete_obsolete_annotations(key_to_annotation, 
                                 hasGoodAnnot, 
                                 go_id_to_aspect,
@@ -175,7 +175,6 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                 bad_complex_annots,
                                 all_complex_go_ids,
                                 fw)
-    """
 
     if annotation_type == 'manually curated':
 
