@@ -4,6 +4,7 @@ cd /data/www/SGDBackend-Nex2
 source /data/www/venv/bin/activate 
 source prod_variables.sh 
 python scripts/loading/ontology/go.py
+python scripts/loading/reference/update_go_refs.py
 python scripts/loading/go/load_gpad.py 'manually curated'
 python scripts/loading/go/load_gpad.py computational
 python scripts/loading/complex/addMissingLiterature.py
