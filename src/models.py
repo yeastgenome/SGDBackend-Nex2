@@ -2289,6 +2289,7 @@ class Referencedbentity(Dbentity):
             "abstract": None,
             "link": self.obj_url,
             "pubmed_id": self.pmid,
+            "go_ref_id": None,
             "journal": None,
             "sgdid": self.sgdid,
             "year": self.year,
@@ -2298,6 +2299,12 @@ class Referencedbentity(Dbentity):
             "expression_datasets": [],
             "downloadable_files": []
         }
+
+        if not self.pmid:
+            goRef = DBSession.query(ReferenceAlias).filter_by(
+                reference_id=self.dbentity_id, alias_type = 'GO reference ID').one_or_none()
+            if goRef:
+                obj["go_ref_id"] = goRef.display_name
 
         if self.pmid != None and self.journal:
             obj["journal"] = {
