@@ -605,7 +605,8 @@ def index_go_terms():
         for annotation in annotations:
             if annotation.go_qualifier != "NOT":
                 gene_ontology_loci.add(annotation.dbentity.display_name)
-            references.add(annotation.reference.display_name)
+            if annotation.reference:
+                references.add(annotation.reference.display_name)
 
         numerical_id = go.goid.split(":")[1]
         key_values = [
@@ -1034,17 +1035,26 @@ def index_references():
         name = ', '.join(authors) + ' (' + ' '.join(reference.citation.split('(')[1:])
         
         pmid = ''
+        go_ref_id = ''
         if reference.pmid:
             pmid = str(reference.pmid)
+            identifier = pmid
+        else:
+            goRef = DBSession.query(ReferenceAlias).filter_by(reference_id=reference.dbentity_id, alias_type='GO reference ID').one_or_none()
+            if goRef:
+                go_ref_id = goRef.display_name
+                identifier = go_ref_id
+
         obj = {
             "name": name,
-            "identifier": pmid,
+            "identifier": identifier,
             "reference_name": reference.citation,
             "href": reference.obj_url,
             "description": abstract,
             "author": authors,
             "journal": journal,
             "year": str(reference.year),
+            "go_ref_id": go_ref_id,
             "reference_loci": reference_loci,
             "associated_alleles": reference_alleles,
             "associated_complexes": reference_complexes,
