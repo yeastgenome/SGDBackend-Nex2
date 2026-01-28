@@ -120,7 +120,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                         dbentity_id_with_uniprot, bad_ref)
     noctua_row_count = len(noctua_data)
     log.info("Noctua GPAD rows read: " + str(noctua_row_count))
-    
+
     if noctua_row_count < NOCTUA_MIN_ROWS:
        fw.close()
        return
@@ -164,7 +164,6 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     if annotation_type != 'manually curated':
         bad_complex_annots = None
         all_complex_go_ids = None
-
     delete_obsolete_annotations(key_to_annotation, 
                                 hasGoodAnnot, 
                                 go_id_to_aspect,
@@ -752,11 +751,27 @@ def send_report(email_message):
     if email_status == 'error':
         print("Failed sending email to " + email_recipients + ": " + message + "\n")
 
-        
+
+def download_url(url, out_path, timeout=120):
+    # Some servers (e.g. snapshot.geneontology.org) reject urllib default UA (or lack of UA)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; SGD-loader/1.0)",
+        "Accept": "*/*",
+    }
+    req = urllib.request.Request(url, headers=headers)
+
+    # Stream to file (avoid loading whole response into memory)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with open(out_path, "wb") as out:
+            while True:
+                chunk = resp.read(1024 * 64)
+                if not chunk:
+                    break
+                out.write(chunk)
+
 if __name__ == "__main__":
     
     datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
-    # url_path = 'ftp://ftp.ebi.ac.uk/pub/contrib/goa/'
     url_path = 'https://ftp.ebi.ac.uk/pub/contrib/goa/'
     gpad_file = 'gp_association.559292_sgd.gz'
     gpi_file = 'gp_information.559292_sgd.gz'
@@ -776,7 +791,7 @@ if __name__ == "__main__":
     ]
     for (retrieval_url, file) in retrieval_file_list:
         try:
-            urllib.request.urlretrieve(retrieval_url, file)
+            download_url(retrieval_url, file)
         except Exception as e:
             error_msg = "Failed to download " + retrieval_url + " <p> " + str(e)
             print(error_msg)
