@@ -7796,6 +7796,7 @@ class Go(Base):
             "go_id": self.goid,
             "go_aspect": self.go_namespace,
             "description": self.description,
+            "is_obsolete": self.is_obsolete,
             "aliases": [],
             "id": self.go_id,
             "link": self.obj_url,
