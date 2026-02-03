@@ -392,12 +392,26 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
     log.info(summary_4_email)
 
 
+def download(url: str, out_path: str) -> None:
+    req = urllib.request.Request(
+        url,
+	headers={"User-Agent": "Mozilla/5.0 (compatible; SGD/1.0; +https://www.yeastgenome.org)"}
+    )
+    with urllib.request.urlopen(req) as r, open(out_path, "wb") as f:
+        f.write(r.read())
+
 if __name__ == "__main__":
-        
-    url_path = 'http://snapshot.geneontology.org/ontology/'
-    go_owl_file = 'go.owl'
-    urllib.request.urlretrieve(url_path + go_owl_file, go_owl_file)
-    
+    go_owl_file = "go.owl"
+    urls = [
+        "http://snapshot.geneontology.org/ontology/go.owl"
+    ]
+    last_err = None
+    for url in urls:
+        try:
+            download(url, go_owl_file)
+            break
+        except Exception as e:
+            last_err = e
     load_ontology(go_owl_file)
 
 
