@@ -171,13 +171,14 @@ def read_owl(filename, ontology, is_sgd_term=None):
     parentId = None
     ignore_section_start = 0
 
-    # <owl:Class rdf:about="http://edamontology.org/data_0006"> 
-    # <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/RO_0002161"> 
+
+    # <owl:Class rdf:about="http://edamontology.org/data_0006">
+    # <owl:AnnotationProperty rdf:about="http://purl.obolibrary.org/obo/RO_0002161">
     # <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/RO_0000301">
-    # <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000054"><!-- realized in --> 
-    term_start_tags = ['<owl:Class rdf:about=', 
+    # <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/BFO_0000054"><!-- realized in -->
+    term_start_tags = ['<owl:Class rdf:about=',
                        '<owl:AnnotationProperty rdf:about=',
-                       '<owl:ObjectProperty rdf:about', 
+                       '<owl:ObjectProperty rdf:about',
                        '<owl:NamedIndividual rdf:about=',
                        '<owl:DatatypeProperty rdf:about=',
                        '<owl:Thing rdf:about=']
@@ -187,13 +188,17 @@ def read_owl(filename, ontology, is_sgd_term=None):
                       '</owl:NamedIndividual>',
                       '</owl:DatatypeProperty>',
                       '</owl:Thing>']
+
     for line in f:
-        line = line.strip()        
+        line = line.strip()
+
+        # ----------------------------
+        # Term start detection
+        # ----------------------------
         for term_start_tag in term_start_tags:
             if term_start_tag in line:
                 pieces = line.split('>')[0].split('/')
                 if ontology == 'EDAM':
-                    # id = pieces.pop().replace('"', '').split('_')[1]
                     id_field = pieces.pop().replace('"', '')
                     if "_" in id_field:
                         namespace_id = id_field.split('_')
@@ -205,7 +210,7 @@ def read_owl(filename, ontology, is_sgd_term=None):
                     else:
                         id = None
                         continue
-                else: 
+                else:
                     id = pieces.pop().replace('"', '').replace('_', ':')
 
                 if id is not None and "#" in id:
@@ -215,14 +220,16 @@ def read_owl(filename, ontology, is_sgd_term=None):
                     id = None
                     continue
 
-                # print "LINE=", line, "ID=", id
-
                 start_ontology = 1
                 break
-            
+
+        # ----------------------------
+        # Ignore equivalentClass blocks (and non-GO nested subClassOf blocks)
+        # but still capture restriction parents into other_parents
+        # ----------------------------
         if "<owl:equivalentClass>" in line or (ontology != 'GO' and "<rdfs:subClassOf>" in line):
             ignore_section_start = 1
-            
+
         if "</owl:equivalentClass>" in line and ignore_section_start == 1:
             ignore_section_start = 0
         if ontology != 'GO' and "</rdfs:subClassOf>" in line and ignore_section_start == 1:
@@ -245,24 +252,62 @@ def read_owl(filename, ontology, is_sgd_term=None):
                 parentId = None
             continue
 
+        # ----------------------------
+        # Term end detection / emit term
+        # ----------------------------
         if start_ontology == 1:
             for term_stop_tag in term_stop_tags:
                 if term_stop_tag in line:
-                    if is_obsolete_id == 0 and id is not None and term is not None:
+                    # IMPORTANT CHANGE:
+                    # - For GO: keep obsolete terms so we can pick up label changes like "obsolete ...",
+                    #   and emit is_obsolete for DB updates.
+                    # - For non-GO: preserve old behavior (skip obsolete terms).
+                    should_emit = (id is not None and term is not None) and (
+                        (ontology == 'GO') or (is_obsolete_id == 0)
+                    )
+
+                    if should_emit:
                         if definition is not None:
-                            definition = definition.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace("&quot;", "'")
-                        ## no need to do so, but just in case
-                        term = term.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
-                        term_orig = term_orig.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
-                        data.append({ "term": term,
-                                      "term_orig": term_orig,
-                                      "id": id,
-                                      "namespace": namespace,
-                                      "definition": definition,
-                                      "parents": parents,
-                                      "other_parents": other_parents,
-                                      "aliases": aliases })
-                  
+                            definition = (definition
+                                          .replace("&apos;", "'")
+                                          .replace("&lt;", "<")
+                                          .replace("&gt;", ">")
+                                          .replace("&amp;", "&")
+                                          .replace("&quot;", "'"))
+
+                        term = (term
+                                .replace("&apos;", "'")
+                                .replace("&lt;", "<")
+                                .replace("&gt;", ">"))
+
+                        if term_orig is None:
+                            term_orig_out = term
+                        else:
+                            term_orig_out = (term_orig
+                                             .replace("&apos;", "'")
+                                             .replace("&lt;", "<")
+                                             .replace("&gt;", ">"))
+
+                        if ontology == 'GO' and namespace is None:
+                            continue
+                        out = {
+                            "term": term,
+                            "term_orig": term_orig_out,
+                            "id": id,
+                            "namespace": namespace,
+                            "definition": definition,
+                            "parents": parents,
+                            "other_parents": other_parents,
+                            "aliases": aliases,
+                        }
+
+                        # Emit is_obsolete for GO so the loader can update go.is_obsolete
+                        if ontology == 'GO':
+                            out["is_obsolete"] = 1 if is_obsolete_id else 0
+
+                        data.append(out)
+
+                    # Reset term state
                     parents = []
                     other_parents = []
                     aliases = []
@@ -276,20 +321,12 @@ def read_owl(filename, ontology, is_sgd_term=None):
                     parentRo = None
                     parentId = None
                     ignore_section_start = 0
-
                     break
 
-        # <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/GO_0048308"/>   
-        # <rdfs:subPropertyOf rdf:resource="http://purl.obolibrary.org/obo/RO_0002172"/>
-        # <rdfs:subClassOf>
-        #    <owl:Restriction>
-        #        <owl:onProperty rdf:resource="http://purl.obolibrary.org/obo/RO_0002211"/>
-        #        <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/GO_0009790"/>
-        #    </owl:Restriction>
-        # </rdfs:subClassOf>
-
+        # ----------------------------
+        # Parent handling
+        # ----------------------------
         if id is not None and '_' in line and ('<rdfs:subClassOf rdf:resource=' in line or '<rdfs:subPropertyOf rdf:resource=' in line):
-
             pieces = line.replace('/>', '').split('/')
             if ontology == 'EDAM':
                 parent_id = pieces.pop().replace('"', '').split('_')[1]
@@ -312,6 +349,7 @@ def read_owl(filename, ontology, is_sgd_term=None):
                 parentRo = parentRo.split("<!")[0]
             continue
 
+
         # <owl:someValuesFrom rdf:resource="http://purl.obolibrary.org/obo/GO_0009790"/>
         if id is not None and subclassStart == 1 and "<owl:someValuesFrom rdf:resource=" in line:
             pieces = line.replace('/>', '').split('/')
@@ -319,7 +357,7 @@ def read_owl(filename, ontology, is_sgd_term=None):
             if "<!--" in parentId:
                 parentId = parentId.split("<!")[0]
             continue
-        
+
         # </rdfs:subClassOf>
         if "<rdfs:subClassOf" in line and "#ObsoleteClass" in line:
             is_obsolete_id = 1
@@ -330,25 +368,21 @@ def read_owl(filename, ontology, is_sgd_term=None):
             parentRo = None
             parentId = None
 
-        # <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mitochondrion inheritance</rdfs:label> 
-        # <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">never in taxon</rdfs:label>              
+        # ----------------------------
+        # Label / synonyms / namespace / definition
+        # ----------------------------
         if '<rdfs:label' in line:
             term_orig = line.split('>')[1].split('<')[0].strip().replace("&apos;", "'")
-            # term = line.split('>')[1].split('<')[0].strip().replace('_', ' ').replace("&apos;", "'")
             term = term_orig.replace('_', ' ')
             if '#' in term:
                 term = None
                 term_orig = None
-        # <oboInOwl:hasExactSynonym rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mitochondrial inheritance</oboInOwl:hasExactSynonym>                                                                   
-        # <oboInOwl:hasExactSynonym>has active substance</oboInOwl:hasExactSynonym>
+
         if 'ExactSynonym' in line or 'BroadSynonym' in line or 'NarrowSynonym' in line or 'RelatedSynonym' in line:
             alias_name = line.split('>')[1].split('<')[0]
             alias_type = line.split('Synonym')[0].replace('<oboInOwl:has', '')
             alias_type = alias_type.upper()
             if alias_name == '':
-                # print "ALIAS LINE: ", line                                                                                      
-                # print "ALIAS TYPE: ", alias_type
-                # print "ALIAS NAME: ", alias_name     
                 continue
             alias_name = alias_name.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
             aliases.append((alias_name, alias_type))
@@ -358,23 +392,21 @@ def read_owl(filename, ontology, is_sgd_term=None):
             if len(alias_name) <= 500:
                 aliases.append((alias_name, "EXACT"))
 
-        # <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">biological_process</oboInOwl:hasOBONamespace>        
-                                                                    
         if ontology != 'EDAM' and '<oboInOwl:hasOBONamespace' in line:
             namespace = line.split('>')[1].split('<')[0]
 
-        # <obo:IAO_0000115 rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The distribution of mitochondria, including the mitochondrial genome, into daughter cells after mitosis or meiosis, mediated by interactions between mitochondria and the cytoskeleton.</obo:IAO_0000115> ## go.owl
-        # <obo:IAO_0000115>x never in taxon T if and only if T is a class, and x does not instantiate the class expression &quot;in taxon some T&quot;. Note that this is a shortcut relation, and should be used as a hasValue restriction in OWL.</obo:IAO_0000115>
-        # <oboInOwl:hasDefinition>The design of an experiment involving non-human animals.</oboInOwl:hasDefinition>               
         if '<obo1:IAO_0000115' in line or '<obo:IAO_0000115' in line or '<oboInOwl:hasDefinition' in line:
             definition = line.split('>')[1].split('<')[0]
             definition = definition.replace("&apos;", "'").replace("&lt;", "<").replace("&gt;", ">")
 
-        # <owl:deprecated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</owl:deprecated>                  
-        # <owl:deprecated>true</owl:deprecated>
 
+        # ----------------------------
+        # Obsoletion detection
+        # ----------------------------
         if 'obsolete_since' in line or '<owl:deprecated' in line or 'reason_for_obsolescence' in line:
             is_obsolete_id = 1
+
+        # Subset tracking
         if ontology == 'APO' and '<oboInOwl:inSubset rdf:resource=' in line and '#SGD' in line and is_sgd_term is not None:
             is_sgd_term[id] = 1
         elif (ontology == 'CHEBI'
@@ -384,7 +416,4 @@ def read_owl(filename, ontology, is_sgd_term=None):
             is_sgd_term[id] = 1
 
     f.close()
-
     return data
-
-
