@@ -462,7 +462,6 @@ def _get_child_ids(nex_session, parent_id, all_complex_goids):
         all_complex_goids.add(x.child.goid)
         _get_child_ids(nex_session, x.child_id, all_complex_goids)
 
-
 def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension=None, get_support=None):
 
     from src.models import Referencedbentity, Complexdbentity, Go, Eco, Ro
@@ -474,14 +473,16 @@ def read_complex_gpad_file(filename, nex_session, foundAnnotation, get_extension
     all_complex_goids.add(go.goid)
     _get_child_ids(nex_session, go_id, all_complex_goids)
 
-    goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    # goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    goid_to_go_id = _get_goid_to_go_id_mapping(nex_session)
     ecoid_to_eco_id = dict([(x.ecoid, x.eco_id) for x in nex_session.query(Eco).all()])
     roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
     complexAcc_to_complex_id = dict([(x.complex_accession, x.dbentity_id) for x in nex_session.query(Complexdbentity).all()])
 
     all_complex_go_ids = set()
     for goid in all_complex_goids:
-        all_complex_go_ids.add(goid_to_go_id[goid])
+        if goid in goid_to_go_id:
+            all_complex_go_ids.add(goid_to_go_id[goid])
 
     sgdid_to_reference_id = {}
     pmid_to_reference_id = {}
@@ -610,12 +611,41 @@ def add_NOT_to_go_qualifer(go_qualifier):
         return "NOT active in"
     return not_mapping.get(go_qualifier)
     
+def _get_goid_to_go_id_mapping_old(nex_session):
+
+    from src.models import Go
+    from sqlalchemy import text
+    goid_to_go_id = dict(
+        nex_session.execute(text("""
+        SELECT goid, go_id
+        FROM nex.go
+        WHERE is_obsolete = '0'
+        OR is_obsolete = 'f'
+        OR is_obsolete = 'false'
+        OR is_obsolete IS FALSE
+        """)).fetchall()
+    )
+
+    return goid_to_go_id
+
+def _get_goid_to_go_id_mapping(nex_session):
+    from src.models import Go
+    from sqlalchemy import text
+    goid_to_go_id = dict(
+        nex_session.execute(text(""" 
+        SELECT goid, go_id
+        FROM nex.go
+        WHERE display_name not like 'obsolete %'
+        """)).fetchall()
+    )
+    return goid_to_go_id
+
     
 def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation, get_extension=None, get_support=None, new_pmids=None, dbentity_with_new_pmid=None, dbentity_id_with_annotation=None, bad_ref=None):
 
     from src.models import Referencedbentity, Pathwaydbentity, Dbentity, Go, Eco, Referencedeleted, Ro
-    
-    goid_to_go_id = dict([(x.goid, (x.go_id, x.is_obsolete)) for x in nex_session.query(Go).all()])
+
+    goid_to_go_id = _get_goid_to_go_id_mapping(nex_session)    
     format_name_to_eco_id = dict([(x.format_name, x.eco_id) for x in nex_session.query(Eco).all()])
     deleted_pmid_to_sgdid = dict([(x.pmid, x.sgdid) for x in nex_session.query(Referencedeleted).all()])
     roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
@@ -686,12 +716,9 @@ def read_noctua_gpad_file(filename, nex_session, sgdid_to_date_assigned, foundAn
         
         ## go_id
         goid = field[3]
-        if goid not in goid_to_go_id:
+        go_id = goid_to_go_id.get(goid)
+        if go_id is None:
             print("The GOID = ", goid, " is not in GO table.")
-            continue
-        (go_id, is_obsolete) = goid_to_go_id.get(goid)
-        if is_obsolete is True:
-            print("The GOID = ", goid, " is obsolete")
             continue
         
         ## eco_id
@@ -791,7 +818,8 @@ def read_gpad_file(filename, nex_session, uniprot_to_date_assigned, uniprot_to_s
     from src.models import Referencedbentity, Locusdbentity, Go, EcoAlias, Ro
     # import src.scripts.loading.config
 
-    goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    # goid_to_go_id = dict([(x.goid, x.go_id) for x in nex_session.query(Go).all()])
+    goid_to_go_id = _get_goid_to_go_id_mapping(nex_session)
     evidence_to_eco_id = dict([(x.display_name, x.eco_id) for x in nex_session.query(EcoAlias).all()])
     roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
     
