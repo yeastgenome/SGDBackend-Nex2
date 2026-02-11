@@ -1061,6 +1061,9 @@ def get_go_extension_link(dbxref_id):
         return "http://www.ebi.ac.uk/chebi/searchId.do?chebiId=" + dbxref_id
     if dbxref_id.startswith('SO:'):
         return "http://www.sequenceontology.org/browser/current_svn/term/" + dbxref_id
+    if dbxref_id.startswith('SGD_PWY:'):
+        dbxref_id = dbxref_id.replace("SGD_PWY:", "")
+        return "https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=" + dbxref_id + "&detail-level=2"
     if dbxref_id.startswith('RNAcentral:'):
         id = dbxref_id.replace('RNAcentral:', '')
         return "http://rnacentral.org/rna/" + id
