@@ -435,7 +435,7 @@ def update_goextension(nex_session, annotation_id, goextension, annotation_id_to
             if link.startswith('Unknown'):
                 if dbxref_id.startswith('IntAct:'):
                     continue
-                else:
+                elif not dbxref_id.startswith('SGD_PWY:'):
                     print("Unknown ID: ", dbxref_id)
                     continue
 
