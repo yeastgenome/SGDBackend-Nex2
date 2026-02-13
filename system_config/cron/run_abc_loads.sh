@@ -1,11 +1,11 @@
 #! /bin/sh
 set -e
 
-cd /data/www/SGDBackend-NEX2/current
-. /data/envs/sgd3/bin/activate
+cd /data/www/SGDBackend-NEX2
+. venv/bin/activate
 . ./prod_variables.sh
 
-export PYTHONPATH=/data/www/SGDBackend-NEX2/current
+export PYTHONPATH=/data/www/SGDBackend-NEX2
 
 LOG=/data/www/logs/abc_loads.log
 echo "===== $(date): Starting ABC loads =====" >> "$LOG"

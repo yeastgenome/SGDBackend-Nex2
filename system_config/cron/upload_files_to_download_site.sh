@@ -1,7 +1,7 @@
 #! /bin/sh
 
-cd /data/www/SGDBackend-Nex2/current/
-source /data/envs/sgd3/bin/activate 
+cd /data/www/SGDBackend-Nex2
+source venv/bin/activate 
 source prod_variables.sh
 
 python scripts/dumping/tab_files_for_download_site/generate_allele_file.py
@@ -19,4 +19,8 @@ python scripts/dumping/tab_files_for_download_site/generate_protein_properties.p
 python scripts/dumping/tab_files_for_download_site/generate_regulation_file.py
 python scripts/dumping/tab_files_for_download_site/generate_sgd_features.py
 python scripts/dumping/tab_files_for_download_site/generate_yeast_human_disease_file.py
+
+# export AWS_ACCESS_KEY_ID=
+# export AWS_SECRET_ACCESS_KEY=
+
 python scripts/dumping/s3/upload_files_for_download_site.py
