@@ -1,0 +1,219 @@
+import os
+import stat
+import json
+import re
+import sys
+import requests
+import gzip
+import shutil
+
+from sqlalchemy import create_engine, and_
+from src.models import DBSession, AllelealiasReference, Referencedbentity, AlleleAlias
+from src.data_helpers import get_pers_output, get_allele_synonyms
+
+engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
+LINKML_VERSION = os.getenv('LINKML_VERSION')
+CURATION_API_TOKEN = os.getenv('CURATION_API_TOKEN')
+
+DBSession.configure(bind=engine)
+SUBMISSION_TYPE = 'allele_ingest_set'
+local_dir = 'scripts/dumping/alliance/data/'
+DEFAULT_TAXID = '559292'
+# please add your curation interface API token to prod_variables.sh
+headers = {
+    'Authorization': 'APIToken ' + CURATION_API_TOKEN + ''
+}
+
+
+def get_allele_information():
+
+    print("getting Alleles")
+    # f"left join nex.locus_allele la on la.allele_id = ad.dbentity_id "
+
+    alleleObjList = DBSession.execute(
+        "select ad.dbentity_id, db.sgdid,  ad.description, db.display_name, "
+        "s.display_name, s.format_name, db.date_created "
+        "from nex.alleledbentity ad "
+        "inner join nex.dbentity db on ad.dbentity_id = db.dbentity_id "
+        "inner join nex.so s on ad.so_id = s.so_id ").fetchall()
+
+    print(("computing " + str(len(alleleObjList)) + " alleles"))
+
+    result = []
+
+    if (len(alleleObjList) > 0):
+
+        try:
+            for alleleObj in alleleObjList:
+
+                if re.search("\<sub\>", alleleObj[3]):
+                    print("skipping: " + alleleObj[3])
+                    continue
+                obj = {}
+                obj["allele_database_status_dto"] = {  # :
+                    "created_by_curie": "SGD",
+                    "database_status_name": "approved",
+                    "internal": False,
+                    "obsolete": False,
+                    "updated_by_curie": "SGD"
+                }
+                obj["internal"] = False
+                obj["is_extinct"] = False
+                obj["obsolete"] = False
+                obj["updated_by_curie"] = "SGD"  # :
+                obj["created_by_curie"] = "SGD"  # :
+                obj["primary_external_id"] = "SGD:" + str(alleleObj[1])
+                obj["data_provider_dto"] = {
+                    "source_organization_abbreviation": "SGD",
+                    "cross_reference_dto": {
+                        "referenced_curie": "SGD:" + str(alleleObj[1]),
+                        "display_name": "SGD:" + str(alleleObj[1]),
+                        "prefix": "SGD",
+                        "page_area": "allele",
+                        "internal": False
+                    },
+                    "internal": False,
+                    "obsolete": False,
+                    "created_by_curie": "SGD",
+                    "updated_by_curie": "SGD",
+                }
+
+                obj["allele_symbol_dto"] = {
+                    "name_type_name": "nomenclature_symbol",
+                    "synonym_scope_name": "exact",
+                    "format_text": alleleObj[3],
+                    "display_text": alleleObj[3],
+                    "internal": False,
+                    "obsolete": False,
+                    "created_by_curie": "SGD",
+                    "updated_by_curie": "SGD"
+                }
+
+                obj["allele_mutation_type_dtos"] = [{
+                    "mutation_type_curies": [str(alleleObj[5])],
+                    "internal": False,
+                    "obsolete": False,
+                    "created_by_curie": "SGD",
+                    "updated_by_curie": "SGD"
+                }]
+
+                allele_alias_list = DBSession.query(AlleleAlias).filter(and_(
+                    AlleleAlias.allele_id == alleleObj[0], AlleleAlias.alias_type != 'SGD Secondary')).all()
+                if (len(allele_alias_list) > 0):
+                    obj["allele_synonym_dtos"] = get_allele_synonyms(
+                        allele_alias_list)
+
+                obj["taxon_curie"] = "NCBITaxon:" + DEFAULT_TAXID
+                obj["date_created"] = alleleObj[6].strftime(
+                    "%Y-%m-%dT%H:%m:%S-00:00")
+                obj["date_updated"] = alleleObj[6].strftime(
+                    "%Y-%m-%dT%H:%m:%S-00:00")
+
+                if str(alleleObj[2]) != "None":
+                    if (str(alleleObj[2].strip()) and str(alleleObj[2].strip()) != "" and len(str(alleleObj[2])) != 0):
+                        # print(str(alleleObj[2]))
+                        obj["note_dtos"] = [{
+                            "free_text": str(alleleObj[2]),
+                            "note_type_name": "mutation_description",
+                            "internal": False,
+                            "obsolete": False,
+                            "created_by_curie": "SGD",
+                            "updated_by_curie": "SGD",
+                            "date_created": alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                            "date_updated": alleleObj[6].strftime("%Y-%m-%dT%H:%m:%S-00:00")
+                        }]
+                alleleRefList = DBSession.execute(
+                    "select rdb.pmid "
+                    "from nex.alleledbentity ad "
+                    "left join nex.literatureannotation ar on ad.dbentity_id = ar.dbentity_id "
+                    "left join nex.referencedbentity rdb on ar.reference_id = rdb.dbentity_id "
+                    "where ad.dbentity_id =" + str(alleleObj[0])).fetchall()
+
+                if alleleRefList:
+                    for x in alleleRefList:
+                        obj['reference_curies'] = []
+                        if x not in obj['reference_curies'] and x is not None:
+                            if str(x[0]) != 'None':
+                                obj['reference_curies'].append(
+                                    "PMID:" + str(x[0]))
+
+                # alleleGeneList = DBSession.execute(
+                #     f"select db.sgdid "
+                #     f"from nex.alleledbentity ad "
+                #     f"left join nex.locus_allele la on la.allele_id = ad.dbentity_id "
+                #     f"inner join nex.dbentity db on db.dbentity_id = la.locus_id "
+                #     f"where ad.dbentity_id =" + str(alleleObj[0])).fetchall()
+
+                # if alleleGeneList:
+                #     for gene in alleleGeneList:
+                #         if gene is not None:
+                #             obj["allele_gene_associations"] = {
+                #                     "associationType": "allele_of",
+                #                     "gene": "SGD:" + str(gene[0])
+                #             }
+                result.append(obj)
+        except Exception as e:
+            print(e)
+
+    if (len(result) > 0):
+        output_obj = get_pers_output(SUBMISSION_TYPE, result, LINKML_VERSION)
+        file_name = 'SGD' + SUBMISSION_VERSION + 'allelesPersistent.json'
+
+        json_file_str = os.path.join(local_dir, file_name)
+      #  os.open(json_file_str, os.O_RDONLY)
+       # os.chmod(json_file_str, 0o666)
+      #  os.close(json_file_str)
+
+        with open(json_file_str, 'w+') as res_file:
+            res_file.write(json.dumps(output_obj, indent=4, sort_keys=False))
+
+        # compress file#
+        compressed_file_str = json_file_str + '.gz'
+        #os.chmod(compressed_file_str, 0o666)
+
+        # exit(1)
+
+        try:
+            with open(json_file_str, 'rb') as f_in:
+                with gzip.open(compressed_file_str, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            print('file successfully compressed: ' + compressed_file_str)
+        except Exception as error:
+            print('could not compress file: ' + json_file_str)
+            print('exception occurred:', type(error).__name__, '-', error)
+            exit()
+# open(FILE, 'r')
+        files = {
+            'ALLELE_SGD': open(compressed_file_str,'rb'),
+        }
+
+        try:
+          #          print('*Headers:', headers)
+          #          print('*Files:', files)
+
+            response = requests.post(
+                'https://curation.alliancegenome.org/api/data/submit', files=files, headers=headers)
+
+            print('Response:' + str(response.status_code))
+
+            if response.status_code == 200:
+                # this doesn't work. It comes back as successful, but have to check dashboard
+                print('File uploaded successfully')
+                # to make sure
+            else:
+                # got 504, but the file was successfully upload to Alliance, continuing to load objs
+
+                print('Failed to upload file. Status code:', response.status_code)
+                print('Response:', response.text)
+                print('Headers:', headers)
+                print('Files:', files)
+
+        except Exception as e:
+            print('An error occurred in file upload:', e)
+
+    DBSession.close()
+
+
+if __name__ == '__main__':
+    get_allele_information()
