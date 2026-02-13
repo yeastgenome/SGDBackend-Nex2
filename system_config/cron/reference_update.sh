@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-cd /data/www/SGDBackend-NEX2
+cd /data/www/SGDBackend-Nex2
 . venv/bin/activate
 . ./prod_variables.sh
 
@@ -9,7 +9,7 @@ cd /data/www/SGDBackend-NEX2
 export AWS_ACCESS_KEY_ID=$ABC_AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$ABC_AWS_SECRET_ACCESS_KEY
 
-export PYTHONPATH=/data/www/SGDBackend-NEX2
+export PYTHONPATH=/data/www/SGDBackend-Nex2
 
 LOG=/data/www/logs/reference_update.log
 
