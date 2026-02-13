@@ -1,16 +1,11 @@
 #! /bin/sh
-set -e
 
 cd /data/www/SGDBackend-Nex2
-. venv/bin/activate
-. ./prod_variables.sh
+source venv/bin/activate
+source prod_variables.sh
 
 export PYTHONPATH=/data/www/SGDBackend-Nex2
 
-LOG=/data/www/logs/abc_loads.log
-echo "===== $(date): Starting ABC loads =====" >> "$LOG"
+python scripts/loading/reference/load_new_references_from_abc.py
+python scripts/loading/reference/load_tet_from_abc.py
 
-python scripts/loading/reference/load_new_references_from_abc.py >> "$LOG" 2>&1
-python scripts/loading/reference/load_tet_from_abc.py          >> "$LOG" 2>&1
-
-echo "===== $(date): ABC loads finished =====" >> "$LOG"
