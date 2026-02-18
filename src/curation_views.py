@@ -1,6 +1,7 @@
 import pandas as pd
 from oauth2client import client, crypt
-from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
+from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, \
+    HTTPFound, HTTPInternalServerError
 from pyramid.view import view_config
 # from pyramid.session import check_csrf_token
 from pyramid.csrf import check_csrf_token
@@ -91,6 +92,7 @@ def account(request):
     return {'username': request.session['username'], 'csrfToken': request.session.get_csrf_token()}
 
 
+"""
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
 def get_locus_curate(request):
     try:
@@ -102,7 +104,31 @@ def get_locus_curate(request):
     finally:
         if DBSession:
             DBSession.remove()
+"""
 
+
+@view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
+def get_locus_curate(request):
+    sgdid = None
+    try:
+        sgdid = extract_id_request(request, 'locus', param_name="sgdid")
+        locus = get_locus_by_id(sgdid)
+
+        if locus is None:
+            raise HTTPNotFound(detail=f"Locus not found: {sgdid}")
+
+        return locus.to_curate_dict()
+
+    except HTTPNotFound:
+        raise
+    except Exception:
+        # This will print the full stack trace so you can see what broke after the upgrade.
+        log.exception("get_locus_curate failed (sgdid=%s)", sgdid)
+        raise HTTPInternalServerError(detail="Failed to build locus curate payload")
+    finally:
+        DBSession.remove()
+
+        
 @view_config(route_name='locus_curate_summaries', request_method='PUT', renderer='json')
 @authenticate
 def locus_curate_summaries(request):

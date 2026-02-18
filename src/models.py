@@ -5750,89 +5750,211 @@ class Locusdbentity(Dbentity):
         return '/webservice/locus/' + str(self.dbentity_id)
 
     def to_curate_dict(self):
-        phenotype_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Phenotype').one_or_none()
-        regulation_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Regulation').one_or_none()
-        protein_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Protein').one_or_none()
-        sequence_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Sequence').one_or_none()
-        interaction_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Interaction').one_or_none()
-        disease_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type='Disease').one_or_none()
-        function_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id,summary_type='Function').one_or_none()
+        phenotype_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Phenotype'
+        ).one_or_none()
+        regulation_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Regulation'
+        ).one_or_none()
+        protein_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Protein'
+        ).one_or_none()
+        sequence_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Sequence'
+        ).one_or_none()
+        interaction_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Interaction'
+        ).one_or_none()
+        disease_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Disease'
+        ).one_or_none()
+        function_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type='Function'
+        ).one_or_none()
 
+        # -----------------------------
+        # Phenotype summary + PMIDs
+        # -----------------------------
         if not phenotype_summary:
-            phenotype_summary = ''
+            phenotype_summary_text = ''
             phenotype_summary_pmids = ''
         else:
             summary_ref_ids = []
-            for x in DBSession.query(LocussummaryReference).filter_by(summary_id=phenotype_summary.summary_id).all():
+            for x in DBSession.query(LocussummaryReference).filter_by(
+                summary_id=phenotype_summary.summary_id
+            ).all():
                 summary_ref_ids.append(x.reference_id)
-            pmids = []
-            for x in DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(summary_ref_ids)).all():
-                pmids.append(str(x.pmid))
-            phenotype_summary_pmids = SEPARATOR.join(pmids)
-            phenotype_summary = phenotype_summary.text
+
+            if summary_ref_ids:
+                pmids = []
+                for x in DBSession.query(Referencedbentity).filter(
+                    Referencedbentity.dbentity_id.in_(summary_ref_ids)
+                ).all():
+                    if x.pmid is not None:
+                        pmids.append(str(x.pmid))
+                phenotype_summary_pmids = SEPARATOR.join(pmids)
+            else:
+                phenotype_summary_pmids = ''
+
+            phenotype_summary_text = phenotype_summary.text
+
+        # -----------------------------
+        # Regulation summary + PMIDs
+        # NOTE: SA 1.4 returns [(id,), ...] for single-column query -> flatten
+        # -----------------------------
         if not regulation_summary:
-            regulation_summary = ''
+            regulation_summary_text = ''
             regulation_summary_pmids = ''
         else:
-            summary_ref_ids = DBSession.query(LocussummaryReference.reference_id).filter_by(summary_id=regulation_summary.summary_id).all()
-            pmids = DBSession.query(Referencedbentity.pmid).filter(Referencedbentity.dbentity_id.in_(summary_ref_ids)).all()
-            pmids = [str(x[0]) for x in pmids]
-            regulation_summary_pmids = SEPARATOR.join(pmids)
-            regulation_summary = regulation_summary.text
-        if protein_summary:
-            protein_summary = protein_summary.text
-        if sequence_summary:
-            sequence_summary = sequence_summary.text
-        if interaction_summary:
-            interaction_summary = interaction_summary.text
-        if disease_summary:
-            disease_summary = disease_summary.text 
-        if function_summary:
-            function_summary = function_summary.text    
-        aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).all()
+            summary_ref_ids = [
+                rid for (rid,) in DBSession.query(LocussummaryReference.reference_id)
+                .filter_by(summary_id=regulation_summary.summary_id)
+                .all()
+            ]
+
+            if summary_ref_ids:
+                pmids = [
+                    str(pmid) for (pmid,) in DBSession.query(Referencedbentity.pmid)
+                    .filter(Referencedbentity.dbentity_id.in_(summary_ref_ids))
+                    .all()
+                    if pmid is not None
+                ]
+                regulation_summary_pmids = SEPARATOR.join(pmids)
+            else:
+                regulation_summary_pmids = ''
+
+            regulation_summary_text = regulation_summary.text
+
+        # Other summaries: keep None if missing (JSON null), else use text
+        protein_summary_text = protein_summary.text if protein_summary else None
+        sequence_summary_text = sequence_summary.text if sequence_summary else None
+        interaction_summary_text = interaction_summary.text if interaction_summary else None
+        disease_summary_text = disease_summary.text if disease_summary else None
+        function_summary_text = function_summary.text if function_summary else None
+
+        # -----------------------------
+        # Aliases + PMIDs
+        # NOTE: Make join explicit for SA 1.4
+        # -----------------------------
+        aliases = DBSession.query(LocusAlias).filter(
+            and_(
+                LocusAlias.locus_id == self.dbentity_id,
+                LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name'])
+            )
+        ).all()
+
         aliases_list = []
         for x in aliases:
-            a_pmids = DBSession.query(LocusAliasReferences, Referencedbentity.pmid).filter(LocusAliasReferences.alias_id==x.alias_id).outerjoin(Referencedbentity).all()
-            pmids_results = [str(y[1]) for y in a_pmids]
+            a_pmids = (
+                DBSession.query(LocusAliasReferences, Referencedbentity.pmid)
+                .outerjoin(
+                    Referencedbentity,
+                    LocusAliasReferences.reference_id == Referencedbentity.dbentity_id
+                )
+                .filter(LocusAliasReferences.alias_id == x.alias_id)
+                .all()
+            )
+            pmids_results = [str(y[1]) for y in a_pmids if y[1] is not None]
             aliases_list.append({
-                'alias_id':x.alias_id,
+                'alias_id': x.alias_id,
                 'alias': x.display_name,
                 'pmids': SEPARATOR.join(pmids_results),
                 'type': x.alias_type
             })
 
+        # -----------------------------
+        # LocusReferences PMIDs (explicit join)
+        # -----------------------------
         gene_name_pmids = ''
         if self.gene_name:
-            pmids_results = DBSession.query(LocusReferences, Referencedbentity.pmid).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='gene_name')).outerjoin(Referencedbentity).all()
-            pmids_results = [str(x[1]) for x in pmids_results]
+            rows = (
+                DBSession.query(LocusReferences, Referencedbentity.pmid)
+                .outerjoin(
+                    Referencedbentity,
+                    LocusReferences.reference_id == Referencedbentity.dbentity_id
+                )
+                .filter(
+                    and_(
+                        LocusReferences.locus_id == self.dbentity_id,
+                        LocusReferences.reference_class == 'gene_name'
+                    )
+                )
+                .all()
+            )
+            pmids_results = [str(x[1]) for x in rows if x[1] is not None]
             gene_name_pmids = SEPARATOR.join(pmids_results)
+
         name_description_pmids = ''
         if self.name_description:
-            pmids_results = DBSession.query(LocusReferences, Referencedbentity.pmid).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='name_description')).outerjoin(Referencedbentity).all()
-            pmids_results = [str(x[1]) for x in pmids_results]
+            rows = (
+                DBSession.query(LocusReferences, Referencedbentity.pmid)
+                .outerjoin(
+                    Referencedbentity,
+                    LocusReferences.reference_id == Referencedbentity.dbentity_id
+                )
+                .filter(
+                    and_(
+                        LocusReferences.locus_id == self.dbentity_id,
+                        LocusReferences.reference_class == 'name_description'
+                    )
+                )
+                .all()
+            )
+            pmids_results = [str(x[1]) for x in rows if x[1] is not None]
             name_description_pmids = SEPARATOR.join(pmids_results)
+
         description_pmids = ''
         if self.description:
-            pmids_results = DBSession.query(LocusReferences, Referencedbentity.pmid).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='description')).outerjoin(Referencedbentity).all()
-            pmids_results = [str(x[1]) for x in pmids_results]
+            rows = (
+                DBSession.query(LocusReferences, Referencedbentity.pmid)
+                .outerjoin(
+                    Referencedbentity,
+                    LocusReferences.reference_id == Referencedbentity.dbentity_id
+                )
+                .filter(
+                    and_(
+                        LocusReferences.locus_id == self.dbentity_id,
+                        LocusReferences.reference_class == 'description'
+                    )
+                )
+                .all()
+            )
+            pmids_results = [str(x[1]) for x in rows if x[1] is not None]
             description_pmids = SEPARATOR.join(pmids_results)
-        feature_type = DBSession.query(So.display_name).outerjoin(Dnasequenceannotation).filter(Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == TAXON_ID, Dnasequenceannotation.dna_type == 'GENOMIC').scalar()
-        protein_name = DBSession.query(LocusAlias.display_name).filter(LocusAlias.locus_id == self.dbentity_id, LocusAlias.alias_type == 'NCBI protein name').scalar()
+
+        # -----------------------------
+        # Feature type (explicit join)
+        # -----------------------------
+        feature_type = (
+            DBSession.query(So.display_name)
+            .join(Dnasequenceannotation, Dnasequenceannotation.so_id == So.so_id)
+            .filter(
+                Dnasequenceannotation.dbentity_id == self.dbentity_id,
+                Dnasequenceannotation.taxonomy_id == TAXON_ID,
+                Dnasequenceannotation.dna_type == 'GENOMIC'
+            )
+            .scalar()
+        )
+
+        protein_name = DBSession.query(LocusAlias.display_name).filter(
+            LocusAlias.locus_id == self.dbentity_id,
+            LocusAlias.alias_type == 'NCBI protein name'
+        ).scalar()
 
         return {
             'name': self.display_name,
             'sgdid': self.sgdid,
             'systematic_name': self.systematic_name,
             'paragraphs': {
-                'phenotype_summary': phenotype_summary,
+                'phenotype_summary': phenotype_summary_text,
                 'phenotype_summary_pmids': phenotype_summary_pmids,
-                'regulation_summary': regulation_summary,
+                'regulation_summary': regulation_summary_text,
                 'regulation_summary_pmids': regulation_summary_pmids,
-                'protein_summary':protein_summary,
-                'sequence_summary':sequence_summary,
-                'interaction_summary':interaction_summary,
-                'disease_summary':disease_summary,
-                'function_summary':function_summary
+                'protein_summary': protein_summary_text,
+                'sequence_summary': sequence_summary_text,
+                'interaction_summary': interaction_summary_text,
+                'disease_summary': disease_summary_text,
+                'function_summary': function_summary_text
             },
             'basic': {
                 'aliases': aliases_list,
@@ -5848,7 +5970,7 @@ class Locusdbentity(Dbentity):
                 'ncbi_protein_name': protein_name
             }
         }
-
+    
     def update_basic(self, new_info, username):
         old_info = self.to_curate_dict()['basic']
         if 'feature_type' in list(new_info.keys()) and (new_info['feature_type'] == None or new_info['feature_type'] == ''):
