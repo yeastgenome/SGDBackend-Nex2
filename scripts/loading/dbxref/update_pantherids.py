@@ -238,7 +238,7 @@ def insert_alias(nex_session,fw,locus_id,source_id,panther_id):
         obj_url=obj_url,
         source_id=source_id,
         locus_id=locus_id,
-        has_external_id_section="1",
+        has_external_id_section=True,
         alias_type=ALIAS_TYPE,
         created_by = CREATED_BY)
     
