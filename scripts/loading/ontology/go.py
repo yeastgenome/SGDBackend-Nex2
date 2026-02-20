@@ -108,12 +108,13 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
             ## in database
             y = goid_to_go[x['id']]
             go_id = y.go_id
-            if y.is_obsolete is True:
-                y.is_obsolete = False
+            is_obsolete_flag = x['term'].lower().startswith('obsolete ')
+            if y.is_obsolete != is_obsolete_flag:
+                fw.write("The is_obsolete for " + str(x['id']) + " has been updated from " + str(y.is_obsolete) + " to " + str(is_obsolete_flag) + "\n")
+                y.is_obsolete = is_obsolete_flag
                 nex_session.add(y)
                 nex_session.flush()
-                update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + str(x['id']) + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
+                update_log['updated'] += 1
             if x['term'] != y.display_name.strip():
                 fw.write("The display_name for " + str(x['id']) + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
                 y.display_name = x['term']
@@ -125,6 +126,7 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
             active_goid.append(x['id'])
         else:
             fw.write("NEW entry = " + x['id'] + " " + x['term'] + "\n")
+            
             this_x = Go(source_id = source_to_id[src],
                          format_name = x['id'],
                          goid = x['id'],
@@ -132,7 +134,7 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
                          go_namespace = x['namespace'].replace("_", " "),
                          description = x['definition'],
                          obj_url = '/go/' + x['id'],
-                         is_obsolete = False,
+                         is_obsolete = x['term'].lower().startswith('obsolete '),
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
