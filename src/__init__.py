@@ -19,6 +19,11 @@ def add_cors_headers_response_callback(event):
         })
     event.request.add_response_callback(cors_headers)
 
+def cleanup_session(request):
+    if request.exception is not None:
+        DBSession.rollback()
+    DBSession.remove()
+
 def main(global_config, **settings):
     engine = create_engine(os.environ['NEX2_URI'], echo=False, pool_recycle=3600, pool_size=100)
     DBSession.configure(bind=engine)
@@ -26,6 +31,12 @@ def main(global_config, **settings):
 
     config = Configurator(settings=settings)
     config.add_subscriber(add_cors_headers_response_callback, NewRequest)
+
+    # DB zombie connection prevention
+    config.add_subscriber(
+        lambda event: event.request.add_finished_callback(cleanup_session),
+        NewRequest
+    )
     
     config.add_route('home', '/')
     config.add_route('get_recent_annotations', '/annotations')
