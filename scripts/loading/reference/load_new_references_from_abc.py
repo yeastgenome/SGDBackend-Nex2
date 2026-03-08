@@ -52,6 +52,13 @@ def is_paper_in_db(nex_session, cross_references):
             pmid = x['curie'].replace('PMID:', '')
     if sgdid is None:
         return (sgdid, pmid, None)
+
+    # Check if a reference with this PMID already exists (regardless of SGDID)
+    if pmid:
+        rows = nex_session.execute("SELECT dbentity_id from nex.referencedbentity WHERE pmid = " + str(pmid)).fetchall()
+        if len(rows) > 0:
+            return (sgdid, pmid, rows[0][0])
+
     rows = nex_session.execute("SELECT dbentity_id from nex.dbentity WHERE sgdid = '" + sgdid + "'").fetchall()
     if len(rows) == 0:
         return (sgdid, pmid, None)
