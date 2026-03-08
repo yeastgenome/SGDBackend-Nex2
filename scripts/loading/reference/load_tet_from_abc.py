@@ -63,6 +63,9 @@ def load_data():
         if tag['entity']:
             entity_sgdid = tag['entity'].replace("SGD:", "")
         reference_id = sgdid_to_reference_id.get(reference_sgdid)
+        if reference_id is None:
+            print("Skipping TET for " + reference_sgdid + " - reference not found in database by SGDID or PMID")
+            continue
         dbentity_id = None
         if entity_sgdid:
             dbentity_id = sgdid_to_dbentity_id.get(entity_sgdid)
@@ -242,7 +245,10 @@ def insert_into_curation_reference(
         
     
 def fetch_dbentity_ids_for_sgdids(nex_session, sgdids):
-        
+
+    if not sgdids:
+        return {}
+
     # sgdid_list = ','.join(f"'{sgdid}'" for sgdid in sgdids)
     sgdid_list = ','.join("'{}'".format(sgdid) for sgdid in sgdids)
 
@@ -251,7 +257,41 @@ def fetch_dbentity_ids_for_sgdids(nex_session, sgdids):
                                "WHERE dbentity_status = 'Active' "
                                "AND sgdid in (" + sgdid_list + ")").fetchall()
 
-    return {row[0]: row[1] for row in rows}
+    sgdid_to_id = {row[0]: row[1] for row in rows}
+
+    # For SGDIDs not found, try to look up by PMID
+    missing_sgdids = sgdids - set(sgdid_to_id.keys())
+    for sgdid in missing_sgdids:
+        pmid = fetch_reference_pmid_from_abc(sgdid)
+        if pmid:
+            dbentity_id = fetch_reference_id_by_pmid(nex_session, pmid)
+            if dbentity_id:
+                sgdid_to_id[sgdid] = dbentity_id
+                print("Found reference for SGDID " + sgdid + " via PMID " + str(pmid))
+
+    return sgdid_to_id
+
+
+def fetch_reference_pmid_from_abc(sgdid):
+    """Fetch reference details from ABC to get PMID"""
+    abc_url = ABC_API_ROOT_URL + "reference/SGD:" + sgdid
+    try:
+        req = request.urlopen(abc_url)
+        data = json.loads(req.read())
+        for cr in data.get('cross_references', []):
+            if cr['curie'].startswith('PMID:') and cr.get('is_obsolete') is False:
+                return int(cr['curie'].replace('PMID:', ''))
+    except Exception as e:
+        print("Error fetching reference from ABC for " + sgdid + ": " + str(e))
+    return None
+
+
+def fetch_reference_id_by_pmid(nex_session, pmid):
+    """Look up reference in database by PMID"""
+    row = nex_session.execute(
+        "SELECT dbentity_id FROM nex.referencedbentity WHERE pmid = " + str(pmid)
+    ).fetchone()
+    return row[0] if row else None
 
 
 def download_json_file():
@@ -324,7 +364,8 @@ def read_reference_data_from_abc(tet_ids, sgdids):
     for x in json_data['data']:
         sgdid = x['curie'].replace("SGD:", "")
         tet_id = x['topic_entity_tag_id']
-        if sgdid not in sgdids or tet_id in tet_ids:
+        # Skip if TET was already processed
+        if tet_id in tet_ids:
             continue
         if tet_id in tet_ids_from_abc:
             continue
