@@ -5,7 +5,6 @@ from datetime import datetime
 import sys
 from src.models import Locusdbentity, Referencedbentity, Source, Taxonomy, \
                        Phenotype, Geninteractionannotation, Apo
-from scripts.loading.reference.promote_reference_triage import add_paper
 from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
@@ -71,16 +70,9 @@ def load_data(infile, logfile):
                 reference_id = pmid_to_reference_id.get(int(row[6]))
                 
                 if reference_id is None:
-                    reference_id = paper_added.get(int(row[6]))
-                if reference_id is None:
                     log.info("The PMID: " + row[6] + " is not in the REFERENCEDBENTITY table.")
-                    (reference_id, sgdid) = add_paper(int(row[6]), CREATED_BY)
-                    if reference_id is None:
-                        log.info("It is an obsolete PMID: " + row[6] + "?");
-                        continue
-                    else:
-                        paper_added[int(row[6])] = reference_id
-
+                    continue
+        
                 annotation_types = []
                 if row[9] == 'HTP':
                     annotation_types.append('high-throughput')
