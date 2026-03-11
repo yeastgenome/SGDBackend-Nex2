@@ -6,6 +6,7 @@ from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 from sqlalchemy.exc import IntegrityError, DataError
 import transaction
 import json
+import boto.exception
 from src.models import DBSession, Dbentity, Filedbentity, Referencedbentity, FilePath, \
                        Path, ReferenceFile, Source, Edam
 from src.aws_helpers import get_checksum
@@ -82,33 +83,48 @@ def upload_one_file(request, curator_session, CREATED_BY, source_id, file, filen
         curator_session.add(fd)
         curator_session.flush()
         file_id = fd.dbentity_id
-        transaction.commit()
-        curator_session.flush()
 
         fd = curator_session.query(Filedbentity).filter_by(dbentity_id=file_id).one_or_none()
-                
-        #### upload file to s3
+
+        #### upload file to s3 BEFORE committing to database
         s3_url = upload_file_to_s3(file, fd.sgdid + "/" + filename)
         fd.s3_url = s3_url
         curator_session.add(fd)
-        transaction.commit()
-        
+
         #### add path_id and newly created file_id to file_path table
         path = curator_session.query(Path).filter_by(path=PATH).one_or_none()
         if path is None:
+            transaction.abort()
             return "Path = " + PATH + " is not in the database"
         insert_file_path(curator_session, CREATED_BY, source_id, file_id, path.path_id)
-            
+
         #### add reference_id to this file
         insert_reference_file(curator_session, CREATED_BY, source_id, file_id, reference_id)
-        
+
+        #### commit only after S3 upload and all DB operations succeed
         transaction.commit()
-        
+
         return "loaded"
-    
+
+    except boto.exception.S3ResponseError as e:
+        log.exception('S3 upload error for file: ' + filename)
+        transaction.abort()
+        if curator_session:
+            curator_session.rollback()
+        if e.status == 403:
+            error_msg = "S3 upload failed: Access denied (403 Forbidden). Please check S3 credentials and bucket permissions."
+        elif e.status == 404:
+            error_msg = "S3 upload failed: Bucket not found (404). Please verify S3_BUCKET configuration."
+        else:
+            error_msg = "S3 upload failed: " + str(e.reason) + " (HTTP " + str(e.status) + ")"
+        return HTTPBadRequest(body=json.dumps({'error': error_msg}), content_type='text/json')
     except Exception as e:
-        log.exception('Upload supplemental file ERROR')
-        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+        log.exception('Upload supplemental file ERROR: ' + filename)
+        transaction.abort()
+        if curator_session:
+            curator_session.rollback()
+        error_msg = "Failed to upload " + filename + ": " + str(e)
+        return HTTPBadRequest(body=json.dumps({'error': error_msg}), content_type='text/json')
     finally:
         if curator_session:
             curator_session.remove()
@@ -193,8 +209,12 @@ def add_metadata_upload_file(request):
 
         transaction.commit()
         return HTTPOk(body=json.dumps({'success': success_message, 'supplemental_files': "SUPPLEMENTAL_FILE"}), content_type='text/json')
+    except ValueError as e:
+        log.exception('Invalid file format error')
+        return HTTPBadRequest(body=json.dumps({'error': "Invalid filename format. Expected format: PMID.zip (e.g., 12748633.zip)"}), content_type='text/json')
     except Exception as e:
-        return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
+        log.exception('Supplemental file upload error')
+        return HTTPBadRequest(body=json.dumps({'error': "Upload failed: " + str(e)}), content_type='text/json')
     finally:
         if curator_session:
             curator_session.remove()
