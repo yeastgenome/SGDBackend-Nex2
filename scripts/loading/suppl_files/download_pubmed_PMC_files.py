@@ -284,21 +284,9 @@ def is_open_access(cache: Dict[str, dict], pmcid: str) -> bool:
     return entry.get("is_open_access", False)
 
 
-def gzip_file(file_with_path: str) -> Optional[str]:
-    """Gzip a file and return the path to the gzipped file."""
-    try:
-        gzip_file_with_path = file_with_path + ".gz"
-        with open(file_with_path, 'rb') as f_in, gzip.open(gzip_file_with_path, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
-        return gzip_file_with_path
-    except Exception as e:
-        log.error(f"Error gzipping file {file_with_path}: {e}")
-        return None
-
-
-def gzip_and_upload_files(pmid: int, pmcid: str, pmid_dir: str) -> bool:
+def create_tarball_and_upload(pmid: int, pmcid: str, pmid_dir: str) -> bool:
     """
-    Gzip all files for a paper and upload to SGD S3.
+    Create a single .tar.gz containing all files for a PMID and upload to SGD S3.
 
     Args:
         pmid: PubMed ID
@@ -308,6 +296,8 @@ def gzip_and_upload_files(pmid: int, pmcid: str, pmid_dir: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
+    import tarfile
+
     pmcid_dir = path_join(pmid_dir, pmcid)
     if not path.exists(pmcid_dir):
         log.warning(f"PMCID directory not found: {pmcid_dir}")
@@ -318,30 +308,27 @@ def gzip_and_upload_files(pmid: int, pmcid: str, pmid_dir: str) -> bool:
         log.warning(f"No files found in {pmcid_dir}")
         return False
 
-    success_count = 0
-    for file_name in files:
-        file_path = path_join(pmcid_dir, file_name)
-        if not path.isfile(file_path):
-            continue
+    # Create tar.gz file named {pmid}.tar.gz
+    tarball_path = path_join(pmcFileDir, f"{pmid}.tar.gz")
 
-        # Skip already gzipped files
-        if file_path.endswith('.gz'):
-            gzip_path = file_path
-        else:
-            gzip_path = gzip_file(file_path)
-            if gzip_path is None:
-                continue
+    try:
+        with tarfile.open(tarball_path, "w:gz") as tar:
+            for file_name in files:
+                file_path = path_join(pmcid_dir, file_name)
+                if path.isfile(file_path):
+                    # Add file with just the filename (no directory structure)
+                    tar.add(file_path, arcname=file_name)
+                    log.info(f"Added {file_name} to {pmid}.tar.gz")
 
-        try:
-            # Upload to SGD S3
-            s3_path = f"suppl_files/{pmid}/{pmcid}/{basename(gzip_path)}"
-            simple_s3_upload(gzip_path, s3_path)
-            success_count += 1
-            log.info(f"Uploaded {gzip_path} to S3: {s3_path}")
-        except Exception as e:
-            log.error(f"Error uploading {gzip_path}: {e}")
+        # Upload to SGD S3
+        s3_path = f"{pmid}.tar.gz"
+        simple_s3_upload(tarball_path, s3_path)
+        log.info(f"Uploaded {tarball_path} to S3: {s3_path}")
+        return True
 
-    return success_count > 0
+    except Exception as e:
+        log.error(f"Error creating/uploading tarball for PMID:{pmid}: {e}")
+        return False
 
 
 def download_files():
@@ -426,7 +413,7 @@ def download_files():
                 log.info(f"[{idx}/{total}] PMID:{pmid} PMCID:{pmcid} - Download successful")
 
                 # Gzip and upload to SGD S3
-                gzip_and_upload_files(pmid, pmcid, pmid_dir)
+                create_tarball_and_upload(pmid, pmcid, pmid_dir)
             else:
                 log.warning(f"[{idx}/{total}] PMID:{pmid} PMCID:{pmcid} - Not found in S3")
                 if path.exists(pmid_dir) and not listdir(pmid_dir):
