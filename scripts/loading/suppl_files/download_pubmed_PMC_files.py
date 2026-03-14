@@ -22,7 +22,7 @@ from botocore.exceptions import ClientError
 from src.models import Referencedbentity, ReferenceFile, Filedbentity
 from scripts.loading.database_session import get_session
 from scripts.loading.suppl_files.load_pubmed_PMC_files import load_data
-from src.helpers import upload_file
+from src.aws_helpers import simple_s3_upload
 
 __author__ = 'sweng66'
 
@@ -335,12 +335,9 @@ def gzip_and_upload_files(pmid: int, pmcid: str, pmid_dir: str) -> bool:
         try:
             # Upload to SGD S3
             s3_path = f"suppl_files/{pmid}/{pmcid}/{basename(gzip_path)}"
-            status = upload_file(gzip_path, s3_path)
-            if status:
-                success_count += 1
-                log.info(f"Uploaded {gzip_path} to S3: {s3_path}")
-            else:
-                log.error(f"Failed to upload {gzip_path} to S3")
+            simple_s3_upload(gzip_path, s3_path)
+            success_count += 1
+            log.info(f"Uploaded {gzip_path} to S3: {s3_path}")
         except Exception as e:
             log.error(f"Error uploading {gzip_path}: {e}")
 
