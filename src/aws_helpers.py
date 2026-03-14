@@ -19,11 +19,9 @@ import traceback
 from src.boto3_upload import boto3_multi_upload
 
 VOLUME_PATH = '/genomes'
-# S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-# S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_ACCESS_KEY = ''
-S3_SECRET_KEY = ''
-S3_BUCKET = os.environ['S3_BUCKET']
+S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY', '')
+S3_SECRET_KEY = os.environ.get('S3_SECRET_KEY', '')
+S3_BUCKET = os.environ.get('S3_BUCKET', '')
 
 
 def get_volume_files(path):

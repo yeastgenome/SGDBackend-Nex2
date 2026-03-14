@@ -18,6 +18,9 @@ import requests
 from botocore import UNSIGNED
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.models import Referencedbentity, ReferenceFile, Filedbentity
 from scripts.loading.database_session import get_session
