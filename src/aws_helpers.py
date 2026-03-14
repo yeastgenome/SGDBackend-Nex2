@@ -196,11 +196,8 @@ def multi_part_upload_s3(file_path, bucket_name, s3_key_name=None, use_rr=True, 
 
 
 def upload_cb(complete, total):
-    logging.info("Uploaded")
-    #new_s3_file = bucket.get_key(s3_key_name)
-    #new_s3_file.set_acl("public-read")
-    #return new_s3_file
-    print("uploaded:" + str(total))
+    # Silent callback - progress is logged by the calling function
+    pass
 
 
 def standard_s3_file_transfer(bucket, s3_key_name, transfer_file, file_size_MB, use_rr):
