@@ -21,23 +21,25 @@ CREATED_BY = os.environ['DEFAULT_USER']
 supplFileDir = "scripts/loading/suppl_files/pubmed_pmc_download/"
 
 def load_data():
-    
+
     nex_session = get_session()
 
     log.info(datetime.now())
     log.info("Getting data from database...")
-    
+
     edam_to_id = dict([(x.format_name, x.edam_id) for x in nex_session.query(Edam).all()])
     src = nex_session.query(Source).filter_by(display_name='SGD').one_or_none()
     source_id = src.source_id
     pmid_to_reference_id_year = dict([(x.pmid, (x.dbentity_id, x.year)) for x in nex_session.query(Referencedbentity).filter(Referencedbentity.pmid.isnot(None)).all()])
     filename_to_file_id = dict([(x.previous_file_name, x.dbentity_id) for x in nex_session.query(Filedbentity).filter_by(description='PubMed Central download').all()])
-    
+
     log.info(datetime.now())
     log.info("Uploading files to s3...")
 
     i = 0
     for suppl_file in os.listdir(supplFileDir):
+        if not suppl_file.endswith('.tar.gz'):
+            continue
         i += 1
         pmid = int(suppl_file.replace('.tar.gz', ''))
         if pmid in pmid_to_reference_id_year:
@@ -54,7 +56,7 @@ def load_data():
     log.info(datetime.now())
     log.info("Done!")
 
-    
+
 def update_database_load_file_to_s3(nex_session, count, suppl_file_name, source_id, edam_to_id, year, reference_id):
 
     suppl_file_with_path = supplFileDir + suppl_file_name
@@ -69,17 +71,17 @@ def update_database_load_file_to_s3(nex_session, count, suppl_file_name, source_
 
     row = nex_session.query(Dbentity).filter(Dbentity.display_name == suppl_file_name).all()
     if len(row) > 0:
-        return 
+        return
 
-    data_id = edam_to_id.get('EDAM:2526')  
-    topic_id = edam_to_id.get('EDAM:3070') 
+    data_id = edam_to_id.get('EDAM:2526')
+    topic_id = edam_to_id.get('EDAM:3070')
     format_id = edam_to_id.get('EDAM:2330')
 
     from sqlalchemy import create_engine
     from src.models import DBSession
     engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600)
     DBSession.configure(bind=engine)
-        
+
     upload_file(CREATED_BY, local_file,
                 filename=suppl_file_name,
                 file_extension='gz',
@@ -114,7 +116,7 @@ def update_database_load_file_to_s3(nex_session, count, suppl_file_name, source_
                  path_id=path_id,
                  source_id=source_id,
                  created_by=CREATED_BY)
-    
+
     nex_session.add(x)
 
     x = ReferenceFile(file_id=file_id,
@@ -123,7 +125,7 @@ def update_database_load_file_to_s3(nex_session, count, suppl_file_name, source_
                       source_id=source_id,
                       created_by=CREATED_BY)
     nex_session.add(x)
-        
+
     nex_session.commit()
 
     log.info(str(count) + " done uploading " + suppl_file_name)
