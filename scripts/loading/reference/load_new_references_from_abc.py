@@ -3,6 +3,7 @@ import json
 from urllib import request
 from scripts.loading.database_session import get_session
 from scripts.loading.reference.add_abc_reference import add_paper
+from src.models import Referencedeleted
 import json
 from os import environ
 
@@ -34,6 +35,16 @@ def load_data():
         # print(sgdid, pmid, reference_id)
         if reference_id or sgdid is None:
             continue
+
+        # Check if paper was previously deleted - if so, remove from referencedeleted
+        # and allow it to be added as a normal paper
+        if pmid:
+            deleted_ref = nex_session.query(Referencedeleted).filter_by(pmid=int(pmid)).one_or_none()
+            if deleted_ref:
+                print("\nRemoving PMID:" + str(pmid) + " from referencedeleted table (was previously deleted)")
+                nex_session.delete(deleted_ref)
+                nex_session.commit()
+
         print("\nAdding paper for SGD:" + sgdid + "\n")
         add_paper(record, nex_session)
 
