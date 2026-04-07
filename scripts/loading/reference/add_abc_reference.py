@@ -355,16 +355,33 @@ def get_journal_id(nex_session, record, source_id=None):
     journal_abbr = record.get('resource_medline_abbreviation', '')
     journal_full_name = record.get('resource_title', '')
 
+    if journal_abbr is None:
+        journal_abbr = ''
+    if journal_full_name is None:
+        journal_full_name = ''
+
+    # First, try to find by med_abbr if it exists
     if journal_abbr:
         journals = nex_session.query(Journal).filter_by(med_abbr=journal_abbr).all()
+        if len(journals) > 0:
+            return journals[0].journal_id, journals[0].med_abbr, journal_full_name
+
+    # Check for existing journal by (med_abbr, title) to avoid unique constraint violation
+    # This is especially important when med_abbr is empty
+    if journal_full_name:
+        journals = nex_session.query(Journal).filter_by(
+            med_abbr=journal_abbr,
+            title=journal_full_name
+        ).all()
         if len(journals) > 0:
             return journals[0].journal_id, journals[0].med_abbr, journal_full_name
 
     if source_id is None:
         source_id = get_source_id(nex_session, 'PubMed')
 
-    if journal_full_name is None:
+    if not journal_full_name:
         return None, '', ''
+
     format_name = journal_full_name.replace(' ', '_') + journal_abbr.replace(' ', '_')
     j = Journal(display_name = journal_full_name,
                 format_name = format_name,
