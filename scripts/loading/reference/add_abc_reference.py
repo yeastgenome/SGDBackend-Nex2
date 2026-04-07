@@ -360,18 +360,23 @@ def get_journal_id(nex_session, record, source_id=None):
     if journal_full_name is None:
         journal_full_name = ''
 
+    # Truncate values to fit database column constraints
+    # med_abbr: varchar(100), title: varchar(200)
+    med_abbr_truncated = journal_abbr[:100]
+    title_truncated = journal_full_name[:200]
+
     # First, try to find by med_abbr if it exists
-    if journal_abbr:
-        journals = nex_session.query(Journal).filter_by(med_abbr=journal_abbr).all()
+    if med_abbr_truncated:
+        journals = nex_session.query(Journal).filter_by(med_abbr=med_abbr_truncated).all()
         if len(journals) > 0:
             return journals[0].journal_id, journals[0].med_abbr, journal_full_name
 
     # Check for existing journal by (med_abbr, title) to avoid unique constraint violation
     # This is especially important when med_abbr is empty
-    if journal_full_name:
+    if title_truncated:
         journals = nex_session.query(Journal).filter_by(
-            med_abbr=journal_abbr,
-            title=journal_full_name
+            med_abbr=med_abbr_truncated,
+            title=title_truncated
         ).all()
         if len(journals) > 0:
             return journals[0].journal_id, journals[0].med_abbr, journal_full_name
@@ -382,13 +387,16 @@ def get_journal_id(nex_session, record, source_id=None):
     if not journal_full_name:
         return None, '', ''
 
-    format_name = journal_full_name.replace(' ', '_') + journal_abbr.replace(' ', '_')
-    j = Journal(display_name = journal_full_name,
+    # format_name: varchar(100), obj_url: varchar(500), display_name: varchar(500)
+    format_name = (journal_full_name.replace(' ', '_') + journal_abbr.replace(' ', '_'))[:100]
+    obj_url = ('/journal/' + format_name)[:500]
+
+    j = Journal(display_name = journal_full_name[:500],
                 format_name = format_name,
-                title = journal_full_name,
-                med_abbr = journal_abbr,
+                title = title_truncated,
+                med_abbr = med_abbr_truncated,
                 source_id = source_id,
-                obj_url = '/journal/'+format_name,
+                obj_url = obj_url,
                 created_by = CREATED_BY)
     nex_session.add(j)
     nex_session.flush()
