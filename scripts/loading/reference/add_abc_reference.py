@@ -18,7 +18,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 
 def add_paper(record, nex_session=None):
-     
+
     if nex_session is None:
         nex_session = get_session()
 
@@ -28,12 +28,20 @@ def add_paper(record, nex_session=None):
      volume, issue, page, title, author_list, journal, journal_title, journal_id,
      curator_email_id) = extract_data(nex_session, record)
 
+    # Skip invalid/placeholder records that are missing required data
+    if year is None:
+        print("Skipping " + str(sgdid) + ": missing required year")
+        return None
+    if title and 'placeholder' in title.lower():
+        print("Skipping " + str(sgdid) + ": placeholder title")
+        return None
+
     email_id_to_created_by = email_id_to_dbuser_mapping()
-    
+
     created_by = CREATED_BY
     if curator_email_id:
         created_by = email_id_to_created_by.get(curator_email_id, CREATED_BY)
-        
+
     print("Inserting into sgdid table:")
 
     insert_sgdid(nex_session, sgdid, source_id, created_by)
