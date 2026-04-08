@@ -12,5 +12,6 @@ python scripts/loading/reference/reference_update_from_abc.py > "$LOG" 2>&1
 # python scripts/loading/reference/reference_update_non_pubmed_from_abc.py >> "$LOG" 2>&1
 python scripts/loading/reference/reference_display_name_update.py >> "$LOG" 2>&1
 python scripts/dumping/ncbi/dump_gene_pmid_pair.py >> "$LOG" 2>&1
+python scripts/loading/reference/remove_obsolete_references_from_abc.py >> "$LOG" 2>&1
 
 
