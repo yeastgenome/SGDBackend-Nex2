@@ -5,8 +5,7 @@ from src.models import Dbentity, Locusdbentity, Referencedbentity, Pathwaydbenti
     Taxonomy, Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
     Gosupportingevidence, LocusAlias, Edam, Path, FilePath, Complexdbentity, \
     Filedbentity, ReferenceAlias, Dnasequenceannotation, So, ComplexAlias
-from urllib.request import urlretrieve
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from datetime import datetime
 import logging
 import os
@@ -362,10 +361,18 @@ def write_header(fw, datestamp):
     fw.write("!Funding: NHGRI at US NIH, grant number U41-HG001315\n")
     fw.write("!\n")
     
+def download_file_with_headers(url, local_filename):
+    """Download a file with proper User-Agent header to avoid 403 errors."""
+    headers = {'User-Agent': 'SGD/1.0 (https://www.yeastgenome.org; sgd-helpdesk@lists.stanford.edu)'}
+    request = Request(url, headers=headers)
+    with urlopen(request) as response, open(local_filename, 'wb') as out_file:
+        out_file.write(response.read())
+
+
 def download_sgd_gaf_from_go_central():
 
     sgd_gaf_url = "http://current.geneontology.org/annotations/sgd.gaf.gz"
-    urlretrieve(sgd_gaf_url, gaf_from_go)
+    download_file_with_headers(sgd_gaf_url, gaf_from_go)
     
 def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_id, edam_to_id, datestamp):
 
@@ -502,9 +509,9 @@ def read_noctua_data(noctua_gpad_file):
 
 
 if __name__ == '__main__':
-                   
+
     noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
-    urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
+    download_file_with_headers(noctua_path + noctua_gpad_file, noctua_gpad_file)
 
     dump_data(noctua_gpad_file)

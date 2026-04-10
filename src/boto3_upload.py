@@ -5,9 +5,9 @@ import sys
 import logging
 from boto3.s3.transfer import TransferConfig
 
-S3_BUCKET = os.environ.get('S3_BUCKET', '')
-S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY', '')
-S3_SECRET_KEY = os.environ.get('S3_SECRET_KEY', '')
+S3_BUCKET = os.environ['S3_BUCKET']
+S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
+S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
 
 session = boto3.Session(
     aws_access_key_id=S3_ACCESS_KEY,
