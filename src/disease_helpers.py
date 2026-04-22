@@ -21,7 +21,14 @@ RO_ID = '1968075'
 
 # Evidence codes that require 'with_ortholog' field
 # IGI and ISS require with_ortholog; IMP and IDA do not
-EVIDENCE_CODES_REQUIRING_WITH = ['IGI', 'ISS']
+EVIDENCE_CODES_REQUIRING_WITH = [
+    'genetic interaction evidence used in manual assertion',  # IGI (ECO:0000316)
+    'sequence similarity evidence used in manual assertion',  # ISS (ECO:0000250)
+]
+EVIDENCE_CODES_PROHIBITING_WITH = [
+    'mutant phenotype evidence used in manual assertion',     # IMP (ECO:0000315)
+    'direct assay evidence used in manual assertion',         # IDA (ECO:0000314)
+]
 
 models_helper = ModelsHelper()
 

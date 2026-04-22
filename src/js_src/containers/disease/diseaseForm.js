@@ -15,9 +15,22 @@ const ANNOTATION_TYPES = [null, 'computational', 'high-throughput', 'manually cu
 const SKIP = 5;
 const TIMEOUT = 120000;
 // Evidence codes that require 'with_ortholog' field (IGI, ISS require it; IMP, IDA do not)
-const EVIDENCE_CODES_REQUIRING_WITH = ['IGI', 'ISS'];
+const EVIDENCE_CODES_REQUIRING_WITH = [
+  'genetic interaction evidence used in manual assertion',  // IGI (ECO:0000316)
+  'sequence similarity evidence used in manual assertion',  // ISS (ECO:0000250)
+];
 // Evidence codes where 'with_ortholog' is invalid and should be disabled
-const EVIDENCE_CODES_PROHIBITING_WITH = ['IMP', 'IDA'];
+const EVIDENCE_CODES_PROHIBITING_WITH = [
+  'mutant phenotype evidence used in manual assertion',     // IMP (ECO:0000315)
+  'direct assay evidence used in manual assertion',         // IDA (ECO:0000314)
+];
+// Mapping from ECO display names to short GO evidence codes
+const ECO_TO_SHORT_CODE = {
+  'genetic interaction evidence used in manual assertion': 'IGI',
+  'sequence similarity evidence used in manual assertion': 'ISS',
+  'mutant phenotype evidence used in manual assertion': 'IMP',
+  'direct assay evidence used in manual assertion': 'IDA',
+};
 
 
 class DiseaseForm extends Component {
@@ -177,7 +190,8 @@ class DiseaseForm extends Component {
     // Client-side validation: check if with_ortholog is required but missing
     if (this.requiresWithOrtholog() && !this.props.disease.with_ortholog?.trim()) {
       const ecoName = this.getSelectedEcoDisplayName();
-      this.props.dispatch(setError(`With Ortholog is required for ${ecoName} evidence code`));
+      const shortCode = ECO_TO_SHORT_CODE[ecoName] || ecoName;
+      this.props.dispatch(setError(`With Ortholog is required for ${shortCode} evidence code`));
       return;
     }
 
@@ -254,6 +268,7 @@ class DiseaseForm extends Component {
 
   renderWithOrthologLabel() {
     const ecoName = this.getSelectedEcoDisplayName();
+    const shortCode = ecoName ? ECO_TO_SHORT_CODE[ecoName] : null;
 
     if (!ecoName) {
       // No ECO selected yet
@@ -262,12 +277,12 @@ class DiseaseForm extends Component {
 
     if (this.requiresWithOrtholog()) {
       // IGI or ISS selected - required
-      return <label>With Ortholog <span style={{color: 'red'}}>* (required for {ecoName})</span></label>;
+      return <label>With Ortholog <span style={{color: 'red'}}>* (required for {shortCode || ecoName})</span></label>;
     }
 
     if (this.prohibitsWithOrtholog()) {
       // IMP or IDA selected - disabled/not allowed
-      return <label>With Ortholog <span style={{color: 'gray'}}>(not applicable for {ecoName})</span></label>;
+      return <label>With Ortholog <span style={{color: 'gray'}}>(not applicable for {shortCode || ecoName})</span></label>;
     }
 
     // Other evidence codes
