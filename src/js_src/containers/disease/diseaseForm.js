@@ -14,6 +14,8 @@ const GET_DISEASES = 'get_diseases';
 const ANNOTATION_TYPES = [null, 'computational', 'high-throughput', 'manually curated'];
 const SKIP = 5;
 const TIMEOUT = 120000;
+// Evidence codes that require 'with_ortholog' field (IGI, ISS require it; IMP, IDA do not)
+const EVIDENCE_CODES_REQUIRING_WITH = ['IGI', 'ISS'];
 
 
 class DiseaseForm extends Component {
@@ -29,6 +31,7 @@ class DiseaseForm extends Component {
     this.handleSelectDisease = this.handleSelectDisease.bind(this);
     this.handleNextPrevious = this.handleNextPrevious.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
+    this.requiresWithOrtholog = this.requiresWithOrtholog.bind(this);
 
     this.state = {
       list_of_eco: [],
@@ -198,6 +201,17 @@ class DiseaseForm extends Component {
     }
   }
 
+  requiresWithOrtholog() {
+    // Check if the selected ECO code requires with_ortholog (IGI, ISS require it; IMP, IDA do not)
+    const selectedEcoId = this.props.disease.eco_id;
+    if (!selectedEcoId) return false;
+
+    const selectedEco = this.state.list_of_eco.find(eco => String(eco.eco_id) === String(selectedEcoId));
+    if (!selectedEco) return false;
+
+    return EVIDENCE_CODES_REQUIRING_WITH.includes(selectedEco.display_name);
+  }
+
   renderActions() {
     var pageIndex = this.state.pageIndex;
     var count_of_diseases = this.state.list_of_diseases.length;
@@ -362,7 +376,7 @@ class DiseaseForm extends Component {
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <label> With Ortholog </label>
+                  <label> With Ortholog {this.requiresWithOrtholog() ? <span style={{color: 'red'}}>* (required for {this.state.list_of_eco.find(eco => String(eco.eco_id) === String(this.props.disease.eco_id))?.display_name})</span> : <span style={{color: 'gray'}}>(not required for IMP/IDA)</span>}</label>
                 </div>
               </div>
               <div className='row'>
