@@ -16,19 +16,35 @@ const SKIP = 5;
 const TIMEOUT = 120000;
 // Evidence codes that require 'with_ortholog' field (IGI, ISS require it; IMP, IDA do not)
 const EVIDENCE_CODES_REQUIRING_WITH = [
-  'genetic interaction evidence used in manual assertion',  // IGI (ECO:0000316)
-  'sequence similarity evidence used in manual assertion',  // ISS (ECO:0000250)
+  'genetic interaction evidence',                              // IGI base
+  'genetic interaction evidence used in automatic assertion',  // IGI auto
+  'genetic interaction evidence used in manual assertion',     // IGI manual
+  'sequence similarity evidence',                              // ISS base
+  'sequence similarity evidence used in automatic assertion',  // ISS auto
+  'sequence similarity evidence used in manual assertion',     // ISS manual
 ];
 // Evidence codes where 'with_ortholog' is invalid and should be disabled
 const EVIDENCE_CODES_PROHIBITING_WITH = [
-  'mutant phenotype evidence used in manual assertion',     // IMP (ECO:0000315)
-  'direct assay evidence used in manual assertion',         // IDA (ECO:0000314)
+  'mutant phenotype evidence',                                 // IMP base
+  'mutant phenotype evidence used in automatic assertion',     // IMP auto
+  'mutant phenotype evidence used in manual assertion',        // IMP manual
+  'direct assay evidence',                                     // IDA base
+  'direct assay evidence used in automatic assertion',         // IDA auto
+  'direct assay evidence used in manual assertion',            // IDA manual
 ];
 // Mapping from ECO display names to short GO evidence codes
 const ECO_TO_SHORT_CODE = {
+  'genetic interaction evidence': 'IGI',
+  'genetic interaction evidence used in automatic assertion': 'IGI',
   'genetic interaction evidence used in manual assertion': 'IGI',
+  'sequence similarity evidence': 'ISS',
+  'sequence similarity evidence used in automatic assertion': 'ISS',
   'sequence similarity evidence used in manual assertion': 'ISS',
+  'mutant phenotype evidence': 'IMP',
+  'mutant phenotype evidence used in automatic assertion': 'IMP',
   'mutant phenotype evidence used in manual assertion': 'IMP',
+  'direct assay evidence': 'IDA',
+  'direct assay evidence used in automatic assertion': 'IDA',
   'direct assay evidence used in manual assertion': 'IDA',
 };
 
