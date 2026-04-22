@@ -230,13 +230,9 @@ def update_aliases(nex_session, go_id, curr_aliases, new_aliases, source_id, goi
 
     for (alias, type) in curr_aliases:
         if(alias, type) not in new_aliases:
-            ## remove the old one                         
-            
-            # print "NEED TO DELETE ALIAS:", alias, type
-            continue
-
+            ## remove the old one
             to_delete = nex_session.query(GoAlias).filter_by(go_id=go_id, display_name=alias, alias_type=type).first()
-            nex_session.delete(to_delete) 
+            nex_session.delete(to_delete)
             fw.write("The old alias = " + alias + " has been deleted for go_id = " + str(go_id) + "\n")
              
 
