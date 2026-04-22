@@ -16,6 +16,8 @@ const SKIP = 5;
 const TIMEOUT = 120000;
 // Evidence codes that require 'with_ortholog' field (IGI, ISS require it; IMP, IDA do not)
 const EVIDENCE_CODES_REQUIRING_WITH = ['IGI', 'ISS'];
+// Evidence codes where 'with_ortholog' is invalid and should be disabled
+const EVIDENCE_CODES_PROHIBITING_WITH = ['IMP', 'IDA'];
 
 
 class DiseaseForm extends Component {
@@ -32,6 +34,9 @@ class DiseaseForm extends Component {
     this.handleNextPrevious = this.handleNextPrevious.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
     this.requiresWithOrtholog = this.requiresWithOrtholog.bind(this);
+    this.prohibitsWithOrtholog = this.prohibitsWithOrtholog.bind(this);
+    this.getSelectedEcoDisplayName = this.getSelectedEcoDisplayName.bind(this);
+    this.renderWithOrthologLabel = this.renderWithOrthologLabel.bind(this);
 
     this.state = {
       list_of_eco: [],
@@ -149,17 +154,33 @@ class DiseaseForm extends Component {
   }
 
   handleChange() {
-
     var data = new FormData(this.refs.form);
     var currentDisease = {};
     for (var key of data.entries()) {
       currentDisease[key[0]] = key[1];
     }
+
+    // Clear with_ortholog when switching to an evidence code that prohibits it (IMP, IDA)
+    if (currentDisease.eco_id) {
+      const selectedEco = this.state.list_of_eco.find(eco => String(eco.eco_id) === String(currentDisease.eco_id));
+      if (selectedEco && EVIDENCE_CODES_PROHIBITING_WITH.includes(selectedEco.display_name)) {
+        currentDisease.with_ortholog = '';
+      }
+    }
+
     this.props.dispatch(setDisease(currentDisease));
   }
 
   handleSubmit(e) {
     e.preventDefault();
+
+    // Client-side validation: check if with_ortholog is required but missing
+    if (this.requiresWithOrtholog() && !this.props.disease.with_ortholog?.trim()) {
+      const ecoName = this.getSelectedEcoDisplayName();
+      this.props.dispatch(setError(`With Ortholog is required for ${ecoName} evidence code`));
+      return;
+    }
+
     this.setState({ isLoading: true });
     fetchData(DISEASES, {
       type: 'POST',
@@ -210,6 +231,47 @@ class DiseaseForm extends Component {
     if (!selectedEco) return false;
 
     return EVIDENCE_CODES_REQUIRING_WITH.includes(selectedEco.display_name);
+  }
+
+  prohibitsWithOrtholog() {
+    // Check if the selected ECO code prohibits with_ortholog (IMP, IDA)
+    const selectedEcoId = this.props.disease.eco_id;
+    if (!selectedEcoId) return false;
+
+    const selectedEco = this.state.list_of_eco.find(eco => String(eco.eco_id) === String(selectedEcoId));
+    if (!selectedEco) return false;
+
+    return EVIDENCE_CODES_PROHIBITING_WITH.includes(selectedEco.display_name);
+  }
+
+  getSelectedEcoDisplayName() {
+    const selectedEcoId = this.props.disease.eco_id;
+    if (!selectedEcoId) return null;
+
+    const selectedEco = this.state.list_of_eco.find(eco => String(eco.eco_id) === String(selectedEcoId));
+    return selectedEco ? selectedEco.display_name : null;
+  }
+
+  renderWithOrthologLabel() {
+    const ecoName = this.getSelectedEcoDisplayName();
+
+    if (!ecoName) {
+      // No ECO selected yet
+      return <label>With Ortholog <span style={{color: 'gray'}}>(select Evidence Code first)</span></label>;
+    }
+
+    if (this.requiresWithOrtholog()) {
+      // IGI or ISS selected - required
+      return <label>With Ortholog <span style={{color: 'red'}}>* (required for {ecoName})</span></label>;
+    }
+
+    if (this.prohibitsWithOrtholog()) {
+      // IMP or IDA selected - disabled/not allowed
+      return <label>With Ortholog <span style={{color: 'gray'}}>(not applicable for {ecoName})</span></label>;
+    }
+
+    // Other evidence codes
+    return <label>With Ortholog <span style={{color: 'gray'}}>(optional)</span></label>;
   }
 
   renderActions() {
@@ -376,12 +438,20 @@ class DiseaseForm extends Component {
             <div className='columns medium-12'>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <label> With Ortholog {this.requiresWithOrtholog() ? <span style={{color: 'red'}}>* (required for {this.state.list_of_eco.find(eco => String(eco.eco_id) === String(this.props.disease.eco_id))?.display_name})</span> : <span style={{color: 'gray'}}>(not required for IMP/IDA)</span>}</label>
+                  {this.renderWithOrthologLabel()}
                 </div>
               </div>
               <div className='row'>
                 <div className='columns medium-12'>
-                  <input type='text' name='with_ortholog' onChange={this.handleChange} value={this.props.disease.with_ortholog} />
+                  <input
+                    type='text'
+                    name='with_ortholog'
+                    onChange={this.handleChange}
+                    value={this.props.disease.with_ortholog}
+                    disabled={this.prohibitsWithOrtholog()}
+                    style={this.prohibitsWithOrtholog() ? {backgroundColor: '#f0f0f0', cursor: 'not-allowed'} : {}}
+                    placeholder={this.prohibitsWithOrtholog() ? 'Not applicable for this evidence code' : ''}
+                  />
                 </div>
               </div>
             </div>
