@@ -37,6 +37,21 @@ EVIDENCE_CODES_PROHIBITING_WITH = [
     'direct assay evidence used in automatic assertion',         # IDA auto
     'direct assay evidence used in manual assertion',            # IDA manual
 ]
+# Mapping from ECO display names to short GO evidence codes
+ECO_TO_SHORT_CODE = {
+    'genetic interaction evidence': 'IGI',
+    'genetic interaction evidence used in automatic assertion': 'IGI',
+    'genetic interaction evidence used in manual assertion': 'IGI',
+    'sequence similarity evidence': 'ISS',
+    'sequence similarity evidence used in automatic assertion': 'ISS',
+    'sequence similarity evidence used in manual assertion': 'ISS',
+    'mutant phenotype evidence': 'IMP',
+    'mutant phenotype evidence used in automatic assertion': 'IMP',
+    'mutant phenotype evidence used in manual assertion': 'IMP',
+    'direct assay evidence': 'IDA',
+    'direct assay evidence used in automatic assertion': 'IDA',
+    'direct assay evidence used in manual assertion': 'IDA',
+}
 
 models_helper = ModelsHelper()
 
@@ -81,7 +96,8 @@ def insert_update_disease_annotations(request):
         # Only require with_ortholog for IGI and ISS evidence codes
         requires_with = eco_obj.display_name in EVIDENCE_CODES_REQUIRING_WITH
         if requires_with and not with_ortholog:
-            return HTTPBadRequest(body=json.dumps({'error': "with_ortholog is required for " + eco_obj.display_name + " evidence code"}), content_type='text/json')
+            short_code = ECO_TO_SHORT_CODE.get(eco_obj.display_name, eco_obj.display_name)
+            return HTTPBadRequest(body=json.dumps({'error': "With Ortholog is required for " + short_code + " evidence code"}), content_type='text/json')
 
         try:
             dbentity_in_db = None
