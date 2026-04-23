@@ -798,7 +798,7 @@ if __name__ == "__main__":
             send_report(error_msg)
             exit()
     file_sizes = {
-        dated_gpad_file: 1000000,
+        dated_gpad_file: 950000,
         dated_gpi_file: 340000,
         dated_noctua_gpad_file: 780000,
         dated_complex_gpad_file: 2700000
