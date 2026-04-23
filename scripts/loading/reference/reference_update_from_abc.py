@@ -838,7 +838,7 @@ def parse_process_json_data(
         author_order += 1
         authors.append((author_name.strip(), orcid, author_order))
 
-    journalAbbr = json_data.get('resource_medline_abbreviation', '')
+    journalAbbr = json_data.get('resource_title_abbreviation', '')
     journalName = json_data.get('resource_title', '')
     journalId = journal_abbr_to_journal_id.get(journalAbbr)
     journalId2 = journal_name_to_journal_id.get(journalName)
