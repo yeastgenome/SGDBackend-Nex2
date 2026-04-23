@@ -19,6 +19,40 @@ OBJ_URL = 'http://www.alliancegenome.org/gene/'
 EVIDENCE_TYPE = 'with'
 RO_ID = '1968075'
 
+# Evidence codes that require 'with_ortholog' field
+# IGI and ISS require with_ortholog; IMP and IDA do not
+EVIDENCE_CODES_REQUIRING_WITH = [
+    'genetic interaction evidence',                              # IGI base
+    'genetic interaction evidence used in automatic assertion',  # IGI auto
+    'genetic interaction evidence used in manual assertion',     # IGI manual
+    'sequence similarity evidence',                              # ISS base
+    'sequence similarity evidence used in automatic assertion',  # ISS auto
+    'sequence similarity evidence used in manual assertion',     # ISS manual
+]
+EVIDENCE_CODES_PROHIBITING_WITH = [
+    'mutant phenotype evidence',                                 # IMP base
+    'mutant phenotype evidence used in automatic assertion',     # IMP auto
+    'mutant phenotype evidence used in manual assertion',        # IMP manual
+    'direct assay evidence',                                     # IDA base
+    'direct assay evidence used in automatic assertion',         # IDA auto
+    'direct assay evidence used in manual assertion',            # IDA manual
+]
+# Mapping from ECO display names to short GO evidence codes
+ECO_TO_SHORT_CODE = {
+    'genetic interaction evidence': 'IGI',
+    'genetic interaction evidence used in automatic assertion': 'IGI',
+    'genetic interaction evidence used in manual assertion': 'IGI',
+    'sequence similarity evidence': 'ISS',
+    'sequence similarity evidence used in automatic assertion': 'ISS',
+    'sequence similarity evidence used in manual assertion': 'ISS',
+    'mutant phenotype evidence': 'IMP',
+    'mutant phenotype evidence used in automatic assertion': 'IMP',
+    'mutant phenotype evidence used in manual assertion': 'IMP',
+    'direct assay evidence': 'IDA',
+    'direct assay evidence used in automatic assertion': 'IDA',
+    'direct assay evidence used in manual assertion': 'IDA',
+}
+
 models_helper = ModelsHelper()
 
 def insert_update_disease_annotations(request):
@@ -51,10 +85,20 @@ def insert_update_disease_annotations(request):
         if not annotation_type:
             return HTTPBadRequest(body=json.dumps({'error': "annotation type is blank"}), content_type='text/json')
 
+        # Look up the ECO code to determine if with_ortholog is required
+        eco_obj = DBSession.query(Eco).filter(Eco.eco_id == eco_id).one_or_none()
+        if not eco_obj:
+            return HTTPBadRequest(body=json.dumps({'error': "eco_id not found in database"}), content_type='text/json')
+
         with_ortholog = request.params.get('with_ortholog')
-        if not with_ortholog:
-            return HTTPBadRequest(body=json.dumps({'error': "with_ortholog is blank"}), content_type='text/json')
-         
+        with_ortholog = with_ortholog.strip() if with_ortholog else None
+
+        # Only require with_ortholog for IGI and ISS evidence codes
+        requires_with = eco_obj.display_name in EVIDENCE_CODES_REQUIRING_WITH
+        if requires_with and not with_ortholog:
+            short_code = ECO_TO_SHORT_CODE.get(eco_obj.display_name, eco_obj.display_name)
+            return HTTPBadRequest(body=json.dumps({'error': "With Ortholog is required for " + short_code + " evidence code"}), content_type='text/json')
+
         try:
             dbentity_in_db = None
             dbentity_in_db = DBSession.query(Dbentity).filter(or_(Dbentity.sgdid == dbentity_id, Dbentity.format_name == dbentity_id)).filter(Dbentity.subclass == 'LOCUS').one_or_none()
@@ -91,7 +135,7 @@ def insert_update_disease_annotations(request):
         disease_in_db = []
 
         if (int(annotation_id) > 0):
-            
+
             try:
                 update_disease = {'dbentity_id': dbentity_id,
                                     'source_id': source_id,
@@ -102,16 +146,40 @@ def insert_update_disease_annotations(request):
                                     'annotation_type': annotation_type,
                                     'disease_id': disease_id
                                     }
-                update_dse = {'dbxref_id': with_ortholog,
-                               'obj_url': OBJ_URL + with_ortholog}
                 curator_session.query(Diseaseannotation).filter(Diseaseannotation.annotation_id == annotation_id).update(update_disease)
-                curator_session.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == annotation_id).update(update_dse)
+
+                # Handle Diseasesupportingevidence based on evidence code
+                existing_dse = curator_session.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == annotation_id).one_or_none()
+
+                if with_ortholog:
+                    # Evidence code requires with_ortholog (IGI, ISS)
+                    if existing_dse:
+                        # Update existing record
+                        update_dse = {'dbxref_id': with_ortholog,
+                                      'obj_url': OBJ_URL + with_ortholog}
+                        curator_session.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == annotation_id).update(update_dse)
+                    else:
+                        # Create new record
+                        dse = Diseasesupportingevidence(
+                                        annotation_id=int(annotation_id),
+                                        group_id=GROUP_ID,
+                                        dbxref_id=with_ortholog,
+                                        obj_url=OBJ_URL + with_ortholog,
+                                        evidence_type='with',
+                                        created_by=CREATED_BY)
+                        curator_session.add(dse)
+                else:
+                    # Evidence code does not require with_ortholog (IMP, IDA)
+                    if existing_dse:
+                        # Delete existing record
+                        curator_session.delete(existing_dse)
+
                 curator_session.flush()
                 transaction.commit()
-               
+
                 isSuccess = True
                 returnValue = 'Record updated successfully.'
-                
+
                 disease = curator_session.query(Diseaseannotation).filter(Diseaseannotation.annotation_id == annotation_id).one_or_none()
                 dse = curator_session.query(Diseasesupportingevidence).filter(Diseasesupportingevidence.annotation_id == annotation_id).one_or_none()
 
@@ -126,7 +194,7 @@ def insert_update_disease_annotations(request):
                     'eco_id': disease.eco_id,
                     'association_type': disease.association_type,
                     'source_id': disease.source_id,
-                    'with_ortholog': dse.dbxref_id,
+                    'with_ortholog': dse.dbxref_id if dse else '',
                     'annotation_type': disease.annotation_type,
                 }
                 if disease.eco:
@@ -182,14 +250,16 @@ def insert_update_disease_annotations(request):
                                     date_assigned = date_created)
                 curator_session.add(y)
                 curator_session.flush()
-                dse = Diseasesupportingevidence(
-                                annotation_id=y.annotation_id,
-                                group_id = GROUP_ID,
-                                dbxref_id=with_ortholog,
-                                obj_url=OBJ_URL+with_ortholog,
-                                evidence_type = 'with',
-                                created_by=CREATED_BY)
-                curator_session.add(dse)
+                # Only create Diseasesupportingevidence for evidence codes that require with_ortholog (IGI, ISS)
+                if with_ortholog:
+                    dse = Diseasesupportingevidence(
+                                    annotation_id=y.annotation_id,
+                                    group_id=GROUP_ID,
+                                    dbxref_id=with_ortholog,
+                                    obj_url=OBJ_URL + with_ortholog,
+                                    evidence_type='with',
+                                    created_by=CREATED_BY)
+                    curator_session.add(dse)
                 update_ldb = {'has_disease': True}
                 curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == dbentity_id).update(update_ldb)
                 transaction.commit()
@@ -521,34 +591,36 @@ def upload_disease_file(request):
                             eco_id = eco_displayname_to_id[code]
                             disease['eco_id'] = eco_id
                             r = Diseaseannotation(
-                                dbentity_id = disease['dbentity_id'],
-                                disease_id = disease['disease_id'], 
-                                source_id = SOURCE_ID,
-                                taxonomy_id = disease['taxonomy_id'],
-                                reference_id = disease['reference_id'], 
-                                eco_id = disease['eco_id'],
-                                association_type = int(RO_ID),
-                                date_assigned = datetime.now(),
-                                created_by = CREATED_BY,
-                                annotation_type = disease['annotation_type']
+                                dbentity_id=disease['dbentity_id'],
+                                disease_id=disease['disease_id'],
+                                source_id=SOURCE_ID,
+                                taxonomy_id=disease['taxonomy_id'],
+                                reference_id=disease['reference_id'],
+                                eco_id=disease['eco_id'],
+                                association_type=int(RO_ID),
+                                date_assigned=datetime.now(),
+                                created_by=CREATED_BY,
+                                annotation_type=disease['annotation_type']
                             )
                             curator_session.add(r)
                             curator_session.flush()
                             annotation_id = r.annotation_id
-                            daf_evidence_row = Diseasesupportingevidence(
-                                annotation_id=annotation_id,
-                                group_id = GROUP_ID,
-                                dbxref_id=disease['with_ortholog'],
-                                obj_url=OBJ_URL+disease['with_ortholog'],
-                                evidence_type = 'with',
-                                created_by=CREATED_BY
-                            )
-                        curator_session.add(daf_evidence_row)
-                        update_ldb = {'has_disease': True}
-                        curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == disease['dbentity_id']).update(update_ldb)
-                        transaction.commit()
-                        curator_session.flush()
-                        INSERT = INSERT + 1            
+                            # Only create Diseasesupportingevidence for evidence codes that require with_ortholog
+                            if disease['with_ortholog'] and code in EVIDENCE_CODES_REQUIRING_WITH:
+                                daf_evidence_row = Diseasesupportingevidence(
+                                    annotation_id=annotation_id,
+                                    group_id=GROUP_ID,
+                                    dbxref_id=disease['with_ortholog'],
+                                    obj_url=OBJ_URL + disease['with_ortholog'],
+                                    evidence_type='with',
+                                    created_by=CREATED_BY
+                                )
+                                curator_session.add(daf_evidence_row)
+                            update_ldb = {'has_disease': True}
+                            curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == disease['dbentity_id']).update(update_ldb)
+                            transaction.commit()
+                            curator_session.flush()
+                            INSERT = INSERT + 1            
             try:
                 transaction.commit()
                 err = '\n'.join(list_of_diseases_errors)
