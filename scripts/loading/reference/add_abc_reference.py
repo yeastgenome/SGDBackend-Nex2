@@ -360,7 +360,7 @@ def convert_publication_status(pubStatus):
 
 def get_journal_id(nex_session, record, source_id=None):
 
-    journal_abbr = record.get('resource_medline_abbreviation', '')
+    journal_abbr = record.get('resource_title_abbreviation', '')
     journal_full_name = record.get('resource_title', '')
 
     if journal_abbr is None:
