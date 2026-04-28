@@ -69,12 +69,10 @@ def download_reference_json():
     """Download reference_new_SGD.json from ABC API."""
     url = ABC_API_ROOT_URL + "reference/get_recently_sorted_references/SGD"
     try:
-        log.info("Downloading " + url)
         req = request.urlopen(url)
         data = req.read()
         with open(REFERENCE_JSON_FILE, 'wb') as fh:
             fh.write(data)
-        log.info("Downloaded reference_new_SGD.json successfully\n")
     except Exception as e:
         log.error("Error downloading the file: " + REFERENCE_JSON_FILE + ". Error=" + str(e))
         sys.exit(1)
@@ -163,17 +161,18 @@ def get_sources_from_gaf_file(pmids_to_check):
     # Download GAF file
     file_name = sgd_gaf_url.split("/")[-1]
     file_with_path = DATA_DIR + file_name
-    log.info(f"Downloading SGD GAF file from {sgd_gaf_url}")
     try:
         response = requests.get(sgd_gaf_url, timeout=300, stream=True)
         response.raise_for_status()
         with open(file_with_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-        log.info(f"Downloaded {file_name} successfully\n")
     except requests.RequestException as e:
         log.error(f"Failed to download SGD GAF file: {e}")
         return pmid_sources
+
+    # Convert pmids_to_check to strings for comparison
+    pmids_to_check_str = {str(pmid) for pmid in pmids_to_check}
 
     # Parse GAF file and extract sources for PMIDs we're looking for
     try:
@@ -201,7 +200,7 @@ def get_sources_from_gaf_file(pmids_to_check):
                     ref = ref.strip()
                     if ref.startswith("PMID:"):
                         pmid = ref.replace("PMID:", "")
-                        if pmid in pmids_to_check:
+                        if pmid in pmids_to_check_str:
                             if pmid not in pmid_sources:
                                 pmid_sources[pmid] = set()
                             pmid_sources[pmid].add(source)
@@ -218,6 +217,9 @@ def get_sources_from_interaction_files(pmids_to_check):
     """
     pmid_sources = {}
 
+    # Convert pmids_to_check to strings for comparison
+    pmids_to_check_str = {str(pmid) for pmid in pmids_to_check}
+
     # SGD has both GEN and MOL interaction files
     interaction_types = ["GEN", "MOL"]
 
@@ -226,16 +228,13 @@ def get_sources_from_interaction_files(pmids_to_check):
         url = FMS_INTERACTION_DOWNLOAD_URL + file_name
         file_with_path = DATA_DIR + file_name
 
-        log.info(f"Downloading SGD {int_type} interaction file from {url}")
         try:
             response = requests.get(url, timeout=300, stream=True)
             response.raise_for_status()
             with open(file_with_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-            log.info(f"Downloaded {file_name} successfully")
         except requests.RequestException as e:
-            log.warning(f"Failed to download {file_name}: {e}")
             continue
 
         # Parse interaction file
@@ -256,7 +255,7 @@ def get_sources_from_interaction_files(pmids_to_check):
                         elif pub_id.startswith("pubmed:"):
                             pmid = pub_id.replace("pubmed:", "")
 
-                    if pmid and pmid in pmids_to_check:
+                    if pmid and pmid in pmids_to_check_str:
                         source = "Unknown"
                         if len(items) > 12:
                             # Extract source from column 13 (e.g., "psi-mi:MI:0469(IntAct)")
@@ -267,9 +266,8 @@ def get_sources_from_interaction_files(pmids_to_check):
                             pmid_sources[pmid] = set()
                         pmid_sources[pmid].add(source)
         except Exception as e:
-            log.warning(f"Error reading interaction file {file_name}: {e}")
+            pass
 
-    log.info("")
     return pmid_sources
 
 
