@@ -34,33 +34,19 @@ def check_data():
     # Parse JSON and extract PMIDs with Gaf or Interaction mod_corpus_sort_source
     gaf_pmids, interaction_pmids = extract_gaf_interaction_pmids()
 
-    log.info(f"Found {len(gaf_pmids)} Gaf PMIDs in JSON: {sorted(gaf_pmids)}")
-    log.info(f"Found {len(interaction_pmids)} Interaction PMIDs in JSON: {sorted(interaction_pmids)}\n")
-
     # Get PMIDs that are in the SGD database
     pmid_to_ref_id = get_pmids_in_db(nex_session)
 
     # Filter to only PMIDs in the database
     gaf_pmids_in_db = set()
-    gaf_pmids_not_in_db = set()
     for pmid in gaf_pmids:
         if pmid in pmid_to_ref_id:
             gaf_pmids_in_db.add(pmid)
-        else:
-            gaf_pmids_not_in_db.add(pmid)
 
     interaction_pmids_in_db = set()
-    interaction_pmids_not_in_db = set()
     for pmid in interaction_pmids:
         if pmid in pmid_to_ref_id:
             interaction_pmids_in_db.add(pmid)
-        else:
-            interaction_pmids_not_in_db.add(pmid)
-
-    if gaf_pmids_not_in_db:
-        log.info(f"Gaf PMIDs NOT in SGD database (skipped): {sorted(gaf_pmids_not_in_db)}")
-    if interaction_pmids_not_in_db:
-        log.info(f"Interaction PMIDs NOT in SGD database (skipped): {sorted(interaction_pmids_not_in_db)}\n")
 
     # Get sources from GAF file for GAF PMIDs
     gaf_pmid_sources = {}
@@ -143,7 +129,6 @@ def get_pmids_in_db(nex_session):
     ).fetchall()
     for row in rows:
         pmid_to_ref_id[int(row[0])] = row[1]
-    log.info(f"Found {len(pmid_to_ref_id)} PMIDs in SGD database\n")
     return pmid_to_ref_id
 
 
