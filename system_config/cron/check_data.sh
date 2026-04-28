@@ -12,3 +12,4 @@ python scripts/checking/check_ontology.py
 python scripts/checking/check_NTR.py
 python scripts/checking/check_suppl_files.py
 python scripts/checking/check_gene_name_reservation.py
+python scripts/checking/check_new_gaf_interaction_papers.py
