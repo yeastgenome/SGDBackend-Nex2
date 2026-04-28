@@ -116,15 +116,21 @@ def extract_gaf_interaction_pmids():
         if not pmid:
             continue
 
+        # Convert to integer for comparison with database
+        try:
+            pmid_int = int(pmid)
+        except ValueError:
+            continue
+
         # Check mod_corpus_associations for SGD with Gaf or Interaction source
         for mca in record.get('mod_corpus_associations', []):
             if mca.get('mod_abbreviation') != 'SGD':
                 continue
             sort_source = mca.get('mod_corpus_sort_source', '')
             if sort_source == 'Gaf':
-                gaf_pmids.add(pmid)
+                gaf_pmids.add(pmid_int)
             elif sort_source == 'Interaction':
-                interaction_pmids.add(pmid)
+                interaction_pmids.add(pmid_int)
 
     return gaf_pmids, interaction_pmids
 
@@ -136,7 +142,8 @@ def get_pmids_in_db(nex_session):
         "SELECT pmid, dbentity_id FROM nex.referencedbentity WHERE pmid IS NOT NULL"
     ).fetchall()
     for row in rows:
-        pmid_to_ref_id[str(row[0])] = row[1]
+        pmid_to_ref_id[int(row[0])] = row[1]
+    log.info(f"Found {len(pmid_to_ref_id)} PMIDs in SGD database\n")
     return pmid_to_ref_id
 
 
@@ -286,8 +293,8 @@ def print_report(gaf_pmids, gaf_pmid_sources, interaction_pmids, interaction_pmi
 
     print("\nPMIDs added from the SGD GAF file in the past week:")
     if gaf_pmids:
-        for pmid in sorted(gaf_pmids, key=int):
-            sources = gaf_pmid_sources.get(pmid, set())
+        for pmid in sorted(gaf_pmids):
+            sources = gaf_pmid_sources.get(str(pmid), set())
             if sources:
                 sources_str = ", ".join(sorted(sources))
                 print(f"PMID:{pmid} [{sources_str}]")
@@ -298,8 +305,8 @@ def print_report(gaf_pmids, gaf_pmid_sources, interaction_pmids, interaction_pmi
 
     print("\nPMIDs added from the SGD Interaction datasets in the past week:")
     if interaction_pmids:
-        for pmid in sorted(interaction_pmids, key=int):
-            sources = interaction_pmid_sources.get(pmid, set())
+        for pmid in sorted(interaction_pmids):
+            sources = interaction_pmid_sources.get(str(pmid), set())
             if sources:
                 sources_str = ", ".join(sorted(sources))
                 print(f"PMID:{pmid} [{sources_str}]")
