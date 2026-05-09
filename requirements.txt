@@ -9,7 +9,7 @@ boto==2.49.0
 boto3==1.18.29
 certifi==2021.5.30
 cffi==1.14.6
-cryptography==3.4.8
+cryptography==43.0.3
 factory-boy==3.2.0
 fake-factory==9999.9.9
 Flask==2.0.1
@@ -35,7 +35,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.20
 py3dns==3.2.1
-pyOpenSSL==20.0.1
+pyOpenSSL==24.2.1
 pyramid==1.10.4
 python-dateutil==2.8.2	
 pyramid-jinja2==2.8
@@ -54,7 +54,7 @@ SQLAlchemy==1.4.23
 tornado==6.1
 transaction==3.0.1
 translationstring==1.4
-twisted==21.7.0
+twisted==26.4.0rc2
 validate_email==1.3
 venusian==3.0.0
 waitress==2.0.0
@@ -77,7 +77,7 @@ primer3-py==0.6.1
 coverage==5.5
 python-coveralls==2.9.3
 webcolors==1.11.1
-pandas==1.3.2
+pandas==1.5.3
 xlrd==2.0.1
 urllib3==1.26.6
 Paste==3.5.0
