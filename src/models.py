@@ -4841,7 +4841,7 @@ class Locusdbentity(Dbentity):
             allianceSearchRootUrl = "https://www.alliancegenome.org/"
             allianceSearchUrl = (
                 allianceSearchRootUrl +
-                "search/?biotypes=protein_coding_gene&category=gene&q=_SUBSTITUTE_&species="
+                "search/?biotypes=protein_coding_gene&category=gene_search_result&q=_SUBSTITUTE_&species="
             )
             mod_to_template_url = { "ZFIN": allianceSearchUrl + "Danio%20rerio",
                                     "RGD":  allianceSearchUrl + "Rattus%20norvegicus",
@@ -4861,13 +4861,14 @@ class Locusdbentity(Dbentity):
                 mod = mod_id.split(':', 1)[0]
                 if mod:
                     mod_to_ids.setdefault(mod, []).append(mod_id)
-        
+
             for mod in ['HGNC', 'MGI', 'RGD', 'ZFIN', 'FB', 'WB']:
                 ids = mod_to_ids.get(mod)
                 if not ids:
                     continue
                 if len(ids) > 1:
-                    substitute = "+".join(ids)
+                    # URL-encode each ID and join with space (which becomes %20)
+                    substitute = quote(" ".join(ids))
                     url = mod_to_template_url[mod].replace("_SUBSTITUTE_", substitute)
                 else:
                     url = allianceSearchRootUrl + "gene/" + ids[0]
