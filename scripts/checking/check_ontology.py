@@ -2,7 +2,7 @@ from sqlalchemy import or_
 import sys
 from src.models import Phenotype, PhenotypeannotationCond, Goextension, Interactor, \
                        Locusdbentity, Apo, Chebi, Disease, Ec, Eco, Edam, Go, Obi, \
-                       Psimi, Psimod, So, Taxonomy, Goslim, ComplexGo, Datasetsample, \
+                       Psimi, Psimod, So, Taxonomy, Goslim, Datasetsample, \
                        ArchContig, ArchDnasequenceannotation, ArchDnasubsequence, \
                        Interactor, Dnasequenceannotation, Dnasubsequence, Alleledbentity,\
                        Referencedbentity, Referenceunlink, Bindingmotifannotation, \
@@ -181,7 +181,7 @@ def check_obi(nex_session):
 def check_go(nex_session):
 
     for x in nex_session.query(Go).filter_by(is_obsolete=True).all():
-        for tableClass in [Goannotation, Goslim, Proteinabundanceannotation, ComplexGo, Regulationannotation]:
+        for tableClass in [Goannotation, Goslim, Proteinabundanceannotation, Regulationannotation]:
             rows = None
             if tableClass == Proteinabundanceannotation:
                 rows = nex_session.query(tableClass).filter_by(process_id=x.go_id).all()
@@ -195,9 +195,7 @@ def check_go(nex_session):
                     rows = rows[0:5]
                     etc = ", ..."
                 table = str(tableClass).split('.')[-1].replace('>', '')
-                if tableClass == ComplexGo:
-                    message = "Obsolete GOID: " + x.format_name + " is used in '" + table + " table. complex_go_id = " + ", ".join([str(x.complex_go_id) for x in rows]) + etc
-                elif tableClass == Goslim:
+                if tableClass == Goslim:
                     message = "Obsolete GOID: " + x.format_name + " is used in '" + table + " table. goslim_id = " + ", ".join([str(x.goslim_id) for x in rows]) + etc
                 else:
                     message = "Obsolete GOID: " + x.format_name + " is used in '" + table + " table. annotation_id = " + ", ".join([str(x.annotation_id) for x in rows]) + etc

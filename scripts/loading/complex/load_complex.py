@@ -8,7 +8,7 @@ import sys
 import importlib
 importlib.reload(sys)  # Reload does the trick!
 from src.models import Source, Psimi, Dbentity, Go, Taxonomy, Eco, Referencedbentity, \
-       Locusdbentity, Complexdbentity, ComplexAlias, ComplexGo, ComplexReference, \
+       Locusdbentity, Complexdbentity, ComplexAlias, ComplexReference, \
        Interactor, LocusAlias, Complexbindingannotation, Literatureannotation, \
        Goannotation, Goslimannotation
 from scripts.loading.database_session import get_session
@@ -337,8 +337,6 @@ def delete_complex(nex_session, complexAC):
         nex_session.delete(x)
 
     ## delete go
-    for	x in nex_session.query(ComplexGo).filter_by(complex_id=complex.dbentity_id).all():
-        nex_session.delete(x)
     for x in nex_session.query(Goannotation).filter_by(dbentity_id=complex.dbentity_id).all():
         nex_session.delete(x)
     for x in nex_session.query(Goslimannotation).filter_by(dbentity_id=complex.dbentity_id).all():

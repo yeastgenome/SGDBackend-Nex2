@@ -11653,23 +11653,23 @@ class ComplexAlias(Base):
     complex = relationship('Complexdbentity')
     source = relationship('Source')
 
-class ComplexGo(Base):
-    __tablename__ = 'complex_go'
-    __table_args__ = (
-        UniqueConstraint('complex_id', 'go_id'),
-        {'schema': 'nex'}
-    )
-
-    complex_go_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    complex_id = Column(ForeignKey('nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
-    created_by = Column(String(12), nullable=False)
-
-    complex = relationship('Complexdbentity')
-    source = relationship('Source')
-    go = relationship('Go')
+# class ComplexGo(Base):
+#     __tablename__ = 'complex_go'
+#     __table_args__ = (
+#         UniqueConstraint('complex_id', 'go_id'),
+#         {'schema': 'nex'}
+#     )
+#
+#     complex_go_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+#     complex_id = Column(ForeignKey('nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+#     go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
+#     source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+#     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+#     created_by = Column(String(12), nullable=False)
+#
+#     complex = relationship('Complexdbentity')
+#     source = relationship('Source')
+#     go = relationship('Go')
 
 class ComplexReference(Base):
     __tablename__ = 'complex_reference'
