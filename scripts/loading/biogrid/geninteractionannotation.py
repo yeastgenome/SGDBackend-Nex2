@@ -229,12 +229,14 @@ def get_old_to_new_pheno_mapping():
 
 if __name__ == '__main__':
 
-    # https://www.thebiogrid.org/downloads/datasets/SGD.tab.txt
+    # https://downloads.thebiogrid.org/Download/BioGRID/External-Database-Builds/SGD.tab.txt
 
-    url_path = 'https://www.thebiogrid.org/downloads/datasets/'
+    url_path = 'https://downloads.thebiogrid.org/Download/BioGRID/External-Database-Builds/'
     infile = 'SGD.tab.txt'
 
-    # urllib.urlretrieve(url_path + infile, infile)
+    # req = urllib.request.Request(url_path + infile, headers={'User-Agent': 'Mozilla/5.0'})
+    # with urllib.request.urlopen(req) as response, open(infile, 'wb') as out:
+    #     out.write(response.read())
             
     logfile = "scripts/loading/biogrid/logs/geninteractionannotation.log"
     
