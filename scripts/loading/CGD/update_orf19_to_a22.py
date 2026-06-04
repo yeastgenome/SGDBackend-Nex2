@@ -40,7 +40,7 @@ import os
 import re
 import sys
 
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 
 from src.models import LocusUrl, LocusAlias, Functionalcomplementannotation
 from scripts.loading.database_session import get_session
@@ -66,6 +66,9 @@ DRY_RUN = False
 
 # Commit every COMMIT_EVERY processed rows to keep transactions small.
 COMMIT_EVERY = 500
+
+# Print a progress line every PROGRESS_EVERY scanned rows within a table.
+PROGRESS_EVERY = 1000
 
 
 def load_mapping(mapping_file):
@@ -109,34 +112,44 @@ def new_obj_url(old_url, mapping, fw):
 
 def update_locus_url(nex_session, mapping, fw, counter):
     """Rewrite obj_url for the CGD 'External id' links on locus pages."""
+    log.info("locus_url: loading candidate rows ...")
     rows = nex_session.query(LocusUrl).filter(
         LocusUrl.obj_url.like('%candidagenome.org%locus=orf19.%')
     ).all()
+    log.info("locus_url: %d candidate rows; preloading existing keys ...", len(rows))
+
+    # Preload the unique-constraint keys (locus_id, display_name, obj_url,
+    # placement) once, so the per-row duplicate check is an in-memory lookup
+    # instead of a query round-trip. Only rows whose obj_url is already in the
+    # new /locus/ form can collide with a target, so restrict the preload.
+    existing = set(nex_session.query(
+        LocusUrl.locus_id, LocusUrl.display_name, LocusUrl.obj_url, LocusUrl.placement
+    ).filter(LocusUrl.obj_url.like(NEW_URL_PREFIX + '%')).all())
 
     updated = skipped = 0
-    for x in rows:
+    for i, x in enumerate(rows, 1):
         url = new_obj_url(x.obj_url, mapping, fw)
         if url is None or url == x.obj_url:
             skipped += 1
-            continue
-        # Unique constraint: (locus_id, display_name, obj_url, placement)
-        dup = nex_session.query(LocusUrl).filter_by(
-            locus_id=x.locus_id, display_name=x.display_name,
-            obj_url=url, placement=x.placement
-        ).one_or_none()
-        if dup is not None and dup.url_id != x.url_id:
-            fw.write("SKIP locus_url url_id=%s - target already exists (url_id=%s): %s\n"
-                     % (x.url_id, dup.url_id, url))
-            skipped += 1
-            continue
-        fw.write("locus_url url_id=%s: %s -> %s\n" % (x.url_id, x.obj_url, url))
-        x.obj_url = url
-        nex_session.add(x)
-        updated += 1
-        counter[0] += 1
-        if counter[0] % COMMIT_EVERY == 0:
-            _checkpoint(nex_session)
-    log.info("locus_url: %d updated, %d skipped (of %d candidate rows)",
+        else:
+            key = (x.locus_id, x.display_name, url, x.placement)
+            if key in existing:
+                fw.write("SKIP locus_url url_id=%s - target already exists: %s\n"
+                         % (x.url_id, url))
+                skipped += 1
+            else:
+                fw.write("locus_url url_id=%s: %s -> %s\n" % (x.url_id, x.obj_url, url))
+                x.obj_url = url
+                nex_session.add(x)
+                existing.add(key)
+                updated += 1
+                counter[0] += 1
+                if counter[0] % COMMIT_EVERY == 0:
+                    _checkpoint(nex_session)
+        if i % PROGRESS_EVERY == 0:
+            log.info("locus_url: %d/%d scanned (%d updated, %d skipped)",
+                     i, len(rows), updated, skipped)
+    log.info("locus_url: DONE - %d updated, %d skipped (of %d candidate rows)",
              updated, skipped, len(rows))
     fw.write("locus_url: %d updated, %d skipped (of %d candidate rows)\n\n"
              % (updated, skipped, len(rows)))
@@ -144,41 +157,50 @@ def update_locus_url(nex_session, mapping, fw, counter):
 
 def update_locus_alias(nex_session, mapping, fw, counter):
     """Replace orf19 display_name with the A22 name and rewrite obj_url."""
+    log.info("locus_alias: loading candidate rows ...")
     rows = nex_session.query(LocusAlias).filter(
         LocusAlias.display_name.like('orf19.%')
     ).all()
+    log.info("locus_alias: %d candidate rows; preloading existing keys ...", len(rows))
+
+    # Preload the unique-constraint keys (locus_id, display_name, alias_type).
+    # Only existing aliases whose display_name is one of the A22 target names
+    # can collide, so restrict the preload to those.
+    targets = list(set(mapping.values()))
+    existing = set(nex_session.query(
+        LocusAlias.locus_id, LocusAlias.display_name, LocusAlias.alias_type
+    ).filter(LocusAlias.display_name.in_(targets)).all())
 
     updated = skipped = 0
-    for x in rows:
+    for i, x in enumerate(rows, 1):
         a22_name = mapping.get(x.display_name)
         if a22_name is None:
             fw.write("SKIP locus_alias alias_id=%s - display_name not in mapping: %s\n"
                      % (x.alias_id, x.display_name))
             skipped += 1
-            continue
-        # Unique constraint: (locus_id, display_name, alias_type)
-        dup = nex_session.query(LocusAlias).filter_by(
-            locus_id=x.locus_id, display_name=a22_name, alias_type=x.alias_type
-        ).one_or_none()
-        if dup is not None and dup.alias_id != x.alias_id:
-            fw.write("SKIP locus_alias alias_id=%s - target already exists (alias_id=%s): %s\n"
-                     % (x.alias_id, dup.alias_id, a22_name))
+        elif (x.locus_id, a22_name, x.alias_type) in existing:
+            fw.write("SKIP locus_alias alias_id=%s - target already exists: %s\n"
+                     % (x.alias_id, a22_name))
             skipped += 1
-            continue
-        old_display = x.display_name
-        old_url = x.obj_url
-        url = new_obj_url(x.obj_url, mapping, fw) if x.obj_url else None
-        fw.write("locus_alias alias_id=%s: display_name %s -> %s; obj_url %s -> %s\n"
-                 % (x.alias_id, old_display, a22_name, old_url, url if url else old_url))
-        x.display_name = a22_name
-        if url is not None:
-            x.obj_url = url
-        nex_session.add(x)
-        updated += 1
-        counter[0] += 1
-        if counter[0] % COMMIT_EVERY == 0:
-            _checkpoint(nex_session)
-    log.info("locus_alias: %d updated, %d skipped (of %d candidate rows)",
+        else:
+            old_display = x.display_name
+            old_url = x.obj_url
+            url = new_obj_url(x.obj_url, mapping, fw) if x.obj_url else None
+            fw.write("locus_alias alias_id=%s: display_name %s -> %s; obj_url %s -> %s\n"
+                     % (x.alias_id, old_display, a22_name, old_url, url if url else old_url))
+            x.display_name = a22_name
+            if url is not None:
+                x.obj_url = url
+            nex_session.add(x)
+            existing.add((x.locus_id, a22_name, x.alias_type))
+            updated += 1
+            counter[0] += 1
+            if counter[0] % COMMIT_EVERY == 0:
+                _checkpoint(nex_session)
+        if i % PROGRESS_EVERY == 0:
+            log.info("locus_alias: %d/%d scanned (%d updated, %d skipped)",
+                     i, len(rows), updated, skipped)
+    log.info("locus_alias: DONE - %d updated, %d skipped (of %d candidate rows)",
              updated, skipped, len(rows))
     fw.write("locus_alias: %d updated, %d skipped (of %d candidate rows)\n\n"
              % (updated, skipped, len(rows)))
@@ -190,48 +212,57 @@ def update_locus_homology(nex_session, mapping, fw, counter):
     nex.locus_homology has no ORM model, so raw SQL is used. Unique constraint:
     (locus_id, gene_id, taxonomy_id).
     """
+    log.info("locus_homology: loading candidate rows ...")
     rows = nex_session.execute(text(
         "SELECT homology_id, locus_id, gene_id, taxonomy_id, obj_url "
         "FROM nex.locus_homology WHERE gene_id LIKE 'orf19.%'"
     )).fetchall()
+    log.info("locus_homology: %d candidate rows; preloading existing keys ...", len(rows))
+
+    # Preload the unique-constraint keys (locus_id, gene_id, taxonomy_id).
+    # Only existing rows whose gene_id is one of the A22 target names can
+    # collide, so restrict the preload to those.
+    targets = list(set(mapping.values()))
+    preload_stmt = text(
+        "SELECT locus_id, gene_id, taxonomy_id FROM nex.locus_homology "
+        "WHERE gene_id IN :names"
+    ).bindparams(bindparam("names", expanding=True))
+    existing = set(nex_session.execute(preload_stmt, {"names": targets}).fetchall())
 
     updated = skipped = 0
-    for homology_id, locus_id, gene_id, taxonomy_id, obj_url in rows:
+    for i, (homology_id, locus_id, gene_id, taxonomy_id, obj_url) in enumerate(rows, 1):
         a22_name = mapping.get(gene_id)
         if a22_name is None:
             fw.write("SKIP locus_homology homology_id=%s - gene_id not in mapping: %s\n"
                      % (homology_id, gene_id))
             skipped += 1
-            continue
-        dup = nex_session.execute(text(
-            "SELECT homology_id FROM nex.locus_homology "
-            "WHERE locus_id = :locus_id AND gene_id = :gene_id "
-            "AND taxonomy_id = :taxonomy_id AND homology_id <> :self_id"
-        ), {"locus_id": locus_id, "gene_id": a22_name,
-            "taxonomy_id": taxonomy_id, "self_id": homology_id}).fetchone()
-        if dup is not None:
-            fw.write("SKIP locus_homology homology_id=%s - target already exists "
-                     "(homology_id=%s): %s\n" % (homology_id, dup[0], a22_name))
+        elif (locus_id, a22_name, taxonomy_id) in existing:
+            fw.write("SKIP locus_homology homology_id=%s - target already exists: %s\n"
+                     % (homology_id, a22_name))
             skipped += 1
-            continue
-        url = new_obj_url(obj_url, mapping, fw) if obj_url else None
-        fw.write("locus_homology homology_id=%s: gene_id %s -> %s; obj_url %s -> %s\n"
-                 % (homology_id, gene_id, a22_name, obj_url, url if url else obj_url))
-        if url is not None:
-            nex_session.execute(text(
-                "UPDATE nex.locus_homology SET gene_id = :gene_id, obj_url = :obj_url "
-                "WHERE homology_id = :homology_id"
-            ), {"gene_id": a22_name, "obj_url": url, "homology_id": homology_id})
         else:
-            nex_session.execute(text(
-                "UPDATE nex.locus_homology SET gene_id = :gene_id "
-                "WHERE homology_id = :homology_id"
-            ), {"gene_id": a22_name, "homology_id": homology_id})
-        updated += 1
-        counter[0] += 1
-        if counter[0] % COMMIT_EVERY == 0:
-            _checkpoint(nex_session)
-    log.info("locus_homology: %d updated, %d skipped (of %d candidate rows)",
+            url = new_obj_url(obj_url, mapping, fw) if obj_url else None
+            fw.write("locus_homology homology_id=%s: gene_id %s -> %s; obj_url %s -> %s\n"
+                     % (homology_id, gene_id, a22_name, obj_url, url if url else obj_url))
+            if url is not None:
+                nex_session.execute(text(
+                    "UPDATE nex.locus_homology SET gene_id = :gene_id, obj_url = :obj_url "
+                    "WHERE homology_id = :homology_id"
+                ), {"gene_id": a22_name, "obj_url": url, "homology_id": homology_id})
+            else:
+                nex_session.execute(text(
+                    "UPDATE nex.locus_homology SET gene_id = :gene_id "
+                    "WHERE homology_id = :homology_id"
+                ), {"gene_id": a22_name, "homology_id": homology_id})
+            existing.add((locus_id, a22_name, taxonomy_id))
+            updated += 1
+            counter[0] += 1
+            if counter[0] % COMMIT_EVERY == 0:
+                _checkpoint(nex_session)
+        if i % PROGRESS_EVERY == 0:
+            log.info("locus_homology: %d/%d scanned (%d updated, %d skipped)",
+                     i, len(rows), updated, skipped)
+    log.info("locus_homology: DONE - %d updated, %d skipped (of %d candidate rows)",
              updated, skipped, len(rows))
     fw.write("locus_homology: %d updated, %d skipped (of %d candidate rows)\n\n"
              % (updated, skipped, len(rows)))
@@ -239,9 +270,11 @@ def update_locus_homology(nex_session, mapping, fw, counter):
 
 def update_functionalcomplement(nex_session, mapping, fw, counter):
     """Replace 'CGD:orf19.x' dbxref_id with 'CGD:<A22>' and rewrite obj_url."""
+    log.info("functionalcomplementannotation: loading candidate rows ...")
     rows = nex_session.query(Functionalcomplementannotation).filter(
         Functionalcomplementannotation.dbxref_id.like('CGD:orf19.%')
     ).all()
+    log.info("functionalcomplementannotation: %d candidate rows", len(rows))
 
     updated = skipped = 0
     for x in rows:
@@ -265,7 +298,7 @@ def update_functionalcomplement(nex_session, mapping, fw, counter):
         counter[0] += 1
         if counter[0] % COMMIT_EVERY == 0:
             _checkpoint(nex_session)
-    log.info("functionalcomplementannotation: %d updated, %d skipped (of %d candidate rows)",
+    log.info("functionalcomplementannotation: DONE - %d updated, %d skipped (of %d candidate rows)",
              updated, skipped, len(rows))
     fw.write("functionalcomplementannotation: %d updated, %d skipped (of %d candidate rows)\n\n"
              % (updated, skipped, len(rows)))
@@ -291,8 +324,10 @@ def update_data(mapping_file):
     fw.write("Loaded %d orf19 -> A22 mappings from %s\n" % (len(mapping), mapping_file))
     fw.write("DRY_RUN = %s\n\n" % DRY_RUN)
 
+    log.info("Connecting to the database ...")
     nex_session = get_session()
     counter = [0]  # mutable shared counter for batch commits across tables
+    log.info("Connected. Mode: %s", "DRY-RUN (no commit)" if DRY_RUN else "APPLY (will commit)")
 
     update_locus_url(nex_session, mapping, fw, counter)
     update_locus_alias(nex_session, mapping, fw, counter)
