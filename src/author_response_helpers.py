@@ -47,9 +47,9 @@ def get_author_responses(curation_id=None):
         if curation_id is not None:
             row = data[0]
             row['reference_id'] = reference_id
-            return Response(body=json.dumps(row), content_type='application/json')
+            return Response(body=json.dumps(row).encode('utf-8'), content_type='application/json')
         else:
-            return Response(body=json.dumps(data), content_type='application/json')
+            return Response(body=json.dumps(data).encode('utf-8'), content_type='application/json')
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
 
