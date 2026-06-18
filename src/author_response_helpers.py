@@ -69,10 +69,16 @@ def notify_author_response_count():
 
 
 def set_val(val):
-    if val or val is True:
-        return '1'
-    else:
-        return '0'
+    """Normalize a checkbox/boolean-ish value to a Python bool.
+
+    Request params arrive as strings ('1' when checked) or are absent (None);
+    DB columns arrive as real booleans. Return a bool so the value can be both
+    compared and assigned to a Boolean column -- psycopg2 rejects '1'/'0'
+    strings for boolean columns ("Not a boolean value: '1'").
+    """
+    if val in (None, '', '0', 0, False, 'false', 'False'):
+        return False
+    return True
     
 def update_author_response(request):
 
