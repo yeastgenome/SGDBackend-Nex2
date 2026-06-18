@@ -68,44 +68,51 @@ def notify_author_response_count():
         log.error("Failed to push authorResponseCount notification: " + str(e))
 
 
-def set_val(val):
-    """Normalize a checkbox/boolean-ish value to a Python bool.
+def is_checked(params, name):
+    """Return True if checkbox `name` was submitted as checked.
 
-    Request params arrive as strings ('1' when checked) or are absent (None);
-    DB columns arrive as real booleans. Return a bool so the value can be both
-    compared and assigned to a Boolean column -- psycopg2 rejects '1'/'0'
-    strings for boolean columns ("Not a boolean value: '1'").
+    Standard HTML forms omit an unchecked checkbox entirely, so presence of
+    the param means checked. The one exception is the curate form's untouched
+    Redux default, which submits the literal '0' for every box even when the
+    curator didn't interact -- treat that (and an empty value) as unchecked.
+
+    Any other present value means checked: the currently deployed bundle sends
+    the stringified prior state ('true'/'false') for a box the curator toggled,
+    and a rebuilt bundle (value='1') sends '1'. Both are handled here, and the
+    result is a real Python bool, which is required for assignment/comparison
+    against the Boolean columns (psycopg2 rejects '1'/'0' strings).
     """
-    if val in (None, '', '0', 0, False, 'false', 'False'):
+    if name not in params:
         return False
-    return True
-    
+    return str(params.get(name)).strip().lower() not in ('0', '')
+
+
 def update_author_response(request):
 
     try:
         CREATED_BY = request.session['username']
         curator_session = get_curator_session(request.session['username'])
-        
+
         curation_id = request.params.get('curation_id')
-        
-        has_fast_track_tag = set_val(request.params.get('has_fast_track_tag'))
-        curator_checked_datasets = set_val(request.params.get('curator_checked_datasets'))
-        curator_checked_genelist = set_val(request.params.get('curator_checked_genelist'))
-        no_action_required = set_val(request.params.get('no_action_required'))
+
+        has_fast_track_tag = is_checked(request.params, 'has_fast_track_tag')
+        curator_checked_datasets = is_checked(request.params, 'curator_checked_datasets')
+        curator_checked_genelist = is_checked(request.params, 'curator_checked_genelist')
+        no_action_required = is_checked(request.params, 'no_action_required')
 
         row = curator_session.query(Authorresponse).filter_by(curation_id=int(curation_id)).one_or_none()
-    
+
         cols_changed = []
-        if set_val(row.has_fast_track_tag) != has_fast_track_tag:
+        if bool(row.has_fast_track_tag) != has_fast_track_tag:
             row.has_fast_track_tag = has_fast_track_tag
             cols_changed.append('has_fast_track_tag')
-        if set_val(row.curator_checked_datasets) != curator_checked_datasets:
+        if bool(row.curator_checked_datasets) != curator_checked_datasets:
             row.curator_checked_datasets = curator_checked_datasets
             cols_changed.append('curator_checked_datasets')
-        if set_val(row.curator_checked_genelist) != curator_checked_genelist:
+        if bool(row.curator_checked_genelist) != curator_checked_genelist:
             row.curator_checked_genelist = curator_checked_genelist
             cols_changed.append('curator_checked_genelist')
-        if set_val(row.no_action_required) != no_action_required:
+        if bool(row.no_action_required) != no_action_required:
             row.no_action_required = no_action_required
             cols_changed.append('no_action_required')
 
