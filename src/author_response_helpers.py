@@ -22,7 +22,7 @@ def get_author_responses(curation_id=None):
                 r = DBSession.query(Referencedbentity).filter_by(pmid=int(row.pmid)).one_or_none()
                 if r is not None:
                     reference_id = r.dbentity_id
-            if row.curator_checked_datasets == True and curator_checked_genelist == True:
+            if row.curator_checked_datasets == True and row.curator_checked_genelist == True:
                 continue
             genes = row.gene_list
             if row.gene_list:
