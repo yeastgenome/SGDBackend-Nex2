@@ -1,11 +1,14 @@
 from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 from sqlalchemy.exc import IntegrityError, DataError
+import logging
 import transaction
 import json
 from pyramid.response import Response
 from validate_email import validate_email
 from src.models import DBSession, Authorresponse, Referencedbentity, Source
 from src.curation_helpers import get_curator_session, get_pusher_client
+
+log = logging.getLogger(__name__)
 
 def get_author_responses(curation_id=None):
 
@@ -50,6 +53,21 @@ def get_author_responses(curation_id=None):
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
 
+def notify_author_response_count():
+    """Push the current pending author-response count to curators.
+
+    This is a non-critical UI notification (the red badge in curate central).
+    A Pusher misconfiguration (e.g. key/secret not matching the app id) must
+    never fail the underlying submission/update, so any error here is swallowed.
+    """
+    try:
+        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required=False).count()
+        pusher = get_pusher_client()
+        pusher.trigger('sgd', 'authorResponseCount', {'message': authorResponseCount})
+    except Exception as e:
+        log.error("Failed to push authorResponseCount notification: " + str(e))
+
+
 def set_val(val):
     if val or val is True:
         return '1'
@@ -91,9 +109,7 @@ def update_author_response(request):
             success_message = "The column <strong>" + ", ".join(cols_changed) + "</strong> got updated in authorresponse table."
         else:
             success_message = "Nothing is changed in authorresponse table."
-        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
-        pusher = get_pusher_client()
-        pusher.trigger('sgd','authorResponseCount',{'message':authorResponseCount})
+        notify_author_response_count()
         return HTTPOk(body=json.dumps({'success': success_message, 'authorResponse': "AUTHORRESPONSE"}), content_type='text/json')
     except Exception as e:
         transaction.abort()
@@ -157,9 +173,7 @@ def insert_author_response(request):
 
         DBSession.add(x)
         transaction.commit()
-        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
-        pusher = get_pusher_client()
-        pusher.trigger('sgd','authorResponseCount',{'message':authorResponseCount})
+        notify_author_response_count()
         return {'curation_id': 0}
     except Exception as e:
         transaction.abort()
