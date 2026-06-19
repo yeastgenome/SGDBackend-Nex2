@@ -1,3 +1,4 @@
+setuptools==75.3.0  # last release supporting Python 3.8; needed so pkg_resources normalizes twisted's 'zope-interface' dep at pserve startup
 amqp==5.0.6
 apply==1.5	
 anyjson==0.3.3	
