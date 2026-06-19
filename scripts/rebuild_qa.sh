@@ -10,13 +10,20 @@
 #   bash scripts/rebuild_qa.sh            # rebuild + verify (does NOT restart)
 #   bash scripts/rebuild_qa.sh --restart  # also restart the service at the end
 #
-# The app directory defaults to APP_DIR below; override with:
-#   APP_DIR=/path/to/app bash scripts/rebuild_qa.sh
+# IMPORTANT: the systemd service (sgd-backend.service -> start.sh) runs pserve
+# from the Python 3.9 venv 'venv-py39', NOT the legacy 'venv' (Python 3.8).
+# Python deps MUST be installed into venv-py39 or the service crash-loops with
+# a pkg_resources VersionConflict (the editable install regenerates the shared
+# SGDBackend.egg-info, which then disagrees with whatever is in the other venv).
+#
+# Override the defaults if the box layout differs:
+#   APP_DIR=/path/to/app VENV=/path/to/venv SERVICE=name bash scripts/rebuild_qa.sh
 #
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/data/www/SGDBackend-Nex2}"
-VENV="${APP_DIR}/venv"
+VENV="${VENV:-${APP_DIR}/venv-py39}"
+SERVICE="${SERVICE:-sgd-backend.service}"
 DO_RESTART=0
 [[ "${1:-}" == "--restart" ]] && DO_RESTART=1
 
@@ -34,7 +41,8 @@ log "node $(node -v)   npm $(npm -v)"
 # The legacy webpack-1 build pipeline needs an old Node; a very new Node will
 # break `npm run build`. Warn (don't fail) so it's visible if the box drifted.
 NODE_MAJOR="$(node -v | sed -E 's/^v([0-9]+).*/\1/')"
-[[ "$NODE_MAJOR" -gt 12 ]] && warn "Node ${NODE_MAJOR} is newer than the legacy webpack-1 build expects; if 'npm run build' fails, use the Node version this app is pinned to."
+# QA builds on Node 14; much newer Node breaks the legacy webpack-1 pipeline.
+[[ "$NODE_MAJOR" -gt 16 ]] && warn "Node ${NODE_MAJOR} is newer than the legacy webpack-1 build expects (QA uses Node 14); if 'npm run build' fails, switch to the pinned Node version."
 
 PREV_HEAD="$(git rev-parse HEAD)"
 log "current HEAD: ${PREV_HEAD:0:8}   (rollback: git reset --hard $PREV_HEAD)"
@@ -116,14 +124,22 @@ fi
 
 # --- 5. restart --------------------------------------------------------------
 if [[ "$DO_RESTART" == 1 ]]; then
-  # On-box restart uses the Makefile pserve targets (the daemonized pid-file
-  # pair). `make qa-restart` is Capistrano-from-a-workstation, not for here.
-  log "Restarting the service (make stop-prod && make run-prod)"
-  make stop-prod || warn "stop-prod returned non-zero (service may not have been running)"
-  make run-prod
-  ok "run-prod issued — confirm it came up (see verification below)"
+  # The QA service is systemd-managed (start.sh -> venv-py39 pserve), not the
+  # Makefile pserve targets. Restart via systemctl and confirm it stays up.
+  log "Restarting the service (sudo systemctl restart ${SERVICE})"
+  if sudo systemctl restart "$SERVICE"; then
+    sleep 4
+    if [[ "$(systemctl is-active "$SERVICE")" == active ]]; then
+      ok "${SERVICE} is active (running)"
+    else
+      systemctl status "$SERVICE" --no-pager -n 15 || true
+      die "${SERVICE} is not active after restart — check the status output above and 'journalctl -u ${SERVICE}'"
+    fi
+  else
+    warn "could not restart ${SERVICE} (sudo/permission?) — restart manually: sudo systemctl restart ${SERVICE}"
+  fi
 else
-  log "Skipping restart. To restart on the box:  make stop-prod && make run-prod"
+  log "Skipping restart. To restart on the box:  sudo systemctl restart ${SERVICE}"
 fi
 
 # --- 6. next steps -----------------------------------------------------------
