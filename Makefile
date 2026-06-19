@@ -1,19 +1,43 @@
-.PHONY: test lib config
+.PHONY: test lib config build prod-build run restart start stop status logs
 
 SHELL := /bin/bash
+
+# Canonical runtime: the systemd service $(SERVICE) runs ./start.sh, which execs
+# pserve from the Python 3.9 venv below. Python deps MUST go into this venv or
+# the service crash-loops (installed pkg vs shared egg-info mismatch). Override
+# with e.g. `make VENV=venv prod-build`.
+VENV    ?= venv-py39
+SERVICE ?= sgd-backend.service
 
 build:
 	npm install
 	npm run build
-	pip install -r requirements.txt
-	pip install -e . --no-deps
+	$(VENV)/bin/pip install -r requirements.txt
+	$(VENV)/bin/pip install -e . --no-deps
 
 prod-build:
-	pip install -r requirements.txt
-	pip install -e . --no-deps
+	$(VENV)/bin/pip install -r requirements.txt
+	$(VENV)/bin/pip install -e . --no-deps
 
 run:
-	source dev_variables.sh && pserve development.ini --reload
+	source dev_variables.sh && $(VENV)/bin/pserve development.ini --reload
+
+# --- service control (systemd; the canonical QA/runtime mechanism) -----------
+restart:
+	sudo systemctl restart $(SERVICE)
+	@sleep 4 && systemctl is-active $(SERVICE)
+
+start:
+	sudo systemctl start $(SERVICE)
+
+stop:
+	sudo systemctl stop $(SERVICE)
+
+status:
+	systemctl status $(SERVICE) --no-pager
+
+logs:
+	sudo tail -n 100 -f /var/log/sgd-backend/error.log
 
 NOSEOPTS ?=
 
@@ -23,6 +47,8 @@ tests:
 npm-tests:
 	npm test
 
+# LEGACY (Capistrano): the `cap ... deploy` targets below predate the systemd +
+# start.sh + venv-py39 setup and are no longer the canonical QA deploy path.
 qa-index-redis:
 	source dev_variables.sh && NEX2_URI=$$QA_NEX2_URI && cap qa deploy:redis
 
@@ -53,11 +79,13 @@ curate-prod-deploy:
 prod-deploy:
 	npm run build && source prod_variables.sh && cap prod deploy
 
+# LEGACY (pre-systemd): direct pserve daemon. Superseded by the systemd service
+# ($(SERVICE)) via start.sh -> venv-py39. Kept for reference / non-QA hosts.
 run-prod:
-	pserve production.ini --daemon --pid-file=/var/run/pyramid/backend.pid
+	$(VENV)/bin/pserve production.ini --daemon --pid-file=/var/run/pyramid/backend.pid
 
 stop-prod:
-	-pserve production.ini --stop-daemon --pid-file=/var/run/pyramid/backend.pid
+	-$(VENV)/bin/pserve production.ini --stop-daemon --pid-file=/var/run/pyramid/backend.pid
 
 lint:
 	eslint src/client/js/

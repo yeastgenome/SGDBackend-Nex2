@@ -71,6 +71,7 @@ dev_variables*
 prod_variables*
 test_variables*
 dev_aws_variables*
+qa.sh
 
 #temp files
 # logs

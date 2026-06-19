@@ -1,0 +1,31 @@
+# SGD Backend Nex2 Pyramid application — canonical systemd unit.
+#
+# Install on the host:
+#   sudo cp system_config/systemd/sgd-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now sgd-backend.service
+#
+# ExecStart runs ./start.sh, which sources qa.sh (secrets, untracked) and execs
+# pserve from the Python 3.9 venv (venv-py39). Logs go to /var/log/sgd-backend/.
+[Unit]
+Description=SGD Backend Nex2 Pyramid Application
+After=network.target
+
+[Service]
+Type=simple
+User=sgd
+Group=sgd
+WorkingDirectory=/data/www/SGDBackend-Nex2
+Environment="PATH=/home/sgd/.local/node14/bin:/data/www/SGDBackend-Nex2/venv-py39/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="INI_FILE=/data/www/SGDBackend-Nex2/development.ini"
+Environment="PIP_NO_BUILD_ISOLATION=1"
+Environment="SETUPTOOLS_USE_DISTUTILS=local"
+Environment="SETUPTOOLS_ENABLE_FEATURES=legacy-editable"
+ExecStart=/data/www/SGDBackend-Nex2/start.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/sgd-backend/output.log
+StandardError=append:/var/log/sgd-backend/error.log
+
+[Install]
+WantedBy=multi-user.target
