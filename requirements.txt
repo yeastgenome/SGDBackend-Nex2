@@ -51,7 +51,7 @@ singledispatch==3.7.0
 six==1.16.0
 sqlacodegen==2.3.0
 SQLAlchemy==1.4.23
-tornado==6.1
+# tornado==6.1  # unused (not imported anywhere); commented out to clear Dependabot alerts. tornado>=6.5.7 requires Python 3.9+, incompatible with this project's Python 3.8
 transaction==3.0.1
 translationstring==1.4
 twisted==26.4.0rc2
