@@ -78,12 +78,20 @@ case "$US_VER" in
 esac
 
 log "Building JS bundle (npm run build)"
-npm run build
-# Verify a fresh bundle landed.
+# webpack 1 exits 0 even when individual modules fail to compile (e.g.
+# unsupported JS syntax like optional chaining under Babel 6), so the exit
+# code alone is not enough — scan the output for emitted errors too.
+BUILD_LOG="$(mktemp)"
+npm run build 2>&1 | tee "$BUILD_LOG"
+if grep -qE 'ERROR in|Module build failed|Parsing error|SyntaxError' "$BUILD_LOG"; then
+  rm -f "$BUILD_LOG"
+  die "webpack reported module/parse errors — the bundle is BROKEN. Fix the source above and rebuild."
+fi
+rm -f "$BUILD_LOG"
 if [[ -d src/build ]] && find src/build -type f -newermt "-10 minutes" | grep -q .; then
-  ok "fresh artifacts present in src/build"
+  ok "build clean — fresh artifacts present in src/build"
 else
-  warn "no recently-modified files in src/build — check the build output above"
+  warn "build reported no errors but no fresh files in src/build — check output above"
 fi
 
 # --- 4. python deps (applies the tornado change; no-op at runtime) -----------

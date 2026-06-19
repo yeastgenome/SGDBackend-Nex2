@@ -204,7 +204,7 @@ class DiseaseForm extends Component {
     e.preventDefault();
 
     // Client-side validation: check if with_ortholog is required but missing
-    if (this.requiresWithOrtholog() && !this.props.disease.with_ortholog?.trim()) {
+    if (this.requiresWithOrtholog() && !(this.props.disease.with_ortholog && this.props.disease.with_ortholog.trim())) {
       const ecoName = this.getSelectedEcoDisplayName();
       const shortCode = ECO_TO_SHORT_CODE[ecoName] || ecoName;
       this.props.dispatch(setError(`With Ortholog is required for ${shortCode} evidence code`));
