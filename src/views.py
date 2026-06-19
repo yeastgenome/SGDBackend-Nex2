@@ -1944,6 +1944,26 @@ def locus_neighbor_sequence_details(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='locus_synteny_neighbors', renderer='json', request_method='GET')
+def locus_synteny_neighbors(request):
+    try:
+        id = extract_id_request(request, 'locus')
+        locus = get_locus_by_id(id)
+        if locus:
+            try:
+                flanking_count = int(request.params.get('flanking', 10))
+            except (TypeError, ValueError):
+                flanking_count = 10
+            flanking_count = max(1, min(flanking_count, 50))
+            return locus.synteny_neighbors(flanking_count=flanking_count)
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='locus_sequence_details', renderer='json', request_method='GET')
 def locus_sequence_details(request):
     try:

@@ -3583,6 +3583,97 @@ class Locusdbentity(Dbentity):
 
         return obj
 
+    def synteny_neighbors(self, flanking_count=10):
+        """Return this gene plus its flanking genes on the same chromosome,
+        ordered by coordinate, for the gene-centered synteny viewer.
+
+        Shaped for cross-database synteny comparison (e.g. CGD): coordinates are
+        chromosome-relative, the query gene is included with is_query=True, and
+        every neighbor carries its SGDID as the cross-reference join key. Uses
+        the gene's main reference strain (S288C when available).
+        """
+        taxonomy_id = self.get_main_strain('taxonomy_id')
+        dna = DBSession.query(Dnasequenceannotation).filter_by(
+            dbentity_id=self.dbentity_id,
+            dna_type='GENOMIC',
+            taxonomy_id=taxonomy_id).first()
+        if dna is None:
+            return {}
+
+        so_id = get_transcript_so_id()
+
+        inactive_loci = [
+            x.dbentity_id for x in DBSession.query(Dbentity).filter(
+                and_(Dbentity.dbentity_status != 'Active',
+                     Dbentity.subclass == 'LOCUS')).all()
+        ]
+
+        # All protein-coding gene annotations on this contig, ordered by position.
+        on_contig = DBSession.query(Dnasequenceannotation).filter(
+            and_(Dnasequenceannotation.dna_type == 'GENOMIC',
+                 Dnasequenceannotation.so_id != so_id,
+                 Dnasequenceannotation.taxonomy_id == dna.taxonomy_id,
+                 Dnasequenceannotation.contig_id == dna.contig_id,
+                 ~Dnasequenceannotation.dbentity_id.in_(inactive_loci))
+        ).order_by(Dnasequenceannotation.start_index).all()
+
+        center_idx = next(
+            (i for i, a in enumerate(on_contig) if a.dbentity_id == self.dbentity_id),
+            None)
+        if center_idx is None:
+            return {}
+
+        start_i = max(0, center_idx - flanking_count)
+        end_i = min(len(on_contig), center_idx + flanking_count + 1)
+        window = on_contig[start_i:end_i]
+
+        # Batch-load loci and exon (CDS) subfeatures for the window.
+        locus_ids = {a.dbentity_id for a in window}
+        loci = {
+            locus.dbentity_id: locus
+            for locus in DBSession.query(Locusdbentity).filter(
+                Locusdbentity.dbentity_id.in_(locus_ids)).all()
+        }
+        annotation_ids = [a.annotation_id for a in window]
+        exons_by_annotation = {}
+        for sub in DBSession.query(Dnasubsequence).filter(
+                Dnasubsequence.annotation_id.in_(annotation_ids),
+                Dnasubsequence.display_name == 'CDS').all():
+            exons_by_annotation.setdefault(sub.annotation_id, []).append(sub)
+
+        def gene_obj(a):
+            locus = loci.get(a.dbentity_id)
+            exons = sorted(
+                exons_by_annotation.get(a.annotation_id, []),
+                key=lambda s: s.contig_start_index)
+            return {
+                "sgdid": locus.sgdid if locus else None,
+                "gene_name": locus.gene_name if locus else None,
+                "systematic_name": locus.systematic_name if locus else None,
+                "start": a.start_index,
+                "stop": a.end_index,
+                "strand": a.strand,
+                "is_query": a.dbentity_id == self.dbentity_id,
+                "exons": [
+                    {"start": s.contig_start_index, "stop": s.contig_end_index}
+                    for s in exons
+                ],
+            }
+
+        return {
+            "query": {
+                "sgdid": self.sgdid,
+                "gene_name": self.gene_name,
+                "systematic_name": self.systematic_name,
+                "chromosome": dna.contig.format_name,
+                "start": dna.start_index,
+                "stop": dna.end_index,
+                "strand": dna.strand,
+            },
+            "chromosome": dna.contig.format_name,
+            "neighbors": [gene_obj(a) for a in window],
+        }
+
     def expression_to_dict(self):
         expression_annotations = DBSession.query(Expressionannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
