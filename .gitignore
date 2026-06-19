@@ -71,7 +71,11 @@ dev_variables*
 prod_variables*
 test_variables*
 dev_aws_variables*
+# per-host runtime config (hold secrets / env-specific values) — use the
+# *.example templates; never commit the filled-in files
 qa.sh
+prod.sh
+start.sh
 
 #temp files
 # logs

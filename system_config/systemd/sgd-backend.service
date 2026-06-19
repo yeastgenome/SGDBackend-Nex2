@@ -5,8 +5,10 @@
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now sgd-backend.service
 #
-# ExecStart runs ./start.sh, which sources qa.sh (secrets, untracked) and execs
-# pserve from the Python 3.9 venv (venv-py39). Logs go to /var/log/sgd-backend/.
+# ExecStart runs ./start.sh, which is per-host (gitignored; see start.sh.example):
+# it sources the env file (qa.sh / prod.sh) and selects the ini (development.ini
+# on QA, production.ini on prod), then execs pserve from the Python 3.9 venv
+# (venv-py39). Logs go to /var/log/sgd-backend/. This unit is env-neutral.
 [Unit]
 Description=SGD Backend Nex2 Pyramid Application
 After=network.target
@@ -17,7 +19,6 @@ User=sgd
 Group=sgd
 WorkingDirectory=/data/www/SGDBackend-Nex2
 Environment="PATH=/home/sgd/.local/node14/bin:/data/www/SGDBackend-Nex2/venv-py39/bin:/usr/local/bin:/usr/bin:/bin"
-Environment="INI_FILE=/data/www/SGDBackend-Nex2/development.ini"
 Environment="PIP_NO_BUILD_ISOLATION=1"
 Environment="SETUPTOOLS_USE_DISTUTILS=local"
 Environment="SETUPTOOLS_ENABLE_FEATURES=legacy-editable"

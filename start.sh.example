@@ -1,0 +1,18 @@
+#!/bin/bash
+# start.sh — per-host entrypoint run by sgd-backend.service (systemd).
+#
+# This file is HOST-SPECIFIC and gitignored. Copy it to start.sh on each host
+# and set the two environment-specific values below:
+#
+#   Host               env file   ini file
+#   -----------------  ---------  ----------------
+#   sgd-backend-qa     qa.sh      development.ini
+#   sgd-curate (prod)  prod.sh    production.ini
+#
+#   cp start.sh.example start.sh && $EDITOR start.sh
+#
+# It sources the env file (secrets; also gitignored — see qa.sh.example /
+# prod.sh.example) and execs pserve from the Python 3.9 venv (venv-py39).
+cd /data/www/SGDBackend-Nex2
+. /data/www/SGDBackend-Nex2/prod.sh
+exec /data/www/SGDBackend-Nex2/venv-py39/bin/pserve production.ini
