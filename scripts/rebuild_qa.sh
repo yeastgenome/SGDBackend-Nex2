@@ -97,7 +97,13 @@ fi
 # --- 4. python deps (applies the tornado change; no-op at runtime) -----------
 log "Installing Python deps (pip install -r requirements.txt)"
 pip install -r requirements.txt
-python setup.py develop
+# Install the local package editable via pip rather than `setup.py develop`.
+# The legacy easy_install path used by `setup.py develop` fails to match
+# twisted's normalized 'zope-interface' requirement against the installed
+# 'zope.interface', and emits an UNKNOWN-0.0.0 egg. pip normalizes names
+# correctly; --no-deps skips re-resolving the already-satisfied graph above.
+log "Installing local package editable (pip install -e . --no-deps)"
+pip install -e . --no-deps
 ok "python deps installed"
 
 # Confirm the app imports cleanly (covers the requirements.txt change).

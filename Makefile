@@ -6,11 +6,11 @@ build:
 	npm install
 	npm run build
 	pip install -r requirements.txt
-	python setup.py develop
+	pip install -e . --no-deps
 
 prod-build:
 	pip install -r requirements.txt
-	python setup.py develop
+	pip install -e . --no-deps
 
 run:
 	source dev_variables.sh && pserve development.ini --reload
