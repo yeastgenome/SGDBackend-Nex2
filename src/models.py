@@ -3600,21 +3600,29 @@ class Locusdbentity(Dbentity):
         if dna is None:
             return {}
 
-        so_id = get_transcript_so_id()
-
         inactive_loci = [
             x.dbentity_id for x in DBSession.query(Dbentity).filter(
                 and_(Dbentity.dbentity_status != 'Active',
                      Dbentity.subclass == 'LOCUS')).all()
         ]
 
-        # All protein-coding gene annotations on this contig, ordered by position.
+        # Restrict to protein-coding ORFs so the neighborhood matches the
+        # ORF-only rows of Candida species in the synteny viewer (snoRNA/tRNA,
+        # Ty/LTR repeats, and ARS features are excluded). Fall back to all
+        # genomic features if the ORF SO term is somehow unavailable.
+        orf_so = DBSession.query(So).filter_by(display_name='ORF').one_or_none()
+        conditions = [
+            Dnasequenceannotation.dna_type == 'GENOMIC',
+            Dnasequenceannotation.taxonomy_id == dna.taxonomy_id,
+            Dnasequenceannotation.contig_id == dna.contig_id,
+            ~Dnasequenceannotation.dbentity_id.in_(inactive_loci),
+        ]
+        if orf_so is not None:
+            conditions.append(Dnasequenceannotation.so_id == orf_so.so_id)
+
+        # All ORF annotations on this contig, ordered by position.
         on_contig = DBSession.query(Dnasequenceannotation).filter(
-            and_(Dnasequenceannotation.dna_type == 'GENOMIC',
-                 Dnasequenceannotation.so_id != so_id,
-                 Dnasequenceannotation.taxonomy_id == dna.taxonomy_id,
-                 Dnasequenceannotation.contig_id == dna.contig_id,
-                 ~Dnasequenceannotation.dbentity_id.in_(inactive_loci))
+            and_(*conditions)
         ).order_by(Dnasequenceannotation.start_index).all()
 
         center_idx = next(
