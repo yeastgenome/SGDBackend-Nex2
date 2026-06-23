@@ -20,7 +20,7 @@ The **Transform** column notes how the loader derives each value.
 | `colleague_url` where `url_type='Research summary'` | list | `webpage` |
 | `city` / `state` / `postal_code` / `country` | trimmed | `city` / `state` / `postal_code` / `country` |
 | `address1`, `address2`, `address3` | joined with ", " | `street_address` |
-| `research_interest` + `colleague_keyword`→`keyword.display_name` | `build_biography()` (`"Keywords: a; b"` appended) | `biography_research_interest` |
+| `profession` + `research_interest` + `colleague_keyword`→`keyword.display_name` | `build_biography()` (`"Profession: X"` line, then research interest, then `"Keywords: a; b"`) | `biography_research_interest` |
 | `display_email` | `true→show_all`, `false→hide_email` | `privacy` |
 
 ## 2. `colleague` → `person_name`
@@ -91,14 +91,40 @@ person-id order. Dedups against `uq_person_lineage_person_ids_relationship`
 | SGD source | Disposition |
 |---|---|
 | `colleague_locus` (gene links) | skipped, count reported in dump metadata |
-| `colleague.profession`, phone numbers, `is_beta_tester` | dropped |
+| phone numbers, `is_beta_tester` | dropped |
 | `colleague_reference`, `colleaguetriage` | empty in source |
 
-## Idempotency
+## Incremental sync (add / update / delete)
 
-Re-runs are safe — already-loaded rows are detected and skipped via:
+The loader is a re-runnable sync keyed on `colleague_id` (via the
+`SGD:Colleague_<id>` xref), so it can run whenever SGD data changes:
 
-- `person`: cross-reference `SGD:Colleague_<colleague_id>`
-- `laboratory`: cross-reference `SGD:Lab_<pi_colleague_id>`
-- `laboratory_person`: existing `(laboratory_id, person_id)`
-- `person_lineage`: existing `(person_subject_id, person_object_id, relationship)`
+- **add** — a colleague new to ABC is created.
+- **update** — a matched colleague's `person` fields and child rows
+  (names, email, note, ORCID xref, SGD-xref pages) are overwritten from SGD
+  (SGD is the source of truth); only rows that actually differ are written.
+- **delete** — with `--prune` on a full run, persons/labs/collaborator_of edges
+  whose `colleague_id` left the SGD dump are removed. Guards: a person linked to
+  a `users` account and a lab with `laboratory_allele_designation` rows are
+  never hard-deleted; collaborator_of deletes only touch edges between two SGD
+  persons.
+
+Match keys: `SGD:Colleague_<id>` (person), `SGD:Lab_<pi_id>` (laboratory),
+`(laboratory_id, person_id)` (laboratory_person), and
+`(person_subject_id, person_object_id, relationship)` (person_lineage). Re-runs
+are convergent: a run with no SGD changes is a no-op.
+
+## Email de-duplication
+
+A colleague new to ABC whose email already belongs to a pre-existing **non-SGD**
+person (e.g. AGR staff/author) is attached to that person — its
+`SGD:Colleague` xref is added and its fields synced — instead of creating a
+duplicate. Matching is restricted to non-SGD persons because institutional
+emails are shared by distinct colleagues, so a blanket email match would
+wrongly merge different people.
+
+`--merge-email-dups` repairs duplicates that already exist: for an email shared
+by exactly one non-SGD and one SGD person, the SGD person's xrefs, lab
+memberships and lineage edges are moved onto the kept person and the SGD
+duplicate is deleted. Ambiguous groups (shared institutional emails, or two SGD
+records for the same person) are reported and left untouched.
