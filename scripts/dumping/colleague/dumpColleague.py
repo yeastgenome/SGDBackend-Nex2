@@ -33,7 +33,7 @@ DEFAULT_OUTFILE = "scripts/dumping/colleague/data/colleague.json"
 
 COLLEAGUE_SQL = """
     SELECT colleague_id, display_name, obj_url, orcid,
-           first_name, middle_name, last_name, other_last_name,
+           first_name, middle_name, last_name, other_last_name, suffix,
            job_title, institution,
            address1, address2, address3, city, state, country, postal_code,
            email, display_email, research_interest, colleague_note
