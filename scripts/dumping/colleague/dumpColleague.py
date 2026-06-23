@@ -7,9 +7,11 @@ Captures everything the ABC loader needs in one self-contained file:
   * nex.colleague_url                  -> research_summary_urls / lab_urls (embedded)
   * nex.colleague_keyword + keyword    -> keywords (embedded)
   * nex.colleague_relation 'Head of Lab' -> lab_relations (PI <-> member edges)
-Counts of the data that has no ABC target (Associate relations, colleague_locus)
-are recorded in the metadata block so the loader can report them without
-re-querying SGD.
+  * nex.colleague_relation 'Associate'   -> associate_relations (collaborator
+    pairs; SGD stores them mirrored A<->B, so they are deduped here to one
+    unordered pair per relationship)
+Counts of the data that has no ABC target (colleague_locus) are recorded in the
+metadata block so the loader can report them without re-querying SGD.
 
 Companion loader (reads the JSON written here, via its --datafile argument):
   agr_literature_service/lit_processing/oneoff_scripts/load_sgd_colleagues.py
@@ -61,6 +63,16 @@ RELATION_SQL = """
     WHERE association_type = 'Head of Lab'
 """
 
+# 'Associate' is a symmetric collaborator relationship and SGD stores it
+# mirrored (both A->B and B->A). Dedup to one unordered pair per relationship.
+ASSOCIATE_SQL = """
+    SELECT DISTINCT least(colleague_id, associate_id)    AS colleague_id_1,
+                    greatest(colleague_id, associate_id) AS colleague_id_2
+    FROM nex.colleague_relation
+    WHERE association_type = 'Associate'
+      AND colleague_id <> associate_id
+"""
+
 
 def dump_data(outfile):
     nex_session = get_session()
@@ -93,7 +105,12 @@ def dump_data(outfile):
             for row in nex_session.execute(text(RELATION_SQL)).mappings()
         ]
 
-        associate_count = nex_session.execute(text(
+        associate_relations = [
+            {"colleague_id_1": row["colleague_id_1"],
+             "colleague_id_2": row["colleague_id_2"]}
+            for row in nex_session.execute(text(ASSOCIATE_SQL)).mappings()
+        ]
+        associate_row_count = nex_session.execute(text(
             "SELECT count(*) FROM nex.colleague_relation "
             "WHERE association_type = 'Associate'"
         )).scalar()
@@ -108,11 +125,13 @@ def dump_data(outfile):
             "source": "SGD nex.colleague",
             "colleague_count": len(colleagues),
             "head_of_lab_pairs": len(lab_relations),
-            "skipped_associate_relations": associate_count,
+            "associate_relation_rows": associate_row_count,
+            "associate_pairs": len(associate_relations),
             "skipped_colleague_locus": locus_count,
         },
         "colleagues": list(colleagues.values()),
         "lab_relations": lab_relations,
+        "associate_relations": associate_relations,
     }
 
     outdir = path.dirname(outfile)
@@ -122,8 +141,10 @@ def dump_data(outfile):
         # default=str guards against any unexpected non-JSON types
         json.dump(payload, fw, indent=2, default=str)
 
-    print("Wrote {} colleagues, {} Head-of-Lab relations -> {}".format(
-        len(colleagues), len(lab_relations), outfile))
+    print("Wrote {} colleagues, {} Head-of-Lab relations, "
+          "{} Associate pairs (from {} mirrored rows) -> {}".format(
+              len(colleagues), len(lab_relations), len(associate_relations),
+              associate_row_count, outfile))
 
 
 def main():
