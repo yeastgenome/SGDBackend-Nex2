@@ -5151,6 +5151,23 @@ class Locusdbentity(Dbentity):
                 "display_name": "UniProtKB"
             })
 
+        # CGD Synteny Browser link for protein-coding genes that have a standard
+        # gene name. Surfaced under "S288C vs. other species" in the Locus Summary
+        # Sequence section and Sequence tab (LOCUS_SEQUENCE_OTHER_SPECIES), and under
+        # Resources -> Homologs in the Homolog tab (LOCUS_PROTEIN_HOMOLOGS).
+        if self.has_protein and self.gene_name:
+            cgd_synteny_url = "https://www.candidagenome.org/synteny-browser?gene=" + self.gene_name + "&source=SGD"
+            obj["urls"].append({
+                "category": "LOCUS_SEQUENCE_OTHER_SPECIES",
+                "link": cgd_synteny_url,
+                "display_name": "CGD Synteny Browser"
+            })
+            obj["urls"].append({
+                "category": "LOCUS_PROTEIN_HOMOLOGS",
+                "link": cgd_synteny_url,
+                "display_name": "CGD Synteny Browser"
+            })
+
         locus_notes = DBSession.query(Locusnote).filter_by(locus_id=self.dbentity_id).all()
         obj["history"] = [h.to_dict() for h in locus_notes]
 
