@@ -11732,18 +11732,29 @@ class Complexdbentity(Dbentity):
 
     def go_cams(self):
         # GO-CAM models for the GO-CAMs subsection on the Complex GO tab. A
-        # complex carries no pathway annotations of its own, so we show the union
-        # of the GO-CAM models of its protein subunits (deduped by pathway).
-        # Mirrors the Locus Summary Page GO-CAMs; see get_go_cam_models().
-        locus_ids = set()
-        annot_objs = DBSession.query(Complexbindingannotation).filter_by(
-            complex_id=self.dbentity_id).all()
-        for annot in annot_objs:
-            if annot.interactor and annot.interactor.locus_id:
-                locus_ids.add(annot.interactor.locus_id)
-            if annot.binding_interactor and annot.binding_interactor.locus_id:
-                locus_ids.add(annot.binding_interactor.locus_id)
-        return get_go_cam_models(list(locus_ids))
+        # complex belongs to a model only when the model annotates the complex
+        # itself (an object SGD:<complex_sgdid> / label 'CPX-xxxx'); that
+        # membership is not in pathwayannotation, so it is precomputed from the
+        # model JSON into complex_alias(alias_type='GO-CAM') by
+        # scripts/loading/complex/load_complex_gocam_url.py. (Using the GO-CAMs of
+        # the protein subunits would over-report -- a moonlighting subunit pulls
+        # in unrelated models the complex is not part of.)
+        aliases = DBSession.query(ComplexAlias).filter_by(
+            complex_id=self.dbentity_id, alias_type='GO-CAM').all()
+
+        models = []
+        for alias in aliases:
+            # The model id is the last path segment of the model.geneontology.org
+            # URL, e.g. http://model.geneontology.org/YeastPathways_PWY-2201.
+            model_id = alias.obj_url.rstrip('/').split('/')[-1]
+            models.append({
+                "model_id": model_id,
+                "title": alias.display_name,
+                "gocam_url": alias.obj_url
+            })
+
+        models.sort(key=lambda m: m["title"].lower())
+        return models
 
     def go_overview_to_dict(self):
 
