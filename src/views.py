@@ -2769,6 +2769,26 @@ def complex(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='complex_go_cams', renderer='json', request_method='GET')
+def complex_go_cams(request):
+    try:
+        id = extract_id_request(request, 'complex', 'id', True)
+        complex = None
+        if id:
+            complex = DBSession.query(Complexdbentity).filter_by(dbentity_id=id).one_or_none()
+        else:
+            complexAC = request.matchdict['id']
+            complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
+        if complex is not None:
+            return complex.go_cams()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='allele', renderer='json', request_method='GET')
 def allele(request):
     try:

@@ -3188,6 +3188,48 @@ class Filedbentity(Dbentity):
         return path.path_id
 
 
+def get_go_cam_models(dbentity_ids):
+    # GO-CAM models available for the given gene dbentity_id(s), for the
+    # Functional Networks GO-CAMs subsection. A pathway has a GO-CAM model when a
+    # PathwayUrl of url_type 'GO-CAM' exists for it (loaded from the GO
+    # noctua-models YeastPathways set). The model graph itself is rendered
+    # client-side by the GO go-gocam-viewer component using the model id, so we
+    # only return the id, title and linkout here. Shared by the Locus Summary
+    # Page (a single gene) and the Complex GO tab (union over protein subunits);
+    # models are deduped by pathway so a pathway shared by several subunits shows
+    # once.
+    if not dbentity_ids:
+        return []
+
+    pathway_ids = [a.pathway_id for a in DBSession.query(Pathwayannotation).filter(
+        Pathwayannotation.dbentity_id.in_(dbentity_ids)).distinct(Pathwayannotation.pathway_id).all()]
+    if len(pathway_ids) == 0:
+        return []
+
+    gocam_urls = DBSession.query(PathwayUrl).filter(and_(
+        PathwayUrl.pathway_id.in_(pathway_ids), PathwayUrl.url_type == 'GO-CAM')).all()
+
+    models = []
+    seen = set()
+    for url in gocam_urls:
+        if url.pathway_id in seen:
+            continue
+        seen.add(url.pathway_id)
+        pathway = DBSession.query(Dbentity).filter_by(dbentity_id=url.pathway_id).one_or_none()
+        title = pathway.display_name if pathway else url.display_name
+        # The model id is the last path segment of the model.geneontology.org URL,
+        # e.g. http://model.geneontology.org/YeastPathways_ARO-PWY -> YeastPathways_ARO-PWY
+        model_id = url.obj_url.rstrip('/').split('/')[-1]
+        models.append({
+            "model_id": model_id,
+            "title": title,
+            "gocam_url": url.obj_url
+        })
+
+    models.sort(key=lambda m: m["title"].lower())
+    return models
+
+
 class Locusdbentity(Dbentity):
     __tablename__ = 'locusdbentity'
     __table_args__ = {'schema': 'nex'}
@@ -4207,38 +4249,8 @@ class Locusdbentity(Dbentity):
 
     def go_cams(self):
         # GO-CAM models available for this locus, for the Functional Networks
-        # section on the Locus Summary Page. A pathway has a GO-CAM model when a
-        # PathwayUrl of url_type 'GO-CAM' exists for it (loaded from the GO
-        # noctua-models YeastPathways set). The model graph itself is rendered
-        # client-side by the GO wc-gocam-viz component using the model id, so we
-        # only return the id, title and linkout here.
-        pathway_ids = [a.pathway_id for a in DBSession.query(Pathwayannotation).filter_by(
-            dbentity_id=self.dbentity_id).distinct(Pathwayannotation.pathway_id).all()]
-        if len(pathway_ids) == 0:
-            return []
-
-        gocam_urls = DBSession.query(PathwayUrl).filter(and_(
-            PathwayUrl.pathway_id.in_(pathway_ids), PathwayUrl.url_type == 'GO-CAM')).all()
-
-        models = []
-        seen = set()
-        for url in gocam_urls:
-            if url.pathway_id in seen:
-                continue
-            seen.add(url.pathway_id)
-            pathway = DBSession.query(Dbentity).filter_by(dbentity_id=url.pathway_id).one_or_none()
-            title = pathway.display_name if pathway else url.display_name
-            # The model id is the last path segment of the model.geneontology.org URL,
-            # e.g. http://model.geneontology.org/YeastPathways_ARO-PWY -> YeastPathways_ARO-PWY
-            model_id = url.obj_url.rstrip('/').split('/')[-1]
-            models.append({
-                "model_id": model_id,
-                "title": title,
-                "gocam_url": url.obj_url
-            })
-
-        models.sort(key=lambda m: m["title"].lower())
-        return models
+        # section on the Locus Summary Page. See get_go_cam_models().
+        return get_go_cam_models([self.dbentity_id])
 
     def disease_graph(self):
         main_gene_disease_annotations = DBSession.query(Diseaseannotation, Diseasesupportingevidence.dbxref_id, Diseasesupportingevidence.obj_url).join(Diseasesupportingevidence).filter(Diseaseannotation.dbentity_id==self.dbentity_id).all()
@@ -11717,6 +11729,21 @@ class Complexdbentity(Dbentity):
         data['network_graph'] = { "edges": network_edges, "nodes": network_nodes }
 
         return data
+
+    def go_cams(self):
+        # GO-CAM models for the GO-CAMs subsection on the Complex GO tab. A
+        # complex carries no pathway annotations of its own, so we show the union
+        # of the GO-CAM models of its protein subunits (deduped by pathway).
+        # Mirrors the Locus Summary Page GO-CAMs; see get_go_cam_models().
+        locus_ids = set()
+        annot_objs = DBSession.query(Complexbindingannotation).filter_by(
+            complex_id=self.dbentity_id).all()
+        for annot in annot_objs:
+            if annot.interactor and annot.interactor.locus_id:
+                locus_ids.add(annot.interactor.locus_id)
+            if annot.binding_interactor and annot.binding_interactor.locus_id:
+                locus_ids.add(annot.binding_interactor.locus_id)
+        return get_go_cam_models(list(locus_ids))
 
     def go_overview_to_dict(self):
 
