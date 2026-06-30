@@ -4205,6 +4205,41 @@ class Locusdbentity(Dbentity):
             "edges": edges
         }
 
+    def go_cams(self):
+        # GO-CAM models available for this locus, for the Functional Networks
+        # section on the Locus Summary Page. A pathway has a GO-CAM model when a
+        # PathwayUrl of url_type 'GO-CAM' exists for it (loaded from the GO
+        # noctua-models YeastPathways set). The model graph itself is rendered
+        # client-side by the GO wc-gocam-viz component using the model id, so we
+        # only return the id, title and linkout here.
+        pathway_ids = [a.pathway_id for a in DBSession.query(Pathwayannotation).filter_by(
+            dbentity_id=self.dbentity_id).distinct(Pathwayannotation.pathway_id).all()]
+        if len(pathway_ids) == 0:
+            return []
+
+        gocam_urls = DBSession.query(PathwayUrl).filter(and_(
+            PathwayUrl.pathway_id.in_(pathway_ids), PathwayUrl.url_type == 'GO-CAM')).all()
+
+        models = []
+        seen = set()
+        for url in gocam_urls:
+            if url.pathway_id in seen:
+                continue
+            seen.add(url.pathway_id)
+            pathway = DBSession.query(Dbentity).filter_by(dbentity_id=url.pathway_id).one_or_none()
+            title = pathway.display_name if pathway else url.display_name
+            # The model id is the last path segment of the model.geneontology.org URL,
+            # e.g. http://model.geneontology.org/YeastPathways_ARO-PWY -> YeastPathways_ARO-PWY
+            model_id = url.obj_url.rstrip('/').split('/')[-1]
+            models.append({
+                "model_id": model_id,
+                "title": title,
+                "gocam_url": url.obj_url
+            })
+
+        models.sort(key=lambda m: m["title"].lower())
+        return models
+
     def disease_graph(self):
         main_gene_disease_annotations = DBSession.query(Diseaseannotation, Diseasesupportingevidence.dbxref_id, Diseasesupportingevidence.obj_url).join(Diseasesupportingevidence).filter(Diseaseannotation.dbentity_id==self.dbentity_id).all()
         main_gene_do_ids = [a[0].disease_id for a in main_gene_disease_annotations]

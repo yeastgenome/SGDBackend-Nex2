@@ -498,12 +498,12 @@ COMMENT ON COLUMN nex.pathway_url.obj_url IS 'URL of the object (relative for lo
 COMMENT ON COLUMN nex.pathway_url.url_id IS 'Unique identifier (serial number).';
 COMMENT ON COLUMN nex.pathway_url.display_name IS 'Public display name.';
 COMMENT ON COLUMN nex.pathway_url.date_created IS 'Date the record was entered into the database.';
-COMMENT ON COLUMN nex.pathway_url.url_type IS 'Type of URL (BioCyc, Yeastpathways).';
+COMMENT ON COLUMN nex.pathway_url.url_type IS 'Type of URL (BioCyc, YeastPathways, GO-CAM).';
 COMMENT ON COLUMN nex.pathway_url.pathway_id IS 'FK to PATHWAYDBENTITY.DBENTITY_ID.';
 COMMENT ON COLUMN nex.pathway_url.source_id IS 'FK to SOURCE.SOURCE_ID.';
 COMMENT ON COLUMN nex.pathway_url.created_by IS 'Username of the person who entered the record into the database.';
 ALTER TABLE nex.pathway_url ADD CONSTRAINT pathway_url_uk UNIQUE (pathway_id,display_name,obj_url);
-ALTER TABLE nex.pathway_url ADD CONSTRAINT pathwayurl_type_ck CHECK (URL_TYPE IN ('BioCyc', 'YeastPathways'));
+ALTER TABLE nex.pathway_url ADD CONSTRAINT pathwayurl_type_ck CHECK (URL_TYPE IN ('BioCyc', 'YeastPathways', 'GO-CAM'));
 CREATE INDEX pathwayurl_source_fk_index ON nex.pathway_url (source_id);
 
 DROP TABLE IF EXISTS nex.pathwaysummary CASCADE; 

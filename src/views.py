@@ -1651,6 +1651,21 @@ def locus_go_graph(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+@view_config(route_name='locus_go_cams', renderer='json', request_method='GET')
+def locus_go_cams(request):
+    try:
+        id = extract_id_request(request, 'locus')
+        locus = get_locus_by_id(id)
+        if locus:
+            return locus.go_cams()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
             
 @view_config(route_name='locus_disease_graph', renderer='json', request_method='GET')
 def locus_disease_graph(request):
