@@ -119,7 +119,7 @@ def insert_url(nex_session, fw, display_name, source, proteindomain_id, source_i
     elif source == 'TIGRFAM':
         link = "http://www.jcvi.org/cgi-bin/tigrfams/HmmReportPage.cgi?acc=" + display_name
     elif source == 'PRINTS':
-        link = "http:////www.bioinf.man.ac.uk/cgi-bin/dbbrowser/sprint/searchprintss.cgi?display_opts=Prints&amp;category=None&amp;queryform=false&amp;prints_accn=" + display_name
+        link = "https://www.ebi.ac.uk/interpro/entry/prints/" + display_name + "/"
     elif source == 'ProDom':
         link = "http://prodom.prabi.fr/prodom/current/cgi-bin/request.pl?question=DBEN&amp;query=" + display_name
     elif source == 'PIRSF':
