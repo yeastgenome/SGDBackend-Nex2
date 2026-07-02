@@ -11567,10 +11567,35 @@ class Complexdbentity(Dbentity):
         if not include_subunit:
             return data
 
-        rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()])
-        chebi_to_link = dict([(x.format_name, x.obj_url) for x in DBSession.query(Chebi).all()])
-        
-        annot_objs = DBSession.query(Complexbindingannotation).filter_by(complex_id=self.dbentity_id).all()
+        # Eager-load the interactors (and their loci) so collecting format_names
+        # and the link lookups in the loops below don't trigger per-row lazy loads.
+        annot_objs = DBSession.query(Complexbindingannotation).options(
+            joinedload(Complexbindingannotation.interactor).joinedload(Interactor.locus),
+            joinedload(Complexbindingannotation.binding_interactor).joinedload(Interactor.locus)
+        ).filter_by(complex_id=self.dbentity_id).all()
+
+        # Only the CHEBI / RNAcentral subunits of THIS complex need external-link
+        # lookups. Loading the whole Chebi table (~110k rows) and every RNAcentral
+        # alias on each request dominated the Summary tab load time, so scope both
+        # lookups to the interactors actually present in this complex.
+        chebi_ids = set()
+        urs_ids = set()
+        for annot in annot_objs:
+            for it in (annot.interactor, annot.binding_interactor):
+                if it is None:
+                    continue
+                if it.format_name.startswith('CHEBI:'):
+                    chebi_ids.add(it.format_name)
+                elif it.format_name.startswith('URS'):
+                    urs_ids.add(it.format_name)
+
+        chebi_to_link = {}
+        if chebi_ids:
+            chebi_to_link = dict([(x.format_name, x.obj_url) for x in DBSession.query(Chebi).filter(Chebi.format_name.in_(chebi_ids)).all()])
+
+        rna_id_to_locus = {}
+        if urs_ids:
+            rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlias).options(joinedload(LocusAlias.locus)).filter_by(alias_type='RNAcentral ID').filter(LocusAlias.display_name.in_(urs_ids)).all()])
 
         unique_interactors = []
         found = {}
