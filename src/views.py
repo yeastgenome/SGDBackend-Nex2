@@ -2769,6 +2769,55 @@ def complex(request):
         if DBSession:
             DBSession.remove()
 
+def _get_complex_from_request(request):
+    id = extract_id_request(request, 'complex', 'id', True)
+    if id:
+        return DBSession.query(Complexdbentity).filter_by(dbentity_id=id).one_or_none()
+    complexAC = request.matchdict['id']
+    return DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
+
+@view_config(route_name='complex_summary', renderer='json', request_method='GET')
+def complex_summary(request):
+    try:
+        complex = _get_complex_from_request(request)
+        if complex is not None:
+            return complex.protein_complex_summary_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complex_go', renderer='json', request_method='GET')
+def complex_go(request):
+    try:
+        complex = _get_complex_from_request(request)
+        if complex is not None:
+            return complex.protein_complex_go_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complex_literature', renderer='json', request_method='GET')
+def complex_literature(request):
+    try:
+        complex = _get_complex_from_request(request)
+        if complex is not None:
+            return complex.protein_complex_literature_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='complex_go_cams', renderer='json', request_method='GET')
 def complex_go_cams(request):
     try:

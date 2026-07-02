@@ -158,6 +158,9 @@ def main(global_config, **settings):
     config.add_route('ecnumber_locus_details', '/ecnumber/{id}/locus_details', request_method='GET')
 
     config.add_route('complex', '/complex/{id}', request_method='GET')
+    config.add_route('complex_summary', '/complex/{id}/summary', request_method='GET')
+    config.add_route('complex_go', '/complex/{id}/go', request_method='GET')
+    config.add_route('complex_literature', '/complex/{id}/literature', request_method='GET')
     config.add_route('complex_go_cams', '/complex/{id}/go_cams', request_method='GET')
     config.add_route('entity_validation', '/entity/{entity_type}/{ids}', request_method='GET')
     

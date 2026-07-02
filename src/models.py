@@ -1,7 +1,7 @@
 import logging
 import functools
 from sqlalchemy import Column, BigInteger, UniqueConstraint, Float, Boolean, SmallInteger, Integer, DateTime, ForeignKey, Index, Numeric, String, Text, text, FetchedValue, func, or_, and_, distinct, inspect
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, joinedload
 from sqlalchemy.ext.declarative import declarative_base
 from zope.sqlalchemy import register
 from elasticsearch import Elasticsearch
@@ -11340,7 +11340,15 @@ class Complexdbentity(Dbentity):
 
     eco = relationship('Eco')
 
-    def protein_complex_details(self):
+    def protein_complex_details(self, include_go=True, include_subunit=True,
+                                include_references=True, include_literature=True):
+
+        # Per-tab section flags let each Complex page tab compute only the data it
+        # renders (see protein_complex_{go,summary,literature}_details below).
+        # The Summary tab's combined network_graph is built from BOTH the GO loop
+        # and the subunit loop, so the network scaffold + GO loop run whenever
+        # either the GO or the subunit section is requested.
+        compute_network = include_go or include_subunit
 
         data = {}
         data['complex_name'] = self.display_name
@@ -11380,11 +11388,12 @@ class Complexdbentity(Dbentity):
         crossRefs2 = sorted(crossRefs, key=lambda c: c['display_name'])
         data["cross_references"] = sorted(crossRefs2, key=lambda c: c['alias_type'])
 
-        unique_references = []
-        data['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
-        data['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
-        data['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
-        data['unique_references'] = unique_references
+        if include_literature:
+            unique_references = []
+            data['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
+            data['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
+            data['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
+            data['unique_references'] = unique_references
 
         ## go
         
@@ -11399,12 +11408,6 @@ class Complexdbentity(Dbentity):
         })
         
         network_nodes_ids[self.format_name] = True
-        
-        complex_ids = []
-        for x in DBSession.query(Complexdbentity).all():
-            complex_ids.append(x.dbentity_id)
-        
-        go_annots = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
         process = []
         function = []
@@ -11413,8 +11416,36 @@ class Complexdbentity(Dbentity):
         foundComplex = {}
         foundSourceTargetPair = {}
 
+        # Skip the (expensive) shared-annotation network entirely for tabs that
+        # render neither the GO nor the subunit sections (e.g. the Literature tab).
+        go_annots = []
+        if compute_network:
+            # Only the dbentity_ids are needed here; querying the full ORM objects
+            # loaded (and identity-mapped) every complex on the site on each request.
+            complex_ids = [x[0] for x in DBSession.query(Complexdbentity.dbentity_id).all()]
+
+            # Eager-load the Go term to avoid an N+1 lazy load per annotation below.
+            go_annots = DBSession.query(Goannotation).options(joinedload(Goannotation.go)).filter_by(dbentity_id=self.dbentity_id).all()
+
         if go_annots:
             data['go'] = [g.go.to_dict() for g in go_annots]
+
+            # Pre-fetch, in a single query, every complex annotation that shares a
+            # GO term with this complex, eager-loading the owning dbentity. This
+            # replaces a per-annotation query + per-result lazy load (N+1) in the
+            # shared-annotation network loop below.
+            go_ids = list({x.go_id for x in go_annots})
+            go_complexes_by_go_id = {}
+            if go_ids:
+                shared_annots = DBSession.query(Goannotation).options(
+                    joinedload(Goannotation.dbentity)
+                ).filter(
+                    Goannotation.go_id.in_(go_ids),
+                    Goannotation.dbentity_id.in_(complex_ids)
+                ).all()
+                for g2 in shared_annots:
+                    go_complexes_by_go_id.setdefault(g2.go_id, []).append(g2)
+
             for x in go_annots:
                 go = x.go
                 if go.go_namespace == 'molecular function':
@@ -11423,9 +11454,9 @@ class Complexdbentity(Dbentity):
                     component.append(x.to_dict()[0])
                 else:
                     process.append(x.to_dict()[0])
-                    
-                goComplexes = DBSession.query(Goannotation).filter_by(go_id=go.go_id).filter(Goannotation.dbentity_id.in_(complex_ids)).all()
-                
+
+                goComplexes = go_complexes_by_go_id.get(go.go_id, [])
+
                 if len(goComplexes) == 1:
                     continue
                     
@@ -11497,33 +11528,44 @@ class Complexdbentity(Dbentity):
                         foundComplex[complex.format_name] = go.go_id
 
         
-        foundId = {}
-        for edge in network_edges:
-            foundId[edge["source"]] = 1
-            foundId[edge["target"]] = 1
-            
-        go_network_nodes = []
-        for node in network_nodes:
-            if node["id"] in foundId:
-                go_network_nodes.append(node)
-                
-        data['go_network_graph'] = { "edges": network_edges, "nodes": go_network_nodes }
-        
-        data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
-        data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
-        data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
+        # go_network_graph is a snapshot of the network after the GO loop only
+        # (before the subunit loop extends it), so it must be taken here.
+        if include_go:
+            foundId = {}
+            for edge in network_edges:
+                foundId[edge["source"]] = 1
+                foundId[edge["target"]] = 1
+
+            go_network_nodes = []
+            for node in network_nodes:
+                if node["id"] in foundId:
+                    go_network_nodes.append(node)
+
+            data['go_network_graph'] = { "edges": network_edges, "nodes": go_network_nodes }
+
+            data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
+            data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
+            data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
 
         ## reference
 
-        ref_objs = DBSession.query(ComplexReference).filter_by(complex_id=self.dbentity_id).all()
+        if include_references:
+            ref_objs = DBSession.query(ComplexReference).filter_by(complex_id=self.dbentity_id).all()
 
-        refs = []
-        if ref_objs:
-            refs = [ref.reference.to_dict_citation() for ref in ref_objs]
-        refs2 = sorted(refs, key=lambda r: r['display_name'])
-        data["references"] = sorted(refs2, key=lambda r: r['year'], reverse=True)
+            refs = []
+            if ref_objs:
+                refs = [ref.reference.to_dict_citation() for ref in ref_objs]
+            refs2 = sorted(refs, key=lambda r: r['display_name'])
+            data["references"] = sorted(refs2, key=lambda r: r['year'], reverse=True)
 
         ## subunits
+
+        # The subunit table + graphs are the last (and heaviest) section; tabs
+        # that don't render them return before this point. The subunit loop below
+        # also extends the shared network scaffold built by the GO loop above to
+        # produce the combined Summary network_graph.
+        if not include_subunit:
+            return data
 
         rna_id_to_locus = dict([(x.display_name, x.locus) for x in DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()])
         chebi_to_link = dict([(x.format_name, x.obj_url) for x in DBSession.query(Chebi).all()])
@@ -11613,6 +11655,18 @@ class Complexdbentity(Dbentity):
                 unique_interactors.append(binding_interactor)
                 found[binding_interactor.format_name] =1
 
+        # Pre-fetch every binding annotation for the unique interactors in one
+        # query (eager-loading the owning complex), grouped by interactor. This
+        # replaces a per-interactor query + per-result lazy load (N+1) in the
+        # subunit loop below.
+        binding_by_interactor = {}
+        interactor_ids = [i.interactor_id for i in unique_interactors]
+        if interactor_ids:
+            for a in DBSession.query(Complexbindingannotation).options(
+                joinedload(Complexbindingannotation.complex)
+            ).filter(Complexbindingannotation.interactor_id.in_(interactor_ids)).all():
+                binding_by_interactor.setdefault(a.interactor_id, []).append(a)
+
         subunits = []
         for interactor in unique_interactors:
             display_name = interactor.display_name
@@ -11646,7 +11700,7 @@ class Complexdbentity(Dbentity):
                               "stoichiometry": stoichiometry4interactor.get(interactor.format_name),
                               "link": link })
 
-            annot_objs2 = DBSession.query(Complexbindingannotation).filter_by(interactor_id=interactor.interactor_id).all()
+            annot_objs2 = binding_by_interactor.get(interactor.interactor_id, [])
 
             unique_complexes = {}
             for annot in annot_objs2:
@@ -11730,13 +11784,34 @@ class Complexdbentity(Dbentity):
 
         return data
 
+    def protein_complex_summary_details(self):
+        # Summary tab: common fields + subunit table/graphs + combined
+        # network_graph + reference list. Needs the GO loop (include_go) because
+        # the combined network_graph and the navbar's process/function/component
+        # counts come from it; skips the literature-annotation reference lists.
+        return self.protein_complex_details(include_go=True, include_subunit=True,
+                                            include_references=True, include_literature=False)
+
+    def protein_complex_go_details(self):
+        # GO tab: common fields + process/function/component + go_network_graph.
+        # Skips the subunit binding network, the reference list and the
+        # literature-annotation reference lists.
+        return self.protein_complex_details(include_go=True, include_subunit=False,
+                                            include_references=False, include_literature=False)
+
+    def protein_complex_literature_details(self):
+        # Literature tab: common fields + literature-annotation reference lists.
+        # Skips both (expensive) network computations entirely.
+        return self.protein_complex_details(include_go=False, include_subunit=False,
+                                            include_references=False, include_literature=True)
+
     def go_cams(self):
         # GO-CAM models for the GO-CAMs subsection on the Complex GO tab. A
         # complex belongs to a model only when the model annotates the complex
         # itself (an object SGD:<complex_sgdid> / label 'CPX-xxxx'); that
         # membership is not in pathwayannotation, so it is precomputed from the
         # model JSON into complex_alias(alias_type='GO-CAM') by
-        # scripts/loading/complex/load_complex_gocam_url.py. (Using the GO-CAMs of
+        # scripts/loading/pathway/load_complex_gocam_url.py. (Using the GO-CAMs of
         # the protein subunits would over-report -- a moonlighting subunit pulls
         # in unrelated models the complex is not part of.)
         aliases = DBSession.query(ComplexAlias).filter_by(
