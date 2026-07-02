@@ -11341,7 +11341,8 @@ class Complexdbentity(Dbentity):
     eco = relationship('Eco')
 
     def protein_complex_details(self, include_go=True, include_subunit=True,
-                                include_references=True, include_literature=True):
+                                include_references=True, include_literature=True,
+                                include_go_list=True):
 
         # Per-tab section flags let each Complex page tab compute only the data it
         # renders (see protein_complex_{go,summary,literature}_details below).
@@ -11424,11 +11425,24 @@ class Complexdbentity(Dbentity):
             # loaded (and identity-mapped) every complex on the site on each request.
             complex_ids = [x[0] for x in DBSession.query(Complexdbentity.dbentity_id).all()]
 
-            # Eager-load the Go term to avoid an N+1 lazy load per annotation below.
-            go_annots = DBSession.query(Goannotation).options(joinedload(Goannotation.go)).filter_by(dbentity_id=self.dbentity_id).all()
+            # Eager-load the Go term and the many-to-one relations that
+            # Goannotation.to_dict() reads (dbentity/reference/source/eco), so the
+            # process/function/component to_dict() calls below don't lazy-load them
+            # one annotation at a time.
+            go_annots = DBSession.query(Goannotation).options(
+                joinedload(Goannotation.go),
+                joinedload(Goannotation.dbentity),
+                joinedload(Goannotation.reference),
+                joinedload(Goannotation.source),
+                joinedload(Goannotation.eco)
+            ).filter_by(dbentity_id=self.dbentity_id).all()
 
         if go_annots:
-            data['go'] = [g.go.to_dict() for g in go_annots]
+            # Top-level go list is only consumed by the full /complex/{id} API
+            # payload; the page tabs use process/function/component instead, so
+            # skip this extra Go.to_dict() pass for them.
+            if include_go_list:
+                data['go'] = [g.go.to_dict() for g in go_annots]
 
             # Pre-fetch, in a single query, every complex annotation that shares a
             # GO term with this complex, eager-loading the owning dbentity. This
@@ -11771,7 +11785,6 @@ class Complexdbentity(Dbentity):
                         ### also need to add this complex to the network 
 
                         if complex.format_name not in network_nodes_ids:
-                            print((complex.format_name))
                             network_nodes.append({
                                 "name": complex.display_name,
                                 "id": complex.format_name,
@@ -11815,14 +11828,16 @@ class Complexdbentity(Dbentity):
         # the combined network_graph and the navbar's process/function/component
         # counts come from it; skips the literature-annotation reference lists.
         return self.protein_complex_details(include_go=True, include_subunit=True,
-                                            include_references=True, include_literature=False)
+                                            include_references=True, include_literature=False,
+                                            include_go_list=False)
 
     def protein_complex_go_details(self):
         # GO tab: common fields + process/function/component + go_network_graph.
         # Skips the subunit binding network, the reference list and the
         # literature-annotation reference lists.
         return self.protein_complex_details(include_go=True, include_subunit=False,
-                                            include_references=False, include_literature=False)
+                                            include_references=False, include_literature=False,
+                                            include_go_list=False)
 
     def protein_complex_literature_details(self):
         # Literature tab: common fields + literature-annotation reference lists.
