@@ -11616,6 +11616,11 @@ class Complexdbentity(Dbentity):
         edges = []
         nodes = []
         stoichiometry4interactor = {}
+        # Residue-level binding regions (range_start/range_end on the binding
+        # annotation). A range is a property of a subunit *pair* (the interactor's
+        # residues that contact binding_interactor), so it is collected per annot
+        # rather than per subunit.
+        binding_regions = []
         found_binding = {}
         found_node = {}
         name_list = {}
@@ -11687,6 +11692,37 @@ class Complexdbentity(Dbentity):
                             found_binding[(node_id, binding_node_id)] = 1
 
             stoichiometry4interactor[interactor.format_name] = annot.stoichiometry
+
+            # Collect the binding region once per annotation (not per stoichiometry
+            # copy). range_start/range_end are residue positions on `interactor`
+            # that bind `binding_interactor`; both endpoints get a resolved label.
+            if (annot.range_start is not None and annot.range_end is not None
+                    and binding_interactor is not None):
+                partner_name = binding_interactor.display_name
+                partner_link = binding_interactor.obj_url
+                partner_sgdid = None
+                if binding_interactor.locus_id:
+                    partner_name = binding_interactor.locus.display_name
+                    partner_link = binding_interactor.locus.obj_url
+                    partner_sgdid = binding_interactor.locus.sgdid
+                elif binding_interactor.format_name.startswith('CPX-'):
+                    partner_link = '/complex/' + binding_interactor.format_name
+                elif binding_interactor.format_name.startswith('CHEBI:'):
+                    partner_link = chebi_to_link.get(binding_interactor.format_name, partner_link)
+                elif (binding_interactor.format_name.startswith('URS')
+                        and binding_interactor.format_name in rna_id_to_locus):
+                    partner_link = rna_id_to_locus[binding_interactor.format_name].obj_url
+                binding_regions.append({
+                    "subunit": display_name,
+                    "subunit_link": link,
+                    "subunit_sgdid": sgdid,
+                    "partner": partner_name,
+                    "partner_link": partner_link,
+                    "partner_sgdid": partner_sgdid,
+                    "range_start": annot.range_start,
+                    "range_end": annot.range_end
+                })
+
             if interactor.format_name not in found:
                 unique_interactors.append(interactor)
                 found[interactor.format_name] = 1
@@ -11817,6 +11853,7 @@ class Complexdbentity(Dbentity):
                     foundComplex[complex.format_name] = interactor.format_name
 
         data['subunit'] = sorted(subunits, key=lambda a: a['display_name'])
+        data['binding_regions'] = sorted(binding_regions, key=lambda b: (b['subunit'], b['range_start']))
         data['graph'] = { "edges": edges, "nodes": nodes }
         data['network_graph'] = { "edges": network_edges, "nodes": network_nodes }
 
