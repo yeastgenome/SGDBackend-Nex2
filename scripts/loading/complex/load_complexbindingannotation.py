@@ -47,10 +47,14 @@ def load_complexbindingannotation():
         binding_interactor_id = x.binding_interactor_id
         if binding_interactor_id is None:
             binding_interactor_id = -1
-        # range_start/range_end are part of the key: a subunit pair can have
-        # several distinct binding regions that differ only by range (e.g. the
-        # three Mg2+ binding sites on ILV2 in CPX-3034).
-        key = (x.complex_id, x.interactor_id, binding_interactor_id, x.range_start, x.range_end)
+        reference_id = x.reference_id
+        if reference_id is None:
+            reference_id = -1
+        # Mirrors the nex.complexbindingannotation_uk unique index. range_start/
+        # range_end are part of the key: a subunit pair can have several distinct
+        # binding regions that differ only by range (e.g. the three Mg2+ binding
+        # sites on ILV2 in CPX-3034). binding_type_id is not part of the key.
+        key = (x.complex_id, x.interactor_id, binding_interactor_id, reference_id, x.range_start, x.range_end)
         key_to_annotation[key] = (x.binding_type_id, x.range_start, x.range_end, x.stoichiometry, x.binding_region_name)
 
     loaded = {}
@@ -126,7 +130,9 @@ def load_complexbindingannotation():
 
                 (binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name) = b
 
-                key = (complex_id, interactor_id, binding_interactor_id, range_start, range_end)
+                # reference_id is always None for loaded rows (-1 sentinel to
+                # match key_to_annotation and the DB unique index).
+                key = (complex_id, interactor_id, binding_interactor_id, -1, range_start, range_end)
 
                 if key in loaded:
                     continue
@@ -147,12 +153,14 @@ def load_complexbindingannotation():
 
     for key in key_to_annotation:
         if key not in loaded:
-            (complex_id, interactor_id, binding_interactor_id, range_start, range_end) = key
+            (complex_id, interactor_id, binding_interactor_id, reference_id, range_start, range_end) = key
+            if reference_id == -1:
+                reference_id = None
             if binding_interactor_id == -1:
-                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, range_start=range_start, range_end=range_end).delete()
+                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, reference_id=reference_id, range_start=range_start, range_end=range_end).delete()
                 fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=None, range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been deleted.\n")
             else:
-                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id, range_start=range_start, range_end=range_end).delete()
+                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id, reference_id=reference_id, range_start=range_start, range_end=range_end).delete()
                 fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + ", range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been deleted.\n")
 
     # nex_session.rollback()
@@ -202,12 +210,12 @@ def update_annotation(nex_session, fw, complex_id, interactor_id, binding_intera
 
     # range_start/range_end are part of the row identity now, so they must be in
     # the WHERE clause -- otherwise the update would hit every binding region for
-    # this subunit pair.
+    # this subunit pair. reference_id is always None for loaded rows.
     if binding_interactor_id == -1:
-        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, range_start=range_start, range_end=range_end).update(update_hash)
+        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, reference_id=None, range_start=range_start, range_end=range_end).update(update_hash)
         fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=None, range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been updated.\n")
     else:
-        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id, range_start=range_start, range_end=range_end).update(update_hash)
+        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id, reference_id=None, range_start=range_start, range_end=range_end).update(update_hash)
         fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + ", range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been updated.\n")
    
 

@@ -12040,13 +12040,16 @@ class ComplexReference(Base):
 class Complexbindingannotation(Base):
     __tablename__ = 'complexbindingannotation'
     __table_args__ = (
-        # range_start/range_end are part of the identity: a subunit pair can have
-        # several distinct residue-level binding regions (e.g. the three Mg2+
-        # binding sites asn-577/asp-550/glu-579 on ILV2 in CPX-3034), which differ
-        # only by range. Without the range columns here the unique constraint
-        # collapses them to a single row.
+        # Mirrors the actual nex.complexbindingannotation_uk unique index in the
+        # database (NULLs coalesced there). range_start/range_end are part of the
+        # identity: a subunit pair can have several distinct residue-level binding
+        # regions (e.g. the three Mg2+ binding sites asn-577/asp-550/glu-579 on
+        # ILV2 in CPX-3034) that differ only by range; without the range columns
+        # the key collapses them to a single row. binding_type_id is intentionally
+        # not part of the key (it is a mutable attribute of the region, not part of
+        # its identity).
         UniqueConstraint('complex_id', 'interactor_id', 'binding_interactor_id',
-                         'reference_id', 'binding_type_id', 'range_start', 'range_end'),
+                         'reference_id', 'range_start', 'range_end'),
         {'schema': 'nex'}
     )
 
