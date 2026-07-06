@@ -47,8 +47,11 @@ def load_complexbindingannotation():
         binding_interactor_id = x.binding_interactor_id
         if binding_interactor_id is None:
             binding_interactor_id = -1
-        key = (x.complex_id, x.interactor_id, binding_interactor_id)
-        key_to_annotation[key] = (x.binding_type_id, x.range_start, x.range_end, x.stoichiometry)
+        # range_start/range_end are part of the key: a subunit pair can have
+        # several distinct binding regions that differ only by range (e.g. the
+        # three Mg2+ binding sites on ILV2 in CPX-3034).
+        key = (x.complex_id, x.interactor_id, binding_interactor_id, x.range_start, x.range_end)
+        key_to_annotation[key] = (x.binding_type_id, x.range_start, x.range_end, x.stoichiometry, x.binding_region_name)
 
     loaded = {}
 
@@ -88,7 +91,7 @@ def load_complexbindingannotation():
             linkedFeatures = p.get('linkedFeatures')
             if linkedFeatures is None or len(linkedFeatures) == 0:
                 # no binding interactor
-                bindingInteractors.append((-1, None, None, None))
+                bindingInteractors.append((-1, None, None, None, None))
             else:
                 for lf in linkedFeatures:
                     binding_interactor = lf.get('participantId')
@@ -107,19 +110,23 @@ def load_complexbindingannotation():
                         print("The binding_type:", binding_type, " is not in the PSIMI table.")
                         continue
 
+                    # Human-readable label of the binding region, e.g.
+                    # "mg2+ binding site (asn-577)".
+                    binding_region_name = lf.get('name')
+
                     ranges = lf.get('ranges')
-                
+
                     (range_start, range_end) = cleanup_ranges(ranges)
 
                     print("ranges:", ranges, range_start, range_end)
-                    
-                    bindingInteractors.append((binding_interactor_id, binding_type_id, range_start, range_end))
+
+                    bindingInteractors.append((binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name))
 
             for b in bindingInteractors:
 
-                (binding_interactor_id, binding_type_id, range_start, range_end) = b
+                (binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name) = b
 
-                key = (complex_id, interactor_id, binding_interactor_id)
+                key = (complex_id, interactor_id, binding_interactor_id, range_start, range_end)
 
                 if key in loaded:
                     continue
@@ -130,29 +137,29 @@ def load_complexbindingannotation():
 
                 if annotation_in_db is None:
 
-                    insert_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, stoichiometry, source_id, taxonomy_id)
+                    insert_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name, stoichiometry, source_id, taxonomy_id)
                     continue
 
-                update_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, stoichiometry, annotation_in_db, source_id, taxonomy_id)
+                update_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name, stoichiometry, annotation_in_db, source_id, taxonomy_id)
 
         # nex_session.rollback()
         nex_session.commit()  
 
     for key in key_to_annotation:
         if key not in loaded:
-            (complex_id, interactor_id, binding_interactor_id) = key
+            (complex_id, interactor_id, binding_interactor_id, range_start, range_end) = key
             if binding_interactor_id == -1:
-                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id).delete()
-                fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=None has been deleted.\n")
+                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, range_start=range_start, range_end=range_end).delete()
+                fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=None, range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been deleted.\n")
             else:
-                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id).delete()
-                fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + " has been deleted.\n")
+                nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id, range_start=range_start, range_end=range_end).delete()
+                fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + ", range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been deleted.\n")
 
     # nex_session.rollback()
     nex_session.commit()  
 
  
-def insert_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, stoichiometry, source_id, taxonomy_id):
+def insert_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name, stoichiometry, source_id, taxonomy_id):
 
     if binding_interactor_id == -1:
         binding_interactor_id = None
@@ -166,16 +173,17 @@ def insert_annotation(nex_session, fw, complex_id, interactor_id, binding_intera
                                  reference_id = None,
                                  range_start = range_start,
                                  range_end = range_end,
+                                 binding_region_name = binding_region_name,
                                  stoichiometry = stoichiometry,
                                  created_by = CREATED_BY)
     nex_session.add(x)
 
-    fw.write("Add a new Complexbindingannotation row for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id="+ str(binding_interactor_id) + "\n")
+    fw.write("Add a new Complexbindingannotation row for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id="+ str(binding_interactor_id) + ", range_start=" + str(range_start) + ", range_end=" + str(range_end) + "\n")
     
 
-def update_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, stoichiometry, annotation_in_db, source_id, taxonomy_id):
+def update_annotation(nex_session, fw, complex_id, interactor_id, binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name, stoichiometry, annotation_in_db, source_id, taxonomy_id):
 
-    (binding_type_id_db, range_start_db, range_end_db, stoichiometry_db) = annotation_in_db
+    (binding_type_id_db, range_start_db, range_end_db, stoichiometry_db, binding_region_name_db) = annotation_in_db
 
     update_hash = {}
     if binding_type_id != binding_type_id_db:
@@ -184,18 +192,23 @@ def update_annotation(nex_session, fw, complex_id, interactor_id, binding_intera
         update_hash['range_start'] = range_start
     if range_end != range_end_db:
         update_hash['range_end'] = range_end
+    if binding_region_name != binding_region_name_db:
+        update_hash['binding_region_name'] = binding_region_name
     if stoichiometry and stoichiometry != stoichiometry_db:
         update_hash['stoichiometry'] = stoichiometry
-    
+
     if not update_hash:
         return
 
+    # range_start/range_end are part of the row identity now, so they must be in
+    # the WHERE clause -- otherwise the update would hit every binding region for
+    # this subunit pair.
     if binding_interactor_id == -1:
-        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id).update(update_hash)
-        fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=None has been updated.\n")
+        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, range_start=range_start, range_end=range_end).update(update_hash)
+        fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=None, range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been updated.\n")
     else:
-        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id).update(update_hash)
-        fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + " has been updated.\n")
+        nex_session.query(Complexbindingannotation).filter_by(complex_id=complex_id, interactor_id=interactor_id, binding_interactor_id=binding_interactor_id, range_start=range_start, range_end=range_end).update(update_hash)
+        fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + ", range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been updated.\n")
    
 
 def cleanup_ranges(ranges):
@@ -212,7 +225,19 @@ def cleanup_ranges(ranges):
         if range_end is not None and range_end in ['n', 'c', '?']:
             range_end = None
 
-    return (range_start, range_end)
+    # Return ints so keys built from the JSON match the integer values read back
+    # from the database on subsequent runs.
+    return (to_int(range_start), to_int(range_end))
+
+
+def to_int(value):
+
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def get_json(url):

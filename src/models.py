@@ -11694,8 +11694,11 @@ class Complexdbentity(Dbentity):
             stoichiometry4interactor[interactor.format_name] = annot.stoichiometry
 
             # Collect the binding region once per annotation (not per stoichiometry
-            # copy). range_start/range_end are residue positions on `interactor`
-            # that bind `binding_interactor`; both endpoints get a resolved label.
+            # copy). In the IntAct source a linked feature's ranges are positions on
+            # the *linked* participant (loaded as binding_interactor), not on the
+            # enclosing participant (interactor). So the residue range belongs to
+            # binding_interactor, and interactor is the subunit binding to it -- the
+            # region is attributed to binding_interactor in the display dict below.
             if (annot.range_start is not None and annot.range_end is not None
                     and binding_interactor is not None):
                 partner_name = binding_interactor.display_name
@@ -11713,14 +11716,17 @@ class Complexdbentity(Dbentity):
                         and binding_interactor.format_name in rna_id_to_locus):
                     partner_link = rna_id_to_locus[binding_interactor.format_name].obj_url
                 binding_regions.append({
-                    "subunit": display_name,
-                    "subunit_link": link,
-                    "subunit_sgdid": sgdid,
-                    "partner": partner_name,
-                    "partner_link": partner_link,
-                    "partner_sgdid": partner_sgdid,
+                    # The residue range belongs to binding_interactor, so it is the
+                    # "subunit" column; interactor is the binding "partner".
+                    "subunit": partner_name,
+                    "subunit_link": partner_link,
+                    "subunit_sgdid": partner_sgdid,
+                    "partner": display_name,
+                    "partner_link": link,
+                    "partner_sgdid": sgdid,
                     "range_start": annot.range_start,
-                    "range_end": annot.range_end
+                    "range_end": annot.range_end,
+                    "region_name": annot.binding_region_name
                 })
 
             if interactor.format_name not in found:
@@ -12034,7 +12040,13 @@ class ComplexReference(Base):
 class Complexbindingannotation(Base):
     __tablename__ = 'complexbindingannotation'
     __table_args__ = (
-        UniqueConstraint('complex_id', 'interactor_id', 'binding_interactor_id', 'reference_id', 'binding_type_id'),
+        # range_start/range_end are part of the identity: a subunit pair can have
+        # several distinct residue-level binding regions (e.g. the three Mg2+
+        # binding sites asn-577/asp-550/glu-579 on ILV2 in CPX-3034), which differ
+        # only by range. Without the range columns here the unique constraint
+        # collapses them to a single row.
+        UniqueConstraint('complex_id', 'interactor_id', 'binding_interactor_id',
+                         'reference_id', 'binding_type_id', 'range_start', 'range_end'),
         {'schema': 'nex'}
     )
 
@@ -12048,6 +12060,9 @@ class Complexbindingannotation(Base):
     binding_type_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False, index=True)
     range_start = Column(Integer)
     range_end = Column(Integer)
+    # Human-readable label of the binding region from the IntAct source
+    # (linkedFeatures[].name), e.g. "mg2+ binding site (asn-577)".
+    binding_region_name = Column(String(500))
     stoichiometry = Column(Integer)
     date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
