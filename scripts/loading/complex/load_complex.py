@@ -452,6 +452,12 @@ def update_complex_alias(nex_session, fw, complex_id, aliases, source_id, aliase
         if alias in aliases:
             continue
         (alias_type, display_name) = alias
+        # GO-CAM aliases are maintained by load_complex_gocam_url.py (redmine 6631)
+        # and are not part of the IntAct feed, so they never appear in `aliases`.
+        # Skip them here; otherwise this reconcile deletes every GO-CAM link on
+        # each run and the Complex GO tab's GO-CAM viewer goes blank.
+        if alias_type == 'GO-CAM':
+            continue
         x = nex_session.query(ComplexAlias).filter_by(complex_id=complex_id, alias_type=alias_type, display_name=display_name).one_or_none()
         nex_session.delete(x)
 
