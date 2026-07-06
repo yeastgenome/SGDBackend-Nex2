@@ -118,13 +118,18 @@ def load_complexbindingannotation():
                     # "mg2+ binding site (asn-577)".
                     binding_region_name = lf.get('name')
 
+                    # A single linked feature can carry several residue ranges
+                    # (e.g. the three glutathione binding sites 163/200/212 on GRX4
+                    # in CPX-6865). Emit one binding region per range instead of
+                    # only the first.
                     ranges = lf.get('ranges')
+                    if not ranges:
+                        ranges = ['?-?']
 
-                    (range_start, range_end) = cleanup_ranges(ranges)
-
-                    print("ranges:", ranges, range_start, range_end)
-
-                    bindingInteractors.append((binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name))
+                    for r in ranges:
+                        (range_start, range_end) = cleanup_range(r)
+                        print("range:", r, range_start, range_end)
+                        bindingInteractors.append((binding_interactor_id, binding_type_id, range_start, range_end, binding_region_name))
 
             for b in bindingInteractors:
 
@@ -219,14 +224,17 @@ def update_annotation(nex_session, fw, complex_id, interactor_id, binding_intera
         fw.write("The Complexbindingannotation for complex_id=" + str(complex_id) + ", interactor_id=" + str(interactor_id) + ", binding_interactor_id=" + str(binding_interactor_id) + ", range_start=" + str(range_start) + ", range_end=" + str(range_end) + " has been updated.\n")
    
 
-def cleanup_ranges(ranges):
+def cleanup_range(r):
 
+    # Parse a single IntAct range string (e.g. '200-200', '>355-426', '?-?').
     range_start = None
     range_end = None
-    if ranges[0] != '?-?':
-        ranges[0] = ranges[0].replace(">", "").replace("<", "")
-        range_start = ranges[0].split("-")[0].split("..")[0]
-        range_end = ranges[0].split("-")[1].split("..")[0]
+    if r and r != '?-?':
+        r = r.replace(">", "").replace("<", "")
+        parts = r.split("-")
+        if len(parts) >= 2:
+            range_start = parts[0].split("..")[0]
+            range_end = parts[1].split("..")[0]
 
         if range_start is not None and range_start in ['n', 'c', '?']:
             range_start = None
