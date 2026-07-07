@@ -29,8 +29,8 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 ## Lower bound on annotations parsed from YEAST-mod.gpad; abort if the file
-## looks truncated. VERIFY against a real load before production use.
-GPAD_MIN_ROWS = 100000
+## looks truncated. Calibrated against the 2026-07 QA load (136,759 parsed).
+GPAD_MIN_ROWS = 125000
 CREATED_BY = os.environ['DEFAULT_USER']
 
 ## YEAST-mod.gpad folds in third-party manual annotations that the old
@@ -809,11 +809,12 @@ if __name__ == "__main__":
             print(error_msg)
             send_report(error_msg)
             exit()
-    ## Thresholds are on the compressed (.gz) downloads; YEAST-mod.gpad.gz ~2.6MB,
-    ## YEAST-mod.gpi.gz ~0.47MB as of 2026-07. VERIFY before production use.
+    ## Minimum expected sizes; abort if a download looks truncated. GPAD/GPI are
+    ## the compressed (.gz) downloads (2026-07 QA: gpad.gz ~2.60MB, gpi.gz ~0.47MB);
+    ## complex_portal.v2.gpad is uncompressed (~2.94MB).
     file_sizes = {
-        dated_gpad_file: 2000000,
-        dated_gpi_file: 300000,
+        dated_gpad_file: 2400000,
+        dated_gpi_file: 425000,
         dated_complex_gpad_file: 2700000
     }
     
