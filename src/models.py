@@ -11400,7 +11400,21 @@ class Complexdbentity(Dbentity):
         
         network_nodes =[]
         network_edges =[]
-                
+
+        def dedup_edges(edge_list):
+            # The network/graph edge builders append source->target pairs from
+            # several branches without deduping, so the same edge can be added
+            # many times. Collapse to one edge per (source, target).
+            seen = set()
+            unique = []
+            for edge in edge_list:
+                key = (edge["source"], edge["target"])
+                if key in seen:
+                    continue
+                seen.add(key)
+                unique.append(edge)
+            return unique
+
         network_nodes.append({
             "name": self.display_name,
             "id": self.format_name,
@@ -11571,7 +11585,7 @@ class Complexdbentity(Dbentity):
                 if node["id"] in foundId:
                     go_network_nodes.append(node)
 
-            data['go_network_graph'] = { "edges": network_edges, "nodes": go_network_nodes }
+            data['go_network_graph'] = { "edges": dedup_edges(network_edges), "nodes": go_network_nodes }
 
             data['process'] = sorted(process, key=lambda p: p['go']['display_name'])
             data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
@@ -11876,8 +11890,8 @@ class Complexdbentity(Dbentity):
 
         data['subunit'] = sorted(subunits, key=lambda a: a['display_name'])
         data['binding_regions'] = sorted(binding_regions, key=lambda b: (b['subunit'], b['range_start']))
-        data['graph'] = { "edges": edges, "nodes": nodes }
-        data['network_graph'] = { "edges": network_edges, "nodes": network_nodes }
+        data['graph'] = { "edges": dedup_edges(edges), "nodes": nodes }
+        data['network_graph'] = { "edges": dedup_edges(network_edges), "nodes": network_nodes }
 
         return data
 
