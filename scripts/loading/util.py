@@ -1047,6 +1047,283 @@ def read_gpi_file(filename):
 
     return [uniprot_to_date_assigned, uniprot_to_sgdid_list]
 
+def parse_gpad2_annotation_properties(annot_prop):
+    """Parse a GPAD 2.0 Annotation-Properties column (column 12) into a dict of lists.
+
+    The column is a '|'-separated list of key=value pairs, e.g.:
+      id=GOA:5063228164|comment=go_evidence:IDA|noctua-model-id=gomodel:SGD_S000000001|model-state=production|contributor-id=https://orcid.org/AAAA|https://orcid.org/BBBB
+
+    A single key can carry several '|'-separated values (contributor-id in
+    particular, when an annotation has more than one contributor), so every key
+    maps to a list of values. Bare segments that contain no '=' (the trailing
+    ORCIDs of a multi-contributor annotation) are appended to the most recently
+    seen key.
+
+    NOTE: annot_prop_to_dict() cannot be reused here - it splits every segment on
+    '=' and would raise IndexError on those bare ORCID continuations.
+    """
+    props = {}
+    last_key = None
+    for segment in annot_prop.split('|'):
+        if '=' in segment:
+            key, value = segment.split('=', 1)
+            props.setdefault(key, []).append(value)
+            last_key = key
+        elif last_key is not None and segment != '':
+            props[last_key].append(segment)
+    return props
+
+def read_gpad2_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotation,
+                    get_extension=None, get_support=None, new_pmids=None,
+                    dbentity_with_new_pmid=None, dbentity_id_with_annotation=None,
+                    bad_ref=None):
+    """Parser for the by-taxon GPAD 2.0 file from the QuickGO/EBI pipeline:
+        http://current.geneontology.org/annotations/gpad/YEAST-mod.gpad.gz
+
+    This replaces the two inputs read_gpad_file() + read_noctua_gpad_file() use
+    today. Differences from read_gpad_file() (which parses the EBI
+    gp_association.559292_sgd file, GPAD 1.x, keyed on UniProtKB accessions):
+
+      * DB_Object_ID (col 1) is already an SGDID, so no UniProt->SGDID mapping
+        (and therefore no GPI lookup) is needed to resolve the gene product.
+      * Column layout is GPAD 2.0: negation is its own column (col 2) and the
+        relation (col 3) is an RO/BFO id rather than a qualifier label.
+      * The GO evidence code is not a first-class column; it is embedded in the
+        annotation-properties column as 'comment=go_evidence:XXX'.
+      * The file folds in the GO-CAM/noctua annotations (noctua-model-id,
+        contributor-id ORCIDs, model-state). read_noctua_gpad_file() must NOT be
+        run in addition to this, or those annotations get loaded twice.
+
+    Complex (COMPLEX-subclass) annotations are still handled by the dedicated
+    read_complex_gpad_file() path; entries here dedupe against those via
+    foundAnnotation, exactly as the noctua data does today.
+    """
+    from src.models import Referencedbentity, Pathwaydbentity, Dbentity, Go, EcoAlias, Ro, Referencedeleted
+
+    goid_to_go_id = _get_goid_to_go_id_mapping(nex_session)
+    evidence_to_eco_id = dict([(x.display_name, x.eco_id) for x in nex_session.query(EcoAlias).all()])
+    roid_to_display_name = dict([(x.roid, x.display_name) for x in nex_session.query(Ro).all()])
+    deleted_pmid_to_sgdid = dict([(x.pmid, x.sgdid) for x in nex_session.query(Referencedeleted).all()])
+    biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])
+
+    pmid_to_reference_id = {}
+    sgdid_to_reference_id = {}
+    for x in nex_session.query(Referencedbentity).all():
+        pmid_to_reference_id[x.pmid] = x.dbentity_id
+        sgdid_to_reference_id[x.sgdid] = x.dbentity_id
+
+    sgdid_to_dbentity_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Dbentity).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).all()])
+
+    f = gzip.open(filename, 'rt') if filename.endswith('.gz') else open(filename)
+
+    read_line = {}
+    data = []
+
+    for line in f:
+
+        if line.startswith('!'):
+            continue
+
+        field = line.strip().split('\t')
+        if len(field) < 12:
+            continue
+
+        ## get rid of duplicate lines...
+        if line in read_line:
+            continue
+        read_line[line] = 1
+
+        ## DB_Object_ID (col 1) -> SGDID
+        if not field[0].startswith('SGD:'):
+            continue
+        sgdid = field[0].split(':')[1]
+        dbentity_id = sgdid_to_dbentity_id.get(sgdid)
+        if dbentity_id is None:
+            # print("The sgdid = ", sgdid, " is not in DBENTITY table or is not LOCUS/COMPLEX.")
+            continue
+
+        ## negation (col 2) + relation (col 3) -> go_qualifier
+        is_a_NOT = field[1].strip() == 'NOT'
+        roid = field[2]
+        if not roid:
+            print("No relation (go qualifier) is provided")
+            continue
+        go_qualifier = roid_to_display_name.get(roid)
+        if go_qualifier is None:
+            print("The ROID = ", roid, " is not in RO table (read_gpad2_file).")
+            continue
+        go_qualifier = go_qualifier.replace("_", " ")
+        if is_a_NOT:
+            go_qualifier = add_NOT_to_go_qualifer(go_qualifier)
+            if go_qualifier is None:
+                print("go_qualifier for roid=", roid, " is not in NOT mapping list")
+                continue
+        if go_qualifier not in allowed_go_qualifier_list:
+            print("WARNING: new go_qualifier=", go_qualifier)
+            continue
+
+        ## GO ID (col 4)
+        goid = field[3]
+        go_id = goid_to_go_id.get(goid)
+        if go_id is None:
+            print("The GOID = ", goid, " is not in GO table.")
+            continue
+
+        ## annotation properties (col 12)
+        props = parse_gpad2_annotation_properties(field[11])
+
+        ## eco_id - the GO evidence code lives in 'comment=go_evidence:XXX'.
+        ## We map the 3-letter evidence code -> eco_id (via EcoAlias) rather than
+        ## using the ECO column (col 6) directly, so the stored eco_id stays
+        ## identical to what read_gpad_file() loads today.
+        go_evidence = None
+        for comment in props.get('comment', []):
+            if comment.startswith('go_evidence:'):
+                go_evidence = comment.split(':', 1)[1]
+                break
+        if go_evidence is None:
+            print("No go_evidence found in properties: ", field[11])
+            continue
+        eco_id = evidence_to_eco_id.get(go_evidence)
+        if eco_id is None:
+            print("The go_evidence = ", go_evidence, " is not in the ECO table.")
+            continue
+
+        ## source (col 10 = Assigned_by)
+        source = field[9]
+        if 'yeastgenome' in source:
+            source = 'SGD'
+        elif source == 'UniProtKB':
+            source = 'UniProt'
+
+        ## created_by
+        if (source != 'SGD' and go_evidence == 'IEA') or source == 'GO_Central':
+            created_by = computational_created_by
+        else:
+            ## manual annotation: map the first known contributor ORCID to a curator.
+            ## Falls back to computational_created_by when the ORCID is unknown
+            ## (created_by is NOT NULL); flag for review if a curator is missing.
+            created_by = computational_created_by
+            for orcid in props.get('contributor-id', []):
+                code = curator_id.get(orcid.replace('https://orcid.org/', '').replace('http://orcid.org/', ''))
+                if code is not None:
+                    created_by = code
+                    break
+
+        ## reference_id (col 5)
+        reference_id = None
+        pmid = None
+        annotation_type_override = None
+        if field[4].startswith('PMID:'):
+            pmid = field[4][5:]
+            if int(pmid) in deleted_pmid_to_sgdid:
+                continue
+            reference_id = pmid_to_reference_id.get(int(pmid))
+        elif field[4].startswith('SGD_PWY:'):
+            biocyc_id = field[4][8:]
+            reference_id = biocyc_id_to_dbentity_id.get(biocyc_id)
+            annotation_type_override = 'computational'
+        else:
+            ref_sgdid = go_ref_mapping.get(field[4])
+            if ref_sgdid is None:
+                if bad_ref is not None and field[4] not in bad_ref:
+                    bad_ref.append(field[4])
+                continue
+            reference_id = sgdid_to_reference_id.get(ref_sgdid)
+        if reference_id is None:
+            if pmid is not None:
+                print("The PMID = " + str(pmid) + " is not in the REFERENCEDBENTITY table.")
+                if new_pmids is not None and pmid not in new_pmids:
+                    new_pmids.append(pmid)
+                if dbentity_with_new_pmid is not None:
+                    dbentity_with_new_pmid[dbentity_id] = 1
+            continue
+
+        ## date_created (col 9) - GPAD 2.0 dates are 'YYYY-MM-DD'; be defensive
+        raw_date = field[8]
+        if '-' in raw_date:
+            date_created = raw_date
+        elif len(raw_date) >= 8 and raw_date[:8].isdigit():
+            date_created = raw_date[0:4] + '-' + raw_date[4:6] + '-' + raw_date[6:8]
+        else:
+            date_created = raw_date
+
+        ## annotation_type
+        if annotation_type_override is not None:
+            annotation_type = annotation_type_override
+        elif go_evidence.startswith('H'):
+            annotation_type = 'high-throughput'
+        elif source != 'SGD' and go_evidence in ['IEA', 'IBA']:
+            annotation_type = 'computational'
+        else:
+            annotation_type = 'manually curated'
+
+        date_assigned = sgdid_to_date_assigned.get(sgdid)
+        if date_assigned is None:
+            date_assigned = date_created
+
+        key = (dbentity_id, go_id, reference_id, go_qualifier, eco_id, field[6], field[10])
+        if dbentity_id_with_annotation is not None:
+            dbentity_id_with_annotation[dbentity_id] = 1
+
+        if key not in foundAnnotation:
+            entry = { 'source': source,
+                      'dbentity_id': dbentity_id,
+                      'reference_id': reference_id,
+                      'go_id': go_id,
+                      'eco_id': eco_id,
+                      'annotation_type': annotation_type,
+                      'go_qualifier': go_qualifier,
+                      'date_assigned': date_assigned,
+                      'date_created': date_created,
+                      'created_by': created_by }
+            if get_extension == 1 and field[10] != '':
+                entry['goextension'] = field[10]
+            if get_support == 1 and field[6] != '':
+                entry['gosupport'] = field[6]
+            data.append(entry)
+            foundAnnotation[key] = 1
+
+    f.close()
+    return data
+
+def read_gpi2_file(filename):
+    """Parser for the by-taxon GPI 2.0 file from the QuickGO/EBI pipeline:
+        http://current.geneontology.org/annotations/gpi/YEAST-mod.gpi.gz
+
+    This file is keyed on SGDIDs (col 1), so - unlike read_gpi_file(), which
+    builds a UniProt->SGDID map from the EBI gp_information.559292_sgd file -
+    it returns sgdid_to_date_assigned directly, taken from the
+    'go_annotation_complete' gene-product property (col 11).
+    """
+    f = gzip.open(filename, 'rt') if filename.endswith('.gz') else open(filename)
+
+    sgdid_to_date_assigned = {}
+
+    for line in f:
+
+        if line.startswith('!'):
+            continue
+
+        field = line.strip().split('\t')
+        if len(field) < 11:
+            continue
+        if not field[0].startswith('SGD:'):
+            continue
+
+        sgdid = field[0].split(':')[1]
+        for pair in field[10].split('|'):
+            if pair.startswith('go_annotation_complete='):
+                date = pair.split('=', 1)[1]
+                if len(date) >= 8 and date[:8].isdigit():
+                    sgdid_to_date_assigned[sgdid] = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
+                else:
+                    sgdid_to_date_assigned[sgdid] = date
+                break
+
+    f.close()
+    return sgdid_to_date_assigned
+
 def get_go_extension_link(dbxref_id):
 
     if dbxref_id.startswith('SGD:S'):
