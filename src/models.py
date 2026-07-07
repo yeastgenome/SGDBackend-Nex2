@@ -11466,8 +11466,23 @@ class Complexdbentity(Dbentity):
             # (both the focus complex's seed terms and the other complexes that
             # share them). The displayed process/function/component lists below
             # still include every annotation.
+            # Cap fan-out: a shared GO term is drawn in the GRAPH only if it links
+            # to at most this many other complexes; generic component terms like
+            # 'nucleus' otherwise swamp it. This caps the graph only -- the ranked
+            # tables below (shared_go_terms / related_complexes) are uncapped and
+            # report true counts. Replaces the curation the retired complex_go
+            # table used to provide. Tunable.
+            MAX_SHARED_COMPLEXES_PER_GO = 50
             go_ids = list({x.go_id for x in go_annots if x.annotation_type == 'manually curated'})
             go_complexes_by_go_id = {}
+            # Track which focus GO terms have already been walked for the network.
+            # The display lists (process/function/component) below include every
+            # annotation, but the shared-annotation network must treat each focus
+            # term once: a term the focus carries from two sources (SGD +
+            # ComplexPortal) would otherwise be walked twice, and the "seen-twice"
+            # foundComplex logic would then admit complexes that share only that
+            # single term -- the same hairball, from the focus side.
+            seen_focus_go = set()
             if go_ids:
                 shared_annots = DBSession.query(Goannotation).options(
                     joinedload(Goannotation.dbentity)
@@ -11476,7 +11491,18 @@ class Complexdbentity(Dbentity):
                     Goannotation.dbentity_id.in_(complex_ids),
                     Goannotation.annotation_type == 'manually curated'
                 ).all()
+                # Dedup per (GO term, complex): a complex annotated to the same
+                # term by multiple sources (e.g. SGD + ComplexPortal on 'nucleus')
+                # yields several rows here. Without deduping, the "seen-twice"
+                # network logic below treats those duplicate rows as if the complex
+                # shared 2 distinct terms and pulls it into the graph -- which is
+                # what balloons generic-term complexes into a hairball.
+                seen_go_complex = set()
                 for g2 in shared_annots:
+                    dedup_key = (g2.go_id, g2.dbentity_id)
+                    if dedup_key in seen_go_complex:
+                        continue
+                    seen_go_complex.add(dedup_key)
                     go_complexes_by_go_id.setdefault(g2.go_id, []).append(g2)
 
             for x in go_annots:
@@ -11487,6 +11513,12 @@ class Complexdbentity(Dbentity):
                     component.append(x.to_dict()[0])
                 else:
                     process.append(x.to_dict()[0])
+
+                # Display lists above already captured this annotation; from here
+                # down is network-only, so process each focus term at most once.
+                if go.go_id in seen_focus_go:
+                    continue
+                seen_focus_go.add(go.go_id)
 
                 goComplexes = go_complexes_by_go_id.get(go.go_id, [])
 
