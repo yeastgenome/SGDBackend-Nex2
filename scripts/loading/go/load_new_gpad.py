@@ -440,7 +440,9 @@ def update_goextension(nex_session, annotation_id, goextension, annotation_id_to
                 continue
             link = get_go_extension_link(dbxref_id)
             if link.startswith('Unknown'):
-                if dbxref_id.startswith('IntAct:'):
+                ## IntAct and ARBA (UniProt automatic-annotation rules) are known
+                ## namespaces we intentionally do not load; skip without warning.
+                if dbxref_id.startswith('IntAct:') or dbxref_id.startswith('ARBA:'):
                     continue
                 elif not dbxref_id.startswith('SGD_PWY:'):
                     print("Unknown ID: ", dbxref_id)
@@ -510,7 +512,10 @@ def update_gosupportevidence(nex_session, annotation_id, gosupport, annotation_i
                 continue
             link = get_go_extension_link(dbxref_id)
             if link.startswith('Unknown'):
-                print("Unknown ID: ", dbxref_id)
+                ## ARBA (UniProt automatic-annotation rules) is a known namespace
+                ## we intentionally do not load; skip it without warning.
+                if not dbxref_id.startswith('ARBA:'):
+                    print("Unknown ID: ", dbxref_id)
                 continue
             evidence_type = 'with'
             if dbxref_id.startswith('GO:'):
