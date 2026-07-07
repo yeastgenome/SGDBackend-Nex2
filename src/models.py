@@ -11448,14 +11448,23 @@ class Complexdbentity(Dbentity):
             # GO term with this complex, eager-loading the owning dbentity. This
             # replaces a per-annotation query + per-result lazy load (N+1) in the
             # shared-annotation network loop below.
-            go_ids = list({x.go_id for x in go_annots})
+            # Shared-annotation network uses only manually curated GO annotations
+            # (both the focus complex's seed terms and the other complexes that
+            # share them). The displayed process/function/component lists below
+            # still include every annotation.
+            # Cap fan-out: a shared GO term is drawn only if it links to at most
+            # this many other complexes. Generic component terms like 'nucleus'
+            # otherwise connect to hundreds of complexes and swamp the graph. Tunable.
+            MAX_SHARED_COMPLEXES_PER_GO = 15
+            go_ids = list({x.go_id for x in go_annots if x.annotation_type == 'manually curated'})
             go_complexes_by_go_id = {}
             if go_ids:
                 shared_annots = DBSession.query(Goannotation).options(
                     joinedload(Goannotation.dbentity)
                 ).filter(
                     Goannotation.go_id.in_(go_ids),
-                    Goannotation.dbentity_id.in_(complex_ids)
+                    Goannotation.dbentity_id.in_(complex_ids),
+                    Goannotation.annotation_type == 'manually curated'
                 ).all()
                 for g2 in shared_annots:
                     go_complexes_by_go_id.setdefault(g2.go_id, []).append(g2)
@@ -11471,9 +11480,16 @@ class Complexdbentity(Dbentity):
 
                 goComplexes = go_complexes_by_go_id.get(go.go_id, [])
 
-                if len(goComplexes) == 1:
+                # Distinct other complexes sharing this term (the focus's own
+                # annotations are also in goComplexes and are excluded here).
+                other_complexes = {g2.dbentity_id for g2 in goComplexes
+                                   if g2.dbentity_id != self.dbentity_id}
+                # Skip terms shared with no other complex, and cap fan-out: drop
+                # over-generic terms (e.g. 'nucleus') that would otherwise link to
+                # hundreds of complexes and swamp the graph.
+                if not other_complexes or len(other_complexes) > MAX_SHARED_COMPLEXES_PER_GO:
                     continue
-                    
+
                 if go.go_id not in network_nodes_ids:
                     network_nodes.append({
                             "name": go.display_name,
