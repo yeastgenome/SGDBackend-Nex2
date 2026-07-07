@@ -11466,10 +11466,6 @@ class Complexdbentity(Dbentity):
             # (both the focus complex's seed terms and the other complexes that
             # share them). The displayed process/function/component lists below
             # still include every annotation.
-            # Cap fan-out: a shared GO term is drawn only if it links to at most
-            # this many other complexes. Generic component terms like 'nucleus'
-            # otherwise connect to hundreds of complexes and swamp the graph. Tunable.
-            MAX_SHARED_COMPLEXES_PER_GO = 15
             go_ids = list({x.go_id for x in go_annots if x.annotation_type == 'manually curated'})
             go_complexes_by_go_id = {}
             if go_ids:
@@ -11498,10 +11494,8 @@ class Complexdbentity(Dbentity):
                 # annotations are also in goComplexes and are excluded here).
                 other_complexes = {g2.dbentity_id for g2 in goComplexes
                                    if g2.dbentity_id != self.dbentity_id}
-                # Skip terms shared with no other complex, and cap fan-out: drop
-                # over-generic terms (e.g. 'nucleus') that would otherwise link to
-                # hundreds of complexes and swamp the graph.
-                if not other_complexes or len(other_complexes) > MAX_SHARED_COMPLEXES_PER_GO:
+                # Skip terms shared with no other complex.
+                if not other_complexes:
                     continue
 
                 if go.go_id not in network_nodes_ids:
