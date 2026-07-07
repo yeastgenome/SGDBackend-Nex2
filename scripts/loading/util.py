@@ -1259,7 +1259,7 @@ def read_gpad2_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotati
             annotation_type = 'manually curated'
 
         date_assigned = sgdid_to_date_assigned.get(sgdid)
-        if date_assigned is None:
+        if not date_assigned:
             date_assigned = date_created
 
         key = (dbentity_id, go_id, reference_id, go_qualifier, eco_id, field[6], field[10])
@@ -1315,6 +1315,10 @@ def read_gpi2_file(filename):
         for pair in field[10].split('|'):
             if pair.startswith('go_annotation_complete='):
                 date = pair.split('=', 1)[1]
+                if date == '':
+                    ## some rows carry an empty go_annotation_complete= ; do not
+                    ## store it, so the caller falls back to date_created
+                    break
                 if len(date) >= 8 and date[:8].isdigit():
                     sgdid_to_date_assigned[sgdid] = date[0:4] + '-' + date[4:6] + '-' + date[6:8]
                 else:
