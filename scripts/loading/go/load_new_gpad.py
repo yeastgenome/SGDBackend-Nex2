@@ -33,6 +33,15 @@ log.setLevel(logging.INFO)
 GPAD_MIN_ROWS = 100000
 CREATED_BY = os.environ['DEFAULT_USER']
 
+## YEAST-mod.gpad folds in third-party manual annotations that the old
+## load_gpad.py never loaded as SGD manual curation. The old manual load came
+## from noctua (which read_noctua_gpad_file restricted to SGD/UniProt) plus the
+## complex portal file (ComplexPortal). To keep the same manual source set as
+## load_gpad.py - SGD (its own curation) and ComplexPortal - drop these sources
+## from the 'manually curated' run. Their computational (IEA/IBA) annotations
+## are still loaded on the 'computational' run, matching load_gpad.py.
+EXCLUDED_MANUAL_SOURCES = frozenset(['IntAct', 'UniProt', 'CACAO', 'GO_Central', 'FlyBase', 'MGI'])
+
 def load_go_annotations(gpad_file, complex_gpad_file, gpi_file, annotation_type, log_file):
 
     nex_session = get_session()
@@ -226,6 +235,12 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
         allData = data
     for x in allData:
         if x['annotation_type'] not in allowed_types:
+            continue
+        ## Keep the manually curated set to the same sources as load_gpad.py
+        ## (SGD + ComplexPortal); skip third-party manual annotations folded in
+        ## by YEAST-mod.gpad. Computational annotations from these sources are
+        ## unaffected (this only fires for annotation_type 'manually curated').
+        if x['annotation_type'] == 'manually curated' and x['source'] in EXCLUDED_MANUAL_SOURCES:
             continue
         if x['dbentity_id'] in deleted_merged_dbentity_ids:
             continue
