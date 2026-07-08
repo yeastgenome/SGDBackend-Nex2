@@ -1,10 +1,10 @@
 from src.models import Referencedbentity
 from scripts.loading.database_session import get_session
 
-date = "2021-03-01"
+date = "2022-05-12"
 
-outfile = "scripts/loading/files/data/supplemental_file_feb_2021_metadata.txt"
-pmidfile = "scripts/loading/files/data/supplemental_pmid_feb_2021.lst"
+outfile = "scripts/loading/files/data/supplemental_file_metadata_2022-05-12.txt"
+pmidfile = "scripts/loading/files/data/supplemental_pmid_2022-05-12.lst"
 
 nex_session = get_session()
 

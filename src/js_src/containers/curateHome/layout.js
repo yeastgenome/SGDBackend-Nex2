@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import style from './style.css';
-import { SMALL_COL_CLASS, LARGE_COL_CLASS,ml_12 } from '../../constants';
+import { SMALL_COL_CLASS, LARGE_COL_CLASS, ml_12 } from '../../constants';
 import Badge from '@material-ui/core/Badge';
 
 class CurateLayout extends Component {
@@ -12,7 +12,6 @@ class CurateLayout extends Component {
     let colleagueCount = this.props.colleagueCount ? this.props.colleagueCount : 0;
     let geneCount = this.props.geneCount ? this.props.geneCount : 0;
     let authorResponseCount = this.props.authorResponseCount ? this.props.authorResponseCount : 0;
-      
     // console.log(this.props.location);
     return (
       <div className='row'>
@@ -23,7 +22,7 @@ class CurateLayout extends Component {
             <li><Link className={(location === '/triage') ? style.activeLink : null} to='/triage'><span><i className='fa fa-book' /> Lit Triage</span></Link></li>
             <li><Link className={(location === '/colleagues/triage') ? style.activeLink : null} to='/colleagues/triage'><span><i className='fa fa-users' /> Colleague Updates <span style={ml_12}><Badge badgeContent={colleagueCount} color="error" /></span></span></Link></li>
             <li><Link className={(location.match('/reservations')) ? style.activeLink : null} to='/reservations'><span><i className='fa fa-sticky-note' /> Gene Name Reservations <span style={ml_12}><Badge badgeContent={geneCount} color="error" /></span></span></Link></li>
-            <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response <span style={ml_12}><Badge badgeContent={authorResponseCount} color="error" /></span></span></Link></li>  
+            <li><Link className={(location.match('/author_responses')) ? style.activeLink : null} to='/author_responses'><span><i className='fa fa-sticky-note' /> Author Response <span style={ml_12}><Badge badgeContent={authorResponseCount} color="error" /></span></span></Link></li>
             <li><Link className={(location === '/spreadsheet_upload') ? style.activeLink : null} to='/spreadsheet_upload'><span><i className='fa fa-upload' /> Spreadsheet Upload</span></Link></li>
             <li><Link className={(location === '/settings') ? style.activeLink : null} to='/settings'><span><i className='fa fa-cog' /> Settings</span></Link></li>
             <li><Link className={(location === '/curate/reference/new') ? style.activeLink : null} to='/curate/reference/new'><span><i className='fa fa-plus' /> Add References</span></Link></li>
@@ -53,17 +52,17 @@ class CurateLayout extends Component {
 CurateLayout.propTypes = {
   children: PropTypes.object,
   location: PropTypes.object,
-  geneCount:PropTypes.number,
-  colleagueCount:PropTypes.number,
-  authorResponseCount:PropTypes.number  
+  geneCount: PropTypes.number,
+  colleagueCount: PropTypes.number,
+  authorResponseCount: PropTypes.number
 };
 
 function mapStateToProps(state) {
   return {
     location: state.router.location,
-    geneCount:state.meta.get('geneCount'),
-    colleagueCount:state.meta.get('colleagueCount'),
-    authorResponseCount:state.meta.get('authorResponseCount')
+    geneCount: state.meta.get('geneCount'),
+    colleagueCount: state.meta.get('colleagueCount'),
+    authorResponseCount: state.meta.get('authorResponseCount')
   };
 }
 

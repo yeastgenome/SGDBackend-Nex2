@@ -7,7 +7,9 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from telnetlib import Telnet
-from zope.sqlalchemy import ZopeTransactionExtension
+
+# from zope.sqlalchemy import ZopeTransactionExtension
+from zope.sqlalchemy import register
 
 logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
@@ -63,9 +65,9 @@ def get_curator_session(username):
     if username:
         curator_engine = create_engine(os.environ['NEX2_URI'],
                                        echo=False, pool_recycle=3600, pool_size=100)
-        session_factory = sessionmaker(
-            bind=curator_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
+        session_factory = sessionmaker(bind=curator_engine, expire_on_commit=False)
         curator_session = scoped_session(session_factory)
+        register(curator_session)
         curator_session.execute('SET LOCAL ROLE ' + username)
         return curator_session
     else:

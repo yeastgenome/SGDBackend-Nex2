@@ -19,11 +19,9 @@ import traceback
 from src.boto3_upload import boto3_multi_upload
 
 VOLUME_PATH = '/genomes'
-# S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
-# S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_ACCESS_KEY = ''
-S3_SECRET_KEY = ''
-S3_BUCKET = os.environ['S3_BUCKET']
+S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY', '')
+S3_SECRET_KEY = os.environ.get('S3_SECRET_KEY', '')
+S3_BUCKET = os.environ.get('S3_BUCKET', '')
 
 
 def get_volume_files(path):
@@ -198,11 +196,8 @@ def multi_part_upload_s3(file_path, bucket_name, s3_key_name=None, use_rr=True, 
 
 
 def upload_cb(complete, total):
-    logging.info("Uploaded")
-    #new_s3_file = bucket.get_key(s3_key_name)
-    #new_s3_file.set_acl("public-read")
-    #return new_s3_file
-    print("uploaded:" + str(total))
+    # Silent callback - progress is logged by the calling function
+    pass
 
 
 def standard_s3_file_transfer(bucket, s3_key_name, transfer_file, file_size_MB, use_rr):

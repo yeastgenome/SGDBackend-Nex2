@@ -19,10 +19,11 @@ from email.mime.multipart import MIMEMultipart
 import re
 from sqlalchemy import and_, inspect
 
-from src.models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
+from srcsrc.models import DBSession, Dbentity, Dbuser, Go, Referencedbentity,\
     Keyword, Locusdbentity, FilePath, Edam, Filedbentity, FileKeyword,\
     ReferenceFile, Disease, CuratorActivity, Source, LocusAlias
 from src.curation_helpers import ban_from_cache, get_curator_session
+# from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
 # from src.aws_helpers import update_s3_readmefile, get_s3_url, get_checksum
 
 
@@ -39,8 +40,8 @@ MAX_QUERY_ATTEMPTS = 3
 S3_BUCKET = os.environ['S3_BUCKET']
 
 import redis
-#disambiguation_table = redis.Redis()
-disambiguation_table = redis.Redis(os.environ['REDIS_WRITE_HOST'], os.environ['REDIS_PORT'])
+# disambiguation_table = redis.Redis()
+disambiguation_table = redis.Redis(os.environ['REDIS_READ_HOST'], os.environ['REDIS_PORT'])
 
 # get list of URLs to visit from comma-separated ENV variable cache_urls 'url1, url2'
 cache_urls = None
@@ -56,11 +57,18 @@ def extract_id_request(request, prefix, param_name='id', safe_return=False):
 
     db_id = disambiguation_table.get(("/" + prefix + "/" + id).upper())
 
-    if db_id is None and prefix == 'reference' and id.startswith('S00'):
-        reference = DBSession.query(Dbentity).filter_by(subclass='REFERENCE', sgdid=id).one_or_none()
-        if reference:
-            db_id = reference.dbentity_id
-            
+    if db_id is None:
+        if prefix == 'reference' and (id.startswith('S00') or id.startswith('S10')):
+            reference = DBSession.query(Dbentity).filter_by(subclass='REFERENCE', sgdid=id).one_or_none()
+            if reference:
+                db_id = reference.dbentity_id
+        elif prefix == 'go':
+            if str(id).isdigit():
+                db_id = id
+            else:
+                go = DBSession.query(Go).filter_by(goid=id).one_or_none()
+                if go:
+                    db_id = go.go_id
     if db_id is None and safe_return:
         return None
     elif db_id is None:
@@ -1117,3 +1125,12 @@ def count_alias(terms):
         count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(
             ['Uniform', 'Non-uniform']), LocusAlias.display_name.in_(terms))).count()
     return count
+
+def check_for_non_ascii_characters(text):
+
+    non_ascii_characters = []
+    for char in text:
+        if ord(char) >= 128:
+            if char not in non_ascii_characters:
+                non_ascii_characters.append(char)
+    return non_ascii_characters

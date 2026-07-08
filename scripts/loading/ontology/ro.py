@@ -56,11 +56,11 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
             ro_id = y.ro_id
             
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['term'] != y.display_name:
                 ## update term
                 fw.write("The display_name for " + x['id'] + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
@@ -72,6 +72,8 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
             # else:
             #     print "SAME: ", y.roid, y.display_name
             roid_to_ro.pop(x['id'])
+        elif x['id'].startswith('valid:'):
+              continue
         else:
             fw.write("NEW entry = " + x['id'] + " " + x['term'] + "\n")
             this_x = Ro(source_id = source_id,
@@ -79,7 +81,7 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
                         roid = x['id'],
                         display_name = x['term'],
                         obj_url = 'ro/' + x['id'],
-                        is_obsolete = '0',
+                        is_obsolete = False,
                         created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -98,11 +100,11 @@ def load_new_data(nex_session, data, source_id, roid_to_ro, fw):
             continue
         to_delete.append((roid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.roid + " has been updated from " + x.is_obsolete + " to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.roid + " has been updated from " + str(x.is_obsolete) + " to " + 'True' + "\n")
 
     nex_session.commit()
 

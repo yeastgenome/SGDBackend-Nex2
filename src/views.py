@@ -21,7 +21,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -61,7 +61,7 @@ def search_autocomplete(request):
     )
 
     return {
-        "results": format_autocomplete_results(autocomplete_results, field)
+        "results": format_autocomplete_results(autocomplete_results, query, field)
     }
 
 @view_config(route_name='search', renderer='json', request_method='GET')
@@ -79,11 +79,13 @@ def search(request):
 
     # get query string
     query = request.params.get('q', '').strip()
+    query = query.upper()
+    
     if query.endswith('\\'):
         query = query.replace('\\', '')
     elif "\\" in query:
         query = query.replace('\\', ' ')
-
+        
     temp_container = query.split(' ')
     int_flag = False
     if(temp_container):
@@ -136,17 +138,35 @@ def search(request):
                       ("year", "year"), ("reference_locus", "reference_loci"),
                       ("associated_alleles", "associated_alleles"),
                       ("associated_complexes", "associated_complexes"),
-                      ("associated_pathways", "associated_pathways")],
+                      ("associated_pathways", "associated_pathways"),
+                      ("associated_strains", "associated_strains")],
         "contig": [("strain", "strain")],
         "allele": [("references", "references"),
                    ("allele_types", "allele_types"),
                    ("allele_loci", "allele_loci"),
                    ("phenotypes", "phenotypes")],
+        "strain": [("references", "references"),
+                   ("diseases", "diseases"),
+                   ("phenotypes", "phenotypes")],
+        "dataset": [("references", "references"),
+                    ("keywords", "keywords"),
+                    ("assays", "assays"),
+                    ("labs", "labs"),
+                    ("lab_locations", "lab_locations")],
+        "pathway": [("references", "references"),
+                    ("pathway_loci", "pathway_loci")],
         "complex": [("references", "references"),
                     ("complex_loci", "complex_loci"),
                     ('molecular function', 'molecular_function'),
                     ('cellular component','cellular_component'),
                     ('biological process', 'biological_process')],
+        "chemical": [("references", "references"),
+                     ("chemical_loci", "chemical_loci"),
+                     ("phenotypes", "phenotypes"),
+                     ('molecular function', 'molecular_function'),
+                     ('cellular component','cellular_component'),
+                     ('biological process', 'biological_process'),
+                     ("pathways", "pathways")],
         "colleague": [("last_name", "last_name"), ("position", "position"),
                       ("institution", "institution"), ("country", "country"),
                       ("keywords", "keywords"), ("colleague_loci",
@@ -166,6 +186,10 @@ def search(request):
         "name_description",
         "summary",
         "phenotypes",
+        "keywords",
+        "labs",
+        "lab_locations",
+        "assays",
         "cellular_component",
         "biological_process",
         "molecular_function",
@@ -185,12 +209,15 @@ def search(request):
         "go_id",
         "gene_ontology_loci",
         "allele_loci",
+        "pathway_loci",
+        "biocyc_id",
         "author",
         "journal",
         "reference_loci",
         "associated_alleles",
         "associated_complexes",
         "associated_pathways",
+        "associated_strains",
         "aliases",
         "data",
         "topic",
@@ -217,32 +244,11 @@ def search(request):
         'readme_url', 'topic', 'data', 'is_quick_flag'
     ]
 
-    ## added for allele search
-    # query2 = query.replace('Δ', "delta").replace('-', "delta")
-    # if is_quick_flag == 'true' and ('delta' in query2):
-    if is_quick_flag:
-        allele_name = query.strip()
-        maybe_allele_url = None
-        maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(query)).one_or_none()
-        if maybe_allele:
-            maybe_allele_url = maybe_allele.obj_url
-        if maybe_allele_url is None:
-            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele_name)).one_or_none()
-            if aa is not None:
-                maybe_allele_url = aa.allele.obj_url
-        if maybe_allele_url:
-            allele_search_obj = {
-                'href': maybe_allele_url,
-                'is_quick': True
-            }
-            return {
-                'total': 1,
-                'results': [allele_search_obj],
-                'aggregations': []
-            }
 
-    ## end of allele search section
-        
+    # set is_quick_flag to false so it always search ES instead of DB
+    is_quick_flag = 'false'
+    #################################################################
+
     # see if we can search for a simple gene name in db without using ES
 
     aliases_count = 0
@@ -253,7 +259,8 @@ def search(request):
         
         ## adding code to check if it is an unmapped gene
         is_unmapped = 0
-        unmapped_url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+        # unmapped_url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+        unmapped_url = "https://wiki.yeastgenome.org/index.php/Genetic_Loci"
         response = urlopen(unmapped_url)
         unmapped_data = response.read().decode('utf-8').split("\n")
         for line in unmapped_data:
@@ -276,7 +283,7 @@ def search(request):
         
         ## end of unmapped gene check
         
-        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match:
+        if Locusdbentity.is_valid_gene_name(t_query) or is_sys_name_match or t_query.startswith('MATA'):
             maybe_gene_url = DBSession.query(Locusdbentity.obj_url).filter(or_(Locusdbentity.gene_name == t_query, Locusdbentity.systematic_name == t_query)).scalar()
             aliases_count = DBSession.query(LocusAlias).filter(and_(LocusAlias.alias_type.in_(['Uniform', 'Non-uniform']),LocusAlias.display_name == t_query)).count()
             if aliases_count == 0 and maybe_gene_url:
@@ -302,7 +309,107 @@ def search(request):
         count = count_alias(terms)
         if (count > 0):
             alias_flag = True
+
+
+
+    ## added for allele search
+    # query2 = query.replace('Δ', "delta").replace('-', "delta")
+    # if is_quick_flag == 'true' and ('delta' in query2):
+    if "*" in query or "?" in query:
+        wildcard = True
+
+    if is_quick_flag:
+        allele_name = query.strip()
+        maybe_allele_url = None
+
+        maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(or_(
+            Dbentity.display_name.ilike(allele_name), 
+            Dbentity.sgdid==allele_name.upper().replace("SGD:", "")
+        )).one_or_none()
+        # maybe_allele = DBSession.query(Dbentity).filter_by(subclass='ALLELE').filter(Dbentity.display_name.ilike(query)).one_or_none()
+        if maybe_allele:
+            maybe_allele_url = maybe_allele.obj_url
+
+        if maybe_allele_url is None:
+            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele_name)).one_or_none()
+            if aa is not None:
+                maybe_allele_url = aa.allele.obj_url
+        if maybe_allele_url:
+            allele_search_obj = {
+                'href': maybe_allele_url,
+                'is_quick': True
+            }
+            return {
+                'total': 1,
+                'results': [allele_search_obj],
+                'aggregations': []
+            }
+
+    ## end of allele search section
+
+    ## dataset search section
+    dataset_dbxref_id_startwords = ["GSE", "E-TABM-", "E-MTAB-", "E-WMIT-", "E-MEXP-", "SRA"]
+    
+    if is_quick_flag:
+        maybe_dbxref_id = query.strip()
+        found = False
+        for text in dataset_dbxref_id_startwords:
+            if maybe_dbxref_id.upper().startswith(text):
+                rest_part = maybe_dbxref_id.upper().replace(text, "")
+                if rest_part.isdigit():
+                    found = True
+                    break
+        if found:
+            maybe_dataset_url = None
+            maybe_datasets = DBSession.query(Dataset).filter_by(dbxref_id=maybe_dbxref_id.upper()).all()
+            if len(maybe_datasets) > 0:
+                maybe_dataset_url = maybe_datasets[0].obj_url
+            if maybe_dataset_url:
+                dataset_search_obj = {
+                    'href': maybe_dataset_url,
+                    'is_quick': True
+                }
+                return {
+                    'total': 1,
+                    'results': [dataset_search_obj],
+                    'aggregations': []
+                }
+
+    ## end of dataset search section
+
+    ## adding code to check if it is a RNAcentral ID                                                             
+    if is_quick_flag:
+        maybe_rnaId = query.strip()
+        if maybe_rnaId.upper().startswith('URS00'):
+            maybe_rnaId_url = None
+            if not maybe_rnaId.endswith('_559292'):
+                maybe_rnaId = maybe_rnaId + "%"
+            maybe_rnaIds = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').filter(LocusAlias.display_name.ilike(maybe_rnaId)).all()
+            if maybe_rnaIds and len(maybe_rnaIds) == 1:
+                maybe_rnaId_url = maybe_rnaIds[0].locus.obj_url
+                if maybe_rnaId_url:
+                    rnaId_search_obj = {
+                        'href': maybe_rnaId_url,
+                        'is_quick': True
+                    }
+                    return {
+                        'total': 1,
+                        'results': [rnaId_search_obj],
+                        'aggregations': []
+                    }
+    ## end of RNAcentral ID check
         
+    ## check if it is a biocyc_id
+    pathway_kws = ['PWY', 'YEAST', 'BIOSYNTHESIS', 'DEGRADATION', 'BYPASS', 'GLUCOSE-MANNOSYL', 'GLYCOLYSIS', 'HOMOCYS']
+    maybe_biocyc_id = None
+    for keyword in pathway_kws:
+        if keyword in query.upper():
+            maybe_biocyc_id = query.strip()
+            break
+    if is_quick_flag and maybe_biocyc_id and not query.endswith('*') and not query.endswith('?'):
+        query = query + "*"
+    ## end of pathway search section       
+
     limit = int(request.params.get('limit', 10))
     offset = int(request.params.get('offset', 0))
     category = request.params.get('category', '')
@@ -369,13 +476,11 @@ def search(request):
                 }
 
     else:
+        if "*" in query or "?" in query:
+            if query[0] == '*' and query[-1] not in ['*', '?']:
+                query = query + "*"
+            wildcard = True
 
-        query = query.upper()
-        
-        #if query.endswith('-') and query[3:-1].isdigit():
-        #    query = query[0:-1]
-        #    is_quick_flag = False
-            
         es_query = build_search_query(query, search_fields, category,
                                     category_filters, args, alias_flag,
                                     terms, ids, wildcard)
@@ -455,8 +560,12 @@ def genomesnapshot(request):
                 go_slim_relationships.append([go_slim['id'], parent.go_id])
         genome_snapshot['go_slim_relationships'] = go_slim_relationships
         so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
-        distinct_so_ids = DBSession.query(distinct(Dnasequenceannotation.so_id)).filter_by(taxonomy_id=TAXON_ID).filter(Dnasequenceannotation.so_id != so.so_id).all()
-        rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()
+        distinct_so_ids = []
+        for x in DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=TAXON_ID).filter(Dnasequenceannotation.so_id != so.so_id).all():
+            if x.so_id not in distinct_so_ids:
+                distinct_so_ids.append(x.so_id)
+        # rows = DBSession.query(So.so_id, So.display_name).filter(So.so_id.in_(distinct_so_ids)).all()
+        rows = DBSession.query(So).filter(So.so_id.in_(distinct_so_ids)).all()
         contigs = DBSession.query(Contig).filter(or_(Contig.display_name.like("%micron%"), Contig.display_name.like("Chromosome%"))).order_by(Contig.contig_id).all()
         columns = [contig.to_dict_sequence_widget() for contig in contigs]
         genome_snapshot['columns'] = columns
@@ -480,11 +589,14 @@ def genomesnapshot(request):
         # sub-categories for 'ORF' data row
         sub_categories = ['Verified', 'Dubious', 'Uncharacterized']
         data_row.extend(sub_categories)
-        orf_so_id = DBSession.query(So.so_id).filter(So.display_name=='ORF').one_or_none()
+        orf_so = DBSession.query(So).filter_by(display_name='ORF').one_or_none()
+        orf_so_id = orf_so.so_id
         for category in sub_categories:
             row_data = list()
             for column in columns:
-                db_entity_ids = DBSession.query(Dnasequenceannotation.dbentity_id).filter(and_(Dnasequenceannotation.so_id==orf_so_id, Dnasequenceannotation.dna_type==GENOMIC, Dnasequenceannotation.contig_id==column['id']))
+                db_entity_ids = []
+                for x in DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.so_id==orf_so_id, Dnasequenceannotation.dna_type==GENOMIC, Dnasequenceannotation.contig_id==column['id'])):
+                    db_entity_ids.append(x.dbentity_id)
                 count = DBSession.query(Locusdbentity).filter(and_(Locusdbentity.dbentity_id.in_(db_entity_ids), Locusdbentity.qualifier==category)).count()
                 row_data.append(count)
             data.append(row_data)
@@ -525,15 +637,19 @@ def extensions(request):
         return {'options': [{'id': e, 'name': e} for e in FILE_EXTENSIONS]}
     except Exception as e:
         log.error(e)
-        
+
 @view_config(route_name='reference_this_week', renderer='json', request_method='GET')
 def reference_this_week(request):
     try:
         start_date = datetime.datetime.today() - datetime.timedelta(days=30)
         end_date = datetime.datetime.today()
-
         recent_literature = DBSession.query(Referencedbentity).filter(Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created.desc()).all()
-        refs = [x.to_dict_citation() for x in recent_literature]
+        # refs = [x.to_dict_citation() for x in recent_literature]
+        refs = []
+        for x in recent_literature:
+            citation_dict = x.to_dict_citation()
+            citation_dict['entity_list'] = x.annotations_to_dict()
+            refs.append(citation_dict)
         return {
             'start': start_date.strftime("%Y-%m-%d"),
             'end': end_date.strftime("%Y-%m-%d"),
@@ -612,7 +728,7 @@ def search_sequence_objects(request):
             'offset': offset
         }
         
-        return Response(body=json.dumps(formatted_response), content_type='application/json')
+        return Response(body=json.dumps(formatted_response), content_type='application/json', charset='UTF-8')
     
     except Exception as e:
         logging.exception(str(e))
@@ -650,9 +766,8 @@ def reserved_name(request):
 def strain(request):
     try:
         id = extract_id_request(request, 'strain')
-
         strain = DBSession.query(Straindbentity).filter_by(dbentity_id=id).one_or_none()
-
+            
         if strain:
             return strain.to_dict()
         else:
@@ -768,14 +883,118 @@ def reference_phenotype_details(request):
         if DBSession:
             DBSession.remove()
 
+def _generate_blast_title_etc(desc):
+
+    text = desc or ""
+    s = text.lower()
+    
+    alternative_ref_strains = [
+        'cen.pk2-1ca', 'd273-10b', 'fl100', 'jk9-3d',
+        'rm11-1a', 'sey6210', 'sigma1278b',
+        'sk1', 'w303', 'x2180-1a', 'y55'
+    ]
+    genus = "Saccharomyces"
+    species = "cerevisiae"
+
+    # ---- S288C Reference ----
+    if s.startswith("s288c reference"):
+    
+        # Genomic DNA buckets
+        if ("nuclear chromosome" in s) or ("mitochondrial chromosome" in s) or ("mitochrondrial chromosome" in s) or ("2-micron plasmid" in s):
+            seqcol_type = "S288C Reference Strain|Genomic DNA"
+            if "nuclear chromosome" in s:
+                title = "Nuclear chromosomes"
+            elif ("mitochondrial chromosome" in s) or ("mitochrondrial chromosome" in s):
+                title = "Mitochondrial chromosome"
+            else:
+                title = "2-micron plasmid"
+        # Protein sequences
+        elif "protein sequences" in s:
+            seqcol_type = "S288C Reference Strain|ORF protein sequences"
+            title = "Protein sequences"
+        # ORFs (DNA only)
+        elif ("orf coding" in s) or ("orf genomic" in s):
+            seqcol_type = "S288C Reference Strain|ORFs (DNA only)"
+            if "+/-" in s:
+                title = "ORFs with 1000 bp upstream/downstream"
+            elif "coding" in s:
+                title = "ORF coding"
+            else:
+                title = "ORFs with introns"
+        # RNA
+        elif "rna" in s:
+            seqcol_type = "S288C Reference Strain|RNA"
+            if "coding" in s:
+                title = "RNA coding"
+            elif "+/-" in s:
+                title = "RNA with 1000 bp upstream/downstream"
+            else:
+                title = "RNA coding with introns"
+        # Non-genic DNA
+        elif "non-genic" in s:
+            seqcol_type = "S288C Reference Strain|Non-genic DNA"
+            title = "Intergenic sequences (between ORFs, RNAs, LTRs, Tys"
+
+    # ---- Vectors (S288C) ----
+    elif "vector" in s:
+        seqcol_type = "S288C Reference Strain|Vectors"
+        title = "Yeast cloning vector collection"
+
+    # ---- Alternative reference strains (SGD) ----
+    elif "sgd" in s:
+        matched_alt = any(alt in s for alt in alternative_ref_strains)
+        if matched_alt:
+            if "contig" in s:
+                seqcol_type = "Alternative Reference Strains|Genomic DNA"
+            elif "coding" in s:
+                seqcol_type = "Alternative Reference Strains|Coding DNA"
+            else:
+                seqcol_type = "Alternative Reference Strains"
+        else:
+            # Fall back if "SGD" appears but not in the alternative strain list
+            seqcol_type = "Other S. cerevisiae Strains"
+        title = (text.split('|', 1)[0] or text).strip()
+
+    # ---- Other strains ----
+    else:
+        if "contig" in s:
+            seqcol_type = "Other Strains|Genomic DNA"
+        elif "orf coding" in s:
+            seqcol_type = "Other Strains|Coding DNA"
+        else:
+            seqcol_type = "Other S. cerevisiae Strains"
+        title = (text.split('|', 1)[0] or text).strip()
+
+    # Final safety fallbacks
+    title = title or (text.split('|', 1)[0].strip() if text else "")
+
+    return genus, species, title, seqcol_type
+
 @view_config(route_name='sgd_blast_metadata', renderer='json', request_method='GET')
 def sgd_blast_metadata(request):
 
     from datetime import datetime
     datestamp = str(datetime.now()).split(" ")[0]
-    
-    taxon_id = "NCBITaxon:4932"
-    
+
+    ntr_root_taxon_id = "4932"
+    version = "SGD:R64-5-1"
+    # genus = "Saccharomyces"
+     
+    strain_taxon_id = {}
+    rows = DBSession.execute("select d.display_name, t.taxid "
+                             "from nex.dbentity d, nex.straindbentity s, nex.taxonomy t "
+                             "where d.dbentity_id = s.dbentity_id "
+                             "and s.taxonomy_id = t.taxonomy_id").fetchall()
+    for x in rows:
+        strain = x['display_name'].upper()
+        strain = strain.replace("'S B", "SB").replace("'S O", "SO")
+        taxon_id = x['taxid'].replace("TAX:", "")
+        if taxon_id == ntr_root_taxon_id:
+            taxon_id = ntr_root_taxon_id + "000"
+        elif taxon_id.startswith('NTR:'):
+            taxon_id = ntr_root_taxon_id + taxon_id.replace("NTR:", "")
+        strain_taxon_id[strain] = taxon_id
+
     try:
         data = []
         for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('BLAST: %')).order_by(Filedbentity.dbentity_id).all():
@@ -784,25 +1003,40 @@ def sgd_blast_metadata(request):
                 seqtype = 'prot'
             desc = x.description.replace('BLAST: ', '').split(' | ')
             description = desc[0]
-            version = ''
-            if len(desc) > 1:
-                version = desc[1]
-            data.append({'URI': x.s3_url,
-                         'md5sum': x.md5sum, 
-                         'description': description,
-                         'genus': 'Saccharomyces',
-                         'species': 'cerevisiae',
-                         'version': version,
-                         'blast_title': description,
-                         'seqtype': seqtype,
-                         'taxon_id': taxon_id 
-                       })
-        obj = { 'data': data,
-                'metaData': {
-                    'contact': 'sweng@stanford.edu',
-                    'dataProvider': 'SGD',
-                    'dateProduced': datestamp,
-                    'release': "SGD:" + datestamp 
+            title = description
+            strain = title.split(' ')[0]
+            # bioproject = strain_to_bioproject.get(strain.upper(), 'UNKNOWN')
+            taxon_id = strain_taxon_id.get(strain.upper())
+            if taxon_id is None:
+                if strain.upper().startswith('CEN.PK'):
+                    taxon_id = strain_taxon_id['CEN.PK']
+                elif strain.upper().startswith('SIGMA1278B'):
+                    taxon_id = strain_taxon_id['SIGMA1278B']
+                elif strain.upper() == 'YEAST':
+                    taxon_id = ntr_root_taxon_id + "999"
+                else:
+                    taxon_id = strain
+            genus, species, title, seqcol_type = _generate_blast_title_etc(description)
+
+            data.append({"blast_title": title,
+                         "description": description.split('|')[0],
+                         "genus": genus,
+                         "species": species,
+                         "md5sum": x.md5sum,
+                         "seqtype": seqtype,
+                         "taxon_id": taxon_id,
+                         "uri": x.s3_url,
+                         "seqcol_type": seqcol_type,
+                         "version": version})
+        obj = { "data": data,
+                "metadata": {
+                    "contact": "sgd-helpdesk@lists.stanford.edu",
+                    "dataProvider": "SGD",
+                    "dateProduced": datestamp,
+                    "homepage_url" : "https://www.yeastgenome.org",
+                    "logo_url" : "https://yeastgenome.org/static/img/sgd-logo.png",
+                    "release": version,
+                    "public": True
                 }
         }
         return obj
@@ -811,7 +1045,169 @@ def sgd_blast_metadata(request):
     finally:
         if DBSession:
             DBSession.remove()
-            
+
+
+def _taxon_to_seqcol_type_mapping():
+
+    return {
+        "559292": "Saccharomyces",
+        "1080349": "Saccharomyces",
+        "226230": "Saccharomyces",
+        "226126": "Saccharomyces",
+        "27291": "Saccharomyces",
+        "237561": "Candida",
+        "291208": "Candida",
+        "498019": "Candida",
+        "573826": "Candida",
+        "1136231": "Candida",
+        "1071382": "Other Saccharomycetales (budding yeasts)",
+        "1071383": "Other Saccharomycetales (budding yeasts)",
+        "1064592": "Other Saccharomycetales (budding yeasts)",
+        "1071378": "Other Saccharomycetales (budding yeasts)",
+        "1071380": "Other Saccharomycetales (budding yeasts)",
+        "1071381": "Other Saccharomycetales (budding yeasts)",
+        "5478":   "Other Saccharomycetales (budding yeasts)",
+        "28985":  "Other Saccharomycetales (budding yeasts)",
+        "1003335":"Other Saccharomycetales (budding yeasts)",
+        "559295": "Other Saccharomycetales (budding yeasts)",
+        "45286":  "Other Saccharomycetales (budding yeasts)",
+        "284811": "Other Saccharomycetales (budding yeasts)",
+        "931890": "Other Saccharomycetales (budding yeasts)",
+        "4950":   "Other Saccharomycetales (budding yeasts)",
+        "48254":  "Other Saccharomycetales (budding yeasts)",
+        "4956":   "Other Saccharomycetales (budding yeasts)",
+        "42260":  "Other Saccharomycetales (budding yeasts)",
+        "4909":   "Other Saccharomycetales (budding yeasts)",
+        "644223": "Other Saccharomycetales (budding yeasts)",
+        "871575": "Other Saccharomycetales (budding yeasts)",
+        "36914":  "Other Saccharomycetales (budding yeasts)",
+        "284592": "Other Saccharomycetales (budding yeasts)",
+        "284591": "Other Saccharomycetales (budding yeasts)",
+        "322104": "Other Saccharomycetales (budding yeasts)",
+        "796027": "Other Saccharomycetales (budding yeasts)",
+        "5007":   "Other Saccharomycetales (budding yeasts)",
+        "13502":  "Other Saccharomycetales (budding yeasts)",
+        "36035":  "Other Saccharomycetales (budding yeasts)",
+        "182096": "Aspergillus (Eurotiales)",
+        "227321": "Aspergillus (Eurotiales)",
+        "330879": "Aspergillus (Eurotiales)",
+        "332952": "Aspergillus (Eurotiales)",
+        "510516": "Aspergillus (Eurotiales)",
+        "1069201":"Aspergillus (Eurotiales)",
+        "1220207":"Aspergillus (Eurotiales)",
+        "69781":  "Penicillium (Eurotiales)",
+        "37727":  "Other Eurotiales (Talaromyces & allies)",
+        "121627": "Other Eurotiales (Talaromyces & allies)",
+        "578455": "Other Eurotiales (Talaromyces & allies)",
+        "573729": "Other Eurotiales (Talaromyces & allies)",
+        "36050":  "Hypocreales - Fusarium complex",
+        "56646":  "Hypocreales - Fusarium complex",
+        "195108": "Hypocreales - Fusarium complex",
+        "229533": "Hypocreales - Fusarium complex",
+        "334819": "Hypocreales - Fusarium complex",
+        "660027": "Hypocreales - Fusarium complex",
+        "1028729":"Hypocreales - Fusarium complex",
+        "1042133":"Hypocreales - Fusarium complex",
+        "1279085":"Hypocreales - Fusarium complex",
+        "1328300":"Hypocreales - Fusarium complex",
+        "2034170":"Hypocreales - Trichoderma",
+        "2231603":"Hypocreales - Entomopathogens",
+        "2060973":"Hypocreales - Entomopathogens",
+        "1380566":"Hypocreales - Entomopathogens",
+        "98403":  "Hypocreales - Entomopathogens",
+        "34406":  "Glomerellales (Colletotrichum)",
+        "145971": "Glomerellales (Colletotrichum)",
+        "759273": "Glomerellales (Colletotrichum)",
+        "148305": "Magnaporthales (Pyricularia)",
+        "242507": "Magnaporthales (Pyricularia)",
+        "1578925":"Magnaporthales (Pyricularia)",
+        "367110": "Sordariales (Neurospora/Podospora)",
+        "2093777":"Sordariales (Neurospora/Podospora)",
+        "2093779":"Sordariales (Neurospora/Podospora)",
+        "2093780":"Sordariales (Neurospora/Podospora)",
+        "2609844":"Sordariales (Neurospora/Podospora)",
+        "5454":   "Dothideomycetes",
+        "122368": "Dothideomycetes",
+        "336722": "Dothideomycetes",
+        "5499":   "Dothideomycetes",
+        "332648": "Leotiomycetes (Botrytis)",
+        "214684": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "294750": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "367775": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "564305": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "279322": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "143232": "Basidiomycete yeasts (Tremellales/Trichosporonales)",
+        "237631": "Ustilaginomycetes (smuts)",
+        "280036": "Ustilaginomycetes (smuts)",
+        "1159556":"Ustilaginomycetes (smuts)",
+        "168172": "Pucciniomycetes (rust fungi)",
+        "208348": "Pucciniomycetes (rust fungi)",
+        "181124": "Agaricomycetes (mushrooms & allies)",
+        "181762": "Agaricomycetes (mushrooms & allies)",
+        "456999": "Agaricomycetes (mushrooms & allies)",
+        "76775":  "Malasseziomycetes",
+        "223818": "Malasseziomycetes",
+        "2020962":"Malasseziomycetes",
+        "4896":   "Taphrinomycotina (Schizosaccharomyces)",
+        "2545709":"Taphrinomycotina (Schizosaccharomyces)",
+        "284813": "Microsporidia",
+        "876142": "Microsporidia",
+        "907965": "Microsporidia",
+        "1178016":"Microsporidia"
+    }
+
+
+@view_config(route_name='fungal_blast_metadata', renderer='json', request_method='GET')
+def fungal_blast_metadata(request):
+
+    from datetime import datetime
+    datestamp = str(datetime.now()).split(" ")[0]
+    root_taxon_id = "NCBITaxon:4751"
+    version = "SGD:2024-04-11"
+    taxon2seqcolTypeMapping = _taxon_to_seqcol_type_mapping()
+    try:
+        data = []
+        for x in DBSession.query(Filedbentity).filter(Filedbentity.description.like('FungalBlast: %')).order_by(Filedbentity.previous_file_name).all():
+            seqtype = 'nucl'
+            if 'protein' in x.previous_file_name:
+                seqtype = 'prot'
+            desc = x.description.replace('FungalBlast: ', '').split(' | ')
+            genus = desc[0]
+            title = desc[1]
+            description = desc[2]
+            bioproject = desc[3]
+            taxon_id = desc[4]
+            species = title.split(' ')[1]
+            seqcol_type = taxon2seqcolTypeMapping.get(taxon_id.replace('NCBITaxon:', ''), 'Other Fungi')
+            data.append({"bioproject": bioproject,
+                         "blast_title": title,
+                         "description": description,
+                         "genus": genus,
+                         "species": species,
+                         "md5sum": x.md5sum,
+                         "seqtype": seqtype,
+                         "taxon_id": taxon_id,
+                         "seqcol_type": seqcol_type,
+                         "uri": x.s3_url,
+                         "version": version})
+        obj = { "data": data,
+                "metadata": {
+                    "contact": "sgd-helpdesk@lists.stanford.edu",
+                    "dataProvider": "SGD",
+                    "dateProduced": datestamp,
+                    "homepage_url" : "https://www.yeastgenome.org",
+                    "logo_url" : "https://yeastgenome.org/static/img/sgd-logo.png",
+                    "release": version,
+                    "public": True
+                }
+        }
+        return obj
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+           
 @view_config(route_name='reference_disease_details', renderer='json', request_method='GET')
 def reference_disease_details(request):
     try:
@@ -871,6 +1267,12 @@ def author(request):
 @view_config(route_name='chemical', renderer='json', request_method='GET')
 def chemical(request):
     try:
+        #chebiID = request.matchdict['id']
+        #chebi = None
+        #if chebiID.startswith('CHEBI:'):
+        #    chebi = DBSession.query(Chebi).filter_by(format_name=chebiID).one_or_none()
+        #else:
+
         id = extract_id_request(request, 'chebi', param_name="format_name")
         chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
         if chebi:
@@ -1249,6 +1651,21 @@ def locus_go_graph(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+@view_config(route_name='locus_go_cams', renderer='json', request_method='GET')
+def locus_go_cams(request):
+    try:
+        id = extract_id_request(request, 'locus')
+        locus = get_locus_by_id(id)
+        if locus:
+            return locus.go_cams()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
             
 @view_config(route_name='locus_disease_graph', renderer='json', request_method='GET')
 def locus_disease_graph(request):
@@ -1303,54 +1720,115 @@ def locus_complement_details(request):
 
 @view_config(route_name='locus_homolog_details', renderer='json', request_method='GET')
 def locus_homolog_details(request):
-    try:
-        sgdid = request.matchdict['id']
-        allianceAPI = "https://www.alliancegenome.org/api/gene/SGD:" + sgdid + "/homologs?limit=10000"
-        req = Request(allianceAPI)
-        res = urlopen(req)
-        records = json.loads(res.read().decode('utf-8'))
-        data = []
-        for record in records['results']:
-            homolog = record['homologGene']
-            data.append(homolog)
-        dataSortBySpecies = sorted(data, key=lambda d: d['species']['name'])
-        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")
-    except Exception as e:
-        log.error(e)
-    
+    sgdid = request.matchdict['id']
+    if not sgdid:
+        log.error("locus_homolog_details: missing 'id' in path")
+        return HTTPBadRequest(json_body={"error": "Missing 'id' parameter"})
+
+    sgdid = sgdid.replace('SGD:', '')
+
+    stmt = """
+        SELECT
+            lh.gene_name,
+            lh.obj_url,
+            s.display_name,
+            t.display_name AS species
+        FROM nex.locus_homology AS lh
+        JOIN nex.dbentity AS d
+          ON lh.locus_id = d.dbentity_id
+        JOIN nex.taxonomy AS t
+          ON lh.taxonomy_id = t.taxonomy_id
+        JOIN nex.source AS s
+          ON lh.source_id = s.source_id
+        WHERE d.sgdid = :sgdid
+          AND lh.obj_url LIKE :pattern
+    """
+    params = {
+        "sgdid": sgdid,
+        "pattern": "%alliancegenome%"
+    }
+
+    rows = DBSession.execute(stmt, params)
+
+    data = []
+    for x in rows:
+        gene_name = x[0]
+        link_url = x[1]
+        source = x[2]
+        species = x[3]
+        gene_id = link_url.split('/')[-1]
+        data.append({
+            "species":   species,
+            "source":    source,
+            "gene_id":   gene_id,
+            "gene_name": gene_name,
+            "link_url": link_url,
+            "description": ''
+        })
+    data_sorted = sorted(
+        data,
+        key=lambda d: (d['species'], d['gene_name'])
+    )
+    return HTTPOk(body=json.dumps(data_sorted), content_type="text/json")
+
+
 @view_config(route_name='locus_fungal_homolog_details', renderer='json', request_method='GET')
 def locus_fungal_homolog_details(request):
-    try:
-        ## gene name can be gene name, orf name, sgdid
-        gene_name = request.matchdict['id']
-        service = Service("https://yeastmine.yeastgenome.org/yeastmine/service")
-        query = service.new_query("Gene")
-        query.add_view(
-            "secondaryIdentifier",
-            "homologues.homologue.organism.shortName",
-            "homologues.homologue.primaryIdentifier",
-            "homologues.homologue.symbol",
-            "homologues.dataSets.dataSource.name",
-            "homologues.homologue.briefDescription"
-        )
-        query.add_sort_order("Gene.homologues.homologue.organism.shortName", "ASC")
-        query.add_constraint("homologues.homologue.organism.shortName", "ONE OF", ["A. flavus NRRL3357", "A. fumigatus Af293", "A. nidulans FGSC A4", "A. niger ATCC 1015", "C. albicans SC5314", "C. albicans WO-1", "C. dubliniensis CD36", "C. gattii R265", "C. gattii WM276", "C. glabrata CBS 138", "C. immitis H538.4", "C. immitis RS", "C. neoformans var. grubii H99", "C. neoformans var. neoformans JEC21", "C. parapsilosis CDC317", "C. posadasii C735 delta SOWgp", "M. oryzae 70-15", "N. crassa OR74A", "S. cerevisiae", "S. pombe", "T. marneffei ATCC 18224", "U. maydis 521"], code="C")
-        query.add_constraint("organism.shortName", "=", "S. cerevisiae", code="B")
-        query.add_constraint("Gene", "LOOKUP", gene_name, code="A")
-        data = []
-        for row in query.rows():
-            data.append({ 'species': row["homologues.homologue.organism.shortName"],
-                          'gene_id': row["homologues.homologue.primaryIdentifier"],
-                          'gene_name': row["homologues.homologue.symbol"],
-                          'source': row["homologues.dataSets.dataSource.name"],
-                          'description': row["homologues.homologue.briefDescription"] })
-        
-        #dataSortByID = sorted(data, key=lambda d: d['gene_id'])
-        dataSortBySpecies = sorted(data, key=lambda d: d['species'])
-        return HTTPOk(body=json.dumps(dataSortBySpecies), content_type="text/json")        
-    except Exception as e:
-        log.error(e)        
-        
+    sgdid = request.matchdict.get('id')
+    if not sgdid:
+        log.error("locus_fungal_homolog_details: missing 'id' in path")
+        return HTTPBadRequest(json_body={"error": "Missing 'id' parameter"})
+
+    sgdid = sgdid.replace('SGD:', '')
+
+    stmt = """
+        SELECT
+            lh.gene_id,
+            lh.gene_name,
+            lh.obj_url,
+            lh.homolog_desc,
+            s.display_name,
+            t.display_name AS species
+        FROM nex.locus_homology AS lh
+        JOIN nex.dbentity AS d
+          ON lh.locus_id = d.dbentity_id
+        JOIN nex.taxonomy AS t
+          ON lh.taxonomy_id = t.taxonomy_id
+        JOIN nex.source AS s                                                                                   
+          ON lh.source_id = s.source_id 
+        WHERE d.sgdid = :sgdid
+          AND lh.obj_url not LIKE :pattern
+    """
+    params = {
+        "sgdid": sgdid,
+        "pattern": "%alliancegenome%"
+    }
+
+    rows = DBSession.execute(stmt, params)
+
+    data = []
+    for x in rows:
+        gene_id = x[0]
+        gene_name = x[1]
+        link_url = x[2]
+        desc = x[3] or ''
+        source = x[4]
+        species = x[5]
+        data.append({
+            "species":   species,
+            "source":    source,
+            "gene_id":   gene_id,
+            "gene_name": gene_name,
+            "link_url": link_url,
+            "description": desc
+        })
+    data_sorted = sorted(
+        data,
+        key=lambda d: (d['species'], d['gene_name'])
+    )
+    return data_sorted
+
+
 @view_config(route_name='locus_literature_details', renderer='json', request_method='GET')
 def locus_literature_details(request):
     try:
@@ -1481,6 +1959,26 @@ def locus_neighbor_sequence_details(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='locus_synteny_neighbors', renderer='json', request_method='GET')
+def locus_synteny_neighbors(request):
+    try:
+        id = extract_id_request(request, 'locus')
+        locus = get_locus_by_id(id)
+        if locus:
+            try:
+                flanking_count = int(request.params.get('flanking', 10))
+            except (TypeError, ValueError):
+                flanking_count = 10
+            flanking_count = max(1, min(flanking_count, 50))
+            return locus.synteny_neighbors(flanking_count=flanking_count)
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='locus_sequence_details', renderer='json', request_method='GET')
 def locus_sequence_details(request):
     try:
@@ -1507,7 +2005,10 @@ def analyze(request):
         return HTTPBadRequest(body=json.dumps({'error': 'Key \"bioent_ids\" missing'}))
 
     try:
-        loci = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(data['bioent_ids'])).all()
+        if "is_name" in data and data['is_name'] is True:
+            loci = DBSession.query(Locusdbentity).filter(Locusdbentity.systematic_name.in_(data['bioent_ids'])).all()
+        else:
+            loci = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(data['bioent_ids'])).all()
 
         return [locus.to_dict_analyze() for locus in loci]
     except Exception as e:
@@ -1549,7 +2050,11 @@ def keyword(request):
 @view_config(route_name='keywords', renderer='json', request_method='GET')
 def keywords(request):
     try:
-        keyword_ids = DBSession.query(distinct(DatasetKeyword.keyword_id)).all()
+        # keyword_ids = DBSession.query(distinct(DatasetKeyword.keyword_id)).all()
+        keyword_ids = []
+        for x in DBSession.query(DatasetKeyword).all():
+            if x.keyword_id not in keyword_ids:
+                keyword_ids.append(x.keyword_id)
         keywords = DBSession.query(Keyword).filter(Keyword.keyword_id.in_(keyword_ids)).all()
         simple_keywords = [k.to_simple_dict() for k in keywords]
         for k in simple_keywords:
@@ -1817,77 +2322,84 @@ def ecnumber(request):
         if DBSession:
             DBSession.remove()
     
-@view_config(route_name='primer3', renderer='json', request_method='POST')
+@view_config(route_name='primer3', renderer='json', request_method='GET') 
 def primer3(request):
-    params = request.json_body
-    p_keys = list(params.keys())
 
-    if 'gene_name' in p_keys:
-        gene_name = params.get('gene_name')
-    if 'sequence' in p_keys:
-        sequence = params.get('sequence')
-
-    if gene_name is not None and sequence is not None:
+    gene_name = request.params.get('gene_name', '')
+    sequence = request.params.get('sequence', '')
+    if gene_name == "None":
+        gene_name = ''
+    if sequence == "None":
+        sequence = ''
+                                        
+    if gene_name != '' and sequence != '':
         return HTTPBadRequest(body=json.dumps({'error': 'Both gene name AND sequence provided'}))
 
-    if gene_name is None and sequence is None:
+    if gene_name == '' and sequence == '':
             return HTTPBadRequest(body=json.dumps({'error': 'No gene name OR sequence provided'}))
 
-    if gene_name is None:
+    if gene_name == '':
+        # sequence = str(sequence.replace('\r', '').replace('\n', ''))  
+        regex = re.compile('[^a-zA-Z]')
+        sequence = regex.sub('', sequence)
         decodeseq = sequence
-        sequence = str(sequence.replace('\r', '').replace('\n', ''))
         input = 'seq'
     else:
         gene_name = gene_name.upper()
         locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name == gene_name, Locusdbentity.systematic_name == gene_name)).one_or_none()
         if locus is None:
             return HTTPBadRequest(body=json.dumps({'error': 'Gene name provided does not exist in the database:  ' + gene_name}))
-        tax_id = DBSession.query(Straindbentity.taxonomy_id).filter(Straindbentity.strain_type =='Reference').one_or_none()
-        dna = DBSession.query(Dnasequenceannotation.residues).filter(and_(Dnasequenceannotation.taxonomy_id == tax_id, Dnasequenceannotation.dbentity_id == locus.dbentity_id, Dnasequenceannotation.dna_type =='1KB')).one_or_none()
-        if dna is None:
+        tax = DBSession.query(Straindbentity).filter(Straindbentity.strain_type =='Reference').one_or_none()
+        tax_id = tax.taxonomy_id        
+        seqRow = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.taxonomy_id == tax_id, Dnasequenceannotation.dbentity_id == locus.dbentity_id, Dnasequenceannotation.dna_type =='1KB')).one_or_none()
+        if seqRow is None:
             return HTTPBadRequest(body=json.dumps({'error': 'Sequence for provided gene name does not exist in the database:  ' + gene_name}))
         else:
+            dna = seqRow.residues
             decodeseq = dna
             sequence = str(dna)
-            sequence = sequence[3:-3]
+            # sequence = sequence[1:-1]
             input = 'name'
 
-    if 'maximum_tm' in p_keys:
-        maximum_tm = params.get('maximum_tm')
-    if 'minimum_tm' in p_keys:
-        minimum_tm = params.get('minimum_tm')
-    if 'optimum_tm' in p_keys:
-        optimum_tm = params.get('optimum_tm')
-    if 'maximum_gc' in p_keys:
-        maximum_gc = params.get('maximum_gc')
-    if 'minimum_gc' in p_keys:
-        minimum_gc = params.get('minimum_gc')
-    if 'optimum_gc' in p_keys:
-        optimum_gc = params.get('optimum_gc')
-    if 'maximum_length' in p_keys:
-        maximum_length = params.get('maximum_length')
-    if 'minimum_length' in p_keys:
-        minimum_length = params.get('minimum_length')
-    if 'optimum_primer_length' in p_keys:
-        optimum_primer_length = params.get('optimum_primer_length')
-    if 'max_three_prime_pair_complementarity' in p_keys:
-        max_three_prime_pair_complementarity = params.get('max_three_prime_pair_complementarity')
-    if 'max_pair_complementarity' in p_keys:
-        max_pair_complementarity = params.get('max_pair_complementarity')
-    if 'max_three_prime_self_complementarity' in p_keys:
-        max_three_prime_self_complementarity= params.get('max_three_prime_self_complementarity')
-    if 'max_self_complementarity' in p_keys:
-        max_self_complementarity = params.get('max_self_complementarity')
-    if 'input_end' in p_keys:
-        input_end = params.get('input_end')
-    if 'input_start' in p_keys:
-        input_start = params.get('input_start')
-    if 'maximum_product_size' in p_keys:
-        maximum_product_size = params.get('maximum_product_size')
-    if 'end_point' in p_keys:
-        end_point = params.get('end_point')
-
-    if gene_name is None:
+    if 'maximum_tm' in request.params:
+        maximum_tm = int(request.params.get('maximum_tm'))
+    if 'minimum_tm' in request.params:
+        minimum_tm = int(request.params.get('minimum_tm'))
+    if 'optimum_tm' in request.params:
+        optimum_tm = int(request.params.get('optimum_tm'))
+    if 'maximum_gc' in request.params:
+        maximum_gc = int(request.params.get('maximum_gc'))
+    if 'minimum_gc' in request.params:
+        minimum_gc = int(request.params.get('minimum_gc'))
+    if 'optimum_gc' in request.params:
+        optimum_gc = int(request.params.get('optimum_gc'))
+    if 'maximum_length' in request.params:
+        maximum_length = int(request.params.get('maximum_length'))
+    if 'minimum_length' in request.params:
+        minimum_length = int(request.params.get('minimum_length'))
+    if 'optimum_primer_length' in request.params:
+        optimum_primer_length = int(request.params.get('optimum_primer_length'))
+    if 'max_three_prime_pair_complementarity' in request.params:
+        max_three_prime_pair_complementarity = int(request.params.get('max_three_prime_pair_complementarity'))
+    if 'max_pair_complementarity' in request.params:
+        max_pair_complementarity = int(request.params.get('max_pair_complementarity'))
+    if 'max_three_prime_self_complementarity' in request.params:
+        max_three_prime_self_complementarity= int(request.params.get('max_three_prime_self_complementarity'))
+    if 'max_self_complementarity' in request.params:
+        max_self_complementarity = int(request.params.get('max_self_complementarity'))
+    if 'input_end' in request.params:
+        input_end = int(request.params.get('input_end'))
+    if 'input_start' in request.params:
+        input_start = int(request.params.get('input_start'))
+    maximum_product_size = None
+    if 'mum_product_size' in request.params:
+        maximum_product_size = request.params.get('maximum_product_size')
+        if maximum_product_size != 'None':
+            maximum_product_size = int(maximum_product_size)
+    if 'end_point' in request.params:
+        end_point = request.params.get('end_point')
+       
+    if gene_name == '':
         target_start = input_start
         target_extend_by =  input_end - input_start
     else:
@@ -2179,11 +2691,74 @@ def ambiguous_names(request):
     return data
 
 
+@view_config(route_name='entity_validation', renderer='json', request_method='GET')
+def entity_validation(request):
+    try:
+        subclass = request.matchdict['entity_type']
+        entities = request.matchdict['ids'].split('|')
+        data = []
+        for entity in entities:
+            entity = entity.replace("+", " ")
+            if subclass == "complex":
+                complex = DBSession.query(Complexdbentity).filter(
+                    or_(Complexdbentity.format_name==entity.upper(),
+                        Complexdbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Complexdbentity.display_name.ilike(entity))).one_or_none()
+                if complex:
+                    data.append({"modEntityId": "SGD:" + complex.sgdid,
+                                 "display_name": complex.display_name,
+                                 "format_name": complex.format_name,
+                                 "query": entity})
+            elif subclass == "pathway":
+                pathway = DBSession.query(Pathwaydbentity).filter(
+                    or_(Pathwaydbentity.format_name.ilike(entity),
+                        Pathwaydbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Pathwaydbentity.display_name.ilike(entity),
+                        Pathwaydbentity.biocyc_id==entity.upper())).one_or_none()
+                if pathway:
+                    data.append({"modEntityId": "SGD:" + pathway.sgdid,
+                                 "display_name": pathway.display_name,
+                                 "format_name": pathway.format_name,
+                                 "biocyc_id": pathway.biocyc_id,
+                                 "query": entity})
+            elif subclass == "allele":
+                allele = DBSession.query(Alleledbentity).filter(
+                    or_(Alleledbentity.format_name.ilike(entity),
+                        Alleledbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Alleledbentity.display_name.ilike(entity))).one_or_none()
+                if allele:
+                    data.append({"modEntityId": "SGD:" + allele.sgdid,
+                                 "display_name": allele.display_name,
+                                 "format_name": allele.format_name,
+                                 "query": entity})
+            else:
+                locus = DBSession.query(Locusdbentity).filter(
+                    or_(Locusdbentity.systematic_name.ilike(entity),
+                        Locusdbentity.sgdid==entity.upper().replace("SGD:", ""),
+                        Locusdbentity.display_name.ilike(entity))).one_or_none()
+                if locus:
+                    data.append({"modEntityId": "SGD:" + locus.sgdid,
+                                 "display_name": locus.display_name,
+                                 "format_name": locus.format_name,
+                                 "query": entity})
+        return data
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+
 @view_config(route_name='complex', renderer='json', request_method='GET')
 def complex(request):
     try:
-        complexAC = request.matchdict['id']
-        complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
+        id = extract_id_request(request, 'complex', 'id', True)
+        complex = None
+        if id:
+            complex = DBSession.query(Complexdbentity).filter_by(dbentity_id=id).one_or_none()
+        else:
+            complexAC = request.matchdict['id']
+            complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
         if complex is not None:
             return complex.protein_complex_details()
         else:
@@ -2194,20 +2769,90 @@ def complex(request):
         if DBSession:
             DBSession.remove()
 
+def _get_complex_from_request(request):
+    id = extract_id_request(request, 'complex', 'id', True)
+    if id:
+        return DBSession.query(Complexdbentity).filter_by(dbentity_id=id).one_or_none()
+    complexAC = request.matchdict['id']
+    return DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
+
+@view_config(route_name='complex_summary', renderer='json', request_method='GET')
+def complex_summary(request):
+    try:
+        complex = _get_complex_from_request(request)
+        if complex is not None:
+            return complex.protein_complex_summary_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complex_go', renderer='json', request_method='GET')
+def complex_go(request):
+    try:
+        complex = _get_complex_from_request(request)
+        if complex is not None:
+            return complex.protein_complex_go_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complex_literature', renderer='json', request_method='GET')
+def complex_literature(request):
+    try:
+        complex = _get_complex_from_request(request)
+        if complex is not None:
+            return complex.protein_complex_literature_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='complex_go_cams', renderer='json', request_method='GET')
+def complex_go_cams(request):
+    try:
+        id = extract_id_request(request, 'complex', 'id', True)
+        complex = None
+        if id:
+            complex = DBSession.query(Complexdbentity).filter_by(dbentity_id=id).one_or_none()
+        else:
+            complexAC = request.matchdict['id']
+            complex = DBSession.query(Complexdbentity).filter(or_(Complexdbentity.format_name==complexAC, Complexdbentity.sgdid==complexAC)).one_or_none()
+        if complex is not None:
+            return complex.go_cams()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='allele', renderer='json', request_method='GET')
 def allele(request):
     try:
-        allele = request.matchdict['id'].replace('SGD:S', 'S').replace('Δ', 'delta')
+        # allele = allele.replace('%C3%8E%C2%94', 'Δ')
+        # allele = request.matchdict['id'].replace('SGD:S', 'S').replace('Δ', 'delta')
+        id = extract_id_request(request, 'allele', 'id', True)
         alleleObj = None
-        if allele.startswith('S0'):
-            alleleObj = DBSession.query(Alleledbentity).filter_by(sgdid=allele).one_or_none()
+        if id:
+            alleleObj = DBSession.query(Alleledbentity).filter_by(dbentity_id=id).one_or_none()
         else:
-            alleleObj = DBSession.query(Alleledbentity).filter(Alleledbentity.format_name.ilike(allele)).one_or_none()
-        if alleleObj is None:
-            aa = DBSession.query(AlleleAlias).filter(AlleleAlias.display_name.ilike(allele)).one_or_none()
-            if aa is not None:
-                alleleObj = aa.allele
-                
+            allele = request.matchdict['id'].upper().replace("SGD:", "")
+            alleleObj = DBSession.query(Alleledbentity).filter(or_(
+                Alleledbentity.display_name.ilike(allele), 
+                Alleledbentity.sgdid==allele 
+            )).one_or_none()
         if alleleObj is not None:
             return alleleObj.to_dict()
         else:
@@ -2282,11 +2927,44 @@ def allele_network_graph(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='all_strain_alignment', renderer='json', request_method='GET')
+def all_strain_alignment(request):
+    try:
+        locus = request.matchdict['id']
+        files = DBSession.query(Filedbentity).filter(
+            Filedbentity.previous_file_name.like(locus+'%'), Filedbentity.description.like('%All Strains Sequence Alignment%')).all()
+        if len(files) > 0:
+            data = {}
+            for file in files:
+                s3_url = file.s3_url.split("?versionId=")[0]
+                if file.previous_file_name not in [locus+".png", locus+".align", locus+"_dna.png", locus+"_dna.align"]:
+                    continue
+                if '_dna' in file.previous_file_name:
+                    if ".png" in file.previous_file_name:
+                        data['dna_images_url'] = s3_url
+                    else:
+                        data['dna_align_url'] = s3_url
+                else:
+                    if ".png" in file.previous_file_name:
+                        data['protein_images_url'] = s3_url
+                    else:
+                        data['protein_align_url'] = s3_url
+            return data
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+            
 @view_config(route_name='alignment', renderer='json', request_method='GET')
 def alignment(request):
     try:
         locus = request.matchdict['id']
-        files = DBSession.query(Filedbentity).filter(Filedbentity.previous_file_name.like(locus+'%')).all()
+        files = DBSession.query(Filedbentity).filter(
+            Filedbentity.previous_file_name.like(locus+'%'), Filedbentity.description.like('%12 Strain Sequence Alignment%')).all()
 
         if len(files) > 0:
             data = {}

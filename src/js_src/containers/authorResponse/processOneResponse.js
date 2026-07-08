@@ -121,16 +121,16 @@ class ProcessOneResponse extends Component {
     return (
       <div className='row'>
         <div className='columns medium-6 small-6'>
-          Has fast track tag? <input type="checkbox" name='has_fast_track_tag' value={this.state.has_fast_track_tag} checked={this.state.has_fast_track_tag} onChange={this.onChange4tag} />
+          Has fast track tag? <input type="checkbox" name='has_fast_track_tag' value='1' checked={this.state.has_fast_track_tag} onChange={this.onChange4tag} />
         </div>
         <div className='columns medium-6 small-6'>
-          Curator checked datasets? <input type="checkbox" name='curator_checked_datasets' value={this.state.curator_checked_datasets} checked={this.state.curator_checked_datasets} onChange={this.onChange4datasets} />
+          Curator checked datasets? <input type="checkbox" name='curator_checked_datasets' value='1' checked={this.state.curator_checked_datasets} onChange={this.onChange4datasets} />
         </div>
         <div className='columns medium-6 small-6'>
-          Curator checked genelist? <input type="checkbox" name='curator_checked_genelist' value={this.state.curator_checked_genelist} checked={this.state.curator_checked_genelist} onChange={this.onChange4genelist} />
+          Curator checked genelist? <input type="checkbox" name='curator_checked_genelist' value='1' checked={this.state.curator_checked_genelist} onChange={this.onChange4genelist} />
         </div>
         <div className='columns medium-6 small-6'>
-          No action required? <input type="checkbox" name='no_action_required' value={this.state.no_action_required} checked={this.state.no_action_required} onChange={this.onChange4action} />
+          No action required? <input type="checkbox" name='no_action_required' value='1' checked={this.state.no_action_required} onChange={this.onChange4action} />
         </div>
       </div>
     );									       

@@ -80,11 +80,11 @@ def load_new_data(nex_session, data, source_to_id, ecid_to_ec, ec_id_to_alias, f
             y = ecid_to_ec[id]
             ec_id = y.ec_id
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + id + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + id + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['description'] != y.description:
                 ## update description
                 fw.write("The description for " + id + " has been updated from " + y.description + " to " + x['description'] + "\n")
@@ -103,7 +103,7 @@ def load_new_data(nex_session, data, source_to_id, ecid_to_ec, ec_id_to_alias, f
                         ecid = id,
                         description = x['description'],
                         obj_url = '/ecnumber/' + id,
-                        is_obsolete = '0',
+                        is_obsolete = False,
                         created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -138,7 +138,7 @@ def load_new_data(nex_session, data, source_to_id, ecid_to_ec, ec_id_to_alias, f
             continue
         to_delete.append(ecid)
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1

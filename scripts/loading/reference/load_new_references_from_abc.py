@@ -1,0 +1,115 @@
+import sys
+import json
+from urllib import request
+from scripts.loading.database_session import get_session
+from scripts.loading.reference.add_abc_reference import add_paper, is_retracted_title
+from scripts.loading.reference.remove_obsolete_references_from_abc import \
+    delete_reference, RETRACTED_REASON
+from src.models import Referencedeleted
+import json
+from os import environ
+
+__author__ = 'sweng66'
+
+ABC_API_ROOT_URL = environ['ABC_API_ROOT_URL']
+url = ABC_API_ROOT_URL + "reference/get_recently_sorted_references/SGD"
+json_file = "scripts/loading/reference/data/reference_new_SGD.json"
+CREATED_BY = 'OTTO'
+
+
+def load_data():
+
+    download_json_file()
+    
+    print("Reading ABC reference_SGD.json file...")
+    
+    nex_session = get_session()
+    
+    json_data = dict()
+    with open(json_file, "r") as f:
+        json_str = f.read()
+        json_data = json.loads(json_str)
+    
+    for record in json_data['data']:
+        if "cross_references" not in record:
+            continue
+        (sgdid, pmid, reference_id) = is_paper_in_db(nex_session, record["cross_references"])
+
+        # Retracted / partially retracted papers must not be loaded into SGD.
+        # If such a paper is already in SGD, remove it; otherwise block the load.
+        title = record.get('title') or ''
+        if is_retracted_title(title):
+            if reference_id:
+                print("\nRemoving retracted paper already in SGD (SGD:" + str(sgdid) +
+                      ", reference_id=" + str(reference_id) + "): " + title)
+                delete_reference(nex_session, reference_id,
+                                 int(pmid) if pmid else None, CREATED_BY,
+                                 reason_deleted=RETRACTED_REASON)
+            else:
+                print("\nBlocking retracted paper from being added (SGD:" +
+                      str(sgdid) + "): " + title)
+            continue
+
+        # print(sgdid, pmid, reference_id)
+        if reference_id or sgdid is None:
+            continue
+
+        # Check if paper was previously deleted - if so, remove from referencedeleted
+        # and allow it to be added as a normal paper
+        if pmid:
+            deleted_ref = nex_session.query(Referencedeleted).filter_by(pmid=int(pmid)).one_or_none()
+            if deleted_ref:
+                print("\nRemoving PMID:" + str(pmid) + " from referencedeleted table (was previously deleted)")
+                nex_session.delete(deleted_ref)
+                nex_session.commit()
+
+        print("\nAdding paper for SGD:" + sgdid + "\n")
+        add_paper(record, nex_session)
+
+    nex_session.close()
+    print("DONE!")
+    
+
+def is_paper_in_db(nex_session, cross_references):
+
+    sgdid = None
+    pmid = None
+    for x in cross_references:
+        if x['curie'].startswith('SGD:S1') and x['is_obsolete'] is False:
+            sgdid = x['curie'].replace('SGD:', '')
+        elif x['curie'].startswith('PMID') and x['is_obsolete'] is False:
+            pmid = x['curie'].replace('PMID:', '')
+    if sgdid is None:
+        return (sgdid, pmid, None)
+
+    # Check if a reference with this PMID already exists (regardless of SGDID)
+    if pmid:
+        rows = nex_session.execute("SELECT dbentity_id from nex.referencedbentity WHERE pmid = " + str(pmid)).fetchall()
+        if len(rows) > 0:
+            return (sgdid, pmid, rows[0][0])
+
+    rows = nex_session.execute("SELECT dbentity_id from nex.dbentity WHERE sgdid = '" + sgdid + "'").fetchall()
+    if len(rows) == 0:
+        return (sgdid, pmid, None)
+    dbentity_id = rows[0][0]
+    rows = nex_session.execute("SELECT pmid from nex.referencedbentity WHERE dbentity_id = " + str(dbentity_id)).fetchall()
+    if len(rows) == 0:
+        return (sgdid, pmid, None)
+    return (sgdid, pmid, dbentity_id)
+
+
+def download_json_file():
+
+    try:
+        print("Downloading " + url)
+        req = request.urlopen(url)
+        data = req.read()
+        with open(json_file, 'wb') as fh:
+            fh.write(data)
+    except Exception as e:
+        print("Error downloading the file: " + json_file + ". Error=" + str(e))
+
+
+if __name__ == '__main__':
+
+    load_data()

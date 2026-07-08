@@ -6,7 +6,6 @@ import sys
 import importlib
 from src.models import Locusdbentity, Referencedbentity, Source, Taxonomy, \
                        Psimod, Physinteractionannotation
-from scripts.loading.reference.promote_reference_triage import add_paper
 from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
@@ -73,17 +72,8 @@ def load_data(infile, logfile):
             else:
                 reference_id = pmid_to_reference_id.get(int(row[6]))
                 if reference_id is None:
-                    reference_id = paper_added.get(int(row[6]))
-                if reference_id is None:
                     log.info("The PMID: " + row[6] + " is not in the REFERENCEDBENTITY table.")
-                    # continue
-                    # fw.write("The PMID: " + row[6] + " is not in the REFERENCEDBENTITY table. Adding the paper now.\n")
-                    (reference_id, sgdid) = add_paper(int(row[6]), CREATED_BY)
-                    if reference_id is None:
-                        log.info("It is an obsolete PMID: " + row[6] + "?");
-                        continue
-                    else:
-                        paper_added[int(row[6])] = reference_id 
+                    continue
                 dbentity1_id = sgdid_to_dbentity_id.get(row[2])
                 dbentity2_id = sgdid_to_dbentity_id.get(row[3])
                 if dbentity1_id is None:
@@ -212,12 +202,17 @@ def get_genetic_type_list():
 
 if __name__ == '__main__':
 
-    # https://www.thebiogrid.org/downloads/datasets/SGD.tab.txt
+    # https://downloads.thebiogrid.org/Download/BioGRID/External-Database-Builds/SGD.tab.txt
 
-    url_path = 'https://www.thebiogrid.org/downloads/datasets/'
+    url_path = 'https://downloads.thebiogrid.org/Download/BioGRID/External-Database-Builds/'
     infile = 'SGD.tab.txt'
 
-    urllib.request.urlretrieve(url_path + infile, infile)
+    req = urllib.request.Request(
+        url_path + infile,
+        headers={'User-Agent': 'Mozilla/5.0'}
+    )
+    with urllib.request.urlopen(req) as response, open(infile, 'wb') as out:
+        out.write(response.read())
             
     logfile = "scripts/loading/biogrid/logs/physinteractionannotation.log"
     

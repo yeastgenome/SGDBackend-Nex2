@@ -108,12 +108,13 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
             ## in database
             y = goid_to_go[x['id']]
             go_id = y.go_id
-            if y.is_obsolete is True:
-                y.is_obsolete = '0'
+            is_obsolete_flag = x['term'].lower().startswith('obsolete ')
+            if y.is_obsolete != is_obsolete_flag:
+                fw.write("The is_obsolete for " + str(x['id']) + " has been updated from " + str(y.is_obsolete) + " to " + str(is_obsolete_flag) + "\n")
+                y.is_obsolete = is_obsolete_flag
                 nex_session.add(y)
                 nex_session.flush()
-                update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + str(x['id']) + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                update_log['updated'] += 1
             if x['term'] != y.display_name.strip():
                 fw.write("The display_name for " + str(x['id']) + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
                 y.display_name = x['term']
@@ -125,6 +126,7 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
             active_goid.append(x['id'])
         else:
             fw.write("NEW entry = " + x['id'] + " " + x['term'] + "\n")
+            
             this_x = Go(source_id = source_to_id[src],
                          format_name = x['id'],
                          goid = x['id'],
@@ -132,7 +134,7 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
                          go_namespace = x['namespace'].replace("_", " "),
                          description = x['definition'],
                          obj_url = '/go/' + x['id'],
-                         is_obsolete = '0',
+                         is_obsolete = x['term'].lower().startswith('obsolete '),
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -203,11 +205,11 @@ def load_new_data(nex_session, data, source_to_id, goid_to_go, ro_id, roid_to_ro
             continue
         to_delete.append((goid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.goid + " has been updated from " + x.is_obsolete +" to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.goid + " has been updated from " + str(x.is_obsolete) +" to " + 'True' + "\n")
 
     nex_session.commit()
  
@@ -228,13 +230,9 @@ def update_aliases(nex_session, go_id, curr_aliases, new_aliases, source_id, goi
 
     for (alias, type) in curr_aliases:
         if(alias, type) not in new_aliases:
-            ## remove the old one                         
-            
-            # print "NEED TO DELETE ALIAS:", alias, type
-            continue
-
+            ## remove the old one
             to_delete = nex_session.query(GoAlias).filter_by(go_id=go_id, display_name=alias, alias_type=type).first()
-            nex_session.delete(to_delete) 
+            nex_session.delete(to_delete)
             fw.write("The old alias = " + alias + " has been deleted for go_id = " + str(go_id) + "\n")
              
 
@@ -392,12 +390,26 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
     log.info(summary_4_email)
 
 
+def download(url: str, out_path: str) -> None:
+    req = urllib.request.Request(
+        url,
+	headers={"User-Agent": "Mozilla/5.0 (compatible; SGD/1.0; +https://www.yeastgenome.org)"}
+    )
+    with urllib.request.urlopen(req) as r, open(out_path, "wb") as f:
+        f.write(r.read())
+
 if __name__ == "__main__":
-        
-    url_path = 'http://purl.obolibrary.org/obo/'
-    go_owl_file = 'go.owl'
-    urllib.request.urlretrieve(url_path + go_owl_file, go_owl_file)
-    
+    go_owl_file = "go.owl"
+    urls = [
+        "http://snapshot.geneontology.org/ontology/go.owl"
+    ]
+    last_err = None
+    for url in urls:
+        try:
+            download(url, go_owl_file)
+            break
+        except Exception as e:
+            last_err = e
     load_ontology(go_owl_file)
 
 

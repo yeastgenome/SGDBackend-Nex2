@@ -14,8 +14,8 @@ DECLARE
 BEGIN
   IF (TG_OP = 'UPDATE') THEN
 
-    IF (OLD.reference_id != NEW.reference_id) THEN
-        PERFORM nex.insertupdatelog('AUTHORRESPONSE'::text, 'REFERENCE_ID'::text, OLD.curation_id, OLD.reference_id::text, NEW.reference_id::text, USER);
+    IF (OLD.pmid != NEW.pmid) THEN
+        PERFORM nex.insertupdatelog('AUTHORRESPONSE'::text, 'PMID'::text, OLD.curation_id, OLD.pmid::text, NEW.pmid::text, USER);
     END IF;
 
      IF (OLD.source_id != NEW.source_id) THEN
@@ -316,10 +316,10 @@ BEGIN
   ELSIF (TG_OP = 'DELETE') THEN
 
     v_row := OLD.curation_id || '[:]' || OLD.reference_id || '[:]' ||
-             OLD.source_id || '[:]' || coalesce(OLD.locus_id,0) || '[:]' ||
+             OLD.source_id || '[:]' || coalesce(OLD.dbentity_id,0) || '[:]' ||
              OLD.curation_tag || '[:]' || OLD.date_created || '[:]' || 
              OLD.created_by  || '[:]' || coalesce(OLD.curator_comment,'') || '[:]' ||
-             coalesce(OLD.json,'');
+             coalesce(OLD.json,'') || '[:]' || coalesce(OLD.topic_entity_tag_id,0);
 
           PERFORM nex.insertdeletelog('CURATION_REFERENCE'::text, OLD.curation_id, v_row, USER);
 

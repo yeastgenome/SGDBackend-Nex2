@@ -299,12 +299,12 @@ my %_annotationFiles = (
 			#     SLIM_MENU_LABEL  => 'GeneDB_tsetse (Generic GO slim)'
 			#     },
 			cgd => {
-			    GENE_URL => 'http://www.candidagenome.org/cgi-bin/locus.pl?locus=',
+			    GENE_URL => 'https://www.candidagenome.org/locus/',
 			    COMMON_NAME => 'Candida',
 			    ORGANISM => 'Candida albicans',
 			    ORGANISM_DB_NAME => 'CGD',
 			    ORGANISM_DB_URL => 'http://www.candidagenome.org/',
-			    DEFAULT_GENE_URL => 'http://www.candidagenome.org/cgi-bin/locus.pl?locus='.'=act1',
+			    DEFAULT_GENE_URL => 'https://www.candidagenome.org/locus/'.'act1',
 			    README_URL => 'http://www.geneontology.org/gene-associations/readme/cgd.README',
 			    IDENTIFIER_2 => 'CGD_ID',
 			    IDENTIFIER_3 => 'Standard Name',

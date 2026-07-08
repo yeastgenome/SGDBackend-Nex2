@@ -78,10 +78,10 @@ def delete_locus_alias(nex_session, locus_id, rna_id):
     if x:
         try:
             nex_session.delete(x)
-            logger.info("Deleting RNAcentral ID: " + rna_id + " from database for locus_id = " + str(locus_id))
+            logger.info(f"Deleting RNAcentral ID: {rna_id} from database for locus_id = {locus_id}")
         except Exception as e:
-            logger.info("Error deleting RNAcentral ID: " + rna_id + " from database for locus_id = " + str(locus_id) + ": " + str(e))
-                        
+            logger.info(f"Error deleting RNAcentral ID: {rna_id} from database for locus_id = {locus_id}: {e}")
+
 
 def insert_locus_alias(nex_session, source_id, locus_id, rna_id):
 
@@ -94,9 +94,9 @@ def insert_locus_alias(nex_session, source_id, locus_id, rna_id):
                        alias_type=ALIAS_TYPE,
                        created_by=CREATED_BY);
         nex_session.add(x)
-        logger.info("Adding RNAcentral ID: " + rna_id + " into database for locus_id = " + str(locus_id))
+        logger.info(f"Adding RNAcentral ID: {rna_id} into database for locus_id = {locus_id}")
     except Exception as e:
-        logger.info("Error adding RNAcentral ID: " + rna_id + " into database for locus_id = " + str(locus_id) + ": " + str(e))
+        logger.info(f"Error adding RNAcentral ID: {rna_id} into database for locus_id = {locus_id}: {e}")
 
 
 if __name__ == "__main__":

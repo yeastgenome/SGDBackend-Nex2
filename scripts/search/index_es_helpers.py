@@ -45,6 +45,34 @@ def get_phenotype_annotations_chemicals(properties):
     else:
         return data
 
+def pheno_annotations_to_dict(phenoObj):
+    phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(
+        phenotype_id=phenoObj.phenotype_id).all()
+    pheno_ids = [p.annotation_id for p in phenotype_annotations]
+    conditions = []
+    condition_names = []
+    if pheno_ids and len(pheno_ids) > 0:
+        conditions = DBSession.query(PhenotypeannotationCond).filter(PhenotypeannotationCond.annotation_id.in_(pheno_ids)).all()
+        # condition_names = clear_list_empty_values(list(set([c.condition_name for c in conditions])))
+        condition_names = list(set([c.condition_name for c in conditions]))
+    conditions_dict = {}
+    for condition in conditions:
+        if condition.annotation_id in conditions_dict:
+            conditions_dict[condition.annotation_id].append(condition)
+        else:
+            conditions_dict[condition.annotation_id] = [condition]
+    if len(condition_names) > 0:
+        urls = DBSession.query(Chebi.display_name, Chebi.obj_url).filter(Chebi.display_name.in_(condition_names)).all()
+    else:
+        urls = []
+    chebi_urls = {}
+    for url in urls:
+        chebi_urls[url[0]] = url[1]
+    obj = []
+    for annotation in phenotype_annotations:
+        obj += annotation.to_dict(phenotype=phenoObj, conditions=conditions_dict.get(annotation.annotation_id, []), chebi_urls=chebi_urls)
+    return obj
+
 
 def flattern_arr(lst):
     '''
@@ -386,7 +414,8 @@ class IndexESHelper:
     def get_pheno_annotations(cls, phenos_data):
         _data = []
         for item in phenos_data:
-            annotations = item.annotations_to_dict()
+            # annotations = item.annotations_to_dict()
+            annotations = pheno_annotations_to_dict(item)
             _references = filter_object_list(
                     [itm["reference"]["display_name"] for itm in annotations]) if annotations else []
             _strains = filter_object_list(

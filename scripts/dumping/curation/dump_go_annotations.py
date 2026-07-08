@@ -1,12 +1,11 @@
 from src.helpers import upload_file
 from src.boto3_upload import upload_one_file_to_s3
 from scripts.loading.database_session import get_session
-from src.models import Dbentity, Locusdbentity, Referencedbentity, Taxonomy, \
-    Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
+from src.models import Dbentity, Locusdbentity, Referencedbentity, Pathwaydbentity, \
+    Taxonomy, Go, Ro, Eco, EcoAlias, Source, Goannotation, Goextension, \
     Gosupportingevidence, LocusAlias, Edam, Path, FilePath, Complexdbentity, \
     Filedbentity, ReferenceAlias, Dnasequenceannotation, So, ComplexAlias
-from urllib.request import urlretrieve
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from datetime import datetime
 import logging
 import os
@@ -97,6 +96,8 @@ def dump_data(noctua_gpad_file):
                      for x in nex_session.query(Go).all()])
     id_to_pmid = dict([(x.dbentity_id, x.pmid)
                        for x in nex_session.query(Referencedbentity).all()])
+    id_to_biocyc_id = dict([(x.dbentity_id, x.biocyc_id)
+                            for x in nex_session.query(Pathwaydbentity).all()])
     id_to_uniprot = dict([(x.locus_id, x.display_name)
                        for x in nex_session.query(LocusAlias).filter_by(alias_type='UniProtKB ID').all()])
     id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
@@ -234,6 +235,8 @@ def dump_data(noctua_gpad_file):
         reference = ""
         if id_to_pmid.get(x.reference_id) is not None:
             reference = "PMID:" + str(id_to_pmid.get(x.reference_id))
+        elif id_to_biocyc_id.get(x.reference_id) is not None:
+            reference = "SGD_PWY:" + id_to_biocyc_id.get(x.reference_id)
         else:
             reference = id_to_go_ref[x.reference_id]
         row[REFERENCE] = reference
@@ -255,6 +258,8 @@ def dump_data(noctua_gpad_file):
         row[ASPECT] = namespace_to_code[go_aspect]
 
         eco_code = id_to_eco.get(x.eco_id)
+        if reference.startswith('SGD_PWY:'):
+            eco_code = 'IEA'
         if eco_code is None:
             if x.eco.display_name.startswith('biological system reconstruction '):
                 eco_code = 'BSR'
@@ -265,6 +270,7 @@ def dump_data(noctua_gpad_file):
             eco_code = "IKR"
         row[EVIDENCE] = eco_code
 
+        """
         ### check if the annotation is in nochua list. If yes, exclude it.
         key = (row[DBID], row[GOID], row[REFERENCE],
                id_to_ecoid[x.eco_id], x.annotation_type)
@@ -332,8 +338,8 @@ def dump_data(noctua_gpad_file):
     log.info("Uploading GAF file to S3...")
 
     update_database_load_file_to_s3(
-        nex_session, gaf_file, '1', source_to_id, edam_to_id, datestamp)
-
+        nex_session, gaf_file, True, source_to_id, edam_to_id, datestamp)
+    
     nex_session.close()
 
     ##### download sgd gaf from go central and upload it to S3
@@ -341,7 +347,7 @@ def dump_data(noctua_gpad_file):
     local_file = open(gaf_from_go, mode='rb')
     upload_one_file_to_s3(local_file, "latest/" + gaf_from_go)
     ## done
-
+    
     log.info(str(datetime.now()))
     log.info("Done!")
 
@@ -356,10 +362,18 @@ def write_header(fw, datestamp):
     fw.write("!Funding: NHGRI at US NIH, grant number U41-HG001315\n")
     fw.write("!\n")
     
+def download_file_with_headers(url, local_filename):
+    """Download a file with proper User-Agent header to avoid 403 errors."""
+    headers = {'User-Agent': 'SGD/1.0 (https://www.yeastgenome.org; sgd-helpdesk@lists.stanford.edu)'}
+    request = Request(url, headers=headers)
+    with urlopen(request) as response, open(local_filename, 'wb') as out_file:
+        out_file.write(response.read())
+
+
 def download_sgd_gaf_from_go_central():
 
     sgd_gaf_url = "http://current.geneontology.org/annotations/sgd.gaf.gz"
-    urlretrieve(sgd_gaf_url, gaf_from_go)
+    download_file_with_headers(sgd_gaf_url, gaf_from_go)
     
 def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_id, edam_to_id, datestamp):
 
@@ -376,7 +390,7 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
     local_file = open(gzip_file, mode='rb')
 
     ### upload a current GAF file to S3 with a static URL for Go Community ###
-    # if is_public == '1':
+    # if is_public == 'true':
     #    upload_gaf_to_s3(local_file, "latest/gene_association.sgd.gaf.gz")
     ##########################################################################
 
@@ -390,7 +404,7 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
 
     gzip_file = gzip_file.replace("scripts/dumping/curation/data/", "")
 
-    if is_public == '1':
+    if is_public == True:
         nex_session.query(Dbentity).filter(Dbentity.display_name.like('gene_association.sgd%')).filter(
             Dbentity.dbentity_status == 'Active').update({"dbentity_status": 'Archived'}, synchronize_session='fetch')
         nex_session.commit()
@@ -425,8 +439,8 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
                 status='Active',
                 readme_file_id=readme_file_id,
                 is_public=is_public,
-                is_in_spell='0',
-                is_in_browser='0',
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gaf_md5sum)
@@ -499,6 +513,6 @@ if __name__ == '__main__':
 
     noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
     noctua_gpad_file = 'noctua_sgd.gpad.gz'
-    urlretrieve(noctua_path + noctua_gpad_file, noctua_gpad_file)
+    download_file_with_headers(noctua_path + noctua_gpad_file, noctua_gpad_file)
 
     dump_data(noctua_gpad_file)

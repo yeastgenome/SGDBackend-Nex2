@@ -10,7 +10,7 @@ from src.models import AlleleGeninteraction, Alleledbentity, DBSession, Function
     So, ContigUrl, LocusAlias, LocusAliasReferences, LocusReferences, LocussummaryReference, LocusUrl, Posttranslationannotation,\
     Psimod, Proteinexptannotation, Proteindomainannotation, Proteindomain, ProteindomainUrl, Ec, EcAlias, EcUrl, LocusRelation, LocusRelationReference, \
     Locusnote, LocusnoteReference, Pathwayannotation, Pathwaydbentity, PathwayUrl, Bindingmotifannotation, Disease, Diseaseannotation, \
-    Proteinabundanceannotation, ChebiAlia, ReferenceFile, ComplexAlias, ComplexGo, ComplexReference, Colleaguetriage, CurationReference, \
+    Proteinabundanceannotation, ChebiAlia, ReferenceFile, ComplexAlias, ComplexReference, Colleaguetriage, CurationReference, \
     CuratorActivity, Efo, DiseaseAlias, Diseasesupportingevidence, DiseaseRelation, DiseaseUrl
 
 class SourceFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -681,18 +681,6 @@ class ComplexAliasFactory(factory.alchemy.SQLAlchemyModelFactory):
     source_id = 1
     complex_id = 1
     alias_type = "alias type"
-    date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
-    created_by = "TOTO"
-
-class ComplexGoFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        model = ComplexGo
-        sqlalchemy_session = DBSession
-
-    complex_go_id = 1
-    complex_id = 1
-    source_id = 1
-    go_id = 1
     date_created = factory.LazyAttribute(lambda o: datetime.datetime.utcnow())
     created_by = "TOTO"
 

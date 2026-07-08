@@ -1,9 +1,11 @@
 import os
+import re
 import logging
 from datetime import datetime
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, LocusAlias, Source
-pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList021119.txt'
+
+pantherGeneFile = 'scripts/loading/dbxref/data/pantherGeneList.txt'
 
 __author__ = 'sagarjha'
 
@@ -21,6 +23,8 @@ alias_type_src_list = [(ALIAS_TYPE, SRC)]
 ADDED = 0
 DELETED = 0
 UPDATED = 0
+
+PANTHER_RE = re.compile(r"\((PTHR[^)]+)\)")
 
 
 def update_data():
@@ -103,6 +107,7 @@ def update_data():
     log.info(str(datetime.now()))
     log.info("Done!")
 
+"""
 def read_panther_gene_list_file(source_to_id):
     sgdid_to_panther_id = {}
     # panther_id_to_sgdid = {}
@@ -111,7 +116,8 @@ def read_panther_gene_list_file(source_to_id):
         lines = file.readlines()
         for line in lines:
             words = line.split()
-            
+            if len(words) == 0:
+                continue
             sgdid_list = words[1].split(",")
             pantherid = words[-1]
             if(pantherid.startswith('(PTHR')):
@@ -129,6 +135,39 @@ def read_panther_gene_list_file(source_to_id):
                     key_to_ids[key] = pantherid_list
     
     return [sgdid_to_panther_id,key_to_ids]
+"""
+
+def read_panther_gene_list_file(source_to_id):
+    sgdid_to_panther_id = {}
+    key_to_ids = {}
+
+    with open(pantherGeneFile, "r") as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue
+
+            words = line.split()
+            if len(words) < 2:
+                continue
+
+            sgdid_list = words[1].split(",")
+
+            m = PANTHER_RE.search(line)
+            if not m:
+                continue
+            pantherid = m.group(1)  # e.g. PTHR19241:SF620
+
+            for sgdid in sgdid_list:
+                sgdid_to_panther_id[sgdid] = pantherid
+                key = (sgdid, ALIAS_TYPE, source_to_id.get(SRC))
+                pantherid_list = key_to_ids.get(key, [])
+                if pantherid not in pantherid_list:
+                    pantherid_list.append(pantherid)
+                key_to_ids[key] = pantherid_list
+
+    return [sgdid_to_panther_id, key_to_ids]
+
 
 def get_locus_id(sgdid,sgdid_to_locus_id):
     # sgdid = panther_id_to_sgdid.get(panther_id)
@@ -199,7 +238,7 @@ def insert_alias(nex_session,fw,locus_id,source_id,panther_id):
         obj_url=obj_url,
         source_id=source_id,
         locus_id=locus_id,
-        has_external_id_section="1",
+        has_external_id_section=True,
         alias_type=ALIAS_TYPE,
         created_by = CREATED_BY)
     

@@ -15,7 +15,7 @@ from src.models import DBSession, Dataset, Datasetsample, Datasettrack, Datasetl
                        Taxonomy
 from src.curation_helpers import get_curator_session
 from src.metadata_helpers import insert_file_keyword, insert_dataset_keyword
-# from src.helpers import file_upload_to_dict
+from src.helpers import check_for_non_ascii_characters
 
 log = logging.getLogger('curation')
 
@@ -340,13 +340,13 @@ def read_dataset_data_from_file(file):
             is_in_browser = row.iat[11]
             
             if is_in_spell and int(is_in_spell) >= 1:
-                is_in_spell = '1'
+                is_in_spell = True
             else:
-                is_in_spell = '0'
+                is_in_spell = False
             if is_in_browser and int(is_in_browser) >= 1:
-                is_in_browser = '1'
+                is_in_browser = True
             else:
-                is_in_browser = '0'
+                is_in_browser = False
             date_public = row.iat[5]
             if str(date_public) == 'nan':
                 # no date provided
@@ -421,16 +421,25 @@ def read_dataset_data_from_file(file):
             if str(row.iat[6]) != 'nan' and str(row.iat[6]).isdigit():
                 parent_dataset_id = int(row.iat[6])
 
+            dbxref_type = row.iat[4]
+
+            for x in [format_name, display_name, dbxref_type, description, lab_name, coll_institution]:
+                if type(x) == str:
+                    continue
+                try:
+                    x = x.decode('utf-8')
+                except UnicodeDecodeError:
+                    pass
             
             entry = { "source_id": source_id,
-                      "format_name": format_name,
+                      "format_name": format_name, 
                       "display_name": str(display_name).replace('"', ''),
                       "obj_url": "/dataset/" + format_name,
                       "sample_count": sample_count,
                       "is_in_spell": is_in_spell,
                       "is_in_browser": is_in_browser,
                       "dbxref_id": dbxref_id,
-                      "dbxref_type": row.iat[4],
+                      "dbxref_type": dbxref_type,
                       "date_public": date_public,
                       "channel_count": channel_count,
                       "description": str(description).replace('"', ''),
@@ -519,6 +528,10 @@ def load_dataset(request):
         if file is None or filename is None:
             return HTTPBadRequest(body=json.dumps({'error': "No dataset file is passed in."}), content_type='text/json')
 
+        #error_message = check_non_ascii_characters(file)
+        #if error_message:
+        #    return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+        #file.seek(0)
         
         [data, error_message] = read_dataset_data_from_file(file)    
         if error_message != '':
@@ -635,6 +648,15 @@ def read_dataset_sample_data_from_file(file):
                     continue
                 entry['obj_url'] = "/datasetsample/" + entry['format_name']
                 entry['dbxref_id'] = GSM
+
+            for x in [entry['format_name'], entry['display_name'], entry['dbxref_type'], entry['description']]:
+                if type(x) == str:
+                    continue
+                try:
+                    x = x.decode('utf-8')
+                except UnicodeDecodeError:
+                    pass
+                      
             data.append(entry)
         return [data, error_message]
     except Exception as e:
@@ -684,6 +706,11 @@ def load_datasetsample(request):
         if file is None or filename is None:
             return HTTPBadRequest(body=json.dumps({'error': "No dataset sample file is passed in."}), content_type='text/json')
 
+        #error_message = check_non_ascii_characters(file)
+        #if error_message:
+        #    return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')
+        #file.seek(0)
+        
         [data, error_message] = read_dataset_sample_data_from_file(file)
         if error_message != '':
             return HTTPBadRequest(body=json.dumps({'error': error_message}), content_type='text/json')

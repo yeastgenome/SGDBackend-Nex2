@@ -1,0 +1,55 @@
+# qa.sh.example — template for the runtime environment file sourced by start.sh.
+#
+# Copy to qa.sh on the host and fill in real values. qa.sh is gitignored
+# because it holds secrets (DB/ES URIs, S3 keys, Pusher/Google secrets,
+# login credentials) — NEVER commit the filled-in file.
+#
+#   cp qa.sh.example qa.sh && $EDITOR qa.sh
+#
+# start.sh sources this file, then execs venv-py39/bin/pserve on $INI_FILE.
+
+# --- App / server ------------------------------------------------------------
+export INI_FILE="/data/www/SGDBackend-Nex2/development.ini"
+export SERVER_NAME="qa.yeastgenome.org"
+export PREVIEW_SERVER="https://preview.qa.yeastgenome.org"
+export PREVIEW_URL="https://preview.qa.yeastgenome.org"
+export ABC_API_ROOT_URL="https://<abc-api-host>"
+export DEFAULT_USER="CHANGEME"
+export CACHE_URLS="https://www.yeastgenome.org"
+
+# --- Database (secret) -------------------------------------------------------
+export NEX2_URI="postgresql://USER:PASSWORD@HOST:5432/DBNAME"
+export BATTER_URI="postgresql://USER:PASSWORD@HOST:5432/DBNAME"
+
+# --- Elasticsearch -----------------------------------------------------------
+export ES_URI="http://<es-host>:9200"
+export WRITE_ES_URI="http://<es-host>:9200"
+export ES_INDEX_NAME="searchable_items_aws"
+
+# --- Redis -------------------------------------------------------------------
+export REDIS_READ_HOST="<redis-read-host>"
+export REDIS_WRITE_HOST="<redis-write-host>"
+export REDIS_PORT="6379"
+
+# --- AWS / S3 (secret) -------------------------------------------------------
+export S3_ACCESS_KEY="CHANGEME"
+export S3_SECRET_KEY="CHANGEME"
+export S3_BUCKET="<s3-bucket>"
+export ARCHIVE_S3_BUCKET="<archive-s3-bucket>"
+export EXPRESSION_S3_BUCKET="<expression-s3-bucket>"
+
+# --- Third-party auth / integrations (secret) --------------------------------
+export GOOGLE_CLIENT_ID="CHANGEME"
+export GOOGLE_CAPTCHA_SECRET="CHANGEME"
+export PUSHER_APP_ID="CHANGEME"
+export PUSHER_KEY="CHANGEME"
+export PUSHER_SECRET="CHANGEME"
+export LOGIN_EMAIL="CHANGEME"
+export LOGIN_PASSWORD="CHANGEME"
+
+# --- Files / logging ---------------------------------------------------------
+export INPUT_FILE_NAME=""
+export LOG_LEVEL="INFO"
+export SCRIPT_LOG_FILE="/var/log/sgd-backend/script.log"
+export WORKER_LOG_FILE="/var/log/sgd-backend/worker.log"
+export CRON_EMAIL="CHANGEME"

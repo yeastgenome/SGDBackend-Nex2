@@ -1,25 +1,22 @@
+import urllib.request, urllib.parse, urllib.error
+import os
 from datetime import datetime
 import sys
-import importlib
-importlib.reload(sys)  # Reload does the trick!
-sys.path.insert(0, '../../../src/')
-from models import Source, Apo, ApoUrl, ApoAlia, ApoRelation, Ro
-sys.path.insert(0, '../')
-from config import CREATED_BY
-from database_session import get_nex_session as get_session
-from ontology import read_owl  
+from src.models import Source, Apo, ApoUrl, ApoAlia, ApoRelation, Ro
+from scripts.loading.database_session import get_session
+from scripts.loading.ontology import read_owl  
                  
 __author__ = 'sweng66'
 
 ## Created on May 2017
 ## This script is used to update APO ontology in NEX2.
 
-ontology_file = 'data/apo.owl'
-log_file = 'logs/apo.log'
+log_file = 'scripts/loading/ontology/logs/apo.log'
 ontology = 'APO'
 src = 'SGD'
+CREATED_BY = os.environ['DEFAULT_USER']
 
-def load_ontology():
+def load_ontology(ontology_file):
 
     nex_session = get_session()
 
@@ -90,11 +87,11 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
             y = apoid_to_apo[x['id']]
             apo_id = y.apo_id
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['term'] != y.display_name:
                 ## update term
                 fw.write("The display_name for " + x['id'] + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
@@ -115,7 +112,7 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
                          apo_namespace = x['namespace'],
                          description = x['definition'],
                          obj_url = x['namespace'] + '/' + x['id'],
-                         is_obsolete = '0',
+                         is_obsolete = False,
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -168,7 +165,7 @@ def load_new_data(nex_session, data, source_to_id, apoid_to_apo, is_sgd_term, ro
             continue
         to_delete.append((apoid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
@@ -266,7 +263,11 @@ def write_summary_and_send_email(fw, update_log, to_delete_list):
 
 if __name__ == "__main__":
         
-    load_ontology()
+    url_path = 'http://purl.obolibrary.org/obo/'
+    apo_owl_file = 'apo.owl'
+    urllib.request.urlretrieve(url_path + apo_owl_file, apo_owl_file)
+    
+    load_ontology(apo_owl_file)
 
 
     

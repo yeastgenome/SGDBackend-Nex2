@@ -1,4 +1,16 @@
-from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, Goannotation, Go, Goslimannotation, Goslim, Apo, Straindbentity, Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, ComplexReference, Complexbindingannotation, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, AlleleReference, LocusAllele, Literatureannotation
+from src.models import DBSession, Base, Colleague, ColleagueLocus, Dbentity, \
+    Locusdbentity, Filedbentity, FileKeyword, LocusAlias, Dnasequenceannotation, \
+    So, Locussummary, Phenotypeannotation, PhenotypeannotationCond, Phenotype, \
+    Regulationannotation, Posttranslationannotation, Goannotation, Go, Goslim, \
+    Goslimannotation, Apo, Straindbentity, Functionalcomplementannotation, \
+    Strainsummary, Reservedname, GoAlias, Goannotation, Referencedbentity, \
+    Referencedocument, Referenceauthor, ReferenceAlias, Chebi, Disease, \
+    Diseaseannotation, DiseaseAlias, Complexdbentity, ComplexAlias, \
+    ComplexReference, Complexbindingannotation, Pathwaydbentity, \
+    PathwayAlias, Pathwaysummary, PathwaysummaryReference, Pathwayannotation, \
+    PathwayUrl, Tools, Alleledbentity, AlleleAlias, AllelealiasReference, \
+    AlleleReference, LocusAllele, Literatureannotation, Dataset, DatasetKeyword, \
+    DatasetReference, Datasetsample, Datasetlab, Taxonomy
 from sqlalchemy import create_engine, and_
 from elasticsearch import Elasticsearch
 # from mapping import mapping
@@ -59,7 +71,8 @@ def setup():
 
 
 def index_not_mapped_genes():
-    url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+    # url = "https://downloads.yeastgenome.org/curation/literature/genetic_loci.tab"
+    url = "https://wiki.yeastgenome.org/index.php/Genetic_Loci"
     bulk_data = []
     with open("./scripts/search/not_mapped.json",
               "r") as json_data:
@@ -258,7 +271,7 @@ def index_genes():
     _phenos = IndexESHelper.get_locus_phenotypeannotation()
     _goids = IndexESHelper.get_locus_go_annotation()
     _aliases_raw = IndexESHelper.get_locus_dbentity_alias(
-        ["Uniform", "Non-uniform", "Retired name", "UniProtKB ID"])
+        ["Uniform", "Non-uniform", "Retired name", "UniProtKB ID", "RNAcentral ID"])
 
     ###################################
     # TODO: remove line below in the next release
@@ -342,13 +355,13 @@ def index_genes():
                 name = alias_item.display_name
                 if name not in merged_deleted:
                     alias_quick_direct_keys.append(name)
-                if alias_item.alias_type != "UniProtKB ID":
+                if alias_item.alias_type not in ["UniProtKB ID", "RNAcentral ID"]:
                     aliases.append(name)
         '''for d in aliases_raw:
             name = d[0]
             if name not in merged_deleted:
                 alias_quick_direct_keys.append(name)
-            if d[1] != "UniProtKB ID":
+            if d[1] not in ["UniProtKB ID", "RNAcentral ID"]:
                 aliases.append(name)'''
         # make everything in keys lowercase to ignore case
         keys = []
@@ -501,7 +514,7 @@ def index_observables():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
-def index_strains():
+def index_strains_old():
     strains = DBSession.query(Straindbentity).all()
 
     print(("Indexing " + str(len(strains)) + " strains"))
@@ -592,7 +605,8 @@ def index_go_terms():
         for annotation in annotations:
             if annotation.go_qualifier != "NOT":
                 gene_ontology_loci.add(annotation.dbentity.display_name)
-            references.add(annotation.reference.display_name)
+            if annotation.reference:
+                references.add(annotation.reference.display_name)
 
         numerical_id = go.goid.split(":")[1]
         key_values = [
@@ -607,6 +621,7 @@ def index_go_terms():
 
         obj = {
             "name": go.display_name,
+            "identifier": go.goid,
             "go_name": go.display_name,
             "href": go.obj_url,
             "description": go.description,
@@ -633,6 +648,103 @@ def index_go_terms():
             es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
             bulk_data = []
 
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+
+def index_RNAcentralIDs():
+
+    all_rows = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID').all()
+    print(("Indexing " + str(len(all_rows)) + " RNA central IDs"))
+
+    bulk_data = []
+    for x in all_rows:
+        obj = {
+            "name": x.display_name,
+            "identifier": x.display_name,
+            "category": "rnacentral_id",
+            "href": x.locus.obj_url,
+        }
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+    
+    
+def index_datasets():
+
+    all_datasets = DBSession.query(Dataset).all()
+    print(("Indexing " + str(len(all_datasets)) + " Datasets"))
+
+    bulk_data = []
+
+    taxonomy_id_to_dataset_id_count = {}
+    for d in all_datasets:
+
+        keywords = set([])
+        for dk in DBSession.query(DatasetKeyword).filter_by(
+                dataset_id=d.dataset_id).all():
+            keywords.add(dk.keyword.display_name)
+
+        references = set([])
+        for dr in DBSession.query(DatasetReference).filter_by(
+                dataset_id=d.dataset_id).all():
+            references.add(dr.reference.display_name)
+
+        labs = set([])
+        lab_locations = set([])
+        for dl in DBSession.query(Datasetlab).filter_by(
+                dataset_id=d.dataset_id).all():
+            labs.add(dl.lab_name)
+            lab_locations.add(dl.lab_location)
+
+        assays = set([])    
+        taxonomy_ids = set([])
+        for ds in DBSession.query(Datasetsample).filter_by(
+                dataset_id=d.dataset_id).all():
+            if ds.assay_id:
+                assays.add(ds.assay.display_name)
+            if ds.taxonomy_id is None:
+                continue
+            taxonomy_ids.add(ds.taxonomy_id)
+
+        strains = []
+        for s in DBSession.query(Taxonomy).filter(
+                Taxonomy.taxonomy_id.in_(list(taxonomy_ids))).all():
+            strains.append(s.display_name)
+                    
+        obj = {
+            "name": d.display_name,
+            "identifier": d.dbxref_id,
+            "category": "dataset",
+            "href": d.obj_url,
+            "description": d.description,
+            "keywords": list(keywords),
+            "references": list(references),
+            "assays": list(assays),
+            "labs": list(labs),
+            "lab_locations": list(lab_locations),
+            "strains": strains
+        }
+
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+
+        if len(bulk_data) == 800:
+            es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+            bulk_data = []
     if len(bulk_data) > 0:
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
@@ -667,6 +779,7 @@ def index_disease_terms():
                 keys.add(k.lower())
         obj = {
             "name": do.display_name,
+            "identifier": do.doid,
             "disease_name": do.display_name,
             "category": "disease",
             "href": do.obj_url,
@@ -697,6 +810,114 @@ def index_disease_terms():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
+def index_strains():
+
+    ## strains with taxonomy_id = 274803; same as 'Other' strain
+    other_strains = [ "A364A", "AB972", "DC5", "Foster's B",
+                      "Foster's O", "XJ24-24a", ]
+    
+    strains = DBSession.query(Straindbentity).all()
+
+    print(("Indexing " + str(len(strains)) + " strains"))
+            
+    i = 0
+    bulk_data = []
+    for s in strains:
+        key_values = [s.display_name, s.format_name, s.genbank_id ]
+        keys = set([])
+        for k in key_values:
+            if k is not None:
+                keys.add(k.lower())
+                                                    
+        i += 1
+        
+        taxonomy_id = s.taxonomy_id
+        strain_link_url = s.obj_url
+        description = s.headline
+        display_name = s.display_name
+
+        """
+        phenotypes = set([])
+        references = set([])
+        diseases = set([])
+
+        if s.display_name not in other_strains:
+
+            for x in DBSession.query(Phenotypeannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+                phenotypes.add(x.phenotype.display_name)
+            
+            for x in DBSession.query(Posttranslationannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+
+            for x in DBSession.query(Regulationannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+
+            for x in DBSession.query(Regulationannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+
+            for x in DBSession.query(Functionalcomplementannotation).filter_by(taxonomy_id=taxonomy_id).all():
+                references.add(x.reference.display_name)
+                
+            for x in DBSession.query(Diseaseannotation).filter_by(taxonomy_id = taxonomy_id).all():
+                references.add(x.reference.display_name)
+                diseases.add(x.disease.display_name)
+
+        """
+        
+        # print(s.display_name, "references=", len(references), "phenotypes=", len(phenotypes), "diseases=", len(diseases))
+        
+        obj = {
+            "name": display_name,
+            "strain_name": display_name,
+            "category": "strain",
+            "href": strain_link_url,
+            "description": description
+        }
+        """
+            "references": list(references),
+            "phenotype": sorted(list(phenotypes)),
+            "disease": sorted(list(diseases))
+        }
+        """
+        
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+        bulk_data.append(obj)
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+        bulk_data = []
+
+
+def get_references_for_strains(taxonomy_id_to_strain_name):
+
+    regulations = DBSession.query(Regulationannotation).filter_by(
+        annotation_type = "manually curated").all()
+
+    diseases = DBSession.query(Diseaseannotation).all()
+
+    ptms = DBSession.query(Posttranslationannotation).all()
+
+    funcComplements = DBSession.query(Functionalcomplementannotation).all()
+
+    phenotypes = DBSession.query(Phenotypeannotation).all()
+    
+    ref2strains = {}
+    for x in regulations + diseases + ptms + funcComplements + phenotypes:
+        strains = []
+        if x.reference_id in ref2strains:
+            strains = ref2strains[x.reference_id]
+        strain = taxonomy_id_to_strain_name.get(x.taxonomy_id)
+        if strain is not None and strain not in strains:
+            strains.append(strain)
+        ref2strains[x.reference_id] = strains
+
+    return ref2strains
+
+
 def index_references():
     # _ref_loci = IndexESHelper.get_dbentity_locus_note()
     _references = DBSession.query(Referencedbentity).all()
@@ -704,6 +925,16 @@ def index_references():
     _authors = IndexESHelper.get_ref_authors()
     _aliases = IndexESHelper.get_ref_aliases()
 
+    main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1",
+                        "SEY6210", "X2180-1A", "CEN.PK", "D273-10B",
+                        "JK9-3d", "FL100", "Y55", "RM11-1a"]
+    taxonomy_id_to_strain_name = {}
+    for x in DBSession.query(Straindbentity).all():
+        if x.display_name in main_strain_list:
+            taxonomy_id_to_strain_name[x.taxonomy_id] = x.display_name
+
+    ref2strains = get_references_for_strains(taxonomy_id_to_strain_name)
+    
     all = DBSession.query(Literatureannotation).all()
     ref2loci = {}
     ref2complexes = {}
@@ -749,6 +980,7 @@ def index_references():
         reference_complexes = []
         reference_alleles = []
         reference_pathways = []
+        reference_strains = []
         # if len(_ref_loci) > 0:
         #    temp_loci = _ref_loci.get(reference.dbentity_id)
         #    if temp_loci is not None:
@@ -769,7 +1001,11 @@ def index_references():
         temp_pathways = ref2pathways.get(reference.dbentity_id)
         if temp_pathways is not None:
             reference_pathways = temp_pathways
-                    
+
+        temp_strains = ref2strains.get(reference.dbentity_id)
+        if temp_strains is not None:
+            reference_strains = temp_strains
+
         abstract = _abstracts.get(reference.dbentity_id)
         if abstract is not None:
             abstract = abstract[0]
@@ -798,18 +1034,32 @@ def index_references():
 
         name = ', '.join(authors) + ' (' + ' '.join(reference.citation.split('(')[1:])
         
+        pmid = ''
+        go_ref_id = ''
+        if reference.pmid:
+            pmid = str(reference.pmid)
+            identifier = pmid
+        else:
+            goRef = DBSession.query(ReferenceAlias).filter_by(reference_id=reference.dbentity_id, alias_type='GO reference ID').one_or_none()
+            if goRef:
+                go_ref_id = goRef.display_name
+                identifier = go_ref_id
+
         obj = {
             "name": name,
+            "identifier": identifier,
             "reference_name": reference.citation,
             "href": reference.obj_url,
             "description": abstract,
             "author": authors,
             "journal": journal,
             "year": str(reference.year),
+            "go_ref_id": go_ref_id,
             "reference_loci": reference_loci,
             "associated_alleles": reference_alleles,
             "associated_complexes": reference_complexes,
             "associated_pathways": reference_pathways,
+            "associated_strains": reference_strains,
             "secondary_sgdid": sec_sgdid,
             "category": "reference",
             "keys": list(keys)
@@ -831,7 +1081,79 @@ def index_references():
         es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
 
 
+def index_pathways():
+    pathways = DBSession.query(Pathwaydbentity).all()
+    print(("Indexing " + str(len(pathways)) + " pathways"))
 
+    bulk_data = []
+
+    pathway_id_to_summary  = dict([(x.pathway_id, (x.summary_id, x.text)) \
+                                   for x in DBSession.query(Pathwaysummary).all()])
+
+    for p in pathways:
+        if p.dbentity_status == 'Deleted':
+            continue
+        synonyms = DBSession.query(PathwayAlias.display_name).filter_by(
+            pathway_id=p.dbentity_id).all()
+        
+        summary_id = None
+        summary_text = ''
+        if p.dbentity_id in pathway_id_to_summary:
+            (summary_id, summary_text) = pathway_id_to_summary[p.dbentity_id]
+        
+        references = set([])
+        if summary_id is not None:
+            refs = DBSession.query(PathwaysummaryReference).filter_by(
+                summary_id=summary_id).all()
+            for ref in refs:
+                references.add(ref.reference.display_name)
+
+        pathway_loci = set([])
+        annotations = DBSession.query(Pathwayannotation).filter_by(
+            pathway_id=p.dbentity_id).all()
+        for a in annotations:
+            pathway_loci.add(a.dbentity.display_name)
+
+        bioCycURL = None
+        yeastPathwayURL = None
+        for x in DBSession.query(PathwayUrl).filter_by(pathway_id=p.dbentity_id).all():
+            if x.url_type == 'BioCyc':
+                bioCycURL = x.obj_url
+            elif x.url_type == 'YeastPathways':
+                yeastPathwayURL = x.obj_url
+            
+        keys = [p.biocyc_id, p.biocyc_id.lower()]
+        obj = {
+            "name": p.display_name,
+            "identifier": p.biocyc_id,
+            "pathway_name": p.display_name,
+            "biocyc_id": p.biocyc_id,
+            "href": yeastPathwayURL,
+            "description": summary_text,
+            "category": "pathway",
+            "synonyms": [s[0] for s in synonyms],
+            "pathway_loci": sorted(list(pathway_loci)),
+            "references": list(references),
+            "keys": keys
+        }
+
+        bulk_data.append({
+            "index": {
+                "_index": INDEX_NAME,
+                "_id": str(uuid.uuid4())
+            }
+        })
+
+        bulk_data.append(obj)
+
+        if len(bulk_data) == 800:
+            es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+            bulk_data = []
+
+    if len(bulk_data) > 0:
+        es.bulk(index=INDEX_NAME, body=bulk_data, refresh=True)
+
+        
 def index_complex_names():
     complexes = DBSession.query(Complexdbentity).all()
     print(("Indexing " + str(len(complexes)) + " complex names"))
@@ -881,9 +1203,9 @@ def index_complex_names():
         for k in key_values:
             if k is not None:
                 keys.add(k.lower())
-
         obj = {
             "name": c.display_name,
+            "identifier": c.complex_accession,
             "complex_name": c.display_name,
             "href": "/complex/" + c.complex_accession,
             "description": c.description + "; " + c.properties,
@@ -986,14 +1308,161 @@ def index_chemicals():
     _result = IndexESHelper.get_chebi_annotations(all_chebi_data)
     bulk_data = []
     print(("Indexing " + str(len(all_chebi_data)) + " chemicals"))
+
+    chemical2pathways = {}
+    rows = DBSession.execute("SELECT display_name FROM nex.dbentity "
+                             "WHERE  subclass = 'PATHWAY'").fetchall()
+    for x in rows:
+        pathway = x[0]
+        kw = pathway
+
+        kw = kw.replace('salvage pathways of ', ' ')
+        kw = kw.replace('superpathway of ', ' ')
+        kw = kw.replace('de novo biosynthesis of ', ' ')
+
+        kw = kw.split('biosynthesis')[0]
+        kw = kw.split('superpathway')[0]
+        kw = kw.split('degradation')[0]
+        kw = kw.split('elongation')[0]
+        kw = kw.split('pathway')[0]
+        kw = kw.split('cleavage')[0]
+        kw = kw.split('fermentation')[0]
+        kw = kw.split('cycle')[0]
+        kw = kw.split('oxidation')[0]
+        kw = kw.split('ribonucleotides')[0]
+        kw = kw.split('ribonucleotide')[0]
+        kw = kw.split('deoxyribonucleotides')[0]
+        kw = kw.split('deoxyribonucleotide')[0]
+        kw = kw.split('assimilation')[0]
+        kw = kw.split('catabolism')[0]
+        kw = kw.split('activation')[0]
+        kw = kw.split('utilization')[0]
+        kw = kw.split('shuttle')[0]
+        kw = kw.split('system')[0]
+        kw = kw.split('interconversion')[0]
+        kw = kw.split('reactions')[0]
+        kw = kw.split('metabolism')[0]
+        kw = kw.split('respiration')[0]
+        kw = kw.split('deoxy')[0]
+        kw = kw.split('diphosphate')[0]
+        kw = kw.split('phosphate')[0]
+        kw = kw.split('nucleotides')[0]
+        kw = kw.split('reduction')[0]
+        
+        kw = kw.replace(' of ', ' ')
+        kw = kw.replace('de novo ', ' ')
+        kw = kw.replace('very long chain ', ' ')
+        kw = kw.replace('fatty acids', 'fatty acid')
+        
+        kw = kw.strip()
+        kws = kw.split(' and ')
+        if " decarboxylation to " in kw:
+            kws = kw.split(' decarboxylation to ')
+        if ", " in kw:
+            kws = kw.split(', ')
+        for kw in kws:
+            pathways = chemical2pathways.get(kw.upper(), set([]))
+            pathways.add(pathway)
+            chemical2pathways[kw.upper()] = pathways
+            
+    chebi2loci = {}
+    chebi2references = {}
+    chebi2phenotypes = {}
+                
+    rows = DBSession.execute("SELECT distinct c.chebiid, p.display_name, "
+                             "       d.display_name, d2.display_name "
+                             "FROM   nex.phenotype p, nex.phenotypeannotation pa, "
+                             "       nex.phenotypeannotation_cond pc, nex.dbentity d, "
+                             "       nex.dbentity d2, nex.chebi c "
+                             "WHERE  p.phenotype_id = pa.phenotype_id "
+                             "and    pa.annotation_id = pc.annotation_id "
+                             "and    pc.condition_class = 'chemical' "
+                             "and    pc.condition_name = c.display_name "
+                             "and    pa.dbentity_id = d.dbentity_id "
+                             "and    pa.reference_id = d2.dbentity_id").fetchall()
+    for x in rows:
+
+        chebi = x[0]
+        phenotype = x[1]
+        gene = x[2]
+        reference = x[3]
+        
+        phenotypes = chebi2phenotypes.get(chebi, set([]))
+        phenotypes.add(phenotype)
+        chebi2phenotypes[chebi] = phenotypes
+
+        loci = chebi2loci.get(chebi, set([]))
+        loci.add(gene)
+        chebi2loci[chebi] = loci
+
+        references = chebi2references.get(chebi, set([]))
+        references.add(reference)
+        chebi2references[chebi] = references
+
+    chebi2processes = {}
+    chebi2functions = {}
+    chebi2components = {}
+    rows = DBSession.execute("SELECT distinct ge.dbxref_id, g.go_namespace, g.display_name, "
+                             "       d.display_name, d2.display_name "
+                             "FROM   nex.goannotation ga, nex.goextension ge, nex.go g, "
+                             "       nex.dbentity d, nex.dbentity d2 "
+                             "WHERE  ge.dbxref_id like 'CHEBI:%' "
+                             "and    ge.annotation_id = ga.annotation_id "
+                             "and    ga.go_id = g.go_id "
+                             "and    ga.dbentity_id = d.dbentity_id "
+                             "and    ga.reference_id = d2.dbentity_id").fetchall()
+    for x in rows:
+
+        chebi = x[0]
+        go_namespace = x[1]
+        go_term = x[2]
+        gene = x[3]
+        reference = x[4]
+
+        loci = chebi2loci.get(chebi, set([]))
+        loci.add(gene)
+        chebi2loci[chebi] = loci
+
+        references = chebi2references.get(chebi, set([]))
+        references.add(reference)
+        chebi2references[chebi] = references
+
+        if go_namespace.endswith('process'):
+            processes = chebi2processes.get(chebi, set([]))
+            processes.add(go_term)
+            chebi2processes[chebi] = processes
+        elif go_namespace.endswith('function'):
+            functions = chebi2functions.get(chebi, set([]))
+            functions.add(go_term)
+            chebi2functions[chebi] = functions
+        else:
+            components = chebi2components.get(chebi, set([]))
+            components.add(go_term)
+            chebi2components[chebi] = components
+    
     for item_key, item_v in list(_result.items()):
         if item_v is not None:
+            loci = chebi2loci.get(item_v.chebiid, set([]))
+            references = chebi2references.get(item_v.chebiid, set([]))
+            phenotypes = chebi2phenotypes.get(item_v.chebiid, set([]))
+            processes = chebi2processes.get(item_v.chebiid, set([]))
+            functions = chebi2functions.get(item_v.chebiid, set([]))
+            components = chebi2components.get(item_v.chebiid, set([]))
+            pathways = chemical2pathways.get(item_v.display_name.upper(), set([]))
             obj = {
                 "name": item_v.display_name,
+                "identifier": item_v.chebiid,
                 "chemical_name": item_v.display_name,
                 "href": item_v.obj_url,
                 "description": item_v.description,
                 "category": "chemical",
+                "chemical_loci": sorted(list(loci)),
+                "references": sorted(list(references)),
+                "phenotypes": sorted(list(phenotypes)),
+                "pathways": sorted(list(pathways)),
+                "biological_process": sorted(list(processes)),
+                "molecular_function": sorted(list(functions)),
+                "cellular_component": sorted(list(components)),
                 "keys": [],
                 "chebiid": item_v.chebiid
             }
@@ -1014,9 +1483,13 @@ def index_chemicals():
 
 
 def index_part_1():
-    index_phenotypes()
-    index_not_mapped_genes()
+
+    # index_RNAcentralIDs()
+    index_datasets()
     index_strains()
+    index_references()
+    index_phenotypes()
+    # index_not_mapped_genes()
     index_colleagues()
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
@@ -1028,18 +1501,20 @@ def index_part_1():
 
 
 def index_part_2():
+    index_pathways()
     index_reserved_names()
     index_toolbar_links()
     index_observables()
     index_disease_terms()
-    index_references()
+    # index_references()
     index_alleles()
     
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_go_terms()
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         index_complex_names()
-
+    
+        
 def index_toolbar_links():
 
     tools = DBSession.query(Tools).all()
@@ -1067,12 +1542,12 @@ if __name__ == "__main__":
         with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
             index_references()
     '''
-    # index_strains()
-    # index_genes()
     
     cleanup()
     setup()
-    
+
+    # index_datasets()
+
     t1 = Thread(target=index_part_1)
     t2 = Thread(target=index_part_2)
     t1.start()

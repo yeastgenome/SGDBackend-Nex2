@@ -11,7 +11,7 @@ import complementReducer from './complementReducer';
 import phenotypeReducer from './phenotypeReducer';
 import alleleReducer from './alleleReducer';
 import authorResponseReducer from './authorResponseReducer';
-import litguideReducer from './litguideReducer';
+import litguideReducer from './litGuideReducer';
 import fileMetadataReducer from './fileMetadataReducer';
 import datasetReducer from './datasetReducer';
 
@@ -21,15 +21,15 @@ export default {
   lit: litReducer,
   locus: locusReducer,
   search: searchReducer,
-  ptm:ptmReducer,
-  newsLetter:newsLetterReducer,
-  regulation:regulationReducer,
+  ptm: ptmReducer,
+  newsLetter: newsLetterReducer,
+  regulation: regulationReducer,
   disease: diseaseReducer,
   complement: complementReducer,
-  phenotype:phenotypeReducer,
-  allele:alleleReducer,
-  authorResponse:authorResponseReducer,
-  litguide:litguideReducer,
+  phenotype: phenotypeReducer,
+  allele: alleleReducer,
+  authorResponse: authorResponseReducer,
+  litguide: litguideReducer,
   metadata: fileMetadataReducer,
   dataset: datasetReducer
 };

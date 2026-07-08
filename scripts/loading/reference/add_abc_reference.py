@@ -1,0 +1,436 @@
+import os
+from sqlalchemy import text
+from src.models import Sgdid, Dbentity, Referencedbentity, Referencedocument, Referenceauthor,\
+    Referencetype, ReferenceUrl, Source, Journal
+from scripts.loading.database_session import get_session
+from scripts.loading.reference.pubmed import set_cite
+from scripts.loading.util import link_gene_names
+
+doi_root = 'http://dx.doi.org/'
+pubmed_root = 'http://www.ncbi.nlm.nih.gov/pubmed/'
+pmc_root = 'http://www.ncbi.nlm.nih.gov/pmc/articles/'
+status = 'Published'
+epub_status = 'Epub ahead of print'
+pdf_status = 'N'
+epub_pdf_status = 'NAP'
+
+CREATED_BY = os.environ['DEFAULT_USER']
+
+# Papers whose title starts with any of these prefixes have been (partially)
+# retracted and must never be loaded into SGD.
+RETRACTED_TITLE_PREFIXES = (
+    'RETRACTED: ',
+    'PARTIALLY RETRACTED: ',
+    'PARTIALLY RETRACTED:',
+)
+
+
+def is_retracted_title(title):
+    """Return True if the reference title indicates a (partial) retraction."""
+    if not title:
+        return False
+    return title.startswith(RETRACTED_TITLE_PREFIXES)
+
+
+def add_paper(record, nex_session=None):
+
+    if nex_session is None:
+        nex_session = get_session()
+
+    source_id = get_source_id(nex_session, 'NCBI')
+
+    (sgdid, display_name, pubStatus, citation, pmid, pmcid, doi, pubdate, year,
+     volume, issue, page, title, author_list, journal, journal_title, journal_id,
+     curator_email_id) = extract_data(nex_session, record)
+
+    # Skip invalid/placeholder records that are missing required data
+    if year is None:
+        print("Skipping " + str(sgdid) + ": missing required year")
+        return None
+    if title and 'placeholder' in title.lower():
+        print("Skipping " + str(sgdid) + ": placeholder title")
+        return None
+    if is_retracted_title(title):
+        print("Skipping " + str(sgdid) + ": retracted paper (title: " + title + ")")
+        return None
+
+    email_id_to_created_by = email_id_to_dbuser_mapping()
+
+    created_by = CREATED_BY
+    if curator_email_id:
+        created_by = email_id_to_created_by.get(curator_email_id, CREATED_BY)
+
+    print("Inserting into sgdid table:")
+
+    insert_sgdid(nex_session, sgdid, source_id, created_by)
+        
+    try:
+        
+        print("Inserting into dbentity/referencedbentity tables:")
+
+        dbentity_id = insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year,
+                                               volume, issue, page, title, citation,
+                                               journal_id, pubStatus, source_id, sgdid,
+                                               display_name, created_by)
+
+        print("Inserting into author table:")
+
+        insert_authors(nex_session, dbentity_id, author_list, source_id, created_by)
+
+        print("Inserting into referencetype table:")
+
+        insert_pubtypes(nex_session, pmid, dbentity_id, record.get('pubmed_types', []),
+                        source_id, created_by)
+
+        print("Inserting into URL table:")
+
+        insert_urls(nex_session, pmid, dbentity_id, doi, pmcid, source_id, created_by)
+
+        print("Inserting into abstract table:")
+
+        insert_abstract(nex_session, pmid, dbentity_id, record,
+                        source_id, journal, journal_title, author_list, created_by)
+        
+        nex_session.commit()
+        return dbentity_id
+    
+    except Exception as e:
+        nex_session.rollback()
+        print("An error occured when adding reference entry for " + sgdid + ". Error=" + str(e))
+        return None
+        
+
+def insert_urls(nex_session, pmid, reference_id, doi, pmcid, source_id, created_by):
+    
+    x = ReferenceUrl(display_name = 'PubMed',
+                     obj_url = pubmed_root + str(pmid),
+                     reference_id = reference_id,
+                     url_type = 'PubMed',
+                     source_id = source_id,
+                     created_by = created_by)
+    nex_session.add(x)
+    if doi:
+        doi_url = doi_url = doi_root + doi
+        x = ReferenceUrl(display_name = 'DOI full text',
+                         obj_url = doi_url,
+                         reference_id = reference_id,
+                         url_type = 'DOI full text',
+                         source_id = source_id,
+                         created_by= created_by)
+        nex_session.add(x)
+    if pmcid:
+        pmc_url = pmc_root + pmcid
+        x =ReferenceUrl(display_name = 'PMC full text',
+                        obj_url = pmc_url,
+                        reference_id = reference_id,
+                        url_type = 'PMC full text',
+                        source_id = source_id,
+                        created_by= created_by)
+    nex_session.add(x)
+    nex_session.flush()
+    nex_session.refresh(x)
+
+
+def insert_pubtypes(nex_session, pmid, reference_id, pubtypes, source_id, created_by):
+
+    if pubtypes is None:
+        return
+    for type in pubtypes:
+        if type is None:
+            continue
+        x = Referencetype(display_name = type,
+                          obj_url = '/referencetype/'+ type.replace(' ', '_'),
+                          source_id = source_id,
+                          reference_id = reference_id,
+                          created_by = created_by)
+        nex_session.add(x)
+    nex_session.flush()
+    nex_session.refresh(x)
+
+
+def insert_abstract(nex_session, pmid, reference_id, record, source_id, journal_abbrev, journal_title, authors, created_by):
+
+    text = record.get('abstract', '')
+
+    if text == '':
+        return
+    
+    x = Referencedocument(document_type = 'Abstract',
+                          source_id = source_id,
+                          reference_id = reference_id,
+                          text = text,
+                          html = link_gene_names(text, {}, nex_session),
+                          created_by = created_by)
+    nex_session.add(x)
+    
+    entries = create_bibentry(pmid, record, journal_abbrev, journal_title, authors)
+    y = Referencedocument(document_type = 'Medline',
+                          source_id = source_id,
+                          reference_id = reference_id,
+                          text = '\n'.join([key + ' - ' + str(value) for key, value in entries if value is not None]),
+                          html = '\n'.join([key + ' - ' + str(value) for key, value in entries if value is not None]),
+                          created_by = created_by)
+    nex_session.add(y)
+    nex_session.flush()
+    nex_session.refresh(x)
+
+
+def create_bibentry(pmid, record, journal_abbrev, journal_title, authors):
+
+    entries = []
+    
+    pubdate = record.get('date_published', '')
+    year = pubdate.split(' ')[0]
+    title = record.get('title', '')
+    volume = record.get('volume', '')
+    issue = record.get('issue_name', '')
+    pages = record.get('page_range', '')
+
+    entries.append(('PMID', pmid))
+    entries.append(('STAT', 'Active'))
+    entries.append(('DP', pubdate))
+    entries.append(('TI', title))
+    entries.append(('IP', issue))
+    entries.append(('PG', pages))
+    entries.append(('VI', volume))
+    entries.append(('SO', 'SGD'))
+    authors = record.get('AU', [])
+    for author in authors:
+        entries.append(('AU', author))
+    pubtypes = record.get('pubmed_types', [])
+    if pubtypes:
+        for pubtype in pubtypes:
+            entries.append(('PT', pubtype))
+    if record.get('abstract') is not None:
+        entries.append(('AB', record.get('abstract')))
+ 
+    if journal_abbrev:
+        entries.append(('TA', journal_abbrev))
+    if journal_title:
+        entries.append(('JT', journal_title))
+    return entries
+
+
+def insert_authors(nex_session, reference_id, authors, source_id, created_by):
+
+    if len(authors) == 0:
+        return
+
+    i = 0
+    for author in authors:
+        i = i + 1
+        x = Referenceauthor(display_name = author,
+                            obj_url = '/author/' + author.replace(' ', '_'),
+                            source_id = source_id,
+                            reference_id = reference_id,
+                            author_order = i,
+                            author_type = 'Author', 
+                            created_by = created_by)
+        nex_session.add(x)
+    nex_session.flush()
+    nex_session.refresh(x)
+    
+
+def extract_data(nex_session, record):
+
+    journal_id, journal, journal_title = get_journal_id(nex_session, record)
+    pubdate = record.get('date_published')
+    year = pubdate
+    if year == "None":
+        year = None
+    if year:
+        year = int(year[0:4])
+    title = record.get('title', '')
+    if title is None:
+        title = '' 
+    title = title.replace("\\'", "'")
+
+    authors = []
+    author_list = []
+    author_order = 0
+    # https://pubmed.ncbi.nlm.nih.gov/35613595/
+    # Yugang Zhang 1, Dan Su 1, Julia Zhu 1, Miao Wang 1, Yandong Zhang 1, Qin Fu 2, Sheng Zhang 2, Hening Lin 3
+    # multiple first authors and they have same last_name first_initial (eg, Zhang Y)
+    # so have to use order them base on the list provided by PubMed
+    for author in record.get('authors', []):
+        author_name = author['name']
+        if 'last_name' in author and author['last_name'] and 'first_initial' in author and author['first_initial']:
+            author_name = author['last_name'] + " " + author['first_initial']
+        author_list.append(author_name.strip())
+        orcid = author['orcid'].replace("ORCID:", "") if 'orcid' in author and author['orcid'] else ''
+        author_order += 1
+        authors.append((author_name.strip(), orcid, author_order))
+
+    volume = record['volume'] if 'volume' in record else ''
+    if volume is None:
+        volume = ''
+    issue = record['issue_name'] if 'issue_name' in record else ''
+    if issue is None:
+        issue = ''
+    page = record['page_range'] if 'page_range' in record else ''
+    if page is None:
+        page = ''
+
+    doi = None
+    pmcid = None
+    pmid = None
+    sgdid = None
+    if "cross_references" in record:
+        for cr in record['cross_references']:
+            if cr['curie'].startswith('PMID:'):
+                pmid = int(cr['curie'].replace('PMID:', ''))
+            if cr['curie'].startswith('DOI:'):
+                doi = cr['curie'].replace('DOI:', '')
+            if cr['curie'].startswith('PMCID:'):
+                pmcid = cr['curie'].replace('PMCID:', '')
+            if cr['curie'].startswith('SGD:'):
+                sgdid = cr['curie'].replace('SGD:', '')
+                
+    pubStatus = record['pubmed_publication_status'] if 'pubmed_publication_status' in record else ''
+    if pubStatus is None:
+        pubStatus = 'Published'
+    else:
+        pubStatus = convert_publication_status(pubStatus)
+
+    citation = set_cite(title, author_list, year, journal, volume, issue, page)
+    display_name = citation.split(')')[0] + ")"
+
+    mca_rows = record.get('mod_corpus_associations', [])
+    mca_row = mca_rows[0]
+    curator_email = mca_row['updated_by_email']
+    curator_email_id = None
+    if curator_email and "@" in curator_email:
+        curator_email_id = curator_email.split('@')[0]
+        
+    return (sgdid, display_name, pubStatus, citation, pmid, pmcid, doi, pubdate, year, volume,
+            issue, page, title, author_list, journal, journal_title, journal_id,
+            curator_email_id)
+    
+
+def email_id_to_dbuser_mapping():
+
+    return {
+        "edwong57": "EDITH",
+        "rnash": "NASH",
+        "stacia": "STACIA",
+        "suzia": "SUZIA",
+        "sweng": "SHUAI"
+    }
+
+
+def insert_sgdid(nex_session, sgdid, source_id, created_by):
+
+    row = nex_session.query(Sgdid).filter_by(display_name = sgdid).one_or_none()
+    if row is None:
+        x = Sgdid(format_name = sgdid,
+                  display_name = sgdid,
+                  obj_url = '/sgdid/' + sgdid,
+                  source_id = source_id,
+                  subclass = 'REFERENCE',
+                  sgdid_status = 'Primary',
+                  created_by = created_by)
+        nex_session.add(x)
+        nex_session.commit()
+    
+
+def insert_referencedbentity(nex_session, pmid, pmcid, doi, pubdate, year, volume, issue, page, title, citation, journal_id, pubStatus, source_id, sgdid, display_name, created_by): 
+
+    print("inserting referencedbentity:", pmid, pmcid, doi, pubdate, year, volume, issue, page, title, citation, journal_id, pubStatus, source_id, sgdid, display_name)
+    
+    x = Referencedbentity(sgdid = sgdid,
+                          source_id = source_id,
+                          format_name = sgdid,
+                          display_name = display_name,
+                          subclass = 'REFERENCE',
+                          dbentity_status = 'Active',
+                          obj_url = '/reference/' + sgdid,
+                          created_by = created_by,
+                          method_obtained = 'Curator triage',
+                          publication_status = pubStatus,
+                          fulltext_status = pdf_status,
+                          citation = citation,
+                          year = year,
+                          pmid = pmid,
+                          pmcid = pmcid,
+                          date_published = pubdate,
+                          issue = issue,
+                          page = page,
+                          volume = volume,
+                          title = title,
+                          doi = doi,
+                          journal_id = journal_id)
+
+    nex_session.add(x)
+    nex_session.flush()
+    nex_session.refresh(x)
+
+    return x.dbentity_id
+
+
+def convert_publication_status(pubStatus):
+
+    if pubStatus in ['ppublish', 'epublish']:
+        return 'Published'
+    elif pubStatus == 'aheadofprint':
+        return 'Epub ahead of print'
+    return pubStatus
+
+
+def get_journal_id(nex_session, record, source_id=None):
+
+    journal_abbr = record.get('resource_title_abbreviation', '')
+    journal_full_name = record.get('resource_title', '')
+
+    if journal_abbr is None:
+        journal_abbr = ''
+    if journal_full_name is None:
+        journal_full_name = ''
+
+    # Truncate values to fit database column constraints
+    # med_abbr: varchar(100), title: varchar(200)
+    med_abbr_truncated = journal_abbr[:100]
+    title_truncated = journal_full_name[:200]
+
+    # First, try to find by med_abbr if it exists
+    if med_abbr_truncated:
+        journals = nex_session.query(Journal).filter_by(med_abbr=med_abbr_truncated).all()
+        if len(journals) > 0:
+            return journals[0].journal_id, journals[0].med_abbr, journal_full_name
+
+    # Check for existing journal by (med_abbr, title) to avoid unique constraint violation
+    # This is especially important when med_abbr is empty
+    if title_truncated:
+        journals = nex_session.query(Journal).filter_by(
+            med_abbr=med_abbr_truncated,
+            title=title_truncated
+        ).all()
+        if len(journals) > 0:
+            return journals[0].journal_id, journals[0].med_abbr, journal_full_name
+
+    if source_id is None:
+        source_id = get_source_id(nex_session, 'PubMed')
+
+    if not journal_full_name:
+        return None, '', ''
+
+    # format_name: varchar(100), obj_url: varchar(500), display_name: varchar(500)
+    format_name = (journal_full_name.replace(' ', '_') + journal_abbr.replace(' ', '_'))[:100]
+    obj_url = ('/journal/' + format_name)[:500]
+
+    j = Journal(display_name = journal_full_name[:500],
+                format_name = format_name,
+                title = title_truncated,
+                med_abbr = med_abbr_truncated,
+                source_id = source_id,
+                obj_url = obj_url,
+                created_by = CREATED_BY)
+    nex_session.add(j)
+    nex_session.flush()
+    nex_session.refresh(j)
+    return j.journal_id, j.med_abbr, journal_full_name
+
+
+def get_source_id(nex_session, source):
+    
+    src = nex_session.query(Source).filter_by(display_name=source).all()
+    return src[0].source_id

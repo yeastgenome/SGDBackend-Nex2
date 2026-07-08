@@ -98,11 +98,11 @@ def load_new_data(nex_session, data, source_to_id, taxid_to_taxonomy, ro_id, tax
             y = taxid_to_taxonomy[taxid]
             taxonomy_id = y.taxonomy_id
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + taxid + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + taxid + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['term'] != y.display_name.strip():
                 ## update term
                 fw.write("The display_name for " + taxid + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
@@ -114,6 +114,8 @@ def load_new_data(nex_session, data, source_to_id, taxid_to_taxonomy, ro_id, tax
             # else:
             #    print "SAME: ", taxid, y.display_name, x['aliases'], x['parents']
             active_taxid.append(taxid)
+        elif taxid == 'TAX:2305204':
+            continue
         else:
             fw.write("NEW entry = " + taxid + " " + x['term'] + "\n")
             format_name = x['term'].replace(" ", "_")
@@ -123,7 +125,7 @@ def load_new_data(nex_session, data, source_to_id, taxid_to_taxonomy, ro_id, tax
                               display_name = x['term'],
                               rank = rank,
                               obj_url = '/taxonomy/' + format_name,
-                              is_obsolete = '0',
+                              is_obsolete = False,
                               created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -177,11 +179,11 @@ def load_new_data(nex_session, data, source_to_id, taxid_to_taxonomy, ro_id, tax
             continue
         to_delete.append((taxid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.taxid + " has been updated from " + x.is_obsolete +" to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.taxid + " has been updated from " + str(x.is_obsolete) +" to " + 'True' + "\n")
 
     nex_session.commit()
  

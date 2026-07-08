@@ -99,8 +99,9 @@ def get_list_of_papers(request):
 
     ref_ids = []
     if year.isdigit():
-        ref_objs = DBSession.query(Referencedbentity.dbentity_id).filter_by(year=int(year)).all()
-        ref_ids = [ x[0] for x in ref_objs]
+        ref_ids = []
+        for x in DBSession.query(Referencedbentity).filter_by(year=int(year)).all():
+            ref_ids.append(x.dbentity_id)
 
     curationObjs = None
     if len(ref_ids) > 0 and dbentity_id:

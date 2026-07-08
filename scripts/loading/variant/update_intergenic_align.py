@@ -7,6 +7,9 @@ __author__ = 'sweng66'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
+# mapping_file = "scripts/loading/variant/data/name_to_contig4intergenic_mapping.txt"
+# data_file = "scripts/loading/variant/data/intergenic_sequence_alignment.txt"
+
 mapping_file = "scripts/loading/variant/data/name_to_contig4intergenic_mapping.txt"
 data_file = "scripts/loading/variant/data/intergenic_sequence_alignment.txt"
 
@@ -80,6 +83,7 @@ def update_data():
                     x = key_to_x[key]
                     nex_session.delete(x)
                     nex_session.commit()
+                    # nex_session.rollback()
                     add_row(nex_session, locus_id, contig_id, seqID, dna_type, start, end, aligned_seq, snp_seq, block_sizes)
                 else:
                     print ("NO CHANGE: ", key)
@@ -98,7 +102,8 @@ def update_data():
                     print ("UPDATE: ", key)
                     x = key_to_x[key]
                     nex_session.delete(x)
-                    nex_session.commit()  
+                    nex_session.commit()
+                    # nex_session.rollback()
                     add_row(nex_session, locus_id, contig_id, seqID, dna_type, start, end, aligned_seq, snp_seq, block_sizes)
                 else:
                     print ("NO CHANGE: ", key)
@@ -118,6 +123,7 @@ def update_data():
                     print ("UPDATE: ", key)
                     x = key_to_x[key]
                     nex_session.delete(x)
+                    # nex_session.rollback()
                     nex_session.commit()  
                     add_row(nex_session, locus_id, contig_id, seqID, dna_type, start, end, aligned_seq, snp_seq, block_sizes)
                 else:
@@ -137,6 +143,7 @@ def update_data():
                     print ("UPDATE: ", key)
                     x = key_to_x[key]
                     nex_session.delete(x)
+                    # nex_session.rollback()
                     nex_session.commit()  
                     add_row(nex_session, locus_id, contig_id, seqID, dna_type, start, end, aligned_seq, snp_seq, block_sizes)
                 else:

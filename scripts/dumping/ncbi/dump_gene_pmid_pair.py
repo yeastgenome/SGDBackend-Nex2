@@ -11,9 +11,23 @@ from scripts.loading.database_session import get_session
 
 __author__ = 'sweng66'
 
-logging.basicConfig(format='%(message)s')
+# Handlers need to be reset for use under Fargate. See
+# https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda/56579088#56579088
+# for details.  Applies to Fargate in addition to Lambda.
+
 log = logging.getLogger()
-log.setLevel(logging.INFO)
+if log.handlers:
+    for handler in log.handlers:
+        log.removeHandler(handler)
+
+logging.basicConfig(
+    format='%(message)s',
+    handlers=[
+        logging.FileHandler(os.environ['LOG_FILE']),
+        logging.StreamHandler(sys.stderr)
+    ],
+    level=logging.INFO
+)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
@@ -113,9 +127,9 @@ def update_database_load_file_to_s3(nex_session, datafile, source_to_id, edam_to
                 topic_id=topic_id,
                 status='Active',
                 readme_file_id=readme_file_id,
-                is_public='1',
-                is_in_spell='0',
-                is_in_browser='0',
+                is_public=True,
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=md5sum)

@@ -3,7 +3,26 @@ from pyramid.config import Configurator
 from sqlalchemy import create_engine
 import os
 
+from pyramid.response import Response
+from pyramid.events import NewRequest
+
 from .models import DBSession, Base
+
+def add_cors_headers_response_callback(event):
+    def cors_headers(request, response):
+        response.headers.update({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST,GET,DELETE,PUT,OPTIONS',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '1728000',
+        })
+    event.request.add_response_callback(cors_headers)
+
+def cleanup_session(request):
+    if request.exception is not None:
+        DBSession.rollback()
+    DBSession.remove()
 
 def main(global_config, **settings):
     engine = create_engine(os.environ['NEX2_URI'], echo=False, pool_recycle=3600, pool_size=100)
@@ -11,7 +30,14 @@ def main(global_config, **settings):
     Base.metadata.bind = engine
 
     config = Configurator(settings=settings)
+    config.add_subscriber(add_cors_headers_response_callback, NewRequest)
 
+    # DB zombie connection prevention
+    config.add_subscriber(
+        lambda event: event.request.add_finished_callback(cleanup_session),
+        NewRequest
+    )
+    
     config.add_route('home', '/')
     config.add_route('get_recent_annotations', '/annotations')
     #search
@@ -85,6 +111,7 @@ def main(global_config, **settings):
     config.add_route('locus_literature_graph', '/locus/{id}/literature_graph', request_method='GET')
     config.add_route('locus_go_details', '/locus/{id}/go_details', request_method='GET')
     config.add_route('locus_go_graph', '/locus/{id}/go_graph', request_method='GET')
+    config.add_route('locus_go_cams', '/locus/{id}/go_cams', request_method='GET')
     config.add_route('locus_disease_details', '/locus/{id}/disease_details', request_method='GET')
     config.add_route('locus_disease_graph', '/locus/{id}/disease_graph', request_method='GET')
     config.add_route('locus_interaction_details', '/locus/{id}/interaction_details', request_method='GET')
@@ -98,6 +125,7 @@ def main(global_config, **settings):
     config.add_route('locus_expression_graph', '/locus/{id}/expression_graph', request_method='GET')
     config.add_route('locus_regulation_graph', '/locus/{id}/regulation_graph', request_method='GET')
     config.add_route('locus_neighbor_sequence_details', '/locus/{id}/neighbor_sequence_details', request_method='GET')
+    config.add_route('locus_synteny_neighbors', '/locus/{id}/synteny_neighbors', request_method='GET')
     config.add_route('locus_sequence_details', '/locus/{id}/sequence_details', request_method='GET')
     config.add_route('locus_posttranslational_details', '/locus/{id}/posttranslational_details', request_method='GET')
     config.add_route('locus_ecnumber_details', '/locus/{id}/ecnumber_details', request_method='GET')
@@ -124,19 +152,27 @@ def main(global_config, **settings):
     config.add_route('get_keywords', '/get_keywords', request_method='GET')
 
     config.add_route('sgd_blast_metadata', '/sgd_blast_metadata', request_method='GET')
-    
+    config.add_route('fungal_blast_metadata', '/fungal_blast_metadata', request_method='GET')
+
     config.add_route('ecnumber', '/ecnumber/{id}', request_method='GET')
     config.add_route('ecnumber_locus_details', '/ecnumber/{id}/locus_details', request_method='GET')
 
     config.add_route('complex', '/complex/{id}', request_method='GET')
-
+    config.add_route('complex_summary', '/complex/{id}/summary', request_method='GET')
+    config.add_route('complex_go', '/complex/{id}/go', request_method='GET')
+    config.add_route('complex_literature', '/complex/{id}/literature', request_method='GET')
+    config.add_route('complex_go_cams', '/complex/{id}/go_cams', request_method='GET')
+    config.add_route('entity_validation', '/entity/{entity_type}/{ids}', request_method='GET')
+    
     config.add_route('goslim', '/goslim', request_method='GET')
 
     config.add_route('ambiguous_names', '/ambiguous_names', request_method='GET')
 
     config.add_route('alignment', '/alignment/{id}', request_method='GET')
-
-    config.add_route('primer3', '/primer3', request_method='POST')
+    config.add_route('all_strain_alignment', '/all_strain_alignment/{id}', request_method='GET')
+    
+    # config.add_route('primer3', '/primer3', request_method='POST')
+    config.add_route('primer3', '/primer3', request_method='GET')
     
     # curator interfaces
     config.add_route('account', '/account')

@@ -15,7 +15,7 @@ data_file = "scripts/loading/pathway/data/processed_pathways.txt"
 summary_type = "Metabolic"
 
 CREATED_BY = os.environ['DEFAULT_USER']
-max_to_commit = 25
+max_to_commit = 5
 
 def load_pathway():
 
@@ -148,16 +148,16 @@ def load_pathway():
     nex_session.commit()
 
     ## some biocyc_ids have been updated so have to retrieve data from database
-    biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])
+    # biocyc_id_to_dbentity_id = dict([(x.biocyc_id, x.dbentity_id) for x in nex_session.query(Pathwaydbentity).all()])
 
-    for biocycId in biocyc_id_to_dbentity_id:
-        if biocycId not in biocycIdList:
-            print (biocycId + " is not in the new pathway file.")
-            pathwayId = biocyc_id_to_dbentity_id[biocycId]
-            delete_obsolete_biocyc_id(nex_session, fw, biocycId, pathwayId)
+    # for biocycId in biocyc_id_to_dbentity_id:
+    #    if biocycId not in biocycIdList:
+    #        print (biocycId + " is not in the new pathway file.")
+    #        pathwayId = biocyc_id_to_dbentity_id[biocycId]
+    #        delete_obsolete_biocyc_id(nex_session, fw, biocycId, pathwayId)
 
     # nex_session.rollback()
-    nex_session.commit()
+    # nex_session.commit()
 
     fw.close()
 
@@ -199,7 +199,8 @@ def update_pathwaydbentity(nex_session, fw, pathway_id, biocycID):
     
 def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_name, genes, pmids, summary, pmids4summary, synonyms, created_by, source_to_id, pathway_id_to_alias_list, summary_id_to_reference_id_list, biocycID_to_locus_id_list, gene_to_locus_id, key_to_annotationDB):    
     
-    ## dbentity 
+    ## dbentity
+    print(biocycID, "updating Dbentity.display_name..")
     x = nex_session.query(Dbentity).filter_by(dbentity_id=pathway_id).one_or_none()
     if display_name != x.display_name:
         x.display_name = display_name
@@ -210,6 +211,7 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
     ## pathwaydbentity: nothing to update
 
     ## pathway_alias
+    print(biocycID, "updating PathwayAlias..")
     synonymsDB = pathway_id_to_alias_list.get(pathway_id, [])
     for synonym in synonyms:
         if synonym not in synonymsDB:
@@ -223,6 +225,7 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
     ## pathway_url: nothing to update 
 
     ## pathwaysummary
+    print(biocycID, "updating Pathwaysummary..")
     x = nex_session.query(Pathwaysummary).filter_by(pathway_id=pathway_id).one_or_none()
     summary_id = None
     if x is None:
@@ -234,6 +237,7 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
             nex_session.query(Pathwaysummary).filter_by(pathway_id=pathway_id).update({'text': summary, 'html': summary})
 
     ## pathwaysummary_reference
+    print(biocycID, "updating PathwaysummaryReference..")
     reference_id_listDB = summary_id_to_reference_id_list.get(summary_id, [])
     reference_id_to_orderDB = {}
     for (reference_id, order) in reference_id_listDB:
@@ -270,7 +274,9 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
             nex_session.query(PathwaysummaryReference).filter_by(summary_id=summary_id, reference_id=reference_id).delete()
 
     ## pathwayannotation & locus_alias
+    print(biocycID, "updating Pathwayannotation and locus_alias..")
     locus_id_listDB = biocycID_to_locus_id_list.get(biocycID, [])
+    print("locus_id_listDB: ", locus_id_listDB)
     locus_id_list = []
     key_to_annotation = {}
     for gene in genes:
@@ -278,11 +284,13 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
         if locus_id is None:
             print ("The gene name = " + gene + " is not in the database.")
             continue
+        print(gene, locus_id)
         locus_id_list.append(locus_id)
         if locus_id not in locus_id_listDB:
             insert_locus_alias(nex_session, fw, source_to_id['MetaCyc'], locus_id, biocycID, created_by)
-
+            
         has_pmids = 0
+        print("pmids: ", pmids)
         for pmid in pmids:
             reference_id = None
             if pmid.isdigit():
@@ -290,18 +298,21 @@ def update_pathway(nex_session, fw, taxonomy_id, biocycID, pathway_id, display_n
             else:
                 continue
             if reference_id is None:
+                print("adding new paper PMID:" + pmid)
                 (reference_id, sgdid) = add_paper(pmid, created_by)
                 if reference_id is None:
                     print ("The pmid = " + pmid + " is not in the database and couldn't be added into the database.")
                     continue
             has_pmids = 1
+            print("annotation key:", (pathway_id, locus_id, reference_id))
             key_to_annotation[(pathway_id, locus_id, reference_id)] = 1
             if (pathway_id, locus_id, reference_id) not in key_to_annotationDB:
+                print("new annotation key:", (pathway_id, locus_id, reference_id))
                 insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id,
-                                         locus_id, reference_id, pathway_id, created_by)
+                                         locus_id, reference_id, pathway_id, created_by, gene)
         if has_pmids == 0:
             insert_pathwayannotation(nex_session, fw, source_to_id['SGD'], taxonomy_id,
-                                     locus_id, None, pathway_id, created_by)
+                                     locus_id, None, pathway_id, created_by, gene)
 
     for locus_id in locus_id_listDB:
         if locus_id not in locus_id_list:
@@ -412,8 +423,10 @@ def insert_locus_alias(nex_session, fw, source_id, locus_id, biocycID, created_b
 
     fw.write("insert new locus_alias: locus_id=" + str(locus_id) + ", biocyc_id=" + biocycID + "\n")
 
-def insert_pathwayannotation(nex_session, fw, source_id, taxonomy_id, locus_id, reference_id, pathway_id, created_by):
+def insert_pathwayannotation(nex_session, fw, source_id, taxonomy_id, locus_id, reference_id, pathway_id, created_by, gene=None):
 
+    print("Add new pathwayannotation:", source_id, taxonomy_id, locus_id, reference_id, pathway_id, created_by, gene)
+    
     x = None
     if reference_id is None:
         x = Pathwayannotation(dbentity_id = locus_id,

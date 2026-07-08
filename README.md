@@ -53,6 +53,51 @@ or
 
     $ make npm-tests
 
+## QA Security Upgrade Notes
+
+On `sgd-backend-qa`, the backend has been upgraded in a parallel virtualenv to
+address CVE-2026-42304 / GHSA-grgv-6hw6-v9g4 for Twisted.
+
+The QA runtime is:
+
+    /data/www/SGDBackend-Nex2/venv-py39/bin/python
+    /data/www/SGDBackend-Nex2/venv-py39/bin/pserve development.ini
+
+The original Python 3.8 virtualenv is still present at:
+
+    /data/www/SGDBackend-Nex2/venv
+
+The QA dependency changes are:
+
+    cryptography==43.0.3
+    pyOpenSSL==24.2.1
+    twisted==26.4.0rc2
+    pandas==1.5.3
+
+The QA host was verified with:
+
+    python --version
+    python -c "import twisted, OpenSSL, cryptography, pandas; print(twisted.__version__, OpenSSL.__version__, cryptography.__version__, pandas.__version__)"
+    pip check
+    curl -sS -o /tmp/sgd-qa-root.out -w "%{http_code} %{size_download}\n" http://127.0.0.1:6543/
+
+Expected results include Python `3.9.25`, Twisted `26.4.0rc2`,
+pyOpenSSL `24.2.1`, cryptography `43.0.3`, pandas `1.5.3`, no broken
+requirements, and HTTP `200` from the local backend.
+
+QA startup files were updated to use `venv-py39`:
+
+    start.sh
+    activate_env.sh
+
+Rollback on QA is to restore `start.sh` from:
+
+    start.sh.bak-before-py39
+
+Then restart the backend so it uses the original Python 3.8 virtualenv again.
+Do not remove `venv` or `venv-py39` until production rollout and rollback
+requirements are settled.
+
 
 ### Varnish Cache and Rebuilding the cache
 

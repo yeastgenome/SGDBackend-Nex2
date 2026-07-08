@@ -9,6 +9,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 data_file = "scripts/loading/variant/data/protein_sequence_alignment.txt"
 
+
 def update_data():
 
     nex_session = get_session()

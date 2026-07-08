@@ -34,7 +34,7 @@
     "reselect": "^2.5.4",
     "tcomb-form": "^0.9.17",
     "tcomb-form-templates-semantic": "^0.2.0",
-    "underscore": "^1.8.3",
+    "underscore": "^1.12.1",
     "webpack-bundle-tracker": "0.0.93"
   },
   "devDependencies": {

@@ -3,10 +3,13 @@ from io import StringIO
 import logging
 import os
 from Bio import Entrez, Medline 
-#from sqlalchemy import create_engine
-#from sqlalchemy.orm import sessionmaker, scoped_session
-#from zope.sqlalchemy import ZopeTransactionExtension
-#import transaction
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker, scoped_session
+# from zope.sqlalchemy import ZopeTransactionExtension
+# from zope.sqlalchemy import register
+# import transaction
+
+from scripts.loading.database_session import get_session
 
 from src.models import Referencedbentity, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias
 from scripts.loading.reference.pubmed import get_pmid_list, get_pubmed_record, set_cite, get_abstract
@@ -18,7 +21,7 @@ __author__ = 'sweng66'
 
 TERMS = ['yeast', 'cerevisiae']
 URL = 'http://www.ncbi.nlm.nih.gov/pubmed/'
-DAY = 14
+DAY = 1825
 RETMAX = 10000
 MAX = 500
 
@@ -33,6 +36,10 @@ def load_references():
     # engine = create_engine(os.environ['NEX2_URI'])
     # session_factory = sessionmaker(bind=engine, extension=ZopeTransactionExtension())
     # db_session = scoped_session(session_factory)
+    
+    # db_session = scoped_session(sessionmaker(autoflush=False))
+    # register(db_session)
+
     db_session = get_session()
     # some preparation
     pmid_to_reference_id = dict([(x.pmid, x.dbentity_id) for x in db_session.query(Referencedbentity).all()])
@@ -55,7 +62,7 @@ def load_references():
             continue
         if len(x.display_name) < 4:
             continue
-        name = x.locus.gene_name if x.locus.gene_name else x.locus.systematic_name
+        name = x.locus.gene_name if x.locus.gene_name else x.locus.systematic_name 
         names = []
         if x.display_name in alias_to_names:
             names = alias_to_names[x.display_name]
@@ -164,7 +171,6 @@ def insert_reference(db_session, pmid, citation, doi_url, abstract, gene_list):
                             abstract_genes = gene_list)
     db_session.add(x)
     db_session.commit()
-    # transaction.commit()
     log.info("Insert new reference: " + citation)
 
 if __name__ == '__main__':    

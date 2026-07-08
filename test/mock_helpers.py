@@ -231,11 +231,6 @@ def complex_side_effect(*args, **kwargs):
     elif len(args) == 1 and str(args[0]) == "<class 'src.models.ComplexAlias'>":
         alias = factory.ComplexAliasFactory()
         return MockQuery(alias)
-    elif len(args) == 1 and str(args[0]) == "<class 'src.models.ComplexGo'>":
-        complexGo = factory.ComplexGoFactory()
-        go = factory.GoFactory()
-        complexGo.go = go
-        return MockQuery(complexGo)
     elif len(args) == 1 and str(args[0]) == "<class 'src.models.ComplexReference'>":
         complexRef = factory.ComplexReferenceFactory()
         ref = factory.ReferencedbentityFactory()

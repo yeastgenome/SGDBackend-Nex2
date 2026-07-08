@@ -217,6 +217,25 @@ mapping = {
                     }
                 }
             },
+            "identifier": {
+                "type": "text",
+                "fielddata": True,
+                "fields": {
+                    "symbol": {
+                        "type": "text",
+                        "analyzer": "symbols"
+                    },
+                    "raw": {
+                        "type": "keyword",
+                        "index": False
+                    },
+                    "autocomplete": {
+                        "type": "text",
+                        "analyzer": "autocomplete",
+                        "search_analyzer": "autocomplete_search"
+                    }
+                }
+            },
             "category": {
                 "type": "text",
                 "fielddata": True,
@@ -279,7 +298,6 @@ mapping = {
                 "type": "text",
                 "fielddata": True
             },
-
             "phenotypes": {
                 "type": "keyword",
                 "fields": {
@@ -289,7 +307,42 @@ mapping = {
                     }
                 }
             },
-
+            "pathways": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "keywords": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "strains": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "diseases": {
+                "type": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },  
             "cellular_component": {
                 "type": "keyword",
                 "fields": {
@@ -386,6 +439,39 @@ mapping = {
                 "fielddata": True,
                 "analyzer": "keyword"
             },
+            "labs": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "lab_locations": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "assays": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "phenotype_loci": {
                 "type": "text",
                 "fielddata": True,
@@ -397,7 +483,29 @@ mapping = {
                     }
                 }
             },
+            "chemical_loci": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
             "complex_loci": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword",
+                "fields": {
+                    "engram": {
+                        "type": "text",
+                        "analyzer": "other_search"
+                    }
+                }
+            },
+            "pathway_loci": {
                 "type": "text",
                 "fielddata": True,
                 "analyzer": "keyword",
@@ -438,7 +546,18 @@ mapping = {
             },
             "synonyms": {
                 "type": "text",
-                "fielddata": True
+                "fielddata": True,
+                "fields": {
+                    "raw": {
+                        "type": "keyword",
+                        "index": False
+                    },
+                    "egram": {
+                        "type": "text",
+                        "analyzer": "alias_search",
+                        "search_analyzer": "alias_search"
+                    }
+                }
             },
             "go_id": {
                 "type": "text",
@@ -495,12 +614,17 @@ mapping = {
                 "fielddata": True,
                 "analyzer": "keyword"
             },
+            "associated_pathways": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "keyword"
+            },
             "associated_alleles": {
                 "type": "text",
                 "fielddata": True,
                 "analyzer": "keyword"
             },
-            "associated_pathways": {
+            "associated_strains": {
                 "type": "text",
                 "fielddata": True,
                 "analyzer": "keyword"
@@ -631,6 +755,16 @@ mapping = {
                 "type": "text",
                 "analyzer": "reference_search"
 
+            },
+            "pathway_name": {
+                "type": "text",
+                "analyzer": "reference_search"
+
+            },
+            "biocyc_id": {
+                "type": "text",
+                "fielddata": True,
+                "analyzer": "reference_search"
             },
             "allele_name": {
                 "type": "text",

@@ -222,7 +222,7 @@ def insert_alias(nex_session, fw, locus_id, alias_type, source, source_id, ID):
                    obj_url = obj_url,
                    source_id = source_id,
                    locus_id = locus_id,
-                   has_external_id_section = "1",
+                   has_external_id_section = True,
                    alias_type = alias_type,
                    created_by = CREATED_BY)
     nex_session.add(x)

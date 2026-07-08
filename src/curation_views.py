@@ -1,8 +1,10 @@
 import pandas as pd
 from oauth2client import client, crypt
-from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPFound
+from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, \
+    HTTPFound, HTTPInternalServerError
 from pyramid.view import view_config
-from pyramid.session import check_csrf_token
+# from pyramid.session import check_csrf_token
+from pyramid.csrf import check_csrf_token
 from sqlalchemy import create_engine, and_, or_
 from sqlalchemy.exc import IntegrityError, DataError, InternalError
 from sqlalchemy.orm import scoped_session, sessionmaker, joinedload
@@ -90,6 +92,7 @@ def account(request):
     return {'username': request.session['username'], 'csrfToken': request.session.get_csrf_token()}
 
 
+"""
 @view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
 def get_locus_curate(request):
     try:
@@ -101,7 +104,31 @@ def get_locus_curate(request):
     finally:
         if DBSession:
             DBSession.remove()
+"""
 
+
+@view_config(route_name='get_locus_curate', request_method='GET', renderer='json')
+def get_locus_curate(request):
+    sgdid = None
+    try:
+        sgdid = extract_id_request(request, 'locus', param_name="sgdid")
+        locus = get_locus_by_id(sgdid)
+
+        if locus is None:
+            raise HTTPNotFound(detail=f"Locus not found: {sgdid}")
+
+        return locus.to_curate_dict()
+
+    except HTTPNotFound:
+        raise
+    except Exception:
+        # This will print the full stack trace so you can see what broke after the upgrade.
+        log.exception("get_locus_curate failed (sgdid=%s)", sgdid)
+        raise HTTPInternalServerError(detail="Failed to build locus curate payload")
+    finally:
+        DBSession.remove()
+
+        
 @view_config(route_name='locus_curate_summaries', request_method='PUT', renderer='json')
 @authenticate
 def locus_curate_summaries(request):
@@ -427,6 +454,8 @@ def db_sign_in(request):
     finally:
         if Temp_session:
             Temp_session.close()
+        if temp_engine:
+            temp_engine.dispose()
 
 @view_config(route_name='sign_in', request_method='POST', renderer='json')
 def sign_in(request):
@@ -804,7 +833,6 @@ def new_colleague(request):
 
 
 @view_config(route_name='reserved_name_index', renderer='json')
-@authenticate
 def reserved_name_index(request):
     try:
         res_triages = DBSession.query(ReservednameTriage).all()
@@ -820,7 +848,6 @@ def reserved_name_index(request):
             DBSession.remove()
 
 @view_config(route_name='reserved_name_curate_show', renderer='json')
-@authenticate
 def reserved_name_curate_show(request):
     try:
         req_id = request.matchdict['id'].upper()
@@ -1282,7 +1309,7 @@ def send_newsletter(request):
             return HTTPBadRequest(body=json.dumps(returnValue), content_type='text/json')
     except Exception as e:
         log.error(e)
-        return HTTPBadRequest(body=json.dumps({'error': "Error occured during sending newsletter"}), content_type='text/json')
+        return HTTPBadRequest(body=json.dumps({'error': "Error occured during sending newsletter: " + str(e) }), content_type='text/json')
 
 
 @view_config(route_name='ptm_file_insert', renderer='json', request_method='POST')
@@ -1669,7 +1696,7 @@ def get_reporter(request):
 @view_config(route_name='get_chebi', renderer='json', request_method='GET')
 def get_chebi(request):
     try:
-        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete='0').order_by(Chebi.display_name).all()
+        all_chemical = DBSession.query(Chebi).filter_by(is_obsolete=False).order_by(Chebi.display_name).all()
         data = []
         for c in all_chemical:
             data.append({"chebi_id": c.chebi_id,
@@ -1686,7 +1713,6 @@ def get_chebi(request):
 @view_config(route_name='get_eco', renderer='json', request_method='GET')
 def get_eco(request):
     try:
-        # all_eco = DBSession.query(Eco).filter_by(is_obsolete='0').order_by(Eco.display_name).all()
         all_eco = DBSession.query(Eco).order_by(Eco.display_name).all()
         data = []
         for e in all_eco:
@@ -1858,13 +1884,11 @@ def file_metadata_delete(request):
     return delete_metadata(request)
 
 @view_config(route_name='get_dataset_data', renderer='json', request_method='GET')
-@authenticate
 def get_dataset_data(request):
 
     return get_one_dataset(request)
 
 @view_config(route_name='get_datasets', renderer='json', request_method='GET')
-@authenticate
 def get_datasets(request):
 
     return get_list_of_dataset(request)
@@ -1926,9 +1950,10 @@ def upload_suppl_file(request):
 @view_config(route_name='get_curation_tag', renderer='json', request_method='GET')
 def get_curation_tag(request):
     try:
-        all_tags = DBSession.query(CurationReference.curation_tag).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all()
-        data = [x[0] for x in all_tags]
-        return HTTPOk(body=json.dumps(data),content_type='text/json')
+        all_tags = []
+        for x in DBSession.query(CurationReference).distinct(CurationReference.curation_tag).order_by(CurationReference.curation_tag).all():
+            all_tags.append(x.curation_tag)
+        return HTTPOk(body=json.dumps(all_tags),content_type='text/json')
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
@@ -1939,9 +1964,10 @@ def get_curation_tag(request):
 @view_config(route_name='get_literature_topic', renderer='json', request_method='GET')
 def get_literature_topic(request):
     try:
-        all_topics = DBSession.query(Literatureannotation.topic).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all()
-        data = [x[0] for x in all_topics]
-        return HTTPOk(body=json.dumps(data),content_type='text/json')
+        all_topics = []
+        for x in DBSession.query(Literatureannotation).distinct(Literatureannotation.topic).order_by(Literatureannotation.topic).all():
+            all_topics.append(x.topic)
+        return HTTPOk(body=json.dumps(all_topics),content_type='text/json')
     except Exception as e:
         log.error(e)
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
@@ -1969,7 +1995,9 @@ def get_psimod(request):
     try:
         psimods = models_helper.get_all_psimods()
         if psimods:
-            distinct_psimod_ids = DBSession.query(Posttranslationannotation.psimod_id).distinct()
+            distinct_psimod_ids = []
+            for x in DBSession.query(Posttranslationannotation).distinct():
+                distinct_psimod_ids.append(x.psimod_id)
             psimods_in_use = psimods.filter(Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             psimods_not_in_use = psimods.filter(~Psimod.psimod_id.in_(distinct_psimod_ids)).order_by(Psimod.display_name).all()
             
@@ -2212,7 +2240,6 @@ def ptm_delete(request):
         return HTTPBadRequest(body=json.dumps({'error': str(e)}), content_type='text/json')
 
 @view_config(route_name='get_all_go_for_regulations',renderer='json',request_method='GET')
-@authenticate
 def get_all_go_for_regulations(request):
     try:
         go_in_db = models_helper.get_all_go()
@@ -2225,7 +2252,6 @@ def get_all_go_for_regulations(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_eco_for_regulations', renderer='json', request_method='GET')
-@authenticate
 def get_all_eco_for_regulations(request):
     try:
         eco_in_db = models_helper.get_all_eco()
@@ -2248,7 +2274,6 @@ def get_papers_by_tag(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_eco', renderer='json', request_method='GET')
-@authenticate
 def get_all_eco(request):
     try:
         eco_in_db = models_helper.get_all_eco()
@@ -2261,7 +2286,6 @@ def get_all_eco(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_do', renderer='json', request_method='GET')
-@authenticate
 def get_all_do(request):
     try:
         do_in_db = models_helper.get_all_do()
@@ -2274,7 +2298,6 @@ def get_all_do(request):
             DBSession.remove()
 
 @view_config(route_name='get_all_ro', renderer='json', request_method='GET')
-@authenticate
 def get_all_ro(request):
     try:
         ro_in_db = models_helper.get_all_ro()
@@ -3193,7 +3216,6 @@ def upload_file_curate(request):
 
 
 @view_config(route_name="get_file", renderer='json', request_method='GET')
-@authenticate
 def get_file(request):
     ''' Get file data '''
   
@@ -3237,7 +3259,6 @@ def file_curate_menus(request):
     return get_file_curate_dropdown_data()
 
 @view_config(route_name="triage_count", renderer='json', request_method='GET')
-@authenticate
 def triage_count(request):
     try:
         colleagueCount = DBSession.query(Colleaguetriage).count()
@@ -3252,7 +3273,6 @@ def triage_count(request):
 
 
 @view_config(route_name='get_reference_annotations',request_method='GET',renderer='json')
-@authenticate
 def get_reference_annotations(request):
     if not check_csrf_token(request, raises=False):
         return HTTPBadRequest(body=json.dumps({'error': 'Bad CSRF Token'}))

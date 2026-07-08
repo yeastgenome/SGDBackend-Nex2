@@ -7,11 +7,13 @@ import getpass
 # import paramiko
 from src.helpers import upload_file
 from src.models import DBSession, Edam, Filedbentity, FileKeyword, FilePath, Keyword, Path, Referencedbentity, ReferenceFile, Source
-from sqlalchemy import create_engine, and_
-from sqlalchemy.orm import sessionmaker, scoped_session
-from zope.sqlalchemy import ZopeTransactionExtension
-import transaction
+# from sqlalchemy import create_engine, and_
+# from sqlalchemy.orm import sessionmaker, scoped_session
+# from zope.sqlalchemy import ZopeTransactionExtension
+# import transaction
 import traceback
+
+from scripts.loading.database_session import get_session
 
 '''
     Process a CSV file of downloads, create filedbentity entries, file_path entries, and 
@@ -44,9 +46,12 @@ def create_and_upload_file(obj, row_num):
         traceback.print_exc()
         return
     try:
-        temp_engine = create_engine(NEX2_URI)
-        session_factory = sessionmaker(bind=temp_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
-        db_session = scoped_session(session_factory)
+        # temp_engine = create_engine(NEX2_URI)
+        # session_factory = sessionmaker(bind=temp_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
+        # db_session = scoped_session(session_factory)
+
+        db_session = get_session()
+        
         # get README location
         readme_file_id = None
         if len(obj['readme_name']):
@@ -167,13 +172,13 @@ def create_and_upload_file(obj, row_num):
         logging.info('finished ' + obj['display_name'] + ', line ' + str(row_num))
     except:
         logging.error('error with ' + obj['display_name']+ ' in row ' + str(row_num))
-        traceback.print_exc()
+        # traceback.print_exc()
         db_session.rollback()
         db_session.close()
 
 def load_tsv_filedbentities():
-    engine = create_engine(NEX2_URI, pool_recycle=3600)
-    DBSession.configure(bind=engine)
+    # engine = create_engine(NEX2_URI, pool_recycle=3600)
+    # DBSession.configure(bind=engine)
 
     f =open(INPUT_FILE_NAME)
     i = 0

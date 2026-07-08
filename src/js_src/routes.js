@@ -7,7 +7,7 @@ import Layout from './containers/layout';
 import PublicHome from './containers/publicHome';
 import Help from './containers/help';
 import GoogleLogin from './containers/googleLogin';
-import PublicLayout from './containers/layout/PublicLayout';
+import PublicLayout from './containers/layout/publicLayout';
 import NewGeneNameReservation from './containers/reserve/new';
 // authenticated curate inputs
 import { requireAuthentication } from './containers/authenticateComponent';

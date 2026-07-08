@@ -30,7 +30,7 @@ s3_archive_dir = "curation/chromosomal_feature/"
 
 taxonId = "NCBITaxon:559292"
 TAXON = "TAX:559292"
-assembly = "R64-3-1"
+assembly = "R64-4-1"
 
 obsolete_pmids = ['PMID:25423496', 'PMID:27651461',
                   'PMID:28068213', 'PMID:31088842']
@@ -40,8 +40,10 @@ def dump_data():
 
     nex_session = get_session()
 
-    datestamp = str(datetime.now()).split(" ")[0]
-
+    # datestamp = str(datetime.now()).split(" ")[0]
+    datestamp = str(datetime.today().strftime("%Y-%m-%dT%H:%M:%S%z")) + ".458526-07:00"
+    
+    
     log.info(str(datetime.now()))
     log.info("Getting basic data from the database...")
 
@@ -238,9 +240,9 @@ def update_database_load_file_to_s3(nex_session, data_file, gzip_file, source_to
                 topic_id=topic_id,
                 status='Active',
                 readme_file_id=None,
-                is_public='1',
-                is_in_spell='0',
-                is_in_browser='0',
+                is_public=True,
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gff_md5sum)

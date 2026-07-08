@@ -1,7 +1,7 @@
 from src.helpers import upload_file
 from scripts.loading.database_session import get_session
 from src.models import Dbentity, Locusdbentity, LocusAlias, Dnasequenceannotation, \
-    Dnasubsequence, So, Contig, Go, Goannotation, Edam, Path, \
+    Dnasubsequence, So, Contig, Go, Goannotation, Ro, Edam, Path, LocusRelation, \
     FilePath, Filedbentity, Source, Transcriptdbentity, TranscriptReference
 import shutil
 import gzip
@@ -15,9 +15,22 @@ importlib.reload(sys)  # Reload does the trick!
 
 __author__ = 'sweng66'
 
-logging.basicConfig(format='%(message)s')
+# Handlers need to be reset for use under Fargate. See
+# https://stackoverflow.com/questions/37703609/using-python-logging-with-aws-lambda/56579088#56579088
+# for details.  Applies to Fargate in addition to Lambda.
+
 log = logging.getLogger()
-log.setLevel(logging.INFO)
+if log.handlers:
+    for handler in log.handlers:
+        log.removeHandler(handler)
+
+logging.basicConfig(
+    format='%(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stderr)
+    ],
+    level=logging.INFO
+)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
@@ -54,10 +67,15 @@ def dump_data():
                        for x in nex_session.query(Edam).all()])
     source_to_id = dict([(x.display_name, x.source_id)
                          for x in nex_session.query(Source).all()])
-    so_id_to_term_name = dict([(x.so_id, x.term_name)
+    so_id_to_so = dict([(x.so_id, x)
                                for x in nex_session.query(So).all()])
-    so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
-    gene_soid = so.soid
+    # so = nex_session.query(So).filter_by(display_name='gene').one_or_none()
+    # gene_soid = so.soid
+
+    ro = nex_session.query(Ro).filter_by(display_name='part of').one_or_none()
+    child_id_to_parent_id = dict([(x.child_id, x.parent_id)
+                                  for x in nex_session.query(LocusRelation).filter_by(ro_id=ro.ro_id).all()])
+    
     locus_id_to_sgdid = dict([(x.dbentity_id, x.sgdid) for x in nex_session.query(
         Dbentity).filter_by(subclass='LOCUS', dbentity_status='Active').all()])
 
@@ -214,7 +232,9 @@ def dump_data():
                 refseqid = "RefSeq:" + locus_id_to_refseq[x.dbentity_id]
                 log.info("has refseq:" + refseqid)
 
-            type = so_id_to_term_name[x.so_id]
+            # type = so_id_to_term_name[x.so_id]
+            so = so_id_to_so[x.so_id]
+            type = so.term_name
             if type == 'ORF':
                 type = 'gene'
             if type == 'gene_group':
@@ -241,9 +261,18 @@ def dump_data():
                     alias_list = gene_name + "," + alias_list
                 else:
                     alias_list = gene_name
-            systematic_name = do_escape(systematic_name)
             start_index = x.start_index
             end_index = x.end_index
+            ###
+            if type == 'gene':
+                transcripts = systematic_name_to_transcripts.get(systematic_name, [])
+                for t in transcripts:
+                    if t['start'] < start_index:
+                        start_index = t['start']
+                    if t['end'] > end_index:
+                        end_index = t['end']
+            systematic_name = do_escape(systematic_name)
+
             if x.annotation_id in UTRs:
                 (utrStart, utrEnd) = UTRs[x.annotation_id]
                 if utrStart < start_index:
@@ -254,14 +283,23 @@ def dump_data():
             fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(start_index) + "\t" + str(end_index) +
                      "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + systematic_name)
 
+            if type == "transposable_element_gene":
+                parent_dbentity_id = child_id_to_parent_id.get(x.dbentity_id)
+                if parent_dbentity_id and parent_dbentity_id in locus_id_to_info:
+                    (parent_systematic_name, parent_gene_name, parent_qualifier,
+                     parent_headline, parent_description) = locus_id_to_info[parent_dbentity_id]
+                    fw.write(";Parent=" + parent_systematic_name)
+                    
             if gene_name:
                 fw.write(";gene=" + gene_name)
+            if type == 'gene':
+                fw.write(";so_term_name=protein_coding_gene")
             if alias_list:
                 fw.write(";Alias=" + alias_list)
             if x.dbentity_id in locus_id_to_goids:
                 goids = sorted(locus_id_to_goids[x.dbentity_id])
                 goid_list = ",".join(goids)
-                fw.write(";Ontology_term=" + goid_list + "," + gene_soid)
+                fw.write(";Ontology_term=" + goid_list + "," + so.soid)
             if description:
                 fw.write(";Note=" + do_escape(description))
             if headline:
@@ -319,8 +357,8 @@ def dump_data():
                         #           " CDS parent: " + parent)
                         #      break
                     else:
-                        parent = systematic_name + "_mRNA"
-                elif type.endswith('_gene'):
+                        parent = systematic_name + "_mRNA"                    
+                elif type.endswith('_gene') and type != 'transposable_element_gene':
                     rnaType = type.replace("_gene", "")
                     parent = systematic_name + "_" + rnaType
 
@@ -355,10 +393,13 @@ def dump_data():
                                  "\t.\tID=" + systematic_name + "_mRNA;Name=" + systematic_name + "_mRNA;Parent=" + systematic_name + "\n")
 
             elif has_subfeature == 1:
-                rnaType = type.replace("_gene", "")
-                fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" + str(end_index) + "\t.\t" + strand + "\t.\tID=" +
-                         systematic_name + "_" + rnaType + ";Name=" + systematic_name + "_" + rnaType + ";Parent=" + systematic_name + "\n")
-
+                if type != "transposable_element_gene":
+                    rnaType = type.replace("_gene", "")
+                    fw.write("chr" + chr + "\tSGD\t" + rnaType + "\t" + str(start_index) + "\t" +
+                             str(end_index) + "\t.\t" + strand + "\t.\tID=" +
+                             systematic_name + "_" + rnaType + ";Name=" + systematic_name +
+                             "_" + rnaType + ";Parent=" + systematic_name + "\n")
+                
     # output 17 chr sequences at the end
 
     fw.write("###\n")
@@ -501,9 +542,9 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
                 topic_id=topic_id,
                 status='Active',
                 readme_file_id=readme_file_id,
-                is_public='1',
-                is_in_spell='0',
-                is_in_browser='0',
+                is_public=True,
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gff_md5sum)
@@ -515,7 +556,9 @@ def update_database_load_file_to_s3(nex_session, gff_file, gzip_file, source_to_
         log.info("The " + gzip_file + " is not in the database.")
         return
     file_id = gff.dbentity_id
-
+    sgdid = gff.sgdid
+    log.info("The file will be uploaded to s3://sgd-[dev|prod]-upload/" + sgdid + "/" + gzip_file)
+    
     path = nex_session.query(Path).filter_by(
         path="/reports/chromosomal-features").one_or_none()
     if path is None:
@@ -539,10 +582,10 @@ def write_header(fw, datestamp):
     fw.write("##gff-version 3\n")
     fw.write("#!date-produced " + datestamp.split(".")[0] + "\n")
     fw.write("#!data-source SGD\n")
-    fw.write("#!assembly R64-3-1\n")
+    fw.write("#!assembly R64-4-1\n")
     fw.write("#!refseq-version GCF_000146045.2\n")
     fw.write("#\n")
-    fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-3-1)\n")
+    fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-4-1)\n")
     fw.write("#\n")
     fw.write("# Features from the 16 nuclear chromosomes labeled chrI to chrXVI,\n")
     fw.write("# plus the mitochondrial genome labeled chrmt.\n")

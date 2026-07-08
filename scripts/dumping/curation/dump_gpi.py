@@ -19,12 +19,10 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
-
 gpi_file = "scripts/dumping/curation/data/gpi.sgd"
-
-TAXON = 'taxon:559292'
-
+TAXON = 'NCBITaxon:559292'
 TAXID = 'TAX:559292'
+
 
 def dump_data():
 
@@ -51,6 +49,7 @@ def dump_data():
     dbentity_id_to_ncbi_protein_name = {}
     dbentity_id_to_uniprot = {}
     dbentity_id_to_refseq_ids = {}
+    dbentity_id_to_rnacentral_id = {}
     for x in nex_session.query(LocusAlias).all():
         if x.alias_type == 'Uniform':
             alias_names = []
@@ -68,6 +67,8 @@ def dump_data():
                 refseq_ids = dbentity_id_to_refseq_ids[x.locus_id]
             refseq_ids.append("RefSeq:" + x.display_name)
             dbentity_id_to_refseq_ids[x.locus_id] = refseq_ids
+        elif x.alias_type == 'RNAcentral ID':
+            dbentity_id_to_rnacentral_id[x.locus_id] = x.display_name.replace("_559292", "")
 
     dbentity_id_to_date_assigned = {}
     for x in nex_session.query(Goannotation).filter_by(source_id=source_id, annotation_type='manually curated').all():
@@ -80,93 +81,123 @@ def dump_data():
         
     ## dumping genes
     
-    type_to_col6 = type_mapping()
+    type_to_col5 = type_mapping()
     
     for x in nex_session.query(Locusdbentity).filter_by(has_go=True).all():
         
-        # col1: DB
-        col1 = 'SGD'
-        
-        # col2: database ID
-        col2 = x.sgdid
-        
-        # col3: gene name
-        col3 = x.display_name
+        # col1: database ID 
+        col1 = 'SGD:' + x.sgdid
                 
-        # col4: gene product
-        col4 = ''
+        # col2: gene name
+        col2 = x.display_name
+                
+        # col3: gene product
+        col3 = ''
         if x.dbentity_id in dbentity_id_to_ncbi_protein_name:
             col4 = dbentity_id_to_ncbi_protein_name[x.dbentity_id]
 
         # col5: gene name/aliases/ORFname
         aliases = dbentity_id_to_alias_names.get(x.dbentity_id, [])
-        if x.gene_name is not None:
-            aliases = [x.gene_name] + aliases
-        aliases = aliases + [x.systematic_name]
-        col5 = '|'.join(aliases)
+        # if x.gene_name is not None:
+        #    aliases = [x.gene_name] + aliases
+        if x.systematic_name not in aliases:
+            aliases = [x.systematic_name] + aliases
+        col4 = '|'.join(aliases)
 
-        # col6: object type
+        # col5: object type
         so_id = dbentity_id_to_so_id.get(x.dbentity_id)
         ## NISS genes
         if so_id is None:
             for y in nex_session.query(Dnasequenceannotation).filter_by(dbentity_id=x.dbentity_id, dna_type='GENOMIC').all():
                 so_id = y.so_id 
-                break
-            
+                break            
         if so_id:
             type = so_id_to_type.get(so_id)
             if type is None:
                 continue
-            col6 = type_to_col6.get(type)
-            if col6 is None:
+            col5 = type_to_col5.get(type)
+            if col5 is None:
                 continue
         else:
-            col6 = 'gene'
+            # col5 = 'SO:0000704'
+            col5 = 'PR:000000001'
+
+        if col5 == "SO:0000718":
+            col5 = "PR:000000001"
+            
+        # col6: taxon
+        col6 = TAXON
+
+        # col7: Encoded by
+        col7 = ''
         
-        # col7: taxon
-        col7 = TAXON
-
         # col8: Parent protein
-        col8 = ''
+        col8 = col1
 
-        # col9: DB_Xrefs
+        # col9: Protein Containing Complex Members
+        col9 = ''
+
+        # col10: DB Xrefs
         dbxrefs = dbentity_id_to_refseq_ids.get(x.dbentity_id, [])
         if x.dbentity_id in dbentity_id_to_uniprot:
             dbxrefs = [dbentity_id_to_uniprot[x.dbentity_id]] + dbxrefs
-        col9 = ''
-        if len(dbxrefs) > 0:
-            col9 = '|'.join(dbxrefs)
+        if x.dbentity_id in dbentity_id_to_rnacentral_id:
+            dbxrefs.append("RNAcentral:" + dbentity_id_to_rnacentral_id[x.dbentity_id] + "_559292")
 
-        # col10: Gene_Product_Properties
-        col10 = "db_subset=Swiss-Prot|go_annotation_complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
+        col10 = ''
+        if len(dbxrefs) > 0:
+            col10 = '|'.join(dbxrefs)
+            
+        # col11: Gene_Product_Properties
+        col11 = ''
+        if x.dbentity_id not in dbentity_id_to_rnacentral_id:
+            col11 = "db_subset=Swiss-Prot|"
+        col11 = col11 + "go_annotation_complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
         if x.dbentity_id in dbentity_id_to_function:
             col10 = col10 + "|go_annotation_summary=" + dbentity_id_to_function[x.dbentity_id]
         if x.dbentity_id in dbentity_id_to_uniprot:
-            col10 = col10 + "|uniprot_proteome=" + dbentity_id_to_uniprot[x.dbentity_id]
-        
-        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t" + col8 + "\t" + col9 + "\t" + col10 + "\n")
+            col11 = col11 + "|uniprot_proteome=" + dbentity_id_to_uniprot[x.dbentity_id]
+
+        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t")
+        fw.write(col6 + "\t" + col7 + "\t" + col8 + "\t" + col9 + "\t" + col10 + "\t")
+        fw.write(col11 + "\n")
         
     ## dumping complexes
 
+    rows = nex_session.execute("SELECT cba.complex_id, d.sgdid "
+                               "FROM nex.complexbindingannotation cba, nex.interactor i, nex.dbentity d "
+                               "WHERE cba.interactor_id = i.interactor_id "
+                               "AND   i.locus_id is not null "
+                               "AND   i.locus_id = d.dbentity_id")
+    complex_id_to_member_sgdids = {}
+    for x in rows:
+        member_sgdids = complex_id_to_member_sgdids.get(x[0], [])
+        member_sgdids.append("SGD:" + x[1])
+        complex_id_to_member_sgdids[x[0]] = member_sgdids
+    
     for x in nex_session.query(Complexdbentity).all():
 
-        col1 = 'SGD'
-        col2 = x.sgdid
-        col3 = x.complex_accession
-        col4 = x.display_name
-        col5 = x.systematic_name + '|' + x.intact_id + '|' + x.display_name 
-        col6 = 'protein_complex'
-        col7 = TAXON
-        col9 = "ComplexPortal:" + x.complex_accession
+        col1 = 'SGD:' + x.sgdid
+        col2 = x.complex_accession
+        col3 = x.display_name
+        col4 = x.systematic_name
+        col5 = 'GO:0032991'
+        col6 = TAXON
+        col7 = ''
+        col8 = col1
+        col9 = "|".join(complex_id_to_member_sgdids.get(x.dbentity_id, []))
+        col10 = "ComplexPortal:" + x.complex_accession
+        col11 = ''
+
+        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t")
+        fw.write(col6 + "\t" + col7 + "\t" + col8 + "\t" + col9 + "\t" + col10 + "\t")
+        fw.write(col11 + "\n")
         
-        fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t" + col6 + "\t" + col7 + "\t\t" + col9 + "\t\n") 
-
     fw.close()
-   
+
     log.info("Uploading GPI file to S3...")
-
     update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to_id, datestamp)
-
+    
     nex_session.close()
 
     log.info(str(datetime.now()))
@@ -174,6 +205,7 @@ def dump_data():
 
 def type_mapping():
 
+    """
     return { 'ORF': 'protein',
              'transposable element gene': 'protein',
              'blocked reading frame': 'gene',
@@ -184,10 +216,34 @@ def type_mapping():
              'rRNA gene': 'rRNA',
              'telomerase RNA gene': 'telomerase_RNA',
              'disabled reading frame': 'gene' }
-             
+    """
+
+    """
+    protein PR:000000001
+    protein-coding gene SO:0001217
+    gene SO:0000704
+    ncRNA SO:0000655
+    any subtype of ncRNA in the Sequence Ontology, including ncRNA-coding gene SO:0001263
+    protein-containing complex GO:0032991
+    """
+    
+    return { 'ORF': 'PR:000000001',
+             'transposable element gene': 'PR:000000001',
+             'blocked reading frame': 'SO:0000718',
+             'ncRNA gene': 'SO:0001263',
+             'snoRNA gene': 'SO:0001263',
+             'snRNA gene': 'SO:0001263',
+             'tRNA gene': 'SO:0001263',
+             'rRNA gene': 'SO:0001263',
+             'telomerase RNA gene': 'SO:0001263',
+             'disabled reading frame': 'PR:000000001' }
+
+
+
 def write_header(fw, datestamp):
 
-    fw.write("!gpi-version: 1.2\n")
+    fw.write("!gpi-version: 2.0\n")
+    fw.write("!generated-by: SGD\n")
     fw.write("!date-generated: " + datestamp + "\n")
     fw.write("!generated-by: Saccharomyces Genome Database (SGD)\n")
     fw.write("!URL: https://www.yeastgenome.org/\n")
@@ -262,9 +318,9 @@ def update_database_load_file_to_s3(nex_session, gpi_file, source_to_id, edam_to
                 topic_id=topic_id,
                 status='Active',
                 readme_file_id=readme_file_id,
-                is_public='1',
-                is_in_spell='0',
-                is_in_browser='0',
+                is_public=True,
+                is_in_spell=False,
+                is_in_browser=False,
                 file_date=datetime.now(),
                 source_id=source_to_id['SGD'],
                 md5sum=gpad_md5sum)

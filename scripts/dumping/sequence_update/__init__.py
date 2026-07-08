@@ -5,7 +5,7 @@ from src.models import Locusdbentity, Dnasequenceannotation, Taxonomy, Contig, S
 
 __author__ = 'sweng66'
 
-VERSION = '64-3-1'
+VERSION = '64-5-1'
 
 orf_features = ['ORF', 'transposable_element_gene', 'pseudogene', 'blocked_reading_frame']
 rna_features = ['ncRNA_gene', 'snoRNA_gene', 'snRNA_gene', 'tRNA_gene', 'rRNA_gene',
@@ -40,6 +40,8 @@ def get_chr_letter():
 
 def clean_up_description(desc):
 
+    if desc is None:
+        return ""
     desc = desc.strip().replace('"', "'").replace('-', '-')
     desc = desc.replace("’", "'").replace('β', 'beta').replace('μm', 'um')
     desc = desc.replace('α', 'alpha')
@@ -148,6 +150,8 @@ def generate_dna_seq_file(nex_session, taxonomy_id, dbentity_id_to_data, contig_
             continue
         #######
         if file_type == 'other' and x.residues == 'No sequence available.':
+            continue
+        if file_type == 'other' and x.download_filename.startswith("VDE"):
             continue
         type = so_id_to_display_name[x.so_id]
         if file_type == 'other' and (type in orf_features or type in rna_features):

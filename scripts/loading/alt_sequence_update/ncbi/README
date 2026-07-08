@@ -1,0 +1,100 @@
+https://www.ncbi.nlm.nih.gov/genbank/tbl2asn2/
+
+under scripts/loading/alt_sequence_update/ncbi/
+
+W303:
+*******
+
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae W303][strain=W303][db_xref=taxon:580240][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -p W303
+
+	  
+ncbieaa		4468 
+iupacna	  	236  (total contig number in W303=236)
+total ERROR 	311
+
+     1 ERROR:   SEQ_FEAT.CDShasTooManyXs
+     3 ERROR:   SEQ_FEAT.InternalStop
+     2 ERROR:   SEQ_FEAT.NoStop
+     4 ERROR:   SEQ_FEAT.SeqLocOrder
+     2 ERROR:   SEQ_FEAT.StartCodon
+     2 ERROR:   SEQ_INST.BadProteinStart
+   294 ERROR:   SEQ_INST.InternalNsInSeqRaw
+     3 ERROR:   SEQ_INST.StopInProtein
+     
+     1 WARNING: SEQ_FEAT.BadEcNumberValue
+     3 WARNING: SEQ_FEAT.FeatureIsMostlyNs
+     1 WARNING: SEQ_FEAT.IdenticalGeneSymbolAndSynonym
+     4 WARNING: SEQ_FEAT.NotSpliceConsensusAcceptor
+     4 WARNING: SEQ_FEAT.NotSpliceConsensusDonor
+    12 WARNING: SEQ_FEAT.UndesiredGeneSynonym
+     4 INFO:    SEQ_FEAT.SerialInComment
+
+
+% ./tbl2asn -t CEN.PK2-1Ca/template.sbt -M n -V v -V b -j '[organism=Saccharomyces cerevisiae CEN.PK2-1Ca][strain=CEN.PK2-1Ca][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][tech=wgs]' -p CEN.PK2-1Ca
+
+CEN.PK2-1Ca % more errorsummary.val
+     1 ERROR:   SEQ_FEAT.CDShasTooManyXs
+     3 ERROR:   SEQ_FEAT.DuplicateFeat
+     1 ERROR:   SEQ_FEAT.InternalStop
+     2 ERROR:   SEQ_FEAT.MissingGeneXref
+     1 ERROR:   SEQ_FEAT.NoStop
+     2 ERROR:   SEQ_FEAT.SeqLocOrder
+     1 ERROR:   SEQ_FEAT.StartCodon
+     1 ERROR:   SEQ_INST.BadProteinStart
+   253 ERROR:   SEQ_INST.InternalNsInSeqRaw
+     1 ERROR:   SEQ_INST.StopInProtein
+     1 WARNING: SEQ_FEAT.BadEcNumberValue
+     2 WARNING: SEQ_FEAT.FeatureIsMostlyNs
+     1 WARNING: SEQ_FEAT.IdenticalGeneSymbolAndSynonym
+     2 WARNING: SEQ_FEAT.NotSpliceConsensusAcceptor
+     2 WARNING: SEQ_FEAT.NotSpliceConsensusDonor
+     7 WARNING: SEQ_FEAT.UndesiredGeneSynonym
+     3 INFO:    SEQ_FEAT.SerialInComment
+
+ncbieaa 3463
+iupacna 189 (total 189 contig in CEN.PK)
+
+
+
+
+
+
+
+
+
+
+./tbl2asn -M n -V v -V b -j '[tech=wgs][organism=Saccharomyces cerevisiae W303][strain=W303][db_xref=taxon:580240][lineage=Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes; Saccharomycetales; Saccharomycetaceae; Saccharomyces][genus=Saccharomyces][species=cerevisiae]' -a r10k -l paired-ends -t W303/template.sbt -p W303
+
+	       	       or use '-a r10u -l paired-ends'
+
+ncbieaa       4468
+iupacna       110  (total contig number in W303=236)
+ncbi2na	      402
+total ERROR = 17
+
+     1 ERROR:   SEQ_FEAT.CDShasTooManyXs
+     3 ERROR:   SEQ_FEAT.InternalStop
+     2 ERROR:   SEQ_FEAT.NoStop
+     4 ERROR:   SEQ_FEAT.SeqLocOrder
+     2 ERROR:   SEQ_FEAT.StartCodon
+     2 ERROR:   SEQ_INST.BadProteinStart
+     3 ERROR:   SEQ_INST.StopInProtein
+     1 WARNING: SEQ_FEAT.BadEcNumberValue
+     1 WARNING: SEQ_FEAT.IdenticalGeneSymbolAndSynonym
+     4 WARNING: SEQ_FEAT.NotSpliceConsensusAcceptor
+     4 WARNING: SEQ_FEAT.NotSpliceConsensusDonor
+    12 WARNING: SEQ_FEAT.UndesiredGeneSynonym
+     4 INFO:    SEQ_FEAT.SerialInComment
+
+-a  File Type
+      a Any
+      r20u Runs of 20+ Ns are gaps, 100 Ns are unknown length
+      r20k Runs of 20+ Ns are gaps, 100 Ns are known length
+      r10u Runs of 10+ Ns are gaps, 100 Ns are unknown length
+      r10k Runs of 10+ Ns are gaps, 100 Ns are known length
+      s FASTA Set (s Batch, s1 Pop, s2 Phy, s3 Mut, s4 Eco, s9 Small-genome)
+      d FASTA Delta, di FASTA Delta with Implicit Gaps
+      l FASTA+Gap Alignment (l Batch, l1 Pop, l2 Phy, l3 Mut, l4 Eco, l9 Small-genome)
+      z FASTA with Gap Lines
+      e PHRAP/ACE
+      b ASN.1 for -M flag

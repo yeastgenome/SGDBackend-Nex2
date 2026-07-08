@@ -79,11 +79,11 @@ def check_macromacromolecular_complex_term(nex_session):
     go_id = go.go_id
     all_complex_terms[go_id] = (go.goid, go.display_name)
 
-    get_child_ids(nex_session, go_id, all_complex_terms)
-
     src = nex_session.query(Source).filter_by(display_name='SGD').one_or_none()
     source_id = src.source_id
     
+    get_child_ids(nex_session, go_id, all_complex_terms)
+
     goslim_go_id = dict([(x.go_id, x.goslim_id) for x in nex_session.query(Goslim).filter_by(slim_name='Macromolecular complex terms').all()]) 
 
     not_in_goslim = []

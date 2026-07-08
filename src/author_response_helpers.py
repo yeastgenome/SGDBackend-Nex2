@@ -1,5 +1,6 @@
 from pyramid.httpexceptions import HTTPBadRequest, HTTPOk
 from sqlalchemy.exc import IntegrityError, DataError
+import logging
 import transaction
 import json
 from pyramid.response import Response
@@ -7,12 +8,14 @@ from validate_email import validate_email
 from src.models import DBSession, Authorresponse, Referencedbentity, Source
 from src.curation_helpers import get_curator_session, get_pusher_client
 
+log = logging.getLogger(__name__)
+
 def get_author_responses(curation_id=None):
 
     try:
         all = None
         if curation_id is None:
-            all = DBSession.query(Authorresponse).filter_by(no_action_required = '0').all()
+            all = DBSession.query(Authorresponse).filter_by(no_action_required = False).all()
         else:
             all = DBSession.query(Authorresponse).filter_by(curation_id=int(curation_id)).all()
         data = []
@@ -22,7 +25,7 @@ def get_author_responses(curation_id=None):
                 r = DBSession.query(Referencedbentity).filter_by(pmid=int(row.pmid)).one_or_none()
                 if r is not None:
                     reference_id = r.dbentity_id
-            if row.curator_checked_datasets == '1' and curator_checked_genelist == '1':
+            if row.curator_checked_datasets == True and row.curator_checked_genelist == True:
                 continue
             genes = row.gene_list
             if row.gene_list:
@@ -44,44 +47,72 @@ def get_author_responses(curation_id=None):
         if curation_id is not None:
             row = data[0]
             row['reference_id'] = reference_id
-            return Response(body=json.dumps(row), content_type='application/json')
+            return Response(body=json.dumps(row).encode('utf-8'), content_type='application/json')
         else:
-            return Response(body=json.dumps(data), content_type='application/json')
+            return Response(body=json.dumps(data).encode('utf-8'), content_type='application/json')
     except Exception as e:
         return HTTPBadRequest(body=json.dumps({'error': str(e)}))
 
-def set_val(val):
-    if val or val is True:
-        return '1'
-    else:
-        return '0'
-    
+def notify_author_response_count():
+    """Push the current pending author-response count to curators.
+
+    This is a non-critical UI notification (the red badge in curate central).
+    A Pusher misconfiguration (e.g. key/secret not matching the app id) must
+    never fail the underlying submission/update, so any error here is swallowed.
+    """
+    try:
+        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required=False).count()
+        pusher = get_pusher_client()
+        pusher.trigger('sgd', 'authorResponseCount', {'message': authorResponseCount})
+    except Exception as e:
+        log.error("Failed to push authorResponseCount notification: " + str(e))
+
+
+def is_checked(params, name):
+    """Return True if checkbox `name` was submitted as checked.
+
+    Standard HTML forms omit an unchecked checkbox entirely, so presence of
+    the param means checked. The one exception is the curate form's untouched
+    Redux default, which submits the literal '0' for every box even when the
+    curator didn't interact -- treat that (and an empty value) as unchecked.
+
+    Any other present value means checked: the currently deployed bundle sends
+    the stringified prior state ('true'/'false') for a box the curator toggled,
+    and a rebuilt bundle (value='1') sends '1'. Both are handled here, and the
+    result is a real Python bool, which is required for assignment/comparison
+    against the Boolean columns (psycopg2 rejects '1'/'0' strings).
+    """
+    if name not in params:
+        return False
+    return str(params.get(name)).strip().lower() not in ('0', '')
+
+
 def update_author_response(request):
 
     try:
         CREATED_BY = request.session['username']
         curator_session = get_curator_session(request.session['username'])
-        
+
         curation_id = request.params.get('curation_id')
-        
-        has_fast_track_tag = set_val(request.params.get('has_fast_track_tag'))
-        curator_checked_datasets = set_val(request.params.get('curator_checked_datasets'))
-        curator_checked_genelist = set_val(request.params.get('curator_checked_genelist'))
-        no_action_required = set_val(request.params.get('no_action_required'))
+
+        has_fast_track_tag = is_checked(request.params, 'has_fast_track_tag')
+        curator_checked_datasets = is_checked(request.params, 'curator_checked_datasets')
+        curator_checked_genelist = is_checked(request.params, 'curator_checked_genelist')
+        no_action_required = is_checked(request.params, 'no_action_required')
 
         row = curator_session.query(Authorresponse).filter_by(curation_id=int(curation_id)).one_or_none()
-    
+
         cols_changed = []
-        if set_val(row.has_fast_track_tag) != has_fast_track_tag:
+        if bool(row.has_fast_track_tag) != has_fast_track_tag:
             row.has_fast_track_tag = has_fast_track_tag
             cols_changed.append('has_fast_track_tag')
-        if set_val(row.curator_checked_datasets) != curator_checked_datasets:
+        if bool(row.curator_checked_datasets) != curator_checked_datasets:
             row.curator_checked_datasets = curator_checked_datasets
             cols_changed.append('curator_checked_datasets')
-        if set_val(row.curator_checked_genelist) != curator_checked_genelist:
+        if bool(row.curator_checked_genelist) != curator_checked_genelist:
             row.curator_checked_genelist = curator_checked_genelist
             cols_changed.append('curator_checked_genelist')
-        if set_val(row.no_action_required) != no_action_required:
+        if bool(row.no_action_required) != no_action_required:
             row.no_action_required = no_action_required
             cols_changed.append('no_action_required')
 
@@ -91,9 +122,7 @@ def update_author_response(request):
             success_message = "The column <strong>" + ", ".join(cols_changed) + "</strong> got updated in authorresponse table."
         else:
             success_message = "Nothing is changed in authorresponse table."
-        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
-        pusher = get_pusher_client()
-        pusher.trigger('sgd','authorResponseCount',{'message':authorResponseCount})
+        notify_author_response_count()
         return HTTPOk(body=json.dumps({'success': success_message, 'authorResponse': "AUTHORRESPONSE"}), content_type='text/json')
     except Exception as e:
         transaction.abort()
@@ -128,12 +157,12 @@ def insert_author_response(request):
         if x is not None:
             return HTTPBadRequest(body=json.dumps({'error': "You have already subomitted info for PMID:" + str(pmid)+"."}), content_type='text/json')
 
-        has_novel_research = '0'
+        has_novel_research = False
         if request.params.get('has_novel_research'):
-            has_novel_research = '1'
-        has_large_scale_data = '0'
+            has_novel_research = True
+        has_large_scale_data = False
         if request.params.get('has_large_scale_data'):
-            has_large_scale_data = '1'
+            has_large_scale_data = True
 
         research_results = request.params.get('research_result')
         dataset_description = request.params.get('dataset_desc')
@@ -145,10 +174,10 @@ def insert_author_response(request):
                            author_email = email,
                            has_novel_research = has_novel_research,
                            has_large_scale_data = has_large_scale_data,
-                           has_fast_track_tag = '0',
-                           curator_checked_datasets = '0',
-                           curator_checked_genelist = '0',
-                           no_action_required = '0',
+                           has_fast_track_tag = False,
+                           curator_checked_datasets = False,
+                           curator_checked_genelist = False,
+                           no_action_required = False,
                            research_results = research_results,
                            gene_list = gene_list,
                            dataset_description = dataset_description,
@@ -157,9 +186,7 @@ def insert_author_response(request):
 
         DBSession.add(x)
         transaction.commit()
-        authorResponseCount = DBSession.query(Authorresponse).filter_by(no_action_required = '0').count()
-        pusher = get_pusher_client()
-        pusher.trigger('sgd','authorResponseCount',{'message':authorResponseCount})
+        notify_author_response_count()
         return {'curation_id': 0}
     except Exception as e:
         transaction.abort()

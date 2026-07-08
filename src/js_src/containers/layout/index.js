@@ -1,4 +1,4 @@
-import React, { Component} from 'react';
+import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -8,8 +8,7 @@ import SearchBar from './searchBar';
 import curateLogo from './curateLogo.png';
 import Loader from './loader/index';
 import { clearError, clearMessage } from '../../actions/metaActions';
-
-import {updateColleagueCount, updateGeneCount, updateAuthorResponseCount} from '../../actions/metaActions';
+import { updateColleagueCount, updateGeneCount, updateAuthorResponseCount } from '../../actions/metaActions';
 import getPusherClient from '../../lib/getPusherClient';
 const CHANNEL = 'sgd';
 const GENECOUNTEVENT = 'geneCount';
@@ -17,10 +16,10 @@ const COLLEAGUECOUNTEVENT = 'colleagueCount';
 const AUTHORRESPONSECOUNTEVENT = 'authorResponseCount';
 
 class LayoutComponent extends Component {
-  componentDidMount(){
+  componentDidMount() {
     // this.listenForUpdates();
   }
-  
+
   componentWillUnmount() {
     if (this.channel !== undefined) {
       this.channel.unbind(GENECOUNTEVENT);
@@ -45,7 +44,7 @@ class LayoutComponent extends Component {
     }
   }
 
-  renderSearch () {
+  renderSearch() {
     if (this.props.isAuthenticated) {
       return (
         <div>
@@ -99,7 +98,7 @@ class LayoutComponent extends Component {
       </ul>
     );
   }
-  
+
   renderError() {
     if (!this.props.error) return null;
     let handleClick = () => {
@@ -123,7 +122,7 @@ class LayoutComponent extends Component {
     return (
       <div className={`primary callout ${style.errorContainer}`}>
         <h3 className={style.closeIcon} onClick={handleClick}><i className='fa fa-close' /></h3>
-        <p dangerouslySetInnerHTML={{ __html: this.props.message}} />
+        <p dangerouslySetInnerHTML={{ __html: this.props.message }} />
       </div>
     );
   }

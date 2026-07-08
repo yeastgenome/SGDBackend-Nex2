@@ -1,6 +1,7 @@
 #! /bin/sh
-cd /data/www/SGDBackend-NEX2/current
-source /data/envs/sgd3/bin/activate 
+
+cd /data/www/SGDBackend-Nex2
+source venv/bin/activate 
 source prod_variables.sh 
 
 python scripts/loading/goslim/generate_goslimannotation_data.py yeast

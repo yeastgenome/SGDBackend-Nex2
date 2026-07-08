@@ -4,14 +4,16 @@ import logging
 import re
 from datetime import datetime
 import getpass
-import paramiko
+# import paramiko
 from src.helpers import upload_file
 from src.models import DBSession, Edam, Filedbentity, FileKeyword, FilePath, Keyword, Path, Referencedbentity, ReferenceFile, Source
-from sqlalchemy import create_engine, and_
-from sqlalchemy.orm import sessionmaker, scoped_session
-from zope.sqlalchemy import ZopeTransactionExtension
-import transaction
-import traceback
+# from sqlalchemy import create_engine, and_
+# from sqlalchemy.orm import sessionmaker, scoped_session
+# from zope.sqlalchemy import ZopeTransactionExtension
+# import transaction
+# import traceback
+
+from scripts.loading.database_session import get_session
 
 '''
     Process a CSV file of downloads, create filedbentity entries, file_path entries, and 
@@ -43,12 +45,9 @@ def create_and_upload_file(obj, row_num):
         remote_file = open(remote_file_path)
     except IOError:
         logging.error('error opening file ' + str(row_num))
-        traceback.print_exc()
         return
     try:
-        temp_engine = create_engine(NEX2_URI)
-        session_factory = sessionmaker(bind=temp_engine, extension=ZopeTransactionExtension(), expire_on_commit=False)
-        db_session = scoped_session(session_factory)
+        db_session = get_session()
         # get README location
         readme_file_id = None
         if len(obj['readme_name']):
@@ -155,19 +154,16 @@ def create_and_upload_file(obj, row_num):
                 if not existing_file_keyword:
                     new_file_keyword = FileKeyword(created_by=CREATED_BY, file_id=existing.dbentity_id, keyword_id=keyword.keyword_id, source_id=SGD_SOURCE_ID)
                     db_session.add(new_file_keyword)
-                transaction.commit()
+                db_session.commit()
                 db_session.flush()
         remote_file.close()
         logging.info('finished ' + obj['display_name'] + ', line ' + str(row_num))
     except:
         logging.error('error with ' + obj['display_name']+ ' in row ' + str(row_num))
-        traceback.print_exc()
-        db_session.rollback()
         db_session.close()
 
 def load_tsv_filedbentities():
-    engine = create_engine(NEX2_URI, pool_recycle=3600)
-    DBSession.configure(bind=engine)
+    DBSession = get_session()
 
     f =open(INPUT_FILE_NAME)
     i = 0
@@ -215,10 +211,11 @@ def load_tsv_filedbentities():
                 'is_in_spell': (val[16] == '1'),
                 'is_in_browser': (val[17] == '1'),
                 'readme_name': readme_file,
-                'description': val[19].decode('utf-8', 'ignore').replace('"', ''),
+                'description': val[19].replace('"', ''),
                 'pmids': val[20],
                 'keywords': val[21].replace('"', '')
             }
+            # 'description': val[19].decode('utf-8', 'ignore').replace('"', ''),
             create_and_upload_file(obj, i)
 
 if __name__ == '__main__':

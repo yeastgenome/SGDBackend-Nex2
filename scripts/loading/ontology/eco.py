@@ -86,11 +86,11 @@ def load_new_data(nex_session, data, source_to_id, ecoid_to_eco, ro_id, eco_id_t
             y = ecoid_to_eco[x['id']]
             eco_id = y.eco_id
             if y.is_obsolete is True:
-                y.is_obsolete = '0'
+                y.is_obsolete = False
                 nex_session.add(y)
                 nex_session.flush()
                 update_log['updated'] = update_log['updated'] + 1
-                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + y.is_obsolete + " to " + 'False' + "\n")
+                fw.write("The is_obsolete for " + x['id'] + " has been updated from " + str(y.is_obsolete) + " to " + 'False' + "\n")
             if x['term'] != y.display_name:
                 ## update term
                 fw.write("The display_name for " + x['id'] + " has been updated from " + y.display_name + " to " + x['term'] + "\n")
@@ -110,7 +110,7 @@ def load_new_data(nex_session, data, source_to_id, ecoid_to_eco, ro_id, eco_id_t
                          display_name = x['term'],
                          description = x['definition'],
                          obj_url = '/eco/' + x['id'],
-                         is_obsolete = '0',
+                         is_obsolete = False,
                          created_by = CREATED_BY)
             nex_session.add(this_x)
             nex_session.flush()
@@ -165,11 +165,11 @@ def load_new_data(nex_session, data, source_to_id, ecoid_to_eco, ro_id, eco_id_t
             continue
         to_delete.append((ecoid, x.display_name))
         if x.is_obsolete is False:
-            x.is_obsolete = '1'
+            x.is_obsolete = True
             nex_session.add(x)
             nex_session.flush()
             update_log['updated'] = update_log['updated'] + 1
-            fw.write("The is_obsolete for " + x.ecoid + " has been updated from " + x.is_obsolete +" to " + 'True' + "\n")
+            fw.write("The is_obsolete for " + x.ecoid + " has been updated from " + str(x.is_obsolete) + " to " + 'True' + "\n")
 
     nex_session.commit()
  
