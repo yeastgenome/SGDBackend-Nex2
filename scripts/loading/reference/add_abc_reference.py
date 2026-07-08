@@ -16,11 +16,12 @@ epub_pdf_status = 'NAP'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-# Papers whose title starts with any of these prefixes have been (partially)
-# retracted and must never be loaded into SGD.
+# Papers whose title starts with any of these prefixes have been (fully or
+# partially) retracted and must never be loaded into SGD. No trailing space so
+# both "RETRACTED:foo" and "RETRACTED: foo" match.
 RETRACTED_TITLE_PREFIXES = (
-    'RETRACTED: ',
-    'PARTIALLY RETRACTED: ',
+    'RETRACTED:',
+    'FULLY RETRACTED:',
     'PARTIALLY RETRACTED:',
 )
 
