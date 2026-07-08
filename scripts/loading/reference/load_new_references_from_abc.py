@@ -2,7 +2,9 @@ import sys
 import json
 from urllib import request
 from scripts.loading.database_session import get_session
-from scripts.loading.reference.add_abc_reference import add_paper
+from scripts.loading.reference.add_abc_reference import add_paper, is_retracted_title
+from scripts.loading.reference.remove_obsolete_references_from_abc import \
+    delete_reference, RETRACTED_REASON
 from src.models import Referencedeleted
 import json
 from os import environ
@@ -12,6 +14,7 @@ __author__ = 'sweng66'
 ABC_API_ROOT_URL = environ['ABC_API_ROOT_URL']
 url = ABC_API_ROOT_URL + "reference/get_recently_sorted_references/SGD"
 json_file = "scripts/loading/reference/data/reference_new_SGD.json"
+CREATED_BY = 'OTTO'
 
 
 def load_data():
@@ -31,6 +34,21 @@ def load_data():
         if "cross_references" not in record:
             continue
         (sgdid, pmid, reference_id) = is_paper_in_db(nex_session, record["cross_references"])
+
+        # Retracted / partially retracted papers must not be loaded into SGD.
+        # If such a paper is already in SGD, remove it; otherwise block the load.
+        title = record.get('title') or ''
+        if is_retracted_title(title):
+            if reference_id:
+                print("\nRemoving retracted paper already in SGD (SGD:" + str(sgdid) +
+                      ", reference_id=" + str(reference_id) + "): " + title)
+                delete_reference(nex_session, reference_id,
+                                 int(pmid) if pmid else None, CREATED_BY,
+                                 reason_deleted=RETRACTED_REASON)
+            else:
+                print("\nBlocking retracted paper from being added (SGD:" +
+                      str(sgdid) + "): " + title)
+            continue
 
         # print(sgdid, pmid, reference_id)
         if reference_id or sgdid is None:

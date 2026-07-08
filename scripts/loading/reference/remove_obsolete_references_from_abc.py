@@ -18,6 +18,25 @@ url = ABC_API_ROOT_URL + "reference/obsolete_mod_curies/SGD"
 json_file = "scripts/loading/reference/data/references_obsolete_SGD.json"
 CREATED_BY = 'OTTO'
 
+OBSOLETE_REASON = 'This paper was deleted because the SGDID became obsolete in ABC.'
+RETRACTED_REASON = 'This paper was deleted because it was retracted.'
+
+# Papers whose title starts with any of these prefixes have been (partially)
+# retracted and must not remain in SGD. Mirrors add_abc_reference.is_retracted_title
+# (defined locally to avoid importing that module's DEFAULT_USER requirement).
+RETRACTED_TITLE_PREFIXES = (
+    'RETRACTED: ',
+    'PARTIALLY RETRACTED: ',
+    'PARTIALLY RETRACTED:',
+)
+
+
+def is_retracted_title(title):
+    """Return True if the reference title indicates a (partial) retraction."""
+    if not title:
+        return False
+    return title.startswith(RETRACTED_TITLE_PREFIXES)
+
 
 def load_data():
 
@@ -59,8 +78,35 @@ def load_data():
             print(f"SGDID:{sgdid_with_prefix}: Not found in database, skipping")
             not_found_count += 1
 
+    # Remove any papers already in SGD that have been (partially) retracted.
+    remove_retracted_references(db, CREATED_BY)
+
     db.close()
     print(f"\nDONE! Deleted: {deleted_count}, Not found: {not_found_count}")
+
+
+def remove_retracted_references(db, created_by):
+
+    print("\nScanning for retracted references already in SGD...")
+
+    rows = db.execute(
+        "SELECT r.dbentity_id, r.pmid, r.title "
+        "FROM nex.referencedbentity r "
+        "JOIN nex.dbentity d ON d.dbentity_id = r.dbentity_id "
+        "WHERE d.subclass = 'REFERENCE' "
+        "AND (r.title LIKE 'RETRACTED:%' OR r.title LIKE 'PARTIALLY RETRACTED:%')"
+    ).fetchall()
+
+    removed_count = 0
+    for reference_id, pmid, title in rows:
+        # Confirm against the exact prefixes before deleting.
+        if not is_retracted_title(title):
+            continue
+        print(f"Retracted reference_id={reference_id}, pmid={pmid}: {title}")
+        delete_reference(db, reference_id, pmid, created_by, reason_deleted=RETRACTED_REASON)
+        removed_count += 1
+
+    print(f"Removed {removed_count} retracted reference(s)")
 
 
 def delete_helper(db, reference_id, table, table_name):
@@ -70,7 +116,10 @@ def delete_helper(db, reference_id, table, table_name):
         print(f'  {count} records deleted from {table_name}')
 
 
-def delete_reference(db, reference_id, pmid, created_by):
+def delete_reference(db, reference_id, pmid, created_by, reason_deleted=None):
+
+    if reason_deleted is None:
+        reason_deleted = OBSOLETE_REASON
 
     try:
         # Delete from annotation tables
@@ -133,7 +182,7 @@ def delete_reference(db, reference_id, pmid, created_by):
         if pmid:
             x = Referencedeleted(
                 pmid=pmid,
-                reason_deleted='This paper was deleted because the SGDID became obsolete in ABC.',
+                reason_deleted=reason_deleted,
                 created_by=created_by
             )
             db.add(x)

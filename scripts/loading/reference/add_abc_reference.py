@@ -16,6 +16,21 @@ epub_pdf_status = 'NAP'
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
+# Papers whose title starts with any of these prefixes have been (partially)
+# retracted and must never be loaded into SGD.
+RETRACTED_TITLE_PREFIXES = (
+    'RETRACTED: ',
+    'PARTIALLY RETRACTED: ',
+    'PARTIALLY RETRACTED:',
+)
+
+
+def is_retracted_title(title):
+    """Return True if the reference title indicates a (partial) retraction."""
+    if not title:
+        return False
+    return title.startswith(RETRACTED_TITLE_PREFIXES)
+
 
 def add_paper(record, nex_session=None):
 
@@ -34,6 +49,9 @@ def add_paper(record, nex_session=None):
         return None
     if title and 'placeholder' in title.lower():
         print("Skipping " + str(sgdid) + ": placeholder title")
+        return None
+    if is_retracted_title(title):
+        print("Skipping " + str(sgdid) + ": retracted paper (title: " + title + ")")
         return None
 
     email_id_to_created_by = email_id_to_dbuser_mapping()
