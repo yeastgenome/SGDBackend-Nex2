@@ -51,14 +51,14 @@ def get_htp_sample_metadata():
     datasamplesDone = []
     sampleResult = []
 
-
     for sampleObj in datasetSamples:
 
         dataset = sampleObj.dataset
 
-        dsRef = DBSession.query(DatasetReference).filter_by(dataset_id=dataset.dataset_id).all()
-        # skip if not right kind of biosample,
-        if len(dsRef) == 0 or sampleObj.display_name in datasamplesDone:
+        # dsRef = DBSession.query(DatasetReference).filter_by(dataset_id=dataset.dataset_id).all()
+
+        # skip if done already,
+        if sampleObj.display_name in datasamplesDone:
             continue
         else:
             datasamplesDone.append(sampleObj.display_name)
@@ -79,7 +79,7 @@ def get_htp_sample_metadata():
                 "dateAssigned":
                 sampleObj.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
             }
-            ## add genomic information (strain) if available
+            # add genomic information (strain) if available
             if sampleObj.strain_name is not None:
                 strains = sampleObj.strain_name.split("|")
                 if str(strains[0]) in strain_name_to_sgdid:
@@ -88,12 +88,11 @@ def get_htp_sample_metadata():
                         "SGD:" + strain_name_to_sgdid[str(strains[0])],
                         "idType": "strain",
                         "bioSampleText": str(strains[0])
-                        }
+                    }
                 else:
-                    print (str(strains[0]) + " not a DB object")
+                    print(str(strains[0]) + " not a DB object")
 
             obj["taxonId"] = "NCBITaxon:" + DEFAULT_TAXID
-
 
             datasetsForSample = DBSession.query(Datasetsample).filter_by(
                 dbxref_id=sampleObj.dbxref_id).with_entities(
@@ -122,7 +121,6 @@ def get_htp_sample_metadata():
 
             sampleResult.append(obj)
 
-
     if (len(sampleResult) > 0):
         output_obj = get_output(sampleResult)
         file_name = 'SGD' + SUBMISSION_VERSION + 'htp_samples.json'
@@ -131,5 +129,7 @@ def get_htp_sample_metadata():
             res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
 
     DBSession.close()
+
+
 if __name__ == '__main__':
     get_htp_sample_metadata()

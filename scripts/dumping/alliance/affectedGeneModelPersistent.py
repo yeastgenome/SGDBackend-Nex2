@@ -1,6 +1,7 @@
 import os
 import json
-import re, sys
+import re
+import sys
 from sqlalchemy import create_engine
 import concurrent.futures
 
@@ -13,28 +14,40 @@ LINKML_VERSION = os.getenv('LINKML_VERSION')
 DBSession.configure(bind=engine)
 local_dir = 'scripts/dumping/alliance/data/'
 DEFAULT_TAXID = '559292'
-SUBMISSION_TYPE= 'agm_ingest_set'
+SUBMISSION_TYPE = 'agm_ingest_set'
+
 
 def get_agm_information():
 
-    strains_in_db = DBSession.query(Straindbentity).order_by(Straindbentity.display_name).all()
+    strains_in_db = DBSession.query(Straindbentity).order_by(
+        Straindbentity.display_name).all()
     filtered_strains = list([strain for strain in strains_in_db if
-                                 strain.strain_type == 'Alternative Reference' or strain.strain_type == 'Reference' or (
-                                         strain.taxonomy.taxid == 'TAX:4932' and strain.display_name.upper() == 'OTHER')])
+                             strain.strain_type == 'Alternative Reference' or strain.strain_type == 'Reference' or (
+                                 strain.taxonomy.taxid == 'TAX:4932' and strain.display_name.upper() == 'OTHER')])
     print(("computing " + str(len(filtered_strains)) + " strains"))
     result = []
     if (len(strains_in_db) > 0):
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             for item in filtered_strains:
-                strainobj = DBSession.query(Straindbentity).filter(Straindbentity.dbentity_id == item.dbentity_id).one()
+                strainobj = DBSession.query(Straindbentity).filter(
+                    Straindbentity.dbentity_id == item.dbentity_id).one()
                 if re.match('NTR', strainobj.taxonomy.taxid):
                     taxon = DEFAULT_TAXID
                 else:
                     taxon = strainobj.taxonomy.taxid.split(":")[1]
                 obj = {}
-                obj["mod_entity_id"] = "SGD:" + item.sgdid
-                obj["name"] = item.display_name
+                # 1/21/25 changed from 'mod_entity_id'
+                # 10/28/25 changed 'name' to agm_full_name_dto
+
+                obj["primary_external_id"] = "SGD:" + item.sgdid
+                obj["mod_internal_id"] = "SGD:" + item.sgdid
+                obj["agm_full_name_dto"] = {
+                    "name_type_name": "full_name",
+                    "format_text": item.format_name,
+                    "display_text": item.display_name,
+                    "internal": False
+                }
                 obj["subtype_name"] = "strain"
                 obj["taxon_curie"] = "NCBITaxon:" + taxon
                 obj["internal"] = False
@@ -47,11 +60,13 @@ def get_agm_information():
                 result.append(obj)
 
             if (len(result) > 0):
-                output_obj = get_pers_output(SUBMISSION_TYPE, result, LINKML_VERSION)
+                output_obj = get_pers_output(
+                    SUBMISSION_TYPE, result, LINKML_VERSION)
                 file_name = 'SGD' + SUBMISSION_VERSION + 'agmPersistent.json'
                 json_file_str = os.path.join(local_dir, file_name)
                 with open(json_file_str, 'w+') as res_file:
-                    res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+                    res_file.write(json.dumps(
+                        output_obj, indent=4, sort_keys=True))
 
     DBSession.close()
 

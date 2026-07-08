@@ -19,7 +19,9 @@ import logging
 from datetime import datetime, timedelta
 from itertools import groupby
 import hashlib
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from urllib.parse import quote
@@ -60,6 +62,7 @@ if 'CACHE_URLS' in list(os.environ.keys()):
     cache_urls = os.environ['CACHE_URLS'].split(',')
 else:
     cache_urls = ['http://localhost:6545']
+
 
 class CacheBase(object):
     def get_base_url(self):
@@ -116,20 +119,25 @@ class CacheBase(object):
             traceback.print_exc()
             print(('Error banning cache ' + self.sgdid))
 
+
 Base = declarative_base(cls=CacheBase)
+
 
 class Allele(Base):
     __tablename__ = 'allele'
     __table_args__ = {'schema': 'nex'}
 
-    allele_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    allele_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -139,16 +147,19 @@ class Apo(Base):
     __tablename__ = 'apo'
     __table_args__ = {'schema': 'nex'}
 
-    apo_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    apo_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     apoid = Column(String(20), nullable=False, unique=True)
     apo_namespace = Column(String(20), nullable=False)
     namespace_group = Column(String(40))
     description = Column(String(1000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
     is_in_slim = Column(Boolean, nullable=False)
@@ -182,7 +193,8 @@ class Apo(Base):
         
         annotations_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p.phenotype_id for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
 
-        children_relation = DBSession.query(ApoRelation).filter_by(parent_id=self.apo_id).all()
+        children_relation = DBSession.query(
+            ApoRelation).filter_by(parent_id=self.apo_id).all()
         if len(children_relation) > 0:
             children_phenotype_ids = []
             for x in DBSession.query(Phenotype).filter(Phenotype.observable_id.in_([c.child_id for c in children_relation])).all():
@@ -212,9 +224,12 @@ class Apo(Base):
         }
 
     def to_snapshot_dict(self):
-        phenotypes = DBSession.query(Phenotype.obj_url, Phenotype.qualifier_id, Phenotype.phenotype_id).filter_by(observable_id=self.apo_id).all()
-        annotations_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p[2] for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
-        children_relation = DBSession.query(ApoRelation).filter_by(parent_id=self.apo_id).all()
+        phenotypes = DBSession.query(Phenotype.obj_url, Phenotype.qualifier_id,
+                                     Phenotype.phenotype_id).filter_by(observable_id=self.apo_id).all()
+        annotations_count = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(
+            Phenotypeannotation.phenotype_id.in_([p[2] for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
+        children_relation = DBSession.query(
+            ApoRelation).filter_by(parent_id=self.apo_id).all()
         if len(children_relation) > 0:
             children_phenotype_ids = []
             for x in DBSession.query(Phenotype).filter(Phenotype.observable_id.in_([c.child_id for c in children_relation])).all():
@@ -233,7 +248,8 @@ class Apo(Base):
         }
 
     def annotations_to_dict(self):
-        phenotypes = DBSession.query(Phenotype).filter_by(observable_id=self.apo_id).all()
+        phenotypes = DBSession.query(Phenotype).filter_by(
+            observable_id=self.apo_id).all()
 
         obj = []
 
@@ -243,17 +259,21 @@ class Apo(Base):
         return obj
 
     def annotations_and_children_to_dict(self):
-        phenotypes = DBSession.query(Phenotype).filter_by(observable_id=self.apo_id).all()
+        phenotypes = DBSession.query(Phenotype).filter_by(
+            observable_id=self.apo_id).all()
 
-        children_relation = DBSession.query(ApoRelation).filter_by(parent_id=self.apo_id).all()
+        children_relation = DBSession.query(
+            ApoRelation).filter_by(parent_id=self.apo_id).all()
         if len(children_relation) > 0:
-            children_phenotypes = DBSession.query(Phenotype).filter(Phenotype.observable_id.in_([c.child_id for c in children_relation])).all()
+            children_phenotypes = DBSession.query(Phenotype).filter(
+                Phenotype.observable_id.in_([c.child_id for c in children_relation])).all()
             phenotypes += children_phenotypes
 
         obj = []
 
         for phenotype in phenotypes:
-            annotations = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=phenotype.phenotype_id).all()
+            annotations = DBSession.query(Phenotypeannotation).filter_by(
+                phenotype_id=phenotype.phenotype_id).all()
 
             for a in annotations:
                 obj += a.to_dict(phenotype=phenotype)
@@ -261,9 +281,11 @@ class Apo(Base):
         return obj
 
     def ontology_graph(self):
-        phenotypes = DBSession.query(Phenotype).filter_by(observable_id=self.apo_id).all()
+        phenotypes = DBSession.query(Phenotype).filter_by(
+            observable_id=self.apo_id).all()
 
-        annotations = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p.phenotype_id for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
+        annotations = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(
+            Phenotypeannotation.phenotype_id.in_([p.phenotype_id for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
 
         if self.apo_id == Apo.ROOT_ID:
             nodes = [{
@@ -279,7 +301,7 @@ class Apo(Base):
                 "data": {
                     "link": self.obj_url,
                     "sub_type": "FOCUS",
-                    "name": self.display_name.replace("_"," ") + " (" + str(annotations) + ")",
+                    "name": self.display_name.replace("_", " ") + " (" + str(annotations) + ")",
                     "id": str(self.apo_id)
                 }
             }]
@@ -287,7 +309,8 @@ class Apo(Base):
         edges = []
         all_children = []
 
-        children_relation = DBSession.query(ApoRelation).filter_by(parent_id=self.apo_id).all()
+        children_relation = DBSession.query(
+            ApoRelation).filter_by(parent_id=self.apo_id).all()
 
         add_parent_type = False
         children_level = 0
@@ -297,26 +320,29 @@ class Apo(Base):
         level = 0
 
         for child_relation in children_relation:
-            child_node = child_relation.to_graph(nodes, edges, add_child=True, add_parent_type=add_parent_type)
+            child_node = child_relation.to_graph(
+                nodes, edges, add_child=True, add_parent_type=add_parent_type)
             all_children.append({
                 "display_name": child_node.display_name,
                 "link": child_node.obj_url
             })
 
             if level < children_level:
-                children_relation += DBSession.query(ApoRelation).filter_by(parent_id=child_node.apo_id).all()
+                children_relation += DBSession.query(ApoRelation).filter_by(
+                    parent_id=child_node.apo_id).all()
                 level += 1
 
         level = 0
         parent_level = 3
-        parents_relation = DBSession.query(ApoRelation).filter_by(child_id=self.apo_id).all()
+        parents_relation = DBSession.query(
+            ApoRelation).filter_by(child_id=self.apo_id).all()
         for parent_relation in parents_relation:
             parent_relation.to_graph(nodes, edges, add_parent=True)
 
             if level < parent_level:
-                parents_relation += DBSession.query(ApoRelation).filter_by(child_id=parent_relation.parent.apo_id).all()
+                parents_relation += DBSession.query(ApoRelation).filter_by(
+                    child_id=parent_relation.parent.apo_id).all()
                 level += 1
-
 
         graph = {
             "edges": edges,
@@ -371,6 +397,7 @@ class Apo(Base):
     def get_secondary_base_url(self):
         return '/webservice/observable/' + str(self.apo_id)
 
+
 class ApoAlia(Base):
     __tablename__ = 'apo_alias'
     __table_args__ = (
@@ -378,12 +405,16 @@ class ApoAlia(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    apo_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    apo_id = Column(ForeignKey('nex.apo.apo_id',
+                    ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     apo = relationship('Apo')
@@ -397,16 +428,24 @@ class ApoRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.apo.apo_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.apo.apo_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Apo', primaryjoin='ApoRelation.child_id == Apo.apo_id')
-    parent = relationship('Apo', primaryjoin='ApoRelation.parent_id == Apo.apo_id')
+    child = relationship(
+        'Apo', primaryjoin='ApoRelation.child_id == Apo.apo_id')
+    parent = relationship(
+        'Apo', primaryjoin='ApoRelation.parent_id == Apo.apo_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -426,9 +465,11 @@ class ApoRelation(Base):
                 type = "observable"
                 name = "Yeast Phenotype Ontology"
             else:
-                phenotypes = DBSession.query(Phenotype).filter_by(observable_id=node.apo_id).all()
+                phenotypes = DBSession.query(Phenotype).filter_by(
+                    observable_id=node.apo_id).all()
 
-                annotations = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(Phenotypeannotation.phenotype_id.in_([p.phenotype_id for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
+                annotations = DBSession.query(Phenotypeannotation.dbentity_id, func.count(Phenotypeannotation.dbentity_id)).filter(
+                    Phenotypeannotation.phenotype_id.in_([p.phenotype_id for p in phenotypes])).group_by(Phenotypeannotation.dbentity_id).count()
 
                 if add_parent_type:
                     type = parent.display_name
@@ -465,22 +506,29 @@ class ApoUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    apo_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    apo_id = Column(ForeignKey('nex.apo.apo_id',
+                    ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     apo = relationship('Apo')
     source = relationship('Source')
+
+
 class ArchContig(Base):
     __tablename__ = 'arch_contig'
     __table_args__ = {'schema': 'nex'}
 
-    contig_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    contig_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500))
@@ -507,18 +555,22 @@ class ArchContig(Base):
     residues = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False)
     created_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
 
 class ArchContigchange(Base):
     __tablename__ = 'arch_contigchange'
     __table_args__ = (
-        UniqueConstraint('contig_id', 'genomerelease_id', 'change_type', 'change_min_coord', 'change_max_coord'),
+        UniqueConstraint('contig_id', 'genomerelease_id',
+                         'change_type', 'change_min_coord', 'change_max_coord'),
         {'schema': 'nex'}
     )
 
-    archive_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.archive_seq'::regclass)"))
-    contig_id = Column(ForeignKey('nex.arch_contig.contig_id', ondelete='CASCADE'), nullable=False)
+    archive_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.archive_seq'::regclass)"))
+    contig_id = Column(ForeignKey('nex.arch_contig.contig_id',
+                       ondelete='CASCADE'), nullable=False)
     source_id = Column(BigInteger, nullable=False)
     bud_id = Column(BigInteger)
     genomerelease_id = Column(BigInteger, nullable=False, index=True)
@@ -529,7 +581,8 @@ class ArchContigchange(Base):
     new_value = Column(String(1000))
     date_changed = Column(DateTime, nullable=False)
     changed_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
     contig = relationship('ArchContig')
 
@@ -537,11 +590,13 @@ class ArchContigchange(Base):
 class ArchDnasequenceannotation(Base):
     __tablename__ = 'arch_dnasequenceannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'taxonomy_id', 'contig_id', 'genomerelease_id', 'so_id', 'dna_type'),
+        UniqueConstraint('dbentity_id', 'taxonomy_id', 'contig_id',
+                         'genomerelease_id', 'so_id', 'dna_type'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
     dbentity_id = Column(BigInteger, nullable=False)
     source_id = Column(BigInteger, nullable=False, index=True)
     taxonomy_id = Column(BigInteger, nullable=False, index=True)
@@ -549,7 +604,8 @@ class ArchDnasequenceannotation(Base):
     bud_id = Column(BigInteger)
     so_id = Column(BigInteger, nullable=False, index=True)
     dna_type = Column(String(50), nullable=False)
-    contig_id = Column(ForeignKey('nex.arch_contig.contig_id', ondelete='CASCADE'), index=True)
+    contig_id = Column(ForeignKey(
+        'nex.arch_contig.contig_id', ondelete='CASCADE'), index=True)
     seq_version = Column(DateTime)
     coord_version = Column(DateTime)
     genomerelease_id = Column(BigInteger, index=True)
@@ -562,7 +618,8 @@ class ArchDnasequenceannotation(Base):
     residues = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False)
     created_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
     contig = relationship('ArchContig')
 
@@ -570,12 +627,15 @@ class ArchDnasequenceannotation(Base):
 class ArchDnasubsequence(Base):
     __tablename__ = 'arch_dnasubsequence'
     __table_args__ = (
-        UniqueConstraint('annotation_id', 'dbentity_id', 'genomerelease_id', 'relative_start_index', 'relative_end_index'),
+        UniqueConstraint('annotation_id', 'dbentity_id', 'genomerelease_id',
+                         'relative_start_index', 'relative_end_index'),
         {'schema': 'nex'}
     )
 
-    dnasubsequence_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.arch_dnasequenceannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    dnasubsequence_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.detail_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.arch_dnasequenceannotation.annotation_id', ondelete='CASCADE'), nullable=False)
     dbentity_id = Column(BigInteger, nullable=False, index=True)
     display_name = Column(String(500), nullable=False)
     bud_id = Column(BigInteger)
@@ -593,7 +653,8 @@ class ArchDnasubsequence(Base):
     residues = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False)
     created_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
     annotation = relationship('ArchDnasequenceannotation')
 
@@ -605,7 +666,8 @@ class ArchLiteratureannotation(Base):
         {'schema': 'nex'}
     )
 
-    archive_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.archive_seq'::regclass)"))
+    archive_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.archive_seq'::regclass)"))
     reference_id = Column(BigInteger, nullable=False)
     source_id = Column(BigInteger, nullable=False)
     taxonomy_id = Column(BigInteger, nullable=False)
@@ -614,17 +676,20 @@ class ArchLiteratureannotation(Base):
     topic = Column(String(42), nullable=False)
     date_created = Column(DateTime, nullable=False)
     created_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
 
 class ArchLocuschange(Base):
     __tablename__ = 'arch_locuschange'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'change_type', 'old_value', 'new_value', 'date_added_to_database'),
+        UniqueConstraint('dbentity_id', 'change_type',
+                         'old_value', 'new_value', 'date_added_to_database'),
         {'schema': 'nex'}
     )
 
-    archive_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.archive_seq'::regclass)"))
+    archive_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.archive_seq'::regclass)"))
     dbentity_id = Column(BigInteger, nullable=False)
     source_id = Column(BigInteger, nullable=False)
     bud_id = Column(BigInteger)
@@ -633,9 +698,9 @@ class ArchLocuschange(Base):
     new_value = Column(String(40))
     date_added_to_database = Column(DateTime, nullable=False)
     added_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     date_name_standardized = Column(DateTime, nullable=False)
-
 
     def to_dict(self):
         return {
@@ -647,21 +712,23 @@ class ArchLocuschange(Base):
         }
 
 
-
 class ArchProteinsequenceannotation(Base):
     __tablename__ = 'arch_proteinsequenceannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'taxonomy_id', 'contig_id', 'genomerelease_id'),
+        UniqueConstraint('dbentity_id', 'taxonomy_id',
+                         'contig_id', 'genomerelease_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
     dbentity_id = Column(BigInteger, nullable=False)
     source_id = Column(BigInteger, nullable=False, index=True)
     taxonomy_id = Column(BigInteger, nullable=False, index=True)
     reference_id = Column(BigInteger, index=True)
     bud_id = Column(BigInteger)
-    contig_id = Column(ForeignKey('nex.arch_contig.contig_id', ondelete='CASCADE'), nullable=False, index=True)
+    contig_id = Column(ForeignKey('nex.arch_contig.contig_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     seq_version = Column(DateTime)
     genomerelease_id = Column(BigInteger, index=True)
     file_header = Column(String(200))
@@ -670,7 +737,8 @@ class ArchProteinsequenceannotation(Base):
     residues = Column(Text, nullable=False)
     date_created = Column(DateTime, nullable=False)
     created_by = Column(String(12), nullable=False)
-    date_archived = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_archived = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
     contig = relationship('ArchContig')
 
@@ -679,10 +747,13 @@ class Authorresponse(Base):
     __tablename__ = 'authorresponse'
     __table_args__ = {'schema': 'nex'}
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.curation_seq'::regclass)"))
     pmid = Column(BigInteger)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
     author_email = Column(String(100), nullable=False)
     has_novel_research = Column(Boolean, nullable=False)
     has_large_scale_data = Column(Boolean, nullable=False)
@@ -694,7 +765,8 @@ class Authorresponse(Base):
     gene_list = Column(String(4000))
     dataset_description = Column(String(4000))
     other_description = Column(String(4000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
@@ -708,15 +780,21 @@ class Bindingmotifannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     obj_url = Column(String(500), nullable=False)
     motif_id = Column(BigInteger, nullable=False)
     logo_url = Column(String(500), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -730,6 +808,7 @@ class Bindingmotifannotation(Base):
             "link": self.logo_url
         }
 
+
 class Book(Base):
     __tablename__ = 'book'
     __table_args__ = (
@@ -737,18 +816,21 @@ class Book(Base):
         {'schema': 'nex'}
     )
 
-    book_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    book_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
     title = Column(String(200), nullable=False)
     volume_title = Column(String(200))
     isbn = Column(String(20))
     total_pages = Column(Integer)
     publisher = Column(String(100))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -758,27 +840,31 @@ class Chebi(Base):
     __tablename__ = 'chebi'
     __table_args__ = {'schema': 'nex'}
 
-    chebi_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    chebi_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     chebiid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
     source = relationship('Source')
 
     def to_dict(self):
 
-        urls = DBSession.query(ChebiUrl).filter_by(chebi_id=self.chebi_id).all()
-        synonyms = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).filter(ChebiAlia.alias_type.in_(['EXACT', 'RELATED', 'IUPAC name'])).all()
+        urls = DBSession.query(ChebiUrl).filter_by(
+            chebi_id=self.chebi_id).all()
+        synonyms = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).filter(
+            ChebiAlia.alias_type.in_(['EXACT', 'RELATED', 'IUPAC name'])).all()
         is_ntr = 0
         if self.chebiid.startswith("NTR:"):
             is_ntr = 1
 
-            
         obj = {
             "id": self.chebi_id,
             "display_name": self.display_name,
@@ -788,9 +874,9 @@ class Chebi(Base):
             "synonyms": [synonym.to_dict() for synonym in synonyms],
             "urls": [url.to_dict() for url in urls]
         }
-        
-        ## need to fix the following...
-        obj["complexes"] = self.complex_to_dict() 
+
+        # need to fix the following...
+        obj["complexes"] = self.complex_to_dict()
         obj["phenotype"] = self.phenotype_to_dict()
         obj["go"] = self.go_to_dict()
         obj["protein_abundance"] = self.proteinabundance_to_dict()
@@ -800,7 +886,7 @@ class Chebi(Base):
         obj["network_graph"] = self.chemical_network()
 
         return obj
-    
+
     def phenotype_to_dict(self):
         conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_name=self.display_name).all()
 
@@ -837,7 +923,7 @@ class Chebi(Base):
         obj = []
 
         for annotation in go_annotations:
-            ## obj += annotation.to_dict() 
+            # obj += annotation.to_dict()
             for annot in annotation.to_dict():
                 properties = annot.get("properties")
                 if properties is not None and len(properties) == 1 and properties[0]["bioentity"]["display_name"] != self.display_name:
@@ -848,17 +934,20 @@ class Chebi(Base):
 
     def proteinabundance_to_dict(self):
 
-        annotations = DBSession.query(Proteinabundanceannotation).filter_by(chemical_id=self.chebi_id).all()
+        annotations = DBSession.query(Proteinabundanceannotation).filter_by(
+            chemical_id=self.chebi_id).all()
         new_reference_ids = [a.reference_id for a in annotations]
         orig_reference_ids = [a.original_reference_id for a in annotations]
         reference_ids = list(set(new_reference_ids + orig_reference_ids))
-        references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).all()
+        references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(reference_ids)).all()
 
         ids_to_references = {}
         for r in references:
             ids_to_references[r.dbentity_id] = r
 
-        data = [a.to_dict(chebi=self, references=ids_to_references) for a in annotations]
+        data = [a.to_dict(chebi=self, references=ids_to_references)
+                for a in annotations]
         return sorted(data, key=lambda d: d['order_by'])
 
     def complex_to_dict(self):
@@ -880,11 +969,11 @@ class Chebi(Base):
             if complex.format_name in found:
                 continue
             found[complex.format_name] = 1
-            complexes.append({ "display_name": complex.display_name,
-                               "intact_id": complex.intact_id,
-                               "format_name": complex.format_name,
-                               "link_url": complex.obj_url,
-                               "description": complex.description })
+            complexes.append({"display_name": complex.display_name,
+                              "intact_id": complex.intact_id,
+                              "format_name": complex.format_name,
+                              "link_url": complex.obj_url,
+                              "description": complex.description})
 
         return complexes
 
@@ -900,12 +989,12 @@ class Chebi(Base):
         
         pathways = []
         for row in pathwayRows:
-            pathways.append({ "display_name": row.display_name,
-                              "biocyc_id": row.biocyc_id,
-                              "link_url": "https://pathway.yeastgenome.org/YEAST/NEW-IMAGE?type=NIL&object=" + row.biocyc_id + "&redirect=T"})
-            
+            pathways.append({"display_name": row.display_name,
+                             "biocyc_id": row.biocyc_id,
+                             "link_url": "https://pathway.yeastgenome.org/YEAST/NEW-IMAGE?type=NIL&object=" + row.biocyc_id + "&redirect=T"})
+
         pathwaysSorted = sorted(pathways, key=lambda p: p['display_name'])
-        
+
         return pathwaysSorted
 
     def get_structure_url(self):
@@ -943,11 +1032,11 @@ class Chebi(Base):
         if len(rows) > 0:
             return "https://www.pharmgkb.org/chemical/" + rows[0].display_name
         return ""
-        
+
     def chemical_network(self):
-        
-        network_nodes =[]
-        network_edges =[]
+
+        network_nodes = []
+        network_edges = []
 
         network_nodes_ids = {}
         network_edges_added = {}
@@ -968,14 +1057,16 @@ class Chebi(Base):
         go_annotations = DBSession.query(Goannotation).filter(Goannotation.annotation_id.in_(annotation_ids)).all()
         
         for g in go_annotations:
-            extensions = DBSession.query(Goextension).filter_by(annotation_id=g.annotation_id).all()
+            extensions = DBSession.query(Goextension).filter_by(
+                annotation_id=g.annotation_id).all()
             for ext in extensions:
 
                 if ext.dbxref_id.startswith("CHEBI:") and ext.dbxref_id != self.format_name:
 
                     if ext.dbxref_id not in network_nodes_ids:
 
-                        chebi = DBSession.query(Chebi).filter_by(format_name=ext.dbxref_id).one_or_none()
+                        chebi = DBSession.query(Chebi).filter_by(
+                            format_name=ext.dbxref_id).one_or_none()
                         if chebi is None:
                             continue
 
@@ -986,7 +1077,7 @@ class Chebi(Base):
                             "category": "CHEMICAL",
                         })
                         network_nodes_ids[ext.dbxref_id] = True
-                
+
                     if g.go.goid not in network_nodes_ids:
                         network_nodes.append({
                             "name": g.go.display_name,
@@ -1001,7 +1092,8 @@ class Chebi(Base):
                             "source": self.format_name,
                             "target": g.go.goid
                         })
-                        network_edges_added[(self.format_name,  g.go.goid)] = True
+                        network_edges_added[(
+                            self.format_name,  g.go.goid)] = True
 
                     if (ext.dbxref_id, g.go.goid) not in network_edges_added:
                         network_edges.append({
@@ -1009,8 +1101,8 @@ class Chebi(Base):
                             "target": g.go.goid
                         })
                         network_edges_added[(ext.dbxref_id,  g.go.goid)] = True
-            
-        ## phenotype
+
+        # phenotype
 
         conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_class = 'chemical', condition_name=self.display_name).all()
 
@@ -1025,28 +1117,31 @@ class Chebi(Base):
             if p.phenotype.display_name.startswith('resistance to chemicals:'):
                 continue
             pheno_id = "phenotype_" + str(p.phenotype_id)
-            conditions = DBSession.query(PhenotypeannotationCond).filter_by(annotation_id = p.annotation_id, condition_class = 'chemical').all() 
+            conditions = DBSession.query(PhenotypeannotationCond).filter_by(
+                annotation_id=p.annotation_id, condition_class='chemical').all()
             for cond in conditions:
-                chebiObjs = DBSession.query(Chebi).filter_by(display_name=cond.condition_name).all()
+                chebiObjs = DBSession.query(Chebi).filter_by(
+                    display_name=cond.condition_name).all()
                 for c in chebiObjs:
                     if c.format_name == self.format_name:
                         continue
                     if c.format_name not in network_nodes_ids:
-                        chebi = DBSession.query(Chebi).filter_by(format_name=c.format_name).one_or_none()
+                        chebi = DBSession.query(Chebi).filter_by(
+                            format_name=c.format_name).one_or_none()
                         if chebi is None:
                             continue
                         network_nodes.append({
-                                "name": chebi.display_name,
-                                "id": c.format_name,
-                                "href": "/chemical/" + c.format_name,
-                                "category": "CHEMICAL",
+                            "name": chebi.display_name,
+                            "id": c.format_name,
+                            "href": "/chemical/" + c.format_name,
+                            "category": "CHEMICAL",
                         })
                         network_nodes_ids[c.format_name] = True
-                    
+
                     if p.phenotype.display_name in phenotype_to_id:
                         pheno_id = phenotype_to_id[p.phenotype.display_name]
                     else:
-                        phenotype_to_id[p.phenotype.display_name] = pheno_id 
+                        phenotype_to_id[p.phenotype.display_name] = pheno_id
 
                     if pheno_id not in network_nodes_ids:
                         network_nodes.append({
@@ -1059,19 +1154,20 @@ class Chebi(Base):
 
                     if (self.format_name, pheno_id) not in network_edges_added:
                         network_edges.append({
-                                "source": self.format_name,
-                                "target": pheno_id
+                            "source": self.format_name,
+                            "target": pheno_id
                         })
-                        network_edges_added[(self.format_name, pheno_id)] = True
+                        network_edges_added[(
+                            self.format_name, pheno_id)] = True
 
                     if (c.format_name, pheno_id) not in network_edges_added:
                         network_edges.append({
-                                "source": c.format_name,
-                                "target": pheno_id
+                            "source": c.format_name,
+                            "target": pheno_id
                         })
                         network_edges_added[(c.format_name, pheno_id)] = True
-                        
-        ## complex
+
+        # complex
 
         interactors = DBSession.query(Interactor).filter_by(format_name=self.chebiid).all()
 
@@ -1089,18 +1185,22 @@ class Chebi(Base):
             if complex_id in found:
                 continue
             found[complex_id] = 1
-            annots = DBSession.query(Complexbindingannotation).filter_by(complex_id=complex_id).all()
-            
+            annots = DBSession.query(Complexbindingannotation).filter_by(
+                complex_id=complex_id).all()
+
             for a in annots:
-                interactors = DBSession.query(Interactor).filter_by(interactor_id=a.interactor_id).all()
-                binding_interactors = DBSession.query(Interactor).filter_by(interactor_id=a.binding_interactor_id).all()
-                
+                interactors = DBSession.query(Interactor).filter_by(
+                    interactor_id=a.interactor_id).all()
+                binding_interactors = DBSession.query(Interactor).filter_by(
+                    interactor_id=a.binding_interactor_id).all()
+
                 complex = a.complex
 
                 for i in interactors + binding_interactors:
                     if i.format_name.startswith("CHEBI:") and i.format_name != self.format_name:
                         if i.format_name not in network_nodes_ids:
-                            chebi = DBSession.query(Chebi).filter_by(format_name=i.format_name).one_or_none()
+                            chebi = DBSession.query(Chebi).filter_by(
+                                format_name=i.format_name).one_or_none()
                             if chebi is None:
                                 continue
                             network_nodes.append({
@@ -1113,28 +1213,30 @@ class Chebi(Base):
 
                         if complex.format_name not in network_nodes_ids:
                             network_nodes.append({
-                                    "name": complex.display_name,
-                                    "id": complex.format_name,
-                                    "href": "/complex/" + complex.format_name,
-                                    "category": "COMPLEX",
+                                "name": complex.display_name,
+                                "id": complex.format_name,
+                                "href": "/complex/" + complex.format_name,
+                                "category": "COMPLEX",
                             })
                             network_nodes_ids[complex.format_name] = True
 
                         if (self.format_name, complex.format_name) not in network_edges_added:
                             network_edges.append({
-                                    "source": self.format_name,
-                                    "target": complex.format_name
+                                "source": self.format_name,
+                                "target": complex.format_name
                             })
-                            network_edges_added[(self.format_name, complex.format_name)] = True
+                            network_edges_added[(
+                                self.format_name, complex.format_name)] = True
 
                         if (i.format_name, complex.format_name) not in network_edges_added:
                             network_edges.append({
-                                    "source": i.format_name,
-                                    "target": complex.format_name
+                                "source": i.format_name,
+                                "target": complex.format_name
                             })
-                            network_edges_added[(i.format_name, complex.format_name)] = True
+                            network_edges_added[(
+                                i.format_name, complex.format_name)] = True
 
-        data = { "edges": network_edges, "nodes": network_nodes }
+        data = {"edges": network_edges, "nodes": network_nodes}
 
         return data
 
@@ -1146,12 +1248,16 @@ class ChebiAlia(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    chebi_id = Column(ForeignKey('nex.chebi.chebi_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    chebi_id = Column(ForeignKey('nex.chebi.chebi_id',
+                      ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     chebi = relationship('Chebi')
@@ -1163,6 +1269,7 @@ class ChebiAlia(Base):
             "synonym_type": self.alias_type
         }
 
+
 class ChebiUrl(Base):
     __tablename__ = 'chebi_url'
     __table_args__ = (
@@ -1170,13 +1277,17 @@ class ChebiUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    chebi_id = Column(ForeignKey('nex.chebi.chebi_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    chebi_id = Column(ForeignKey('nex.chebi.chebi_id',
+                      ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     chebi = relationship('Chebi')
@@ -1187,15 +1298,18 @@ class ChebiUrl(Base):
             "link": self.obj_url
         }
 
+
 class Colleague(Base):
     __tablename__ = 'colleague'
     __table_args__ = {'schema': 'nex'}
 
-    colleague_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    colleague_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
     orcid = Column(String(20), unique=True)
     first_name = Column(String(40), nullable=False)
@@ -1221,8 +1335,10 @@ class Colleague(Base):
     is_beta_tester = Column(Boolean, nullable=False)
     display_email = Column(Boolean, nullable=False)
     is_in_triage = Column(Boolean, nullable=False)
-    date_last_modified = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_last_modified = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     colleague_note = Column(String(1000))
     research_interest = Column(String(4000))
@@ -1230,7 +1346,8 @@ class Colleague(Base):
     source = relationship('Source')
 
     def get_keywords(self):
-        lst = DBSession.query(Colleague,ColleagueKeyword).join(ColleagueKeyword).filter(ColleagueKeyword.colleague_id == Colleague.colleague_id).all()
+        lst = DBSession.query(Colleague, ColleagueKeyword).join(ColleagueKeyword).filter(
+            ColleagueKeyword.colleague_id == Colleague.colleague_id).all()
         obj = {}
         keyword_ids = []
         for item in lst:
@@ -1244,7 +1361,8 @@ class Colleague(Base):
             keywords = DBSession.query(Keyword).filter(
                 Keyword.keyword_id.in_(keyword_ids)).all()
         for k in keywords:
-            obj[k.keyword_id].append({'id': k.keyword_id, 'name': k.display_name})
+            obj[k.keyword_id].append(
+                {'id': k.keyword_id, 'name': k.display_name})
         return obj
 
     def to_simple_dict(self):
@@ -1279,7 +1397,8 @@ class Colleague(Base):
 
     def to_dict(self):
         websites = []
-        c_urls = DBSession.query(ColleagueUrl.obj_url, ColleagueUrl.url_type).filter(ColleagueUrl.colleague_id == self.colleague_id).all()
+        c_urls = DBSession.query(ColleagueUrl.obj_url, ColleagueUrl.url_type).filter(
+            ColleagueUrl.colleague_id == self.colleague_id).all()
         for x in c_urls:
             websites.append({
                 'link': x[0],
@@ -1355,6 +1474,7 @@ class Colleague(Base):
             ColleagueUrl.colleague_id == self.colleague_id).first()
         return item
 
+
 class CuratorActivity(Base):
     __tablename__ = 'curatoractivity'
     __table_args__ = (
@@ -1362,14 +1482,17 @@ class CuratorActivity(Base):
         {'schema': 'nex'}
     )
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
     activity_category = Column(String(100), nullable=False)
-    dbentity_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
+    dbentity_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
     message = Column(String(500), nullable=False)
     json = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     def to_dict(self):
@@ -1377,7 +1500,7 @@ class CuratorActivity(Base):
         time_created = ''
         if self.dbentity_id != 1 or self.dbentity_id == None:
             is_mod_date = json.loads(self.json).get('modified_date', None)
-            if is_mod_date: #self.activity_category == 'download':
+            if is_mod_date:  # self.activity_category == 'download':
                 href = re.sub(r'\?.+', '', href).replace(':433', '').strip()
                 return {
                     'category': self.activity_category,
@@ -1391,7 +1514,7 @@ class CuratorActivity(Base):
                     'data': json.loads(self.json)
 
                 }
-       
+
         return {
             'category': self.activity_category,
             'created_by': self.created_by,
@@ -1412,11 +1535,16 @@ class ColleagueKeyword(Base):
         {'schema': 'nex'}
     )
 
-    colleague_keyword_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False, index=True)
-    keyword_id = Column(ForeignKey('nex.keyword.keyword_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    colleague_keyword_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False, index=True)
+    keyword_id = Column(ForeignKey('nex.keyword.keyword_id',
+                        ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
@@ -1431,11 +1559,16 @@ class ColleagueLocus(Base):
         {'schema': 'nex'}
     )
 
-    colleague_locus_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    colleague_locus_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
@@ -1450,11 +1583,16 @@ class ColleagueReference(Base):
         {'schema': 'nex'}
     )
 
-    colleague_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    colleague_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
@@ -1469,17 +1607,24 @@ class ColleagueRelation(Base):
         {'schema': 'nex'}
     )
 
-    colleague_relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    colleague_relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
-    associate_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False, index=True)
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
+    associate_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False, index=True)
     association_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    associate = relationship('Colleague', primaryjoin='ColleagueRelation.associate_id == Colleague.colleague_id')
-    colleague = relationship('Colleague', primaryjoin='ColleagueRelation.colleague_id == Colleague.colleague_id')
+    associate = relationship(
+        'Colleague', primaryjoin='ColleagueRelation.associate_id == Colleague.colleague_id')
+    colleague = relationship(
+        'Colleague', primaryjoin='ColleagueRelation.colleague_id == Colleague.colleague_id')
     source = relationship('Source')
 
 
@@ -1490,14 +1635,18 @@ class ColleagueUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
@@ -1508,12 +1657,14 @@ class Colleaguetriage(Base):
     __tablename__ = 'colleaguetriage'
     __table_args__ = {'schema': 'nex'}
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.curation_seq'::regclass)"))
     triage_type = Column(String(10), nullable=False)
     colleague_id = Column(BigInteger)
     json = Column(Text, nullable=False)
     curator_comment = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
     def to_dict(self):
         data = json.loads(self.json)
@@ -1529,13 +1680,17 @@ class Contig(Base):
     __tablename__ = 'contig'
     __table_args__ = {'schema': 'nex'}
 
-    contig_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    contig_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
     centromere_start = Column(Integer)
     centromere_end = Column(Integer)
     genbank_accession = Column(String(40), nullable=False)
@@ -1548,12 +1703,15 @@ class Contig(Base):
     reference_alignment_length = Column(Integer)
     seq_version = Column(DateTime)
     coord_version = Column(DateTime)
-    genomerelease_id = Column(ForeignKey('nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
+    genomerelease_id = Column(ForeignKey(
+        'nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
     file_header = Column(String(200), nullable=False)
     download_filename = Column(String(100), nullable=False)
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), index=True)
     residues = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     file = relationship('Filedbentity')
@@ -1566,7 +1724,7 @@ class Contig(Base):
         return {
             "display_name": self.display_name,
             "format_name": self.format_name,
-            "is_chromosome": self.so_id == 264265, # soid = SO:0000340 = Chromosome
+            "is_chromosome": self.so_id == 264265,  # soid = SO:0000340 = Chromosome
             "centromere_start": self.centromere_start,
             "centromere_end": self.centromere_end,
             "link": self.obj_url,
@@ -1599,7 +1757,8 @@ class Contig(Base):
             if chromosome_cache.get(self.reference_chromosome_id):
                 chromosome = chromosome_cache.get(self.reference_chromosome_id)
             else:
-                chromosome = DBSession.query(Contig.format_name, Contig.obj_url).filter_by(contig_id=self.reference_chromosome_id).one_or_none()
+                chromosome = DBSession.query(Contig.format_name, Contig.obj_url).filter_by(
+                    contig_id=self.reference_chromosome_id).one_or_none()
                 chromosome_cache[self.reference_chromosome_id] = chromosome
 
             if chromosome:
@@ -1618,7 +1777,8 @@ class Contig(Base):
 
     def to_dict(self):
         strains = Straindbentity.get_strains_by_taxon_id(self.taxonomy_id)
-        urls = DBSession.query(ContigUrl).filter_by(contig_id=self.contig_id).all()
+        urls = DBSession.query(ContigUrl).filter_by(
+            contig_id=self.contig_id).all()
         # get sequences and group by feature type, exclude inactive and non S288c features
 
         inactive_ids = []
@@ -1626,10 +1786,10 @@ class Contig(Base):
             inactive_ids.append(x.dbentity_id)
         
         so_id = get_transcript_so_id()
-        
+
         sequences = DBSession.\
             query(Dnasequenceannotation.so_id, func.count(Dnasequenceannotation.annotation_id)).\
-            filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC", Dnasequenceannotation.taxonomy_id == TAXON_ID, Dnasequenceannotation.so_id != so_id, ~Dnasequenceannotation.dbentity_id.in_(inactive_ids))).\
+            filter(and_(Dnasequenceannotation.contig_id == self.contig_id, Dnasequenceannotation.dna_type == "GENOMIC", Dnasequenceannotation.taxonomy_id == TAXON_ID, Dnasequenceannotation.so_id != so_id, ~Dnasequenceannotation.dbentity_id.in_(inactive_ids))).\
             group_by(Dnasequenceannotation.so_id).all()
         so_ids = set([ov[0] for ov in sequences])
         so = DBSession.query(So).filter(So.so_id.in_(list(so_ids))).all()
@@ -1656,8 +1816,9 @@ class Contig(Base):
     def sequence_details(self):
 
         so_id = get_transcript_so_id()
-        
-        dnas = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.contig_id==self.contig_id, Dnasequenceannotation.dna_type=="GENOMIC", Dnasequenceannotation.so_id != so_id)).all()
+
+        dnas = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.contig_id == self.contig_id,
+                                                                  Dnasequenceannotation.dna_type == "GENOMIC", Dnasequenceannotation.so_id != so_id)).all()
 
         active_genomic_dna = []
         for dna in dnas:
@@ -1676,13 +1837,17 @@ class ContigUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    contig_id = Column(ForeignKey('nex.contig.contig_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    contig_id = Column(ForeignKey('nex.contig.contig_id',
+                       ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     contig = relationship('Contig')
@@ -1702,16 +1867,22 @@ class Contignoteannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    contig_id = Column(ForeignKey('nex.contig.contig_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    contig_id = Column(ForeignKey('nex.contig.contig_id',
+                       ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     bud_id = Column(Integer)
     note_type = Column(String(40), nullable=False)
     display_name = Column(String(500), nullable=False)
     note = Column(String(2000), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     contig = relationship('Contig')
@@ -1727,11 +1898,15 @@ class CurationLocus(Base):
         {'schema': 'nex'}
     )
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.curation_seq'::regclass)"))
+    locus_id = Column(ForeignKey(
+        'nex.locusdbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     curation_tag = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     curator_comment = Column(String(2000))
     json = Column(Text)
@@ -1772,12 +1947,17 @@ class CurationReference(Base):
         {'schema': 'nex'}
     )
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.curation_seq'::regclass)"))
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), index=True)
     curation_tag = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     curator_comment = Column(String(2000))
     json = Column(Text)
@@ -1831,25 +2011,30 @@ class CurationReference(Base):
                 return key
         return None
 
+
 class Dataset(Base):
     __tablename__ = 'dataset'
     __table_args__ = {'schema': 'nex'}
 
-    dataset_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dataset_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     dbxref_id = Column(String(40))
     dbxref_type = Column(String(40))
     date_public = Column(DateTime)
-    parent_dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), index=True)
+    parent_dataset_id = Column(ForeignKey(
+        'nex.dataset.dataset_id', ondelete='CASCADE'), index=True)
     channel_count = Column(SmallInteger)
     sample_count = Column(Integer, nullable=False)
     is_in_spell = Column(Boolean, nullable=False)
     is_in_browser = Column(Boolean, nullable=False)
     description = Column(String(4000))
-    date_created = Column(DateTime, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     parent_dataset = relationship('Dataset', remote_side=[dataset_id])
@@ -1859,7 +2044,8 @@ class Dataset(Base):
     samples = relationship('Datasetsample', backref="parent")
 
     def to_dict(self, reference=None, dataset_keywords=None, add_conditions=False, add_resources=False):
-        keywords = DBSession.query(DatasetKeyword).filter_by(dataset_id=self.dataset_id).all()
+        keywords = DBSession.query(DatasetKeyword).filter_by(
+            dataset_id=self.dataset_id).all()
 
         tags = [keyword.to_dict() for keyword in keywords]
 
@@ -1883,11 +2069,12 @@ class Dataset(Base):
                 "id": reference.dbentity_id
             }
         else:
-            references = DBSession.query(DatasetReference).filter_by(dataset_id=self.dataset_id).all()
+            references = DBSession.query(DatasetReference).filter_by(
+                dataset_id=self.dataset_id).all()
             formatted_refs = []
             for datasetreference in references:
                 reference = datasetreference.reference
-                ref_obj =  {
+                ref_obj = {
                     "display_name": reference.display_name,
                     "link": reference.obj_url,
                     "pubmed_id": reference.pmid,
@@ -1897,7 +2084,8 @@ class Dataset(Base):
             obj["references"] = formatted_refs
 
         if add_conditions:
-            conditions = DBSession.query(Datasetsample).filter_by(dataset_id=self.dataset_id).all()
+            conditions = DBSession.query(Datasetsample).filter_by(
+                dataset_id=self.dataset_id).all()
 
             obj["datasetcolumns"] = []
             for condition in conditions:
@@ -1911,11 +2099,13 @@ class Dataset(Base):
                 })
 
         if add_resources:
-            urls = DBSession.query(DatasetUrl).filter_by(dataset_id=self.dataset_id).all()
+            urls = DBSession.query(DatasetUrl).filter_by(
+                dataset_id=self.dataset_id).all()
 
             obj["urls"] = []
 
-            files = DBSession.query(DatasetFile).filter_by(dataset_id=self.dataset_id).all()
+            files = DBSession.query(DatasetFile).filter_by(
+                dataset_id=self.dataset_id).all()
             for f in files:
                 if f.file.s3_url is not None:
                     obj["urls"].append({
@@ -1944,15 +2134,21 @@ class DatasetFile(Base):
         {'schema': 'nex'}
     )
 
-    dataset_file_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False)
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    dataset_file_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False)
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dataset = relationship('Dataset')
-    file = relationship('Filedbentity', primaryjoin='Filedbentity.dbentity_id == DatasetFile.file_id')
+    file = relationship(
+        'Filedbentity', primaryjoin='Filedbentity.dbentity_id == DatasetFile.file_id')
     source = relationship('Source')
 
 
@@ -1963,11 +2159,16 @@ class DatasetKeyword(Base):
         {'schema': 'nex'}
     )
 
-    dataset_keyword_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    keyword_id = Column(ForeignKey('nex.keyword.keyword_id', ondelete='CASCADE'), nullable=False)
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    dataset_keyword_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    keyword_id = Column(ForeignKey('nex.keyword.keyword_id',
+                        ondelete='CASCADE'), nullable=False)
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dataset = relationship('Dataset')
@@ -1988,11 +2189,16 @@ class DatasetReference(Base):
         {'schema': 'nex'}
     )
 
-    dataset_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    dataset_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dataset = relationship('Dataset')
@@ -2007,13 +2213,17 @@ class DatasetUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dataset = relationship('Dataset')
@@ -2027,13 +2237,17 @@ class Datasetlab(Base):
         {'schema': 'nex'}
     )
 
-    datasetlab_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False, index=True)
+    datasetlab_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
     source_id = Column(BigInteger, nullable=False)
     lab_name = Column(String(40), nullable=False)
     lab_location = Column(String(100), nullable=False)
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     colleague = relationship('Colleague')
@@ -2044,13 +2258,17 @@ class Datasetsample(Base):
     __tablename__ = 'datasetsample'
     __table_args__ = {'schema': 'nex'}
 
-    datasetsample_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    datasetsample_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), index=True)
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), index=True)
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
     sample_order = Column(Integer, nullable=False)
     dbxref_id = Column(String(40))
     dbxref_type = Column(String(40))
@@ -2058,8 +2276,10 @@ class Datasetsample(Base):
     biosample = Column(String(500))
     strain_name = Column(String(500))
     description = Column(String(500))
-    assay_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    assay_id = Column(ForeignKey('nex.obi.obi_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     dbxref_url = Column(String(12), nullable=False)
 
@@ -2068,18 +2288,23 @@ class Datasetsample(Base):
     taxonomy = relationship('Taxonomy')
     assay = relationship('Obi')
 
+
 class Datasettrack(Base):
     __tablename__ = 'datasettrack'
     __table_args__ = {'schema': 'nex'}
 
-    datasettrack_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    datasettrack_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    dataset_id = Column(ForeignKey('nex.dataset.dataset_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    dataset_id = Column(ForeignKey('nex.dataset.dataset_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
     track_order = Column(BigInteger, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dataset = relationship('Dataset')
@@ -2093,25 +2318,30 @@ class Dbentity(Base):
         {'schema': 'nex'}
     )
 
-    dbentity_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbentity_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id'),
+                       nullable=False, index=True)
     bud_id = Column(Integer)
     sgdid = Column(String(20), nullable=False, unique=True)
     subclass = Column(String(40), nullable=False)
     dbentity_status = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
+
 
 class Pathwaydbentity(Dbentity):
     __tablename__ = 'pathwaydbentity'
     __table_args__ = {'schema': 'nex'}
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
     biocyc_id = Column(String(40))
 
 
@@ -2120,7 +2350,8 @@ class Referencedbentity(Dbentity):
     __table_args__ = {'schema': 'nex'}
     __url_segment__ = '/reference/'
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
     method_obtained = Column(String(40), nullable=False)
     publication_status = Column(String(40), nullable=False)
     fulltext_status = Column(String(40), nullable=False)
@@ -2135,8 +2366,10 @@ class Referencedbentity(Dbentity):
     volume = Column(String(40))
     title = Column(String(400))
     doi = Column(String(100))
-    journal_id = Column(ForeignKey('nex.journal.journal_id', ondelete='SET NULL'), index=True)
-    book_id = Column(ForeignKey('nex.book.book_id', ondelete='SET NULL'), index=True)
+    journal_id = Column(ForeignKey('nex.journal.journal_id',
+                        ondelete='SET NULL'), index=True)
+    book_id = Column(ForeignKey('nex.book.book_id',
+                     ondelete='SET NULL'), index=True)
 
     book = relationship('Book')
     journal = relationship('Journal')
@@ -2149,16 +2382,19 @@ class Referencedbentity(Dbentity):
         curator_session = None
         try:
             curator_session = get_curator_session(username)
-            exists = curator_session.query(Referencedbentity).filter(Referencedbentity.pmid==user_pmid).one_or_none()
+            exists = curator_session.query(Referencedbentity).filter(
+                Referencedbentity.pmid == user_pmid).one_or_none()
             if exists:
                 raise ValueError('Reference already exists.')
-            curator_session.query(Referencedeleted).filter_by(pmid=user_pmid).delete(synchronize_session=False)
-            curator_session.query(Referencetriage).filter_by(pmid=user_pmid).delete(synchronize_session=False)
+            curator_session.query(Referencedeleted).filter_by(
+                pmid=user_pmid).delete(synchronize_session=False)
+            curator_session.query(Referencetriage).filter_by(
+                pmid=user_pmid).delete(synchronize_session=False)
             transaction.commit()
         except Exception as e:
             traceback.print_exc()
             transaction.abort()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.close()
@@ -2166,9 +2402,12 @@ class Referencedbentity(Dbentity):
     # See if in referencedeleted or referencetriage and return string describing error to see if curators really want to add. Returns None if no errors
     @classmethod
     def get_deletion_warnings(Referencedbentity, user_pmid):
-        ref_deleted = DBSession.query(Referencedeleted).filter_by(pmid=user_pmid).scalar()
-        is_in_triage = DBSession.query(Referencetriage).filter_by(pmid=user_pmid).count()
-        is_in_ref = DBSession.query(Referencedbentity).filter_by(pmid=user_pmid).count()
+        ref_deleted = DBSession.query(
+            Referencedeleted).filter_by(pmid=user_pmid).scalar()
+        is_in_triage = DBSession.query(
+            Referencetriage).filter_by(pmid=user_pmid).count()
+        is_in_ref = DBSession.query(
+            Referencedbentity).filter_by(pmid=user_pmid).count()
         if ref_deleted:
             return 'Warning: previously deleted: ' + ref_deleted.reason_deleted + 'by ' + ref_deleted.created_by
         elif is_in_triage:
@@ -2200,7 +2439,7 @@ class Referencedbentity(Dbentity):
                 ("PG", self.page),
                 ("VI", self.volume),
                 ("SO", "SGD")
-        ]
+                ]
 
         for x in DBSession.query(Referenceauthor).filter_by(reference_id=self.dbentity_id).order_by(Referenceauthor.author_order).all():
             data.append(("AU", x.display_name))
@@ -2231,7 +2470,7 @@ class Referencedbentity(Dbentity):
         }
 
     def to_dict_citation(self):
-        if(self.pmid == 23241746):
+        if (self.pmid == 23241746):
             print('found pmid')
         obj = {
             "id": self.dbentity_id,
@@ -2243,7 +2482,8 @@ class Referencedbentity(Dbentity):
             "urls": []
         }
 
-        ref_urls = DBSession.query(ReferenceUrl).filter_by(reference_id=self.dbentity_id).all()
+        ref_urls = DBSession.query(ReferenceUrl).filter_by(
+            reference_id=self.dbentity_id).all()
         for url in ref_urls:
             obj["urls"].append({
                 "display_name": url.display_name,
@@ -2265,7 +2505,8 @@ class Referencedbentity(Dbentity):
             "urls": []
         }
 
-        ref_urls = DBSession.query(ReferenceUrl).filter_by(reference_id=self.dbentity_id).all()
+        ref_urls = DBSession.query(ReferenceUrl).filter_by(
+            reference_id=self.dbentity_id).all()
         for url in ref_urls:
             obj["urls"].append({
                 "display_name": url.display_name,
@@ -2314,11 +2555,14 @@ class Referencedbentity(Dbentity):
             obj["journal"] = {
                 "med_abbr": self.journal.med_abbr
             }
-        
-        datasets = DBSession.query(DatasetReference).filter_by(reference_id=self.dbentity_id).all()
-        obj["expression_datasets"] = [data.dataset.to_dict(self) for data in datasets]
 
-        files = DBSession.query(ReferenceFile).filter_by(reference_id=self.dbentity_id).all()
+        datasets = DBSession.query(DatasetReference).filter_by(
+            reference_id=self.dbentity_id).all()
+        obj["expression_datasets"] = [
+            data.dataset.to_dict(self) for data in datasets]
+
+        files = DBSession.query(ReferenceFile).filter_by(
+            reference_id=self.dbentity_id).all()
         obj["downloadable_files"] = [data.file.to_dict() for data in files]
 
         abstract = DBSession.query(Referencedocument).filter_by(reference_id=self.dbentity_id, document_type="Abstract").one_or_none()
@@ -2327,7 +2571,8 @@ class Referencedbentity(Dbentity):
                 "text": abstract.html
             }
 
-        ref_urls = DBSession.query(ReferenceUrl).filter_by(reference_id=self.dbentity_id).all()
+        ref_urls = DBSession.query(ReferenceUrl).filter_by(
+            reference_id=self.dbentity_id).all()
         ref_urls_obj = []
         for url in ref_urls:
             ref_urls_obj.append({
@@ -2348,7 +2593,8 @@ class Referencedbentity(Dbentity):
                 "display_name": type.display_name
             })
 
-        authors = DBSession.query(Referenceauthor.display_name, Referenceauthor.obj_url).filter_by(reference_id=self.dbentity_id).order_by(Referenceauthor.author_order).all()
+        authors = DBSession.query(Referenceauthor.display_name, Referenceauthor.obj_url).filter_by(
+            reference_id=self.dbentity_id).order_by(Referenceauthor.author_order).all()
         obj["authors"] = []
         for author in authors:
             obj["authors"].append({
@@ -2356,13 +2602,17 @@ class Referencedbentity(Dbentity):
                 "link": author[1]
             })
 
-        reference_relation_parent = DBSession.query(ReferenceRelation).filter_by(parent_id=self.dbentity_id).all()
+        reference_relation_parent = DBSession.query(
+            ReferenceRelation).filter_by(parent_id=self.dbentity_id).all()
         for ref in reference_relation_parent:
-            obj["related_references"].append(ref.child.to_dict_reference_related())
+            obj["related_references"].append(
+                ref.child.to_dict_reference_related())
 
-        reference_relation_child = DBSession.query(ReferenceRelation).filter_by(child_id=self.dbentity_id).all()
+        reference_relation_child = DBSession.query(
+            ReferenceRelation).filter_by(child_id=self.dbentity_id).all()
         for ref in reference_relation_child:
-            obj["related_references"].append(ref.parent.to_dict_reference_related())
+            obj["related_references"].append(
+                ref.parent.to_dict_reference_related())
 
         obj["counts"] = {
             "interaction": DBSession.query(Physinteractionannotation).filter_by(reference_id=self.dbentity_id).count() + DBSession.query(Geninteractionannotation).filter_by(reference_id=self.dbentity_id).count(),
@@ -2371,14 +2621,15 @@ class Referencedbentity(Dbentity):
             "disease": DBSession.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).count(),
             "complement": DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).count(),
             "regulation": DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).count(),
-            "ptms":DBSession.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).count()
+            "ptms": DBSession.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).count()
         }
 
         return obj
 
     def annotations_to_dict(self):
-        
-        annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
+
+        annotations = DBSession.query(Literatureannotation).filter_by(
+            reference_id=self.dbentity_id).all()
 
         loci = []
         complexes = []
@@ -2393,17 +2644,17 @@ class Referencedbentity(Dbentity):
                 elif 'pathway' in locus["link"]:
                     pathways.append(annotation.to_dict())
                 elif 'allele' in locus["link"]:
-                    alleles.append(annotation.to_dict()) 
+                    alleles.append(annotation.to_dict())
                 else:
                     loci.append(annotation.to_dict())
 
         return loci + complexes + pathways + alleles
-    
+
     def annotations_summary_to_dict(self):
         preview_url = '/reference/' + self.sgdid
         return {
             'category': 'reference',
-            'created_by' : self.created_by,
+            'created_by': self.created_by,
             'href': preview_url,
             'date_created': self.date_created.strftime("%Y-%m-%d"),
             'time_created': self.date_created.isoformat(),
@@ -2415,14 +2666,16 @@ class Referencedbentity(Dbentity):
     def interactions_to_dict(self):
         obj = []
 
-        interactions = DBSession.query(Physinteractionannotation).filter_by(reference_id=self.dbentity_id).all() + DBSession.query(Geninteractionannotation).filter_by(reference_id=self.dbentity_id).all()
-        
+        interactions = DBSession.query(Physinteractionannotation).filter_by(reference_id=self.dbentity_id).all(
+        ) + DBSession.query(Geninteractionannotation).filter_by(reference_id=self.dbentity_id).all()
+
         return [interaction.to_dict(self) for interaction in interactions]
 
     def go_to_dict(self):
         obj = []
 
-        gos = DBSession.query(Goannotation).filter_by(reference_id=self.dbentity_id).all()
+        gos = DBSession.query(Goannotation).filter_by(
+            reference_id=self.dbentity_id).all()
 
         for go_annotation in gos:
             for annotation in go_annotation.to_dict():
@@ -2433,12 +2686,14 @@ class Referencedbentity(Dbentity):
 
     def functional_complement_to_dict(self):
 
-        all_annotations = DBSession.query(Functionalcomplementannotation).filter_by(reference_id=self.dbentity_id).all()
+        all_annotations = DBSession.query(Functionalcomplementannotation).filter_by(
+            reference_id=self.dbentity_id).all()
 
         return [a.to_dict(self.dbentity_id) for a in all_annotations]
-    
+
     def phenotype_to_dict(self):
-        phenotypes = DBSession.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
+        phenotypes = DBSession.query(Phenotypeannotation).filter_by(
+            reference_id=self.dbentity_id).all()
 
         obj = []
         for phenotype in phenotypes:
@@ -2446,7 +2701,8 @@ class Referencedbentity(Dbentity):
         return obj
 
     def disease_to_dict(self):
-        do_annotations = DBSession.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).all()
+        do_annotations = DBSession.query(Diseaseannotation).filter_by(
+            reference_id=self.dbentity_id).all()
 
         obj = []
 
@@ -2455,8 +2711,8 @@ class Referencedbentity(Dbentity):
                 if annotation not in obj:
                     obj.append(annotation)
         # get human gene symbols from Alliance API
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
+        # human_gene_ids_to_symbols = {}
+        human_gene_ids_to_symbols = {'display name': 'TEST1'}
         for x in obj:
             try:
                 for y in x['properties']:
@@ -2467,7 +2723,8 @@ class Referencedbentity(Dbentity):
                             entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
                         else:
                             url = ALLIANCE_API_BASE_URL + hgnc_id
-                            symbol = requests.request('GET', url).json()['symbol']
+                            symbol = requests.request(
+                                'GET', url).json()['symbol']
                             entry['display_name'] = symbol
                             human_gene_ids_to_symbols[hgnc_id] = symbol
             except Exception as e:
@@ -2477,7 +2734,8 @@ class Referencedbentity(Dbentity):
     def regulation_to_dict(self):
         obj = []
 
-        regulations = DBSession.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).all()
+        regulations = DBSession.query(Regulationannotation).filter_by(
+            reference_id=self.dbentity_id).all()
 
         return [regulation.to_dict(self) for regulation in regulations]
 
@@ -2490,8 +2748,9 @@ class Referencedbentity(Dbentity):
 
         tags = []
 
-        ## for gene names vs CurationReference
-        curation_refs = DBSession.query(CurationReference, Locusdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
+        # for gene names vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Locusdbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
         for x in curation_refs:
             locus_name = None
             locus = x.Locusdbentity
@@ -2504,8 +2763,9 @@ class Referencedbentity(Dbentity):
             }
             tags.append(obj)
 
-        ## for complex vs CurationReference
-        curation_refs = DBSession.query(CurationReference, Complexdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Complexdbentity).all()
+        # for complex vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Complexdbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Complexdbentity).all()
         for x in curation_refs:
             complex_name = None
             complex = x.Complexdbentity
@@ -2518,8 +2778,9 @@ class Referencedbentity(Dbentity):
             }
             tags.append(obj)
 
-        ## for pathway vs CurationReference
-        curation_refs = DBSession.query(CurationReference, Pathwaydbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Pathwaydbentity).all()
+        # for pathway vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Pathwaydbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Pathwaydbentity).all()
         for x in curation_refs:
             pathway_name = None
             pathway = x.Pathwaydbentity
@@ -2532,8 +2793,9 @@ class Referencedbentity(Dbentity):
             }
             tags.append(obj)
 
-        ## for allele vs CurationReference
-        curation_refs = DBSession.query(CurationReference, Alleledbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
+        # for allele vs CurationReference
+        curation_refs = DBSession.query(CurationReference, Alleledbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
         for x in curation_refs:
             allele_name = None
             allele = x.Alleledbentity
@@ -2545,10 +2807,11 @@ class Referencedbentity(Dbentity):
                 'comment': x.CurationReference.curator_comment
             }
             tags.append(obj)
-            
-        ## Literatureannotation
+
+        # Literatureannotation
         items = []
-        lit_annotations = DBSession.query(Literatureannotation, Locusdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
+        lit_annotations = DBSession.query(Literatureannotation, Locusdbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Locusdbentity).all()
         for x in lit_annotations:
             locus_name = None
             locus = x.Locusdbentity
@@ -2557,7 +2820,8 @@ class Referencedbentity(Dbentity):
             name = x.Literatureannotation.get_name()
             items.append((name, locus_name))
 
-        lit_annotations = DBSession.query(Literatureannotation, Complexdbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Complexdbentity).all()
+        lit_annotations = DBSession.query(Literatureannotation, Complexdbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Complexdbentity).all()
         for x in lit_annotations:
             complex_name = None
             complex = x.Complexdbentity
@@ -2566,29 +2830,31 @@ class Referencedbentity(Dbentity):
             name = x.Literatureannotation.get_name()
             items.append((name, complex_name))
 
-        lit_annotations = DBSession.query(Literatureannotation, Pathwaydbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Pathwaydbentity).all()
+        lit_annotations = DBSession.query(Literatureannotation, Pathwaydbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Pathwaydbentity).all()
         for x in lit_annotations:
             pathway_name = None
-            pathway= x.Pathwaydbentity
+            pathway = x.Pathwaydbentity
             if pathway:
                 pathway_name = pathway.biocyc_id
             name = x.Literatureannotation.get_name()
             items.append((name, pathway_name))
 
-        lit_annotations = DBSession.query(Literatureannotation, Alleledbentity).filter_by(reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
+        lit_annotations = DBSession.query(Literatureannotation, Alleledbentity).filter_by(
+            reference_id=self.dbentity_id).outerjoin(Alleledbentity).all()
         for x in lit_annotations:
             allele_name = None
-            allele= x.Alleledbentity
+            allele = x.Alleledbentity
             if allele:
                 allele_name = allele.format_name
-            name = x.Literatureannotation.get_name()                                                        
+            name = x.Literatureannotation.get_name()
             items.append((name, allele_name))
 
         for (name, dbentity_name) in items:
-            # ignore omics tags bc already have internal   
+            # ignore omics tags bc already have internal
             if name in ['non_phenotype_htp', 'htp_phenotype']:
                 continue
-            # Don't append to tags if it is a primary and already in tags.  
+            # Don't append to tags if it is a primary and already in tags.
             if name in ['other_primary', 'go', 'classical_phenotype', 'headline_information']:
                 found = 0
                 for tag in tags:
@@ -2598,17 +2864,17 @@ class Referencedbentity(Dbentity):
                 if found == 0:
                     # it is a other_primary tag since it is not one of ['go', 'classical_phenotype', 'headline_information']
                     tags.append(
-                        { 'name':  'other_primary',
-                          'dbentity_name': dbentity_name,
-                          'comment': None
-                    })
+                        {'name':  'other_primary',
+                         'dbentity_name': dbentity_name,
+                         'comment': None
+                         })
             else:
                 tags.append(
-                    { 'name':  name,
-                      'dbentity_name': dbentity_name,
-                      'comment': None
-                    })
-                
+                    {'name':  name,
+                     'dbentity_name': dbentity_name,
+                     'comment': None
+                     })
+
         ###################################################
         tag2dbentityNames = {}
         tag2comments = {}
@@ -2629,16 +2895,16 @@ class Referencedbentity(Dbentity):
                 comments.append(comment)
             tag2comments[tag] = comments
 
-        tag_list = []    
+        tag_list = []
         for tag in tag2dbentityNames:
             dbentity_names = tag2dbentityNames[tag]
             comments = tag2comments[tag]
             dbentity_str = SEPARATOR.join(dbentity_names)
             comment_str = "; ".join(comments)
             tag_list.append({
-                    'name': tag,
-                    'genes': dbentity_str,
-                    'comment': comment_str
+                'name': tag,
+                'genes': dbentity_str,
+                'comment': comment_str
             })
         return tag_list
 
@@ -2648,8 +2914,10 @@ class Referencedbentity(Dbentity):
             curator_session = get_curator_session(username)
             tags = validate_tags(tags)
             # delete old tags
-            curator_session.query(CurationReference).filter_by(reference_id=self.dbentity_id).delete(synchronize_session=False)
-            curator_session.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).delete(synchronize_session=False)
+            curator_session.query(CurationReference).filter_by(
+                reference_id=self.dbentity_id).delete(synchronize_session=False)
+            curator_session.query(Literatureannotation).filter_by(
+                reference_id=self.dbentity_id).delete(synchronize_session=False)
             transaction.commit()
             curator_session.flush()
             # track which loci have primary annotations for this reference to only have one primary per reference
@@ -2681,13 +2949,13 @@ class Referencedbentity(Dbentity):
                         if row:
                             gene_dbentity_id = row.dbentity_id
 
-                        ## check for complex ID
+                        # check for complex ID
                         if gene_dbentity_id is None:
                             row = curator_session.query(Dbentity).filter_by(format_name=upper_g_id, subclass='COMPLEX').one_or_none()
                             if row:
                                 gene_dbentity_id = row.dbentity_id
 
-                        ## check for pathway ID
+                        # check for pathway ID
                         if gene_dbentity_id is None:
                             row = curator_session.query(Pathwaydbentity).filter_by(biocyc_id=upper_g_id).one_or_none()
                             if row:
@@ -2705,13 +2973,15 @@ class Referencedbentity(Dbentity):
                         if gene_dbentity_id is None:
                             continue
                         tag_dbentity_ids.append(gene_dbentity_id)
-                        
-                        curation_ref = CurationReference.factory(self.dbentity_id, name, comment, gene_dbentity_id, username)
+
+                        curation_ref = CurationReference.factory(
+                            self.dbentity_id, name, comment, gene_dbentity_id, username)
                         if curation_ref:
                             curator_session.add(curation_ref)
-                            
+
                         # add primary lit annotation
-                        lit_annotation = Literatureannotation.factory(self.dbentity_id, name, gene_dbentity_id, username)
+                        lit_annotation = Literatureannotation.factory(
+                            self.dbentity_id, name, gene_dbentity_id, username)
                         if lit_annotation:
                             # only make a single primary tag
                             if lit_annotation.topic == 'Primary Literature':
@@ -2722,10 +2992,12 @@ class Referencedbentity(Dbentity):
                             curator_session.add(lit_annotation)
                 # add a tag with no gene
                 else:
-                    curation_ref = CurationReference.factory(self.dbentity_id, name, comment, None, username)
+                    curation_ref = CurationReference.factory(
+                        self.dbentity_id, name, comment, None, username)
                     if curation_ref:
                         curator_session.add(curation_ref)
-                    lit_annotation = Literatureannotation.factory(self.dbentity_id, name, None, username)
+                    lit_annotation = Literatureannotation.factory(
+                        self.dbentity_id, name, None, username)
                     if lit_annotation:
                         # only make a single omics tag
                         if lit_annotation.topic == 'Omics':
@@ -2740,7 +3012,7 @@ class Referencedbentity(Dbentity):
             traceback.print_exc()
             transaction.abort()
             curator_session.rollback()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.close()
@@ -2749,27 +3021,29 @@ class Referencedbentity(Dbentity):
         tags_obj = self.get_tags()
         try:
             curator_session = get_curator_session(username)
-            existing = curator_session.query(CuratorActivity).filter(CuratorActivity.dbentity_id == self.dbentity_id).one_or_none()
+            existing = curator_session.query(CuratorActivity).filter(
+                CuratorActivity.dbentity_id == self.dbentity_id).one_or_none()
             message = 'added'
             if existing:
                 curator_session.delete(existing)
                 message = 'updated'
             diplay_name = self.display_name + ' PMID: ' + str(self.pmid)
             new_curate_activity = CuratorActivity(
-                display_name = diplay_name,
-                obj_url = self.obj_url,
-                activity_category = 'reference',
-                dbentity_id = self.dbentity_id,
-                message = message,
-                json = json.dumps({ 'tags': tags_obj, 'modified_date':str(datetime.now())}),
-                created_by = username
+                display_name=diplay_name,
+                obj_url=self.obj_url,
+                activity_category='reference',
+                dbentity_id=self.dbentity_id,
+                message=message,
+                json=json.dumps(
+                    {'tags': tags_obj, 'modified_date': str(datetime.now())}),
+                created_by=username
             )
             curator_session.add(new_curate_activity)
             transaction.commit()
         except Exception as e:
             traceback.print_exc()
             transaction.abort()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.close()
@@ -2780,34 +3054,42 @@ class Referencedbentity(Dbentity):
         try:
             curator_session = get_curator_session(username)
             self = curator_session.merge(self)
-            ref_aliases = curator_session.query(ReferenceAlias).filter(ReferenceAlias.reference_id == self.dbentity_id)
+            ref_aliases = curator_session.query(ReferenceAlias).filter(
+                ReferenceAlias.reference_id == self.dbentity_id)
             ref_aliases.delete(synchronize_session=False)
-            ref_authors = curator_session.query(Referenceauthor).filter(Referenceauthor.reference_id == self.dbentity_id)
+            ref_authors = curator_session.query(Referenceauthor).filter(
+                Referenceauthor.reference_id == self.dbentity_id)
             ref_authors.delete(synchronize_session=False)
-            ref_docs = curator_session.query(Referencedocument).filter(Referencedocument.reference_id == self.dbentity_id)
+            ref_docs = curator_session.query(Referencedocument).filter(
+                Referencedocument.reference_id == self.dbentity_id)
             ref_docs.delete(synchronize_session=False)
-            ref_types = curator_session.query(Referencetype).filter(Referencetype.reference_id == self.dbentity_id)
+            ref_types = curator_session.query(Referencetype).filter(
+                Referencetype.reference_id == self.dbentity_id)
             ref_types.delete(synchronize_session=False)
-            ref_urls = curator_session.query(ReferenceUrl).filter(ReferenceUrl.reference_id == self.dbentity_id)
+            ref_urls = curator_session.query(ReferenceUrl).filter(
+                ReferenceUrl.reference_id == self.dbentity_id)
             ref_urls.delete(synchronize_session=False)
-            ref_unlinks = curator_session.query(Referenceunlink).filter(Referenceunlink.reference_id == self.dbentity_id)
+            ref_unlinks = curator_session.query(Referenceunlink).filter(
+                Referenceunlink.reference_id == self.dbentity_id)
             ref_unlinks.delete(synchronize_session=False)
-            locus_refs = curator_session.query(LocusReferences).filter(LocusReferences.reference_id == self.dbentity_id)
+            locus_refs = curator_session.query(LocusReferences).filter(
+                LocusReferences.reference_id == self.dbentity_id)
             locus_refs.delete(synchronize_session=False)
-            ref_files = curator_session.query(ReferenceFile).filter(ReferenceFile.reference_id == self.dbentity_id)
+            ref_files = curator_session.query(ReferenceFile).filter(
+                ReferenceFile.reference_id == self.dbentity_id)
             ref_files.delete(synchronize_session=False)
-            curate_act = curator_session.query(CuratorActivity).filter(CuratorActivity.dbentity_id == self.dbentity_id)
+            curate_act = curator_session.query(CuratorActivity).filter(
+                CuratorActivity.dbentity_id == self.dbentity_id)
             curate_act.delete(synchronize_session=False)
             curator_session.delete(self)
             transaction.commit()
         except Exception as e:
             traceback.print_exc()
             transaction.abort()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.close()
-
 
     def get_all_annotations(self, username):
 
@@ -2815,10 +3097,11 @@ class Referencedbentity(Dbentity):
         annotation_list = dict()
 
         self.returnValue = {
-            "annotations":[],
-            "not_annotations":[]
+            "annotations": [],
+            "not_annotations": []
         }
-        def helper(key,items):
+
+        def helper(key, items):
             val = None
 
             try:
@@ -2843,89 +3126,104 @@ class Referencedbentity(Dbentity):
                     obj[key] = values
                     self.returnValue['annotations'].append(obj)
 
-
             except Exception as ex:
                 log.exception(ex)
 
-        def get_count(table_name,key):
-            count = curator_session.query(table_name).filter_by(reference_id=self.dbentity_id).count()
-            if count >0 :
+        def get_count(table_name, key):
+            count = curator_session.query(table_name).filter_by(
+                reference_id=self.dbentity_id).count()
+            if count > 0:
                 self.returnValue['not_annotations'].append({key: count})
 
         try:
             curator_session = get_curator_session(username)
 
-            binding_motif = curator_session.query(Bindingmotifannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Bindingmotifannotation",binding_motif)
+            binding_motif = curator_session.query(Bindingmotifannotation).filter_by(
+                reference_id=self.dbentity_id).all()
+            helper("Bindingmotifannotation", binding_motif)
 
-            literature_annot = curator_session.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Literatureannotation",literature_annot)
+            literature_annot = curator_session.query(
+                Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Literatureannotation", literature_annot)
 
-            disease_annot = curator_session.query(Diseaseannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Diseaseannotation",disease_annot)
+            disease_annot = curator_session.query(Diseaseannotation).filter_by(
+                reference_id=self.dbentity_id).all()
+            helper("Diseaseannotation", disease_annot)
 
-            disease_subset_annot = curator_session.query(Diseasesubsetannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Diseasesubsetannotation",disease_subset_annot)
+            disease_subset_annot = curator_session.query(
+                Diseasesubsetannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Diseasesubsetannotation", disease_subset_annot)
 
-            dnaseq_annot = curator_session.query(Dnasequenceannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Dnasequenceannotation",dnaseq_annot)
+            dnaseq_annot = curator_session.query(Dnasequenceannotation).filter_by(
+                reference_id=self.dbentity_id).all()
+            helper("Dnasequenceannotation", dnaseq_annot)
 
-            enzyme_annot = curator_session.query(Enzymeannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Enzymeannotation",enzyme_annot)
+            enzyme_annot = curator_session.query(Enzymeannotation).filter_by(
+                reference_id=self.dbentity_id).all()
+            helper("Enzymeannotation", enzyme_annot)
 
-            expression_annot = curator_session.query(Expressionannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Expressionannotation",expression_annot)
+            expression_annot = curator_session.query(
+                Expressionannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Expressionannotation", expression_annot)
 
-            goslim_annot = curator_session.query(Goslimannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Goslimannotation",goslim_annot)
+            goslim_annot = curator_session.query(Goslimannotation).filter_by(
+                reference_id=self.dbentity_id).all()
+            helper("Goslimannotation", goslim_annot)
 
-            pathway_annot = curator_session.query(Pathwayannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Pathwayannotation",pathway_annot)
+            pathway_annot = curator_session.query(Pathwayannotation).filter_by(
+                reference_id=self.dbentity_id).all()
+            helper("Pathwayannotation", pathway_annot)
 
-            phenotype_annot = curator_session.query(Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Phenotypeannotation",phenotype_annot)
+            phenotype_annot = curator_session.query(
+                Phenotypeannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Phenotypeannotation", phenotype_annot)
 
-            posttranslation_annot = curator_session.query(Posttranslationannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Posttranslationannotation",posttranslation_annot)
+            posttranslation_annot = curator_session.query(
+                Posttranslationannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Posttranslationannotation", posttranslation_annot)
 
-            proteindomain_annot = curator_session.query(Proteindomainannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Proteindomainannotation",proteindomain_annot)
+            proteindomain_annot = curator_session.query(
+                Proteindomainannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Proteindomainannotation", proteindomain_annot)
 
-            proteinexpt_annot = curator_session.query(Proteinexptannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Proteinexptannotation",proteinexpt_annot)
+            proteinexpt_annot = curator_session.query(
+                Proteinexptannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Proteinexptannotation", proteinexpt_annot)
 
-            proteinseq_annot = curator_session.query(Proteinsequenceannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Proteinsequenceannotation",proteinseq_annot)
+            proteinseq_annot = curator_session.query(
+                Proteinsequenceannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Proteinsequenceannotation", proteinseq_annot)
 
-            regulation_annot = curator_session.query(Regulationannotation).filter_by(reference_id=self.dbentity_id).all()
-            helper("Regulationannotation",regulation_annot)
+            regulation_annot = curator_session.query(
+                Regulationannotation).filter_by(reference_id=self.dbentity_id).all()
+            helper("Regulationannotation", regulation_annot)
 
             # Table that are not annotations.
             # author_response = curator_session.query(Authorresponse).filter_by(reference_id=self.dbentity_id)
             # contignote_ref = curator_session.query(Contignoteannotation).filter_by(reference_id=self.dbentity_id).all()
 
-            get_count(Geninteractionannotation,"Geninteractionannotation")
-            get_count(Goannotation,"Goannotation")
-            get_count(Physinteractionannotation,"Physinteractionannotation")
-            get_count(ColleagueReference,"ColleagueReference")
+            get_count(Geninteractionannotation, "Geninteractionannotation")
+            get_count(Goannotation, "Goannotation")
+            get_count(Physinteractionannotation, "Physinteractionannotation")
+            get_count(ColleagueReference, "ColleagueReference")
 
-            get_count(CurationReference,"CurationReference")
-            get_count(DatasetReference,"DatasetReference")
-            get_count(LocusReferences,"LocusReferences")
-            get_count(LocusAliasReferences,"LocusAliasReferences")
-            get_count(LocusnoteReference,"LocusnoteReference")
-            get_count(LocusRelationReference,"LocusRelationReference")
-            get_count(LocussummaryReference,"LocussummaryReference")
-            get_count(PathwaysummaryReference,"PathwaysummaryReference")
-            get_count(Reservedname,"Reservedname")
-            get_count(StrainsummaryReference,"StrainsummaryReference")
-            get_count(ReferenceAlias,"ReferenceAlias")
-            get_count(ReferenceUrl,"ReferenceUrl")
-            get_count(Referenceauthor,"Referenceauthor")
-            get_count(Referencedocument,"Referencedocument")
-            get_count(Referencetype,"Referencetype")
-            get_count(Referenceunlink,"Referenceunlink")
-            get_count(ReferenceFile,"ReferenceFile")
+            get_count(CurationReference, "CurationReference")
+            get_count(DatasetReference, "DatasetReference")
+            get_count(LocusReferences, "LocusReferences")
+            get_count(LocusAliasReferences, "LocusAliasReferences")
+            get_count(LocusnoteReference, "LocusnoteReference")
+            get_count(LocusRelationReference, "LocusRelationReference")
+            get_count(LocussummaryReference, "LocussummaryReference")
+            get_count(PathwaysummaryReference, "PathwaysummaryReference")
+            get_count(Reservedname, "Reservedname")
+            get_count(StrainsummaryReference, "StrainsummaryReference")
+            get_count(ReferenceAlias, "ReferenceAlias")
+            get_count(ReferenceUrl, "ReferenceUrl")
+            get_count(Referenceauthor, "Referenceauthor")
+            get_count(Referencedocument, "Referencedocument")
+            get_count(Referencetype, "Referencetype")
+            get_count(Referenceunlink, "Referenceunlink")
+            get_count(ReferenceFile, "ReferenceFile")
 
             return self.returnValue
 
@@ -2933,31 +3231,41 @@ class Referencedbentity(Dbentity):
             traceback.print_exc()
             transaction.abort()
             curator_session.rollback()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
-                curator_session.close()            
+                curator_session.close()
+
 
 class FilePath(Base):
     __tablename__ = 'file_path'
     __table_args__ = {'schema': 'nex'}
 
-    file_path_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    path_id = Column(ForeignKey('nex.path.path_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    file_path_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), nullable=False, index=True)
+    path_id = Column(ForeignKey('nex.path.path_id',
+                     ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     source = relationship('Source')
 
+
 class Path(Base):
     __tablename__ = 'path'
-    __table_args__ = (UniqueConstraint('path_id', 'path'),{'schema': 'nex'})
-    path_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    __table_args__ = (UniqueConstraint('path_id', 'path'), {'schema': 'nex'})
+    path_id = Column(BigInteger, primary_key=True,
+                     server_default=text("nextval('nex.url_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     path = Column(String(500), nullable=False)
     description = Column(String(1000), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -3021,9 +3329,10 @@ class Filedbentity(Dbentity):
         if self.s3_url:
             mod_s3_url = re.sub(
                 r'\?.+', '', self.s3_url).replace(':433', '').strip()
-        
+
         if self.readme_file:
-            readme_s3 = re.sub(r'\?.+', '', self.readme_file.s3_url).replace(':433', '').strip()
+            readme_s3 = re.sub(
+                r'\?.+', '', self.readme_file.s3_url).replace(':433', '').strip()
 
         obj = {
             "id":
@@ -3055,15 +3364,16 @@ class Filedbentity(Dbentity):
         }
         return obj
 
-
     def to_simple_dict(self):
         readme_s3 = None
         s3_url = ''
-        
+
         if self.s3_url:
-            s3_url = re.sub(r'\?.+', '', self.s3_url).replace(':433', '').strip()
+            s3_url = re.sub(
+                r'\?.+', '', self.s3_url).replace(':433', '').strip()
         if self.readme_file:
-            readme_s3 = re.sub(r'\?.+', '', self.readme_file.s3_url).replace(':433', '').strip()
+            readme_s3 = re.sub(
+                r'\?.+', '', self.readme_file.s3_url).replace(':433', '').strip()
 
         obj = {
             "id":
@@ -3091,7 +3401,6 @@ class Filedbentity(Dbentity):
 
     def upload_file_to_s3(self, file, filename, is_web_file=False, file_path=None, flag=True):
 
-
         try:
             s3_path = self.sgdid + '/' + filename
             s3_url = upload_one_file_to_s3(file, s3_path)
@@ -3100,9 +3409,7 @@ class Filedbentity(Dbentity):
             logging.error(e, exc_info=True)
         return
 
-
-    
-        ## we can get rid of the following code when everything is working good  
+        # we can get rid of the following code when everything is working good
 
         try:
             # get s3_url and upload
@@ -3129,12 +3436,13 @@ class Filedbentity(Dbentity):
                 file_size = file.tell()
                 file.seek(0)
                 self.file_size = file_size
-                self.s3_url = re.sub(r'\?.+', '', mod_s3_url).replace(':433', '').strip()
-                #TODO: Remove this after optimization of querries
+                self.s3_url = re.sub(
+                    r'\?.+', '', mod_s3_url).replace(':433', '').strip()
+                # TODO: Remove this after optimization of querries
                 if flag:
                     # multiplte commits are fluching pending transactions
                     transaction.commit()
-    
+
             else:
                 conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
                 bucket = conn.get_bucket(S3_BUCKET)
@@ -3147,7 +3455,7 @@ class Filedbentity(Dbentity):
                 k.set_contents_from_file(file_bytes, rewind=True)
                 k.make_public()
                 file_s3 = bucket.get_key(k.key)
-        
+
                 # get local md5sum https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
                 hash_md5 = hashlib.md5()
                 local_md5 = get_checksum(file)
@@ -3173,7 +3481,6 @@ class Filedbentity(Dbentity):
                 return False
         except Exception as e:
             logging.error(e, exc_info=True)
-            
 
     def get_path(self):
         path_res = DBSession.query(FilePath, Path).filter(
@@ -3239,7 +3546,8 @@ class Locusdbentity(Dbentity):
     __table_args__ = {'schema': 'nex'}
     __url_segment__ = '/locus/'
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
     systematic_name = Column(String(40), nullable=False, unique=True)
     gene_name = Column(String(20))
     qualifier = Column(String(40))
@@ -3269,8 +3577,34 @@ class Locusdbentity(Dbentity):
             Dnasequenceannotation).filter(
                 Dnasequenceannotation.taxonomy_id == TAXON_ID,
                 Dnasequenceannotation.dna_type == 'GENOMIC').all()
-        comp = [x.dbentity_id for x in all_dbentity_ids if x.dbentity.dbentity_status == 'Active' ]
-        locus_data = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(comp),Locusdbentity.not_in_s288c == False).all()
+        comp = [
+            x.dbentity_id for x in all_dbentity_ids if x.dbentity.dbentity_status == 'Active']
+        locus_data = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_id.in_(comp), Locusdbentity.not_in_s288c == False).all()
+        return locus_data
+
+    @classmethod
+    def get_active_genes(Locusdbentity):
+        # get all dbentity_ids from dnasequenceannotation model
+        all_dbentity_ids = DBSession.query(
+            Dnasequenceannotation).filter(Dnasequenceannotation.dna_type == 'GENOMIC').all()
+        comp = [
+            x.dbentity_id for x in all_dbentity_ids if x.dbentity.dbentity_status == 'Active']
+        locus_data = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_id.in_(comp)).all()
+
+        return locus_data
+
+    @classmethod
+    def get_not_in_s288c_genes(Locusdbentity):
+        # get all locus dbentites, filter for active ones
+        all_dbentity_ids = DBSession.query(
+            Dbentity).filter(Dbentity.subclass == 'LOCUS').all()
+        comp = [
+            x.dbentity_id for x in all_dbentity_ids if x.dbentity_status == 'Active']
+        locus_data = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_id.in_(comp), Locusdbentity.not_in_s288c == True).all()
+
         return locus_data
 
     # returns true of 3 letters and a number
@@ -3295,7 +3629,8 @@ class Locusdbentity(Dbentity):
         })
     
         try:
-            req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
+            req = Request(url=os.environ['BATTER_URI'],
+                          data=data.encode('utf-8'))
             res = urlopen(req)
             response_json = json.loads(res.read().decode('utf-8'))
         except:
@@ -3314,21 +3649,25 @@ class Locusdbentity(Dbentity):
             })
         return obj
 
-
     def regulation_details(self):
-        annotations = DBSession.query(Regulationannotation).filter(or_(Regulationannotation.target_id==self.dbentity_id, Regulationannotation.regulator_id==self.dbentity_id)).all()
+        annotations = DBSession.query(Regulationannotation).filter(or_(
+            Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).all()
         return [a.to_dict() for a in annotations]
 
     def binding_site_details(self):
-        motifs = DBSession.query(Bindingmotifannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        motifs = DBSession.query(Bindingmotifannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
 
         return [m.to_dict() for m in motifs]
 
     def protein_domain_graph(self):
-        main_gene_proteindomain_annotations = DBSession.query(Proteindomainannotation).filter_by(dbentity_id=self.dbentity_id).all()
-        main_gene_proteindomain_ids = [a.proteindomain_id for a in main_gene_proteindomain_annotations]
+        main_gene_proteindomain_annotations = DBSession.query(
+            Proteindomainannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        main_gene_proteindomain_ids = [
+            a.proteindomain_id for a in main_gene_proteindomain_annotations]
 
-        genes_sharing_proteindomain = DBSession.query(Proteindomainannotation).filter((Proteindomainannotation.proteindomain_id.in_(main_gene_proteindomain_ids)) & (Proteindomainannotation.dbentity_id != self.dbentity_id)).all()
+        genes_sharing_proteindomain = DBSession.query(Proteindomainannotation).filter((Proteindomainannotation.proteindomain_id.in_(
+            main_gene_proteindomain_ids)) & (Proteindomainannotation.dbentity_id != self.dbentity_id)).all()
         genes_to_proteindomain = {}
         for annotation in genes_sharing_proteindomain:
             gene = annotation.dbentity_id
@@ -3338,7 +3677,8 @@ class Locusdbentity(Dbentity):
             else:
                 genes_to_proteindomain[gene] = set([proteindomain])
 
-        list_genes_to_proteindomain = sorted([(g, genes_to_proteindomain[g]) for g in genes_to_proteindomain], key=lambda x: len(x[1]), reverse=True)
+        list_genes_to_proteindomain = sorted(
+            [(g, genes_to_proteindomain[g]) for g in genes_to_proteindomain], key=lambda x: len(x[1]), reverse=True)
 
         edges = []
         nodes = {}
@@ -3374,7 +3714,8 @@ class Locusdbentity(Dbentity):
                 }
 
             for proteindomain_id in proteindomain_ids:
-                proteindomain = DBSession.query(Proteindomain).filter_by(proteindomain_id=proteindomain_id).one_or_none()
+                proteindomain = DBSession.query(Proteindomain).filter_by(
+                    proteindomain_id=proteindomain_id).one_or_none()
 
                 if proteindomain.format_name not in nodes:
                     nodes[proteindomain.format_name] = {
@@ -3394,7 +3735,8 @@ class Locusdbentity(Dbentity):
                             "target": dbentity[1]
                         }
                     })
-                    edges_added.add(proteindomain.format_name + " " + dbentity[1])
+                    edges_added.add(
+                        proteindomain.format_name + " " + dbentity[1])
 
                 if (proteindomain.format_name + " " + self.format_name) not in edges_added:
                     edges.append({
@@ -3403,7 +3745,8 @@ class Locusdbentity(Dbentity):
                             "target": self.format_name
                         }
                     })
-                    edges_added.add(proteindomain.format_name + " " + self.format_name)
+                    edges_added.add(proteindomain.format_name +
+                                    " " + self.format_name)
 
             i += 1
 
@@ -3412,18 +3755,20 @@ class Locusdbentity(Dbentity):
             "edges": edges
         }
 
-
     def protein_domain_details(self):
         taxonomy_id = self.get_main_strain('taxonomy_id')
-        annotations = DBSession.query(Proteindomainannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).all()
+        annotations = DBSession.query(Proteindomainannotation).filter_by(
+            dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).all()
 
         return [a.to_dict(locus=self) for a in annotations]
 
     def protein_experiment_details(self):
-        annotations = DBSession.query(Proteinexptannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        annotations = DBSession.query(Proteinexptannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
 
         reference_ids = [a.reference_id for a in annotations]
-        references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).all()
+        references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(reference_ids)).all()
 
         ids_to_references = {}
         for r in references:
@@ -3432,22 +3777,26 @@ class Locusdbentity(Dbentity):
         return [a.to_dict(locus=self, references=ids_to_references) for a in annotations]
 
     def protein_abundance_details(self):
-        annotations = DBSession.query(Proteinabundanceannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        annotations = DBSession.query(Proteinabundanceannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         new_reference_ids = [a.reference_id for a in annotations]
         orig_reference_ids = [a.original_reference_id for a in annotations]
         reference_ids = list(set(new_reference_ids + orig_reference_ids))
-        references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).all()
+        references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(reference_ids)).all()
 
         ids_to_references = {}
         for r in references:
             ids_to_references[r.dbentity_id] = r
-        
+
         # return [a.to_dict(locus=self, references=ids_to_references) for a in annotations]
-        data = [a.to_dict(locus=self, references=ids_to_references) for a in annotations] 
+        data = [a.to_dict(locus=self, references=ids_to_references)
+                for a in annotations]
         return sorted(data, key=lambda d: d['order_by'])
 
     def ecnumber_details(self):
-        aliases = DBSession.query(LocusAlias).filter(LocusAlias.locus_id == self.dbentity_id, LocusAlias.alias_type == "EC number").all()
+        aliases = DBSession.query(LocusAlias).filter(
+            LocusAlias.locus_id == self.dbentity_id, LocusAlias.alias_type == "EC number").all()
 
         obj = []
         for alias in aliases:
@@ -3463,15 +3812,18 @@ class Locusdbentity(Dbentity):
 
         interactors = DBSession.query(Interactor).filter_by(locus_id = self.dbentity_id).all()   
         if len(interactors) == 0:
-            rna_ids = DBSession.query(LocusAlias).filter_by(alias_type='RNAcentral ID', locus_id=self.dbentity_id).all()
+            rna_ids = DBSession.query(LocusAlias).filter_by(
+                alias_type='RNAcentral ID', locus_id=self.dbentity_id).all()
             if len(rna_ids) == 0:
                 return []
-            interactors = DBSession.query(Interactor).filter_by(format_name = rna_ids[0].display_name).all()
+            interactors = DBSession.query(Interactor).filter_by(
+                format_name=rna_ids[0].display_name).all()
             if len(interactors) == 0:
                 return []
 
         interactor = interactors[0]
-        complexes = DBSession.query(Complexbindingannotation).filter_by(interactor_id = interactor.interactor_id).all()
+        complexes = DBSession.query(Complexbindingannotation).filter_by(
+            interactor_id=interactor.interactor_id).all()
         data = []
         found = {}
         for x in complexes:
@@ -3479,17 +3831,19 @@ class Locusdbentity(Dbentity):
             if complex.format_name in found:
                 continue
             found[complex.format_name] = 1
-            data.append({ "format_name": complex.format_name,
-                          "display_name": complex.display_name })
+            data.append({"format_name": complex.format_name,
+                         "display_name": complex.display_name})
         data = sorted(data, key=lambda c: c['display_name'])
         return data
     
 
     def posttranslational_details(self):
-        annotations = DBSession.query(Posttranslationannotation).filter_by(dbentity_id=self.dbentity_id).order_by(Posttranslationannotation.site_index).all()
+        annotations = DBSession.query(Posttranslationannotation).filter_by(
+            dbentity_id=self.dbentity_id).order_by(Posttranslationannotation.site_index).all()
 
         reference_ids = [a.reference_id for a in annotations]
-        references = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(reference_ids)).all()
+        references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(reference_ids)).all()
 
         ids_to_references = {}
         for r in references:
@@ -3499,7 +3853,8 @@ class Locusdbentity(Dbentity):
 
     def sequence_details(self):
         taxonomy_id = self.get_main_strain('taxonomy_id')
-        dnas = DBSession.query(Dnasequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        dnas = DBSession.query(Dnasequenceannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
 
         obj = {
             "genomic_dna": [],
@@ -3512,7 +3867,7 @@ class Locusdbentity(Dbentity):
         main_strain_coding = None
         main_strain_1KB = None
         main_strain_protein = None
-        
+
         for dna in dnas:
             dna_dict = dna.to_dict()
 
@@ -3540,7 +3895,8 @@ class Locusdbentity(Dbentity):
         if main_strain_1KB is not None:
             obj["1kb"].insert(0, main_strain_1KB)
 
-        protein_dnas = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        protein_dnas = DBSession.query(Proteinsequenceannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         for protein_dna in protein_dnas:
             protein_dna_dict = protein_dna.to_dict(locus=self)
             if protein_dna_dict:
@@ -3551,7 +3907,7 @@ class Locusdbentity(Dbentity):
 
         if main_strain_protein is not None:
             obj["protein"].insert(0, main_strain_protein)
-            
+
         return obj
 
     def neighbor_sequence_details(self):
@@ -3575,7 +3931,7 @@ class Locusdbentity(Dbentity):
         for dna in dnas:
             strain = Straindbentity.get_strains_by_taxon_id(dna.taxonomy_id)
             so_id = get_transcript_so_id()
-            
+
             if len(strain) < 1:
                 continue
 
@@ -3586,7 +3942,8 @@ class Locusdbentity(Dbentity):
             start = max(1, midpoint - 5000)
             end = min(len(dna.contig.residues), start + 10000)
 
-            neighbors = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.dna_type == 'GENOMIC', Dnasequenceannotation.so_id != so_id, Dnasequenceannotation.contig_id == dna.contig_id, Dnasequenceannotation.end_index >= start, Dnasequenceannotation.start_index <= end, ~Dnasequenceannotation.dbentity_id.in_(inactive_loci))).all()
+            neighbors = DBSession.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.dna_type == 'GENOMIC', Dnasequenceannotation.so_id != so_id, Dnasequenceannotation.contig_id ==
+                                                                           dna.contig_id, Dnasequenceannotation.end_index >= start, Dnasequenceannotation.start_index <= end, ~Dnasequenceannotation.dbentity_id.in_(inactive_loci))).all()
 
             for neighbor in neighbors:
                 locus_ids.add(neighbor.dbentity_id)
@@ -3595,14 +3952,16 @@ class Locusdbentity(Dbentity):
             neighbors_list[(dna.annotation_id, dna.taxonomy_id)] = neighbors
 
         # Caching the queries to fetch Locus and Dnasubsequences
-        loci_list = DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(locus_ids)).all()
+        loci_list = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_id.in_(locus_ids)).all()
 
         loci = {}
         for locus in loci_list:
             loci[locus.dbentity_id] = locus
 
         dnasubsequences = {}
-        tags_list = DBSession.query(Dnasubsequence).filter(Dnasubsequence.annotation_id.in_(neighbors_annotation_ids)).all()
+        tags_list = DBSession.query(Dnasubsequence).filter(
+            Dnasubsequence.annotation_id.in_(neighbors_annotation_ids)).all()
         for tag in tags_list:
             if tag.annotation_id in dnasubsequences:
                 dnasubsequences[tag.annotation_id].append(tag)
@@ -3729,7 +4088,8 @@ class Locusdbentity(Dbentity):
         }
 
     def expression_to_dict(self):
-        expression_annotations = DBSession.query(Expressionannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        expression_annotations = DBSession.query(
+            Expressionannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
         dataset_expression_values = {}
 
@@ -3768,7 +4128,8 @@ class Locusdbentity(Dbentity):
             else:
                 dataset_expression_values[dataset.dataset_id] = set([rounded])
 
-        datasets = DBSession.query(Dataset).filter(Dataset.dataset_id.in_(list(dataset_ids))).all()
+        datasets = DBSession.query(Dataset).filter(
+            Dataset.dataset_id.in_(list(dataset_ids))).all()
 
         obj = {
             "min_value": min_expression_value,
@@ -3778,16 +4139,20 @@ class Locusdbentity(Dbentity):
         }
 
         for dataset in datasets:
-            dataset_dict = dataset.to_dict(DBSession.query(Referencedbentity).filter_by(dbentity_id=reference_ids[dataset.dataset_id]).one_or_none())
-            dataset_dict["hist_values"] = sorted(dataset_expression_values[dataset.dataset_id])
+            dataset_dict = dataset.to_dict(DBSession.query(Referencedbentity).filter_by(
+                dbentity_id=reference_ids[dataset.dataset_id]).one_or_none())
+            dataset_dict["hist_values"] = sorted(
+                dataset_expression_values[dataset.dataset_id])
             obj["datasets"].append(dataset_dict)
 
         return obj
 
     def interactions_to_dict(self):
-        physical_interactions = DBSession.query(Physinteractionannotation).filter(or_(Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).all()
+        physical_interactions = DBSession.query(Physinteractionannotation).filter(or_(
+            Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).all()
 
-        genetic_interactions = DBSession.query(Geninteractionannotation).filter(or_(Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).all()
+        genetic_interactions = DBSession.query(Geninteractionannotation).filter(or_(
+            Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).all()
 
         obj = []
         for interaction in physical_interactions + genetic_interactions:
@@ -3796,7 +4161,8 @@ class Locusdbentity(Dbentity):
         return obj
 
     def go_to_dict(self):
-        go_annotations = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        go_annotations = DBSession.query(Goannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
 
         obj = []
 
@@ -3808,8 +4174,9 @@ class Locusdbentity(Dbentity):
         return obj
 
     def disease_to_dict(self):
-        
-        do_annotations = DBSession.query(Diseaseannotation).filter_by(dbentity_id=self.dbentity_id).all()
+
+        do_annotations = DBSession.query(Diseaseannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
 
         obj = []
         for do_annotation in do_annotations:
@@ -3817,8 +4184,8 @@ class Locusdbentity(Dbentity):
                 if annotation not in obj:
                     obj.append(annotation)
         # get human gene symbols from Alliance API
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
+        # human_gene_ids_to_symbols = {}
+        human_gene_ids_to_symbols = {'display name': 'TEST1'}
         for x in obj:
             try:
                 for y in x['properties']:
@@ -3830,7 +4197,8 @@ class Locusdbentity(Dbentity):
                         else:
                             url = ALLIANCE_API_BASE_URL + hgnc_id
                             if "symbol" in requests.request('GET', url).json():
-                                symbol = requests.request('GET', url).json()['symbol']                            
+                                symbol = requests.request(
+                                    'GET', url).json()['symbol']
                                 entry['display_name'] = symbol
                                 human_gene_ids_to_symbols[hgnc_id] = symbol
             except Exception as e:
@@ -3838,10 +4206,13 @@ class Locusdbentity(Dbentity):
         return obj
 
     def literature_graph(self):
-        main_gene_lit_annotations = DBSession.query(Literatureannotation).filter((Literatureannotation.dbentity_id==self.dbentity_id) & (Literatureannotation.topic == "Primary Literature")).all()
-        main_gene_reference_ids = [a.reference_id for a in main_gene_lit_annotations]
+        main_gene_lit_annotations = DBSession.query(Literatureannotation).filter(
+            (Literatureannotation.dbentity_id == self.dbentity_id) & (Literatureannotation.topic == "Primary Literature")).all()
+        main_gene_reference_ids = [
+            a.reference_id for a in main_gene_lit_annotations]
 
-        genes_sharing_references = DBSession.query(Literatureannotation).filter((Literatureannotation.reference_id.in_(main_gene_reference_ids)) & (Literatureannotation.dbentity_id != self.dbentity_id)).all()
+        genes_sharing_references = DBSession.query(Literatureannotation).filter((Literatureannotation.reference_id.in_(
+            main_gene_reference_ids)) & (Literatureannotation.dbentity_id != self.dbentity_id)).all()
         genes_to_references = {}
         for annotation in genes_sharing_references:
             gene = annotation.dbentity_id
@@ -3851,7 +4222,8 @@ class Locusdbentity(Dbentity):
             else:
                 genes_to_references[gene] = set([reference])
 
-        list_genes_to_references = sorted([(g, genes_to_references[g]) for g in genes_to_references], key=lambda x: len(x[1]), reverse=True)
+        list_genes_to_references = sorted(
+            [(g, genes_to_references[g]) for g in genes_to_references], key=lambda x: len(x[1]), reverse=True)
 
         edges = []
         nodes = {}
@@ -3873,7 +4245,8 @@ class Locusdbentity(Dbentity):
 
         i = 0
         while i < len(list_genes_to_references) and len(nodes) <= 20 and len(edges) <= 50:
-            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_references[i][0]).one_or_none()
+            dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(
+                dbentity_id=list_genes_to_references[i][0]).one_or_none()
             reference_ids = list_genes_to_references[i][1]
 
             if len(reference_ids) > max_cutoff:
@@ -3894,7 +4267,8 @@ class Locusdbentity(Dbentity):
                 }
 
             for reference_id in list(reference_ids)[:2]:
-                reference = DBSession.query(Referencedbentity).filter_by(dbentity_id=reference_id).one_or_none()
+                reference = DBSession.query(Referencedbentity).filter_by(
+                    dbentity_id=reference_id).one_or_none()
 
                 if reference.format_name not in nodes:
                     nodes[reference.format_name] = {
@@ -3923,7 +4297,8 @@ class Locusdbentity(Dbentity):
                             "target": self.format_name
                         }
                     })
-                    edges_added.add(reference.format_name + " " + self.format_name)
+                    edges_added.add(reference.format_name +
+                                    " " + self.format_name)
 
             i += 1
 
@@ -3984,9 +4359,12 @@ class Locusdbentity(Dbentity):
             if reference.dbentity_id in reviews_ids:
                 reviews.append(reference)
 
-        primary_lit = sorted(sorted(primary, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
-        additional_lit = sorted(sorted(additional, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
-        reviews_lit = sorted(sorted(reviews, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
+        primary_lit = sorted(sorted(
+            primary, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
+        additional_lit = sorted(sorted(
+            additional, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
+        reviews_lit = sorted(sorted(
+            reviews, key=lambda p: p.display_name), key=lambda p: p.year, reverse=True)
 
         for lit in primary_lit:
             obj["primary"].append(lit.to_dict_citation())
@@ -4082,12 +4460,12 @@ class Locusdbentity(Dbentity):
         # primary_ids = set(primary_ids)
 
         # valid_phenotype_ref_ids = []
-        #for phenotype_id_experiment in phenotype_ids:
+        # for phenotype_id_experiment in phenotype_ids:
         #    if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in apo_ids:
         #        valid_phenotype_ref_ids.append(phenotype_id_experiment[0])
 
-        #valid_phenotype_ref_ids_lsc = []
-        #for phenotype_id_experiment in phenotype_ids:
+        # valid_phenotype_ref_ids_lsc = []
+        # for phenotype_id_experiment in phenotype_ids:
         #    if (phenotype_id_experiment[0],) in primary_ids or phenotype_id_experiment[1] in  apo_ids_large_scale:
         #        valid_phenotype_ref_ids_lsc.append(phenotype_id_experiment[0])
         #####
@@ -4117,7 +4495,8 @@ class Locusdbentity(Dbentity):
             go_ids.append(x.reference_id)
             
         go_ids = set(go_ids) - set(Referencedbentity.get_go_blacklist_ids())
-        go_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(go_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
+        go_lit = DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(
+            go_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all()
 
         for lit in go_lit:
             obj["go"].append(lit.to_dict_citation())
@@ -4139,7 +4518,7 @@ class Locusdbentity(Dbentity):
             Referencedbentity.dbentity_id.in_(htp_ids)).order_by(
                 Referencedbentity.year.desc(),
                 Referencedbentity.display_name.asc()).all()
-        
+
         for lit in all_lit_htp:
             if lit.to_dict_citation() not in obj["htp"]:
                 obj["htp"].append(lit.to_dict_citation())
@@ -4147,10 +4526,12 @@ class Locusdbentity(Dbentity):
         return obj
 
     def go_graph(self):
-        main_gene_go_annotations = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        main_gene_go_annotations = DBSession.query(
+            Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
         main_gene_go_ids = [a.go_id for a in main_gene_go_annotations]
 
-        genes_sharing_go = DBSession.query(Goannotation).filter((Goannotation.go_id.in_(main_gene_go_ids)) & (Goannotation.dbentity_id != self.dbentity_id)).all()
+        genes_sharing_go = DBSession.query(Goannotation).filter((Goannotation.go_id.in_(
+            main_gene_go_ids)) & (Goannotation.dbentity_id != self.dbentity_id)).all()
         genes_to_go = {}
         for annotation in genes_sharing_go:
             gene = annotation.dbentity_id
@@ -4160,7 +4541,8 @@ class Locusdbentity(Dbentity):
             else:
                 genes_to_go[gene] = set([go])
 
-        list_genes_to_go = sorted([(g, genes_to_go[g]) for g in genes_to_go], key=lambda x: len(x[1]), reverse=True)
+        list_genes_to_go = sorted(
+            [(g, genes_to_go[g]) for g in genes_to_go], key=lambda x: len(x[1]), reverse=True)
 
         edges = []
         nodes = {}
@@ -4257,8 +4639,10 @@ class Locusdbentity(Dbentity):
         return get_go_cam_models([self.dbentity_id])
 
     def disease_graph(self):
-        main_gene_disease_annotations = DBSession.query(Diseaseannotation, Diseasesupportingevidence.dbxref_id, Diseasesupportingevidence.obj_url).join(Diseasesupportingevidence).filter(Diseaseannotation.dbentity_id==self.dbentity_id).all()
-        main_gene_do_ids = [a[0].disease_id for a in main_gene_disease_annotations]
+        main_gene_disease_annotations = DBSession.query(Diseaseannotation, Diseasesupportingevidence.dbxref_id, Diseasesupportingevidence.obj_url).join(
+            Diseasesupportingevidence).filter(Diseaseannotation.dbentity_id == self.dbentity_id).all()
+        main_gene_do_ids = [
+            a[0].disease_id for a in main_gene_disease_annotations]
 
         genes_sharing_do_annotations = DBSession.query(Diseaseannotation, Diseasesupportingevidence.dbxref_id, Diseasesupportingevidence.obj_url).join(Diseasesupportingevidence).filter(
             (Diseaseannotation.disease_id.in_(main_gene_do_ids)) & (Diseaseannotation.dbentity_id != self.dbentity_id)).all()
@@ -4276,7 +4660,8 @@ class Locusdbentity(Dbentity):
             all_disease_ids.add(x[0].disease_id)
             all_human_gene_ids.add(x[1])
         # get names up front
-        gene_names = DBSession.query(Locusdbentity.dbentity_id, Locusdbentity.display_name, Locusdbentity.format_name, Locusdbentity.obj_url).filter(Locusdbentity.dbentity_id.in_(all_gene_ids)).all()
+        gene_names = DBSession.query(Locusdbentity.dbentity_id, Locusdbentity.display_name, Locusdbentity.format_name,
+                                     Locusdbentity.obj_url).filter(Locusdbentity.dbentity_id.in_(all_gene_ids)).all()
         gene_ids_to_names = {}
         human_gene_ids_to_names = {}
         gene_ids_to_format_names = {}
@@ -4285,7 +4670,8 @@ class Locusdbentity(Dbentity):
             gene_ids_to_names[x[0]] = x[1]
             gene_ids_to_format_names[x[0]] = x[2]
             gene_ids_to_urls[x[0]] = x[3]
-        disease_names = DBSession.query(Disease.disease_id, Disease.display_name, Disease.obj_url).filter(Disease.disease_id.in_(all_disease_ids)).all()
+        disease_names = DBSession.query(Disease.disease_id, Disease.display_name, Disease.obj_url).filter(
+            Disease.disease_id.in_(all_disease_ids)).all()
         disease_ids_to_names = {}
         disease_ids_to_urls = {}
         for x in disease_names:
@@ -4374,7 +4760,7 @@ class Locusdbentity(Dbentity):
                     "target": human_gene_id,
                 })
                 all_edge_slugs.append(edge_slug)
-            
+
             if human_gene_id not in all_node_ids:
                 nodes.append({
                     "name": human_gene_ids_to_names[human_gene_id],
@@ -4414,14 +4800,17 @@ class Locusdbentity(Dbentity):
     def interaction_graph_secondary_edges(self, Interaction, edge_type, nodes, edges):
         secondary_nodes = set(nodes.keys()) - set([self.dbentity_id])
 
-        interactions = DBSession.query(Interaction).filter(and_(Interaction.dbentity1_id.in_(secondary_nodes), Interaction.dbentity2_id.in_(secondary_nodes))).all()
+        interactions = DBSession.query(Interaction).filter(and_(Interaction.dbentity1_id.in_(
+            secondary_nodes), Interaction.dbentity2_id.in_(secondary_nodes))).all()
 
         edges_to_annotations = {}
         for annotation in interactions:
             if annotation.dbentity1_id < annotation.dbentity2_id:
-                add = str(annotation.dbentity1_id) + "_" + str(annotation.dbentity2_id)
+                add = str(annotation.dbentity1_id) + "_" + \
+                    str(annotation.dbentity2_id)
             else:
-                add = str(annotation.dbentity2_id) + "_" + str(annotation.dbentity1_id)
+                add = str(annotation.dbentity2_id) + "_" + \
+                    str(annotation.dbentity1_id)
 
             if add in edges_to_annotations:
                 edges_to_annotations[add].add(annotation)
@@ -4456,8 +4845,10 @@ class Locusdbentity(Dbentity):
             i += 1
 
     def interaction_graph(self):
-        phys_graph = self.interaction_graph_builder(Physinteractionannotation, "PHYSICAL")
-        gen_graph = self.interaction_graph_builder(Geninteractionannotation, "GENETIC")
+        phys_graph = self.interaction_graph_builder(
+            Physinteractionannotation, "PHYSICAL")
+        gen_graph = self.interaction_graph_builder(
+            Geninteractionannotation, "GENETIC")
 
         nodes = {}
 
@@ -4471,12 +4862,15 @@ class Locusdbentity(Dbentity):
                 nodes[node]["data"]["genetic"] = gen_graph["nodes"][node]["data"]["evidence"]
             else:
                 nodes[node]["data"]["genetic"] = gen_graph["nodes"][node]["data"]["evidence"]
-                nodes[node]["data"]["evidence"] = max(nodes[node]["data"]["genetic"], nodes[node]["data"]["physical"])
+                nodes[node]["data"]["evidence"] = max(
+                    nodes[node]["data"]["genetic"], nodes[node]["data"]["physical"])
 
         edges = phys_graph["edges"] + gen_graph["edges"]
 
-        self.interaction_graph_secondary_edges(Physinteractionannotation, "PHYSICAL", nodes, edges)
-        self.interaction_graph_secondary_edges(Geninteractionannotation, "GENETIC", nodes, edges)
+        self.interaction_graph_secondary_edges(
+            Physinteractionannotation, "PHYSICAL", nodes, edges)
+        self.interaction_graph_secondary_edges(
+            Geninteractionannotation, "GENETIC", nodes, edges)
 
         # limiting cutoffs by 10. The interface converts > 10 to '+10' to save space
 
@@ -4490,7 +4884,8 @@ class Locusdbentity(Dbentity):
         }
 
     def interaction_graph_builder(self, Interaction, edge_type):
-        main_gene_annotations = DBSession.query(Interaction).filter(or_(Interaction.dbentity1_id == self.dbentity_id, Interaction.dbentity2_id == self.dbentity_id)).all()
+        main_gene_annotations = DBSession.query(Interaction).filter(or_(
+            Interaction.dbentity1_id == self.dbentity_id, Interaction.dbentity2_id == self.dbentity_id)).all()
 
         genes_to_interactions = {}
         for annotation in main_gene_annotations:
@@ -4504,7 +4899,8 @@ class Locusdbentity(Dbentity):
             else:
                 genes_to_interactions[add] = set([annotation.annotation_id])
 
-        list_genes_to_interactions = sorted([(g, genes_to_interactions[g]) for g in genes_to_interactions], key=lambda x: len(x[1]), reverse=True)
+        list_genes_to_interactions = sorted(
+            [(g, genes_to_interactions[g]) for g in genes_to_interactions], key=lambda x: len(x[1]), reverse=True)
 
         nodes = {}
         edges = []
@@ -4525,7 +4921,8 @@ class Locusdbentity(Dbentity):
         min_cutoff = 99999999
         max_cutoff = 0
 
-        genes_cache_query = DBSession.query(Dbentity.dbentity_id, Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter(Dbentity.dbentity_id.in_(list(genes_to_interactions.keys()))).all()
+        genes_cache_query = DBSession.query(Dbentity.dbentity_id, Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter(
+            Dbentity.dbentity_id.in_(list(genes_to_interactions.keys()))).all()
         genes_cache = {}
         for gene in genes_cache_query:
             genes_cache[gene.dbentity_id] = gene
@@ -4577,7 +4974,8 @@ class Locusdbentity(Dbentity):
     def regulation_graph(self):
         MAX_NODES = 150
         # get annotations to and from gene, or among regulators/targets
-        direct_relations = DBSession.query(Regulationannotation.target_id, Regulationannotation.regulator_id).filter(or_(Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).all()
+        direct_relations = DBSession.query(Regulationannotation.target_id, Regulationannotation.regulator_id).filter(or_(
+            Regulationannotation.target_id == self.dbentity_id, Regulationannotation.regulator_id == self.dbentity_id)).all()
         target_ids = []
         regulator_ids = []
         for d in direct_relations:
@@ -4586,7 +4984,8 @@ class Locusdbentity(Dbentity):
         target_ids = list(set(target_ids))
         regulator_ids = list(set(regulator_ids))
         ids = list(set(target_ids + regulator_ids))
-        main_gene_annotations = DBSession.query(Regulationannotation).filter(and_(Regulationannotation.target_id.in_(ids), Regulationannotation.regulator_id.in_(ids))).all()
+        main_gene_annotations = DBSession.query(Regulationannotation).filter(and_(
+            Regulationannotation.target_id.in_(ids), Regulationannotation.regulator_id.in_(ids))).all()
         genes_to_regulations = {}
         # get unique relations and append annotations so key = {regulator_id}_{target_id}
         for d in main_gene_annotations:
@@ -4595,6 +4994,7 @@ class Locusdbentity(Dbentity):
                 genes_to_regulations[id_str].append(d)
             else:
                 genes_to_regulations[id_str] = [d]
+
         def sortfn(x):
             BOOST = 1.25
             score = len(genes_to_regulations[x])
@@ -4604,7 +5004,8 @@ class Locusdbentity(Dbentity):
                 score = score * BOOST
             return score
         all_keys = list(genes_to_regulations.keys())
-        sorted_ids_keys = sorted(all_keys, key=lambda x: sortfn(x), reverse=True)
+        sorted_ids_keys = sorted(
+            all_keys, key=lambda x: sortfn(x), reverse=True)
         sorted_ids_keys = sorted_ids_keys[:MAX_NODES]
         ids_from_keys = []
         for k in sorted_ids_keys:
@@ -4614,13 +5015,16 @@ class Locusdbentity(Dbentity):
         ids_from_keys = list(set(ids_from_keys))
         # format nodes
         nodes = []
-        all_gene_info = DBSession.query(Dbentity.dbentity_id, Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter(Dbentity.dbentity_id.in_(ids_from_keys)).all()
+        all_gene_info = DBSession.query(Dbentity.dbentity_id, Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter(
+            Dbentity.dbentity_id.in_(ids_from_keys)).all()
         # ensure self is first
+
         def self_sort_fn(x):
             if x[0] == self.dbentity_id:
                 return 1
             return -1
-        all_gene_info = sorted(all_gene_info, key=lambda x: self_sort_fn(x), reverse=True)
+        all_gene_info = sorted(
+            all_gene_info, key=lambda x: self_sort_fn(x), reverse=True)
         gene_ids_info = {}
         for d in all_gene_info:
             gene_ids_info[str(d[0])] = d
@@ -4667,7 +5071,8 @@ class Locusdbentity(Dbentity):
         }
 
     def expression_graph(self):
-        annotations = DBSession.query(Expressionannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        annotations = DBSession.query(Expressionannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
 
         datasetsample_to_exp_value = {}
         datasetsample_ids = []
@@ -4675,13 +5080,14 @@ class Locusdbentity(Dbentity):
             datasetsample_ids.append(a.datasetsample_id)
             datasetsample_to_exp_value[a.datasetsample_id] = a.normalized_expression_value
 
-        genes_in_same_datasetsamples = DBSession.query(Expressionannotation.dbentity_id, Expressionannotation.datasetsample_id, Expressionannotation.normalized_expression_value).filter(and_(Expressionannotation.datasetsample_id.in_(datasetsample_ids), Expressionannotation.dbentity_id != self.dbentity_id)).all()
-
+        genes_in_same_datasetsamples = DBSession.query(Expressionannotation.dbentity_id, Expressionannotation.datasetsample_id, Expressionannotation.normalized_expression_value).filter(
+            and_(Expressionannotation.datasetsample_id.in_(datasetsample_ids), Expressionannotation.dbentity_id != self.dbentity_id)).all()
 
         genes_data = []
 
         for g in genes_in_same_datasetsamples:
-            genes_data.append((g.dbentity_id, g.datasetsample_id, g.normalized_expression_value * datasetsample_to_exp_value[g.datasetsample_id]))
+            genes_data.append((g.dbentity_id, g.datasetsample_id,
+                              g.normalized_expression_value * datasetsample_to_exp_value[g.datasetsample_id]))
 
         list_genes = sorted(genes_data, key=lambda x: x[2], reverse=True)
 
@@ -4708,7 +5114,8 @@ class Locusdbentity(Dbentity):
             gene = list_genes[i][0]
 
             if gene not in nodes:
-                dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(dbentity_id=gene).one_or_none()
+                dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.obj_url).filter_by(
+                    dbentity_id=gene).one_or_none()
 
                 nodes[gene] = {
                     "data": {
@@ -4720,7 +5127,8 @@ class Locusdbentity(Dbentity):
                     }
                 }
 
-                score = list_genes[i][2] / list_genes[0][2] / 10, # normalizing
+                score = list_genes[i][2] / \
+                    list_genes[0][2] / 10,  # normalizing
 
                 max_coeff = max(max_coeff, score)
                 min_coeff = min(min_coeff, score)
@@ -4738,7 +5146,6 @@ class Locusdbentity(Dbentity):
 
             i += 1
 
-
         return {
             "min_coeff": min_coeff,
             "max_coeff": max_coeff,
@@ -4747,19 +5154,23 @@ class Locusdbentity(Dbentity):
         }
 
     def get_main_strain(self, type=None):
-        main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1", "SEY6210", "X2180-1A", "CEN.PK", "D273-10B", "JK9-3d", "FL100", "Y55", "RM11-1a"]
+        main_strain_list = ["S288C", "W303", "Sigma1278b", "SK1", "SEY6210",
+                            "X2180-1A", "CEN.PK", "D273-10B", "JK9-3d", "FL100", "Y55", "RM11-1a"]
         main_strain = None
         for strain in main_strain_list:
-            x = DBSession.query(Straindbentity).filter_by(display_name=strain, subclass='STRAIN').one_or_none()
-            y = DBSession.query(Dnasequenceannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all()
+            x = DBSession.query(Straindbentity).filter_by(
+                display_name=strain, subclass='STRAIN').one_or_none()
+            y = DBSession.query(Dnasequenceannotation).filter_by(
+                taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id, dna_type='GENOMIC').all()
             if len(y) == 0:
                 continue
-            if  main_strain is None:
+            if main_strain is None:
                 main_strain = strain
                 TAXON_ID = x.taxonomy_id
                 if main_strain == 'S288C':
                     break
-            z = DBSession.query(Proteindomainannotation).filter_by(taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id).all()
+            z = DBSession.query(Proteindomainannotation).filter_by(
+                taxonomy_id=x.taxonomy_id, dbentity_id=self.dbentity_id).all()
             if len(z) > 0:
                 main_strain = strain
                 TAXON_ID = x.taxonomy_id
@@ -4771,12 +5182,15 @@ class Locusdbentity(Dbentity):
             return TAXON_ID
         else:
             return [main_strain, TAXON_ID]
-            
-    def phenotype_graph(self):
-        main_gene_phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
-        main_gene_phenotype_ids = [a.phenotype_id for a in main_gene_phenotype_annotations]
 
-        genes_sharing_phenotypes = DBSession.query(Phenotypeannotation).filter((Phenotypeannotation.phenotype_id.in_(main_gene_phenotype_ids)) & (Phenotypeannotation.dbentity_id != self.dbentity_id)).all()
+    def phenotype_graph(self):
+        main_gene_phenotype_annotations = DBSession.query(
+            Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        main_gene_phenotype_ids = [
+            a.phenotype_id for a in main_gene_phenotype_annotations]
+
+        genes_sharing_phenotypes = DBSession.query(Phenotypeannotation).filter((Phenotypeannotation.phenotype_id.in_(
+            main_gene_phenotype_ids)) & (Phenotypeannotation.dbentity_id != self.dbentity_id)).all()
         genes_to_phenotypes = {}
         for annotation in genes_sharing_phenotypes:
             gene = annotation.dbentity_id
@@ -4786,7 +5200,8 @@ class Locusdbentity(Dbentity):
             else:
                 genes_to_phenotypes[gene] = set([phenotype])
 
-        list_genes_to_phenotypes = sorted([(g, genes_to_phenotypes[g]) for g in genes_to_phenotypes], key=lambda x: len(x[1]), reverse=True)
+        list_genes_to_phenotypes = sorted(
+            [(g, genes_to_phenotypes[g]) for g in genes_to_phenotypes], key=lambda x: len(x[1]), reverse=True)
 
         edges = []
         nodes = {}
@@ -4811,7 +5226,8 @@ class Locusdbentity(Dbentity):
         while i < len(list_genes_to_phenotypes) and len(nodes) <= 20 and len(edges) <= 50:
             dbentity = DBSession.query(Dbentity.display_name, Dbentity.format_name, Dbentity.dbentity_id, Dbentity.obj_url).filter_by(dbentity_id=list_genes_to_phenotypes[i][0]).one_or_none()
 
-            observable_ids = DBSession.query(distinct(Phenotype.observable_id)).filter(Phenotype.phenotype_id.in_(list_genes_to_phenotypes[i][1])).all()
+            observable_ids = DBSession.query(distinct(Phenotype.observable_id)).filter(
+                Phenotype.phenotype_id.in_(list_genes_to_phenotypes[i][1])).all()
 
             if len(observable_ids) > max_cutoff:
                 max_cutoff = len(observable_ids)
@@ -4861,7 +5277,8 @@ class Locusdbentity(Dbentity):
                             "target": self.format_name
                         }
                     })
-                    edges_added.add(observable.format_name + " " + self.format_name)
+                    edges_added.add(observable.format_name +
+                                    " " + self.format_name)
 
             i += 1
 
@@ -4878,9 +5295,11 @@ class Locusdbentity(Dbentity):
         }
 
     def phenotype_to_dict(self):
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        phenotype_annotations = DBSession.query(
+            Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
-        conditions = DBSession.query(PhenotypeannotationCond).filter(PhenotypeannotationCond.annotation_id.in_([p.annotation_id for p in phenotype_annotations])).all()
+        conditions = DBSession.query(PhenotypeannotationCond).filter(
+            PhenotypeannotationCond.annotation_id.in_([p.annotation_id for p in phenotype_annotations])).all()
         temp_lst = list(set([c.condition_name for c in conditions]))
         condition_names = clear_list_empty_values(temp_lst)
 
@@ -4891,7 +5310,8 @@ class Locusdbentity(Dbentity):
             else:
                 conditions_dict[condition.annotation_id] = [condition]
         if len(condition_names) > 0:
-            urls = DBSession.query(Chebi.display_name, Chebi.obj_url).filter(Chebi.display_name.in_(condition_names)).all()
+            urls = DBSession.query(Chebi.display_name, Chebi.obj_url).filter(
+                Chebi.display_name.in_(condition_names)).all()
         else:
             urls = []
         chebi_urls = {}
@@ -4900,7 +5320,8 @@ class Locusdbentity(Dbentity):
 
         obj = []
         for annotation in phenotype_annotations:
-            obj += annotation.to_dict(locus=self, conditions=conditions_dict.get(annotation.annotation_id, []), chebi_urls=chebi_urls)
+            obj += annotation.to_dict(locus=self, conditions=conditions_dict.get(
+                annotation.annotation_id, []), chebi_urls=chebi_urls)
         return obj
 
     def to_dict_analyze(self):
@@ -4923,7 +5344,8 @@ class Locusdbentity(Dbentity):
         
         taxonomy_id = self.get_main_strain('taxonomy_id')
 
-        query = "SELECT display_name FROM nex.so where so_id IN (SELECT so_id FROM nex.dnasequenceannotation WHERE dbentity_id = " + str(self.dbentity_id) + " and taxonomy_id =" + str(taxonomy_id) + " GROUP BY so_id)"
+        query = "SELECT display_name FROM nex.so where so_id IN (SELECT so_id FROM nex.dnasequenceannotation WHERE dbentity_id = " + str(
+            self.dbentity_id) + " and taxonomy_id =" + str(taxonomy_id) + " GROUP BY so_id)"
 
         locus_type = []
         so_display_names = DBSession.execute(query)
@@ -4936,7 +5358,7 @@ class Locusdbentity(Dbentity):
         return obj
         
     def to_dict(self):
-        
+
         obj = {
             "id": self.dbentity_id,
             "display_name": self.display_name,
@@ -5031,7 +5453,8 @@ class Locusdbentity(Dbentity):
         if sequence_summary:
             obj["sequence_summary"] = sequence_summary.html
 
-        protein_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
+        protein_summary = DBSession.query(Locussummary).filter_by(
+            locus_id=self.dbentity_id, summary_type="Protein").one_or_none()
         if protein_summary:
             obj["protein_summary"] = protein_summary.html
 
@@ -5050,37 +5473,44 @@ class Locusdbentity(Dbentity):
             obj["uniprot_id"] = rows[0].display_name
 
         # summaries and paragraphs
-        summaries = DBSession.query(Locussummary.summary_id, Locussummary.html, Locussummary.date_created,Locussummary.summary_order,Locussummary.summary_type).filter_by(locus_id=self.dbentity_id).all()
+        summaries = DBSession.query(Locussummary.summary_id, Locussummary.html, Locussummary.date_created,
+                                    Locussummary.summary_order, Locussummary.summary_type).filter_by(locus_id=self.dbentity_id).all()
         summary_types = {}
         for s in summaries:
             if s[4] in summary_types:
                 summary_types[s[4]].append(s)
             else:
                 summary_types[s[4]] = [s]
-        summary_gene = sorted(summary_types.get("Gene", []), key=lambda s: s[3])
-        summary_regulation = sorted(summary_types.get("Regulation", []), key=lambda s: s[3])
-        obj["regulation_overview"] = self.regulation_overview_to_dict(summary_regulation)
+        summary_gene = sorted(summary_types.get(
+            "Gene", []), key=lambda s: s[3])
+        summary_regulation = sorted(summary_types.get(
+            "Regulation", []), key=lambda s: s[3])
+        obj["regulation_overview"] = self.regulation_overview_to_dict(
+            summary_regulation)
         if len(summary_gene) > 0:
             text = ""
             for s in summary_gene:
                 text += s[1]
-            modify_summary_gene = sorted(summary_gene,key=lambda s: s[2])
+            modify_summary_gene = sorted(summary_gene, key=lambda s: s[2])
             obj["paragraph"] = {
                 "text": text,
                 "date_edited": modify_summary_gene[-1][2].strftime("%Y-%m-%d")
             }
         else:
             obj["paragraph"] = None
-        references_obj = self.references_overview_to_dict([s[0] for s in summary_gene])
+        references_obj = self.references_overview_to_dict(
+            [s[0] for s in summary_gene])
         obj["qualities"] = references_obj["qualities"]
         obj["references"] = references_obj["references"]
         obj["reference_mapping"] = references_obj["reference_mapping"]
-        
+
         if obj["paragraph"] is not None:
-            obj["paragraph"]["text"] = self.format_paragraph(obj["paragraph"]["text"], references_obj)
-    
+            obj["paragraph"]["text"] = self.format_paragraph(
+                obj["paragraph"]["text"], references_obj)
+
         # aliases/external IDs
-        aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
+        aliases = DBSession.query(LocusAlias).filter(and_(LocusAlias.locus_id == self.dbentity_id,
+                                                          ~LocusAlias.alias_type.in_(['Pathway ID', 'Retired name', 'SGDID Secondary']))).all()
         for alias in aliases:
             if alias.alias_type == "EC number":
                 # generate URL to internal page, not expasy
@@ -5089,7 +5519,7 @@ class Locusdbentity(Dbentity):
                     "display_name": alias.display_name,
                     "link": internal_url
                 })
-            
+
             category = ""
             if alias.alias_type == "Uniform" or alias.alias_type == "Non-uniform":
                 category = "Alias"
@@ -5097,21 +5527,21 @@ class Locusdbentity(Dbentity):
                 category = "NCBI protein name"
             else:
                 category = alias.alias_type
-        
-            references_alias = DBSession.query(LocusAliasReferences).filter_by(alias_id=alias.alias_id).all()
+
+            references_alias = DBSession.query(
+                LocusAliasReferences).filter_by(alias_id=alias.alias_id).all()
 
             reference_alias_dict = []
             for r in references_alias:
                 reference_dict = r.reference.to_dict_citation()
                 reference_alias_dict.append(reference_dict)
-                if(reference_dict not in obj["references"]):
+                if (reference_dict not in obj["references"]):
                     obj["references"].append(reference_dict)
-    
+
                 order = len(list(obj["reference_mapping"].keys()))
                 if r.reference_id not in obj["reference_mapping"]:
                     obj["reference_mapping"][r.reference_id] = order + 1
 
-                    
             alias_obj = {
                 "id": alias.alias_id,
                 "display_name": alias.display_name,
@@ -5126,17 +5556,17 @@ class Locusdbentity(Dbentity):
                 alias_obj["protein"] = True
 
             obj["aliases"].append(alias_obj)
-            
-        ## alleles
+
+        # alleles
         alleles = []
         for x in DBSession.query(LocusAllele).filter_by(locus_id=self.dbentity_id).all():
             allele = x.allele
-            alleles.append({ "display_name": allele.display_name,
-                             "link_url": allele.obj_url })
+            alleles.append({"display_name": allele.display_name,
+                            "link_url": allele.obj_url})
         if len(alleles) > 0:
             alleles = sorted(alleles, key=lambda r: r['display_name'])
-            obj["alleles"] = alleles 
-    
+            obj["alleles"] = alleles
+
         # URLs (resources)
         so_ids = []
         for x in DBSession.query(Dnasequenceannotation).filter(Dnasequenceannotation.dbentity_id == self.dbentity_id,Dnasequenceannotation.taxonomy_id == taxonomy_id).all():
@@ -5174,7 +5604,8 @@ class Locusdbentity(Dbentity):
                 os.remove(mapping_file)
         
         uniprotID = None
-        aliases = DBSession.query(LocusAlias).filter_by(locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
+        aliases = DBSession.query(LocusAlias).filter_by(
+            locus_id=self.dbentity_id, alias_type='UniProtKB ID').all()
         if aliases:
             uniprotID = aliases[0].display_name
         if uniprotID:
@@ -5223,13 +5654,15 @@ class Locusdbentity(Dbentity):
         obj["history"] = [h.to_dict() for h in locus_notes]
 
         # pathways
-        pathwayannotations = DBSession.query(Pathwayannotation).filter_by(dbentity_id=self.dbentity_id).distinct(Pathwayannotation.pathway_id).all()
+        pathwayannotations = DBSession.query(Pathwayannotation).filter_by(
+            dbentity_id=self.dbentity_id).distinct(Pathwayannotation.pathway_id).all()
         obj["pathways"] = [a.to_dict() for a in pathwayannotations]
 
         obj["complexes"] = self.complex_details()
-        
+
         # reserved name
-        reservedname = DBSession.query(Reservedname).filter_by(locus_id=self.dbentity_id).one_or_none()
+        reservedname = DBSession.query(Reservedname).filter_by(
+            locus_id=self.dbentity_id).one_or_none()
         if reservedname:
             r_obj = reservedname.to_dict()
             r_obj["link"] = reservedname.obj_url
@@ -5253,7 +5686,10 @@ class Locusdbentity(Dbentity):
         for match in sgdid_pattern.finditer(text):
             reference = references_obj["sgdid_ref"].get(match.group(1))
             if reference:
-                formatted_text += text[last_cursor:match.start()] + "<span data-tooltip aria-haspopup=\"true\" class=\"has-tip\" title=\"" + reference.display_name + "\"><a href=\"" + reference.obj_url + "\">" + str(references_obj["reference_mapping"][reference.dbentity_id]) + "</a></span>"
+                formatted_text += text[last_cursor:match.start()] + "<span data-tooltip aria-haspopup=\"true\" class=\"has-tip\" title=\"" + reference.display_name + \
+                    "\"><a href=\"" + reference.obj_url + "\">" + \
+                    str(references_obj["reference_mapping"]
+                        [reference.dbentity_id]) + "</a></span>"
                 last_cursor = match.end()
 
         return formatted_text + text[last_cursor:]
@@ -5303,7 +5739,8 @@ class Locusdbentity(Dbentity):
             if ref.reference_class == "description":
                 obj["qualities"]["description"]["references"].append(ref_dict)
             elif ref.reference_class == "name_description":
-                obj["qualities"]["name_description"]["references"].append(ref_dict)
+                obj["qualities"]["name_description"]["references"].append(
+                    ref_dict)
             elif ref.reference_class == "gene_name":
                 obj["qualities"]["gene_name"]["references"].append(ref_dict)
             elif ref.reference_class == "qualifier":
@@ -5413,7 +5850,8 @@ class Locusdbentity(Dbentity):
                 text += s[1]
                 summary_ids.append(s[0])
 
-            summary_references = DBSession.query(LocussummaryReference).filter(and_(LocussummaryReference.summary_id.in_(summary_ids), ~LocussummaryReference.reference_id.in_(blacklist))).order_by(LocussummaryReference.reference_order).all()
+            summary_references = DBSession.query(LocussummaryReference).filter(and_(LocussummaryReference.summary_id.in_(
+                summary_ids), ~LocussummaryReference.reference_id.in_(blacklist))).order_by(LocussummaryReference.reference_order).all()
 
             obj["paragraph"] = {
                 "text": text,
@@ -5425,33 +5863,38 @@ class Locusdbentity(Dbentity):
 
     def paralogs_to_dict(self):
         PARALOG_RO_ID = 169738
-        paralog_relations = DBSession.query(LocusRelation).filter(and_(LocusRelation.ro_id == PARALOG_RO_ID, or_(LocusRelation.parent_id == self.dbentity_id, LocusRelation.child_id == self.dbentity_id))).all()
+        paralog_relations = DBSession.query(LocusRelation).filter(and_(LocusRelation.ro_id == PARALOG_RO_ID, or_(
+            LocusRelation.parent_id == self.dbentity_id, LocusRelation.child_id == self.dbentity_id))).all()
         return [a.to_dict(self.dbentity_id) for a in paralog_relations]
 
     def complements_to_dict(self):
-        complement_relations = DBSession.query(Functionalcomplementannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        complement_relations = DBSession.query(
+            Functionalcomplementannotation).filter_by(dbentity_id=self.dbentity_id).all()
         return [a.to_dict(self.dbentity_id) for a in complement_relations]
 
     def protein_overview_to_dict(self):
         obj = {
             "length": 0,
             "molecular_weight": None,
-            "pi": None, 
+            "pi": None,
             "median_value": None,
             "median_abs_dev_value": None,
             "half_life": None
         }
 
         taxonomy_id = self.get_main_strain('taxonomy_id')
-        protein = DBSession.query(Proteinsequenceannotation).filter_by(dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).one_or_none()
+        protein = DBSession.query(Proteinsequenceannotation).filter_by(
+            dbentity_id=self.dbentity_id, taxonomy_id=taxonomy_id).one_or_none()
         if protein:
-            protein_sequence = DBSession.query(ProteinsequenceDetail).filter_by(annotation_id=protein.annotation_id).one_or_none()
+            protein_sequence = DBSession.query(ProteinsequenceDetail).filter_by(
+                annotation_id=protein.annotation_id).one_or_none()
             if protein_sequence:
                 obj = protein_sequence.to_dict_lsp()
             else:
                 obj["length"] = len(protein.residues) - 1
 
-        abundance_data = DBSession.query(Proteinabundanceannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        abundance_data = DBSession.query(Proteinabundanceannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         for row in abundance_data:
             if row.median_value:
                 obj["median_value"] = int(row.median_value)
@@ -5466,7 +5909,6 @@ class Locusdbentity(Dbentity):
 
         return obj
 
-
     def phenotype_overview_to_dict(self):
         obj = {
             "paragraph": None,
@@ -5479,18 +5921,22 @@ class Locusdbentity(Dbentity):
         if phenotype_summary:
             obj["paragraph"] = phenotype_summary.html
 
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        phenotype_annotations = DBSession.query(
+            Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).all()
 
         for annotation in phenotype_annotations:
             json = annotation.to_dict_lsp()
 
             if json["mutant"] in obj[json["experiment_category"]]:
                 if json["phenotype"]["display_name"] not in [p["display_name"] for p in obj[json["experiment_category"]][json["mutant"]]]:
-                    obj[json["experiment_category"]][json["mutant"]].append(json["phenotype"])
+                    obj[json["experiment_category"]][json["mutant"]].append(
+                        json["phenotype"])
             else:
-                obj[json["experiment_category"]][json["mutant"]] = [json["phenotype"]]
+                obj[json["experiment_category"]][json["mutant"]] = [
+                    json["phenotype"]]
 
-        counts = Phenotypeannotation.create_count_overview(None, phenotype_annotations=phenotype_annotations)
+        counts = Phenotypeannotation.create_count_overview(
+            None, phenotype_annotations=phenotype_annotations)
         obj["strains"] = counts["strains"]
         obj["experiment_categories"] = counts["experiment_categories"]
 
@@ -5512,7 +5958,8 @@ class Locusdbentity(Dbentity):
             "total_count": 0
         }
 
-        literature_counts = DBSession.query(Literatureannotation.topic, func.count(Literatureannotation.annotation_id)).filter_by(dbentity_id=self.dbentity_id).group_by(Literatureannotation.topic).all()
+        literature_counts = DBSession.query(Literatureannotation.topic, func.count(Literatureannotation.annotation_id)).filter_by(
+            dbentity_id=self.dbentity_id).group_by(Literatureannotation.topic).all()
 
         for lit_count in literature_counts:
             if lit_count[0] == "Additional Literature":
@@ -5607,14 +6054,20 @@ class Locusdbentity(Dbentity):
             "circle_distance": 0
         }
 
-        physical_interactions = DBSession.query(Physinteractionannotation.biogrid_experimental_system, func.count(Physinteractionannotation.annotation_id)).filter(or_(Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).group_by(Physinteractionannotation.biogrid_experimental_system).all()
+        physical_interactions = DBSession.query(Physinteractionannotation.biogrid_experimental_system, func.count(Physinteractionannotation.annotation_id)).filter(or_(
+            Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).group_by(Physinteractionannotation.biogrid_experimental_system).all()
 
-        genetic_interactions = DBSession.query(Geninteractionannotation.biogrid_experimental_system, func.count(Geninteractionannotation.annotation_id)).filter(or_(Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).group_by(Geninteractionannotation.biogrid_experimental_system).all()
+        genetic_interactions = DBSession.query(Geninteractionannotation.biogrid_experimental_system, func.count(Geninteractionannotation.annotation_id)).filter(or_(
+            Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).group_by(Geninteractionannotation.biogrid_experimental_system).all()
 
-        physical_interactors_1 = DBSession.query(Physinteractionannotation.dbentity2_id).distinct(Physinteractionannotation.dbentity2_id).filter_by(dbentity1_id=self.dbentity_id).all()
-        physical_interactors_2 = DBSession.query(Physinteractionannotation.dbentity1_id).distinct(Physinteractionannotation.dbentity1_id).filter_by(dbentity2_id=self.dbentity_id).all()
-        genetic_interactors_1 = DBSession.query(Geninteractionannotation.dbentity2_id).distinct(Geninteractionannotation.dbentity2_id).filter(Geninteractionannotation.dbentity1_id==self.dbentity_id).all()
-        genetic_interactors_2 = DBSession.query(Geninteractionannotation.dbentity1_id).distinct(Geninteractionannotation.dbentity1_id).filter(Geninteractionannotation.dbentity2_id==self.dbentity_id).all()
+        physical_interactors_1 = DBSession.query(Physinteractionannotation.dbentity2_id).distinct(
+            Physinteractionannotation.dbentity2_id).filter_by(dbentity1_id=self.dbentity_id).all()
+        physical_interactors_2 = DBSession.query(Physinteractionannotation.dbentity1_id).distinct(
+            Physinteractionannotation.dbentity1_id).filter_by(dbentity2_id=self.dbentity_id).all()
+        genetic_interactors_1 = DBSession.query(Geninteractionannotation.dbentity2_id).distinct(
+            Geninteractionannotation.dbentity2_id).filter(Geninteractionannotation.dbentity1_id == self.dbentity_id).all()
+        genetic_interactors_2 = DBSession.query(Geninteractionannotation.dbentity1_id).distinct(
+            Geninteractionannotation.dbentity1_id).filter(Geninteractionannotation.dbentity2_id == self.dbentity_id).all()
 
         for interaction in physical_interactions:
             obj["physical_experiments"][interaction[0]] = interaction[1]
@@ -5624,15 +6077,20 @@ class Locusdbentity(Dbentity):
             obj["genetic_experiments"][interaction[0]] = interaction[1]
             obj["total_interactions"] += interaction[1]
 
-        physical_interactors = set(physical_interactors_1 + physical_interactors_2)
-        genetic_interactors = set(genetic_interactors_1 + genetic_interactors_2)
+        physical_interactors = set(
+            physical_interactors_1 + physical_interactors_2)
+        genetic_interactors = set(
+            genetic_interactors_1 + genetic_interactors_2)
 
-        obj["num_both_interactors"] = len(physical_interactors.intersection(genetic_interactors))
+        obj["num_both_interactors"] = len(
+            physical_interactors.intersection(genetic_interactors))
         obj["num_phys_interactors"] = len(physical_interactors)
         obj["num_gen_interactors"] = len(genetic_interactors)
-        obj["total_interactors"] =  obj["num_phys_interactors"] + obj["num_gen_interactors"] - obj["num_both_interactors"]
+        obj["total_interactors"] = obj["num_phys_interactors"] + \
+            obj["num_gen_interactors"] - obj["num_both_interactors"]
 
-        x, y, z = calc_venn_measurements(obj["num_gen_interactors"], obj["num_phys_interactors"], obj["num_both_interactors"])
+        x, y, z = calc_venn_measurements(
+            obj["num_gen_interactors"], obj["num_phys_interactors"], obj["num_both_interactors"])
         obj["gen_circle_size"], obj["phys_circle_size"], obj["circle_distance"] = x, y, z
 
         interaction_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Interaction").one_or_none()
@@ -5655,7 +6113,8 @@ class Locusdbentity(Dbentity):
             "date_last_reviewed": None
         }
 
-        go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        go_slims = DBSession.query(Goslimannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         process_go_slim_list = []
         function_go_slim_list = []
         component_go_slim_list = []
@@ -5669,7 +6128,8 @@ class Locusdbentity(Dbentity):
                 if go_slim_dict not in complex_go_slim_list:
                     complex_go_slim_list.append(go_slim_dict)
             else:
-                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                go = DBSession.query(Go).filter_by(
+                    go_id=go_slim_dict['go_id']).one_or_none()
                 if go is None:
                     continue
                 if 'component' in go.go_namespace:
@@ -5680,26 +6140,33 @@ class Locusdbentity(Dbentity):
                         function_go_slim_list.append(go_slim_dict)
                 elif go_slim_dict not in process_go_slim_list:
                     process_go_slim_list.append(go_slim_dict)
-                          
-        ## sort goslim terms here
+
+        # sort goslim terms here
         obj['go_slim'] = sorted(go_slim_list, key=lambda p: p['display_name'])
-        process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
-        function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
-        component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
-        complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
-        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + component_go_slim_sorted_list + complex_go_slim_sorted_list
-        
+        process_go_slim_sorted_list = sorted(
+            process_go_slim_list, key=lambda p: p['display_name'])
+        function_go_slim_sorted_list = sorted(
+            function_go_slim_list, key=lambda p: p['display_name'])
+        component_go_slim_sorted_list = sorted(
+            component_go_slim_list, key=lambda p: p['display_name'])
+        complex_go_slim_sorted_list = sorted(
+            complex_go_slim_list, key=lambda p: p['display_name'])
+        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + \
+            component_go_slim_sorted_list + complex_go_slim_sorted_list
+
         go = {
             "cellular component": {},
             "molecular function": {},
             "biological process": {}
         }
 
-        go_annotations_mc = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="manually curated").all()
+        go_annotations_mc = DBSession.query(Goannotation).filter_by(
+            dbentity_id=self.dbentity_id, annotation_type="manually curated").all()
         for annotation in go_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
-                obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
-        
+                obj["date_last_reviewed"] = annotation.date_assigned.strftime(
+                    "%Y-%m-%d")
+
             json = annotation.to_dict_lsp()
 
             namespace = json["namespace"]
@@ -5711,20 +6178,24 @@ class Locusdbentity(Dbentity):
                         go[namespace][term]["evidence_codes"].append(ec)
             else:
                 go[namespace][term] = json
-    
+
         for namespace in list(go.keys()):
-            terms = sorted(list(go[namespace].keys()), key=lambda k : k.lower())
+            terms = sorted(list(go[namespace].keys()), key=lambda k: k.lower())
             if namespace == "cellular component":
                 for term in terms:
-                    obj["manual_cellular_component_terms"].append(self.modify_go_display_name(go[namespace][term]))
+                    obj["manual_cellular_component_terms"].append(
+                        self.modify_go_display_name(go[namespace][term]))
             elif namespace == "molecular function":
                 for term in terms:
-                    obj["manual_molecular_function_terms"].append(self.modify_go_display_name(go[namespace][term]))
+                    obj["manual_molecular_function_terms"].append(
+                        self.modify_go_display_name(go[namespace][term]))
             elif namespace == "biological process":
                 for term in terms:
-                    obj["manual_biological_process_terms"].append(self.modify_go_display_name(go[namespace][term]))
+                    obj["manual_biological_process_terms"].append(
+                        self.modify_go_display_name(go[namespace][term]))
 
-        obj["computational_annotation_count"] = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="computational").count()
+        obj["computational_annotation_count"] = DBSession.query(Goannotation).filter_by(
+            dbentity_id=self.dbentity_id, annotation_type="computational").count()
 
         go = {
             "cellular component": {},
@@ -5732,7 +6203,8 @@ class Locusdbentity(Dbentity):
             "biological process": {}
         }
 
-        go_annotations_htp = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id, annotation_type="high-throughput").all()
+        go_annotations_htp = DBSession.query(Goannotation).filter_by(
+            dbentity_id=self.dbentity_id, annotation_type="high-throughput").all()
         for annotation in go_annotations_htp:
             json = annotation.to_dict_lsp()
 
@@ -5747,14 +6219,17 @@ class Locusdbentity(Dbentity):
                 go[namespace][term] = json
 
         for namespace in list(go.keys()):
-            terms = sorted(list(go[namespace].keys()), key=lambda k : k.lower())
+            terms = sorted(list(go[namespace].keys()), key=lambda k: k.lower())
 
             if namespace == "cellular component":
-                obj["htp_cellular_component_terms"] = [go[namespace][term] for term in terms]
+                obj["htp_cellular_component_terms"] = [
+                    go[namespace][term] for term in terms]
             elif namespace == "molecular function":
-                obj["htp_molecular_function_terms"] = [go[namespace][term] for term in terms]
+                obj["htp_molecular_function_terms"] = [
+                    go[namespace][term] for term in terms]
             elif namespace == "biological process":
-                obj["htp_biological_process_terms"] = [go[namespace][term] for term in terms]
+                obj["htp_biological_process_terms"] = [
+                    go[namespace][term] for term in terms]
 
         go_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type="Function").one_or_none()
         if go_summary:
@@ -5776,11 +6251,13 @@ class Locusdbentity(Dbentity):
             "computational": {}
         }
 
-        do_annotations_mc = DBSession.query(Diseaseannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        do_annotations_mc = DBSession.query(Diseaseannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         for annotation in do_annotations_mc:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj[
-                "date_last_reviewed"]:
-                obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
+                    "date_last_reviewed"]:
+                obj["date_last_reviewed"] = annotation.date_assigned.strftime(
+                    "%Y-%m-%d")
 
             json = annotation.to_dict_lsp()
 
@@ -5798,13 +6275,15 @@ class Locusdbentity(Dbentity):
             terms = sorted(list(do[namespace].keys()), key=lambda k: k.lower())
             if namespace == "manually curated":
                 for term in terms:
-                    obj["manual_disease_terms"].append(self.modify_go_display_name(do[namespace][term]))
+                    obj["manual_disease_terms"].append(
+                        self.modify_go_display_name(do[namespace][term]))
             elif namespace == "high-throughput":
                 for term in terms:
-                    obj["htp_disease_terms"].append(self.modify_go_display_name(do[namespace][term]))
+                    obj["htp_disease_terms"].append(
+                        self.modify_go_display_name(do[namespace][term]))
 
         obj["computational_annotation_count"] = DBSession.query(Diseaseannotation).filter_by(dbentity_id=self.dbentity_id,
-                                                                                        annotation_type="computational").count()
+                                                                                             annotation_type="computational").count()
 
         do_summary = DBSession.query(Locussummary).filter_by(locus_id=self.dbentity_id,
                                                                   summary_type="Disease").one_or_none()
@@ -5813,8 +6292,9 @@ class Locusdbentity(Dbentity):
 
         return obj
 
-    def modify_go_display_name(self,item):
-        item["term"]["display_name"] = item["term"]["display_name"].replace("_", " ")
+    def modify_go_display_name(self, item):
+        item["term"]["display_name"] = item["term"]["display_name"].replace(
+            "_", " ")
         return item
 
     def get_go_count(self):
@@ -5824,8 +6304,10 @@ class Locusdbentity(Dbentity):
         return DBSession.query(Phenotypeannotation).filter_by(dbentity_id=self.dbentity_id).count()
 
     def get_interaction_count(self):
-        phys = DBSession.query(Physinteractionannotation).filter(or_(Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).count()
-        genetic = DBSession.query(Geninteractionannotation).filter(or_(Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).count()
+        phys = DBSession.query(Physinteractionannotation).filter(or_(Physinteractionannotation.dbentity1_id ==
+                                                                     self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).count()
+        genetic = DBSession.query(Geninteractionannotation).filter(or_(
+            Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).count()
         return phys + genetic
 
     def get_literature_count(self):
@@ -5879,7 +6361,8 @@ class Locusdbentity(Dbentity):
                     phenotype_items = []
         else:
             tabs = self.tabs()
-            protein_items = ['sequence_details', 'posttranslational_details', 'ecnumber_details', 'protein_experiment_details', 'protein_domain_details', 'protein_domain_details']
+            protein_items = ['sequence_details', 'posttranslational_details', 'ecnumber_details',
+                             'protein_experiment_details', 'protein_domain_details', 'protein_domain_details']
         backend_urls_by_tab = {
             'protein_tab': protein_items,
             'interaction_tab': ['interaction_details', 'interaction_graph'],
@@ -6163,9 +6646,10 @@ class Locusdbentity(Dbentity):
         # if changing gene name, append old name as alias
         if 'gene_name' in keys_to_update and old_info['gene_name']:
             new_alias_type = new_info['old_gene_name_alias_type']
-            new_alias = { 'alias': old_info['gene_name'], 'pmids': old_info['gene_name_pmids'], 'type': new_alias_type }
+            new_alias = {
+                'alias': old_info['gene_name'], 'pmids': old_info['gene_name_pmids'], 'type': new_alias_type}
             new_info['aliases'].append(new_alias)
-            keys_to_update.append('aliases')        
+            keys_to_update.append('aliases')
         if len(keys_to_update) == 0:
             raise ValueError('Nothing has been changed.')
         else:
@@ -6188,35 +6672,41 @@ class Locusdbentity(Dbentity):
                             self.display_name = self.systematic_name
                         else:
                             # see if new name already exists, and if proper name
-                            new_name_already_exists = curator_session.query(Locusdbentity).filter(Locusdbentity.gene_name == new_name).one_or_none()
+                            new_name_already_exists = curator_session.query(Locusdbentity).filter(
+                                Locusdbentity.gene_name == new_name).one_or_none()
                             if new_name_already_exists:
-                                raise ValueError(new_name + ' is already a standard gene name and cannot be used.')
-                            is_valid_gene_name = Locusdbentity.is_valid_gene_name(new_name)
+                                raise ValueError(
+                                    new_name + ' is already a standard gene name and cannot be used.')
+                            is_valid_gene_name = Locusdbentity.is_valid_gene_name(
+                                new_name)
                             if not is_valid_gene_name:
-                                raise ValueError(new_name + ' does not follow standards for standard gene names.')
+                                raise ValueError(
+                                    new_name + ' does not follow standards for standard gene names.')
                             self.display_name = new_name
                             self.gene_name = new_name
                             # add locusnote and locusnotereference(s) for old gene_name_pmids
-                            old_pmids = convert_space_separated_pmids_to_list(old_info['gene_name_pmids'])
+                            old_pmids = convert_space_separated_pmids_to_list(
+                                old_info['gene_name_pmids'])
                             for p in old_pmids:
-                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                    Referencedbentity.pmid == p).scalar()
                                 note_html_str = '<b>Name:</b> ' + new_name
                                 new_locusnote = Locusnote(
-                                    source_id = SGD_SOURCE_ID,
-                                    locus_id = self.dbentity_id,
-                                    note_class = 'Locus',
-                                    note_type = 'Name',
-                                    note = note_html_str,
-                                    created_by = username
+                                    source_id=SGD_SOURCE_ID,
+                                    locus_id=self.dbentity_id,
+                                    note_class='Locus',
+                                    note_type='Name',
+                                    note=note_html_str,
+                                    created_by=username
                                 )
                                 curator_session.add(new_locusnote)
                                 curator_session.flush()
                                 curator_session.refresh(new_locusnote)
                                 new_locusnote_ref = LocusnoteReference(
-                                    note_id = new_locusnote.note_id,
-                                    reference_id = ref_id,
-                                    source_id = SGD_SOURCE_ID,
-                                    created_by = username
+                                    note_id=new_locusnote.note_id,
+                                    reference_id=ref_id,
+                                    source_id=SGD_SOURCE_ID,
+                                    created_by=username
                                 )
                                 curator_session.add(new_locusnote_ref)
                     elif key == 'name_description':
@@ -6225,48 +6715,57 @@ class Locusdbentity(Dbentity):
                         self.qualifier = new_info['qualifier']
                     # changes outside of locusdbentity
                     elif key == 'ncbi_protein_name':
-                        protein_alias = DBSession.query(LocusAlias).filter(LocusAlias.locus_id == self.dbentity_id, LocusAlias.alias_type == 'NCBI protein name').one_or_none()
+                        protein_alias = DBSession.query(LocusAlias).filter(
+                            LocusAlias.locus_id == self.dbentity_id, LocusAlias.alias_type == 'NCBI protein name').one_or_none()
                         protein_alias.display_name = new_info['ncbi_protein_name']
                     elif key == 'feature_type':
-                        new_so_id = curator_session.query(So.so_id).filter(So.display_name == new_info['feature_type']).scalar()
+                        new_so_id = curator_session.query(So.so_id).filter(
+                            So.display_name == new_info['feature_type']).scalar()
                         dna_seq = curator_session.query(Dnasequenceannotation).filter(and_(Dnasequenceannotation.dbentity_id == self.dbentity_id, Dnasequenceannotation.taxonomy_id == TAXON_ID))\
-                            .update({ 'so_id': new_so_id })
+                            .update({'so_id': new_so_id})
                     elif key == 'gene_name_pmids':
                         # delete the old name gene_name PMIDS
-                        curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='gene_name')).delete(synchronize_session=False)
-                        pmid_list = convert_space_separated_pmids_to_list(new_info['gene_name_pmids'])
+                        curator_session.query(LocusReferences).filter(and_(
+                            LocusReferences.locus_id == self.dbentity_id, LocusReferences.reference_class == 'gene_name')).delete(synchronize_session=False)
+                        pmid_list = convert_space_separated_pmids_to_list(
+                            new_info['gene_name_pmids'])
                         # add new entries
                         for p in pmid_list:
-                            new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
+                            new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                Referencedbentity.pmid == p).scalar()
                             new_locus_ref = LocusReferences(
-                                reference_id = new_ref_id,
-                                locus_id = self.dbentity_id,
-                                source_id = SGD_SOURCE_ID,
-                                reference_class = 'gene_name',
-                                created_by = username
+                                reference_id=new_ref_id,
+                                locus_id=self.dbentity_id,
+                                source_id=SGD_SOURCE_ID,
+                                reference_class='gene_name',
+                                created_by=username
                             )
                             curator_session.add(new_locus_ref)
                     elif key == 'description_pmids':
                         # delete the old name description PMIDS
-                        old_pmid_list = convert_space_separated_pmids_to_list(old_info['description_pmids'])
-                        new_pmid_list = convert_space_separated_pmids_to_list(new_info['description_pmids'])
-                        
+                        old_pmid_list = convert_space_separated_pmids_to_list(
+                            old_info['description_pmids'])
+                        new_pmid_list = convert_space_separated_pmids_to_list(
+                            new_info['description_pmids'])
+
                         for old in old_pmid_list:
                             if old not in new_pmid_list:
-                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                    Referencedbentity.pmid == old).scalar()
                                 if ref_id:
-                                    curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='description',LocusReferences.reference_id == ref_id)).delete(synchronize_session=False)
-
+                                    curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id == self.dbentity_id, LocusReferences.reference_class ==
+                                                                                       'description', LocusReferences.reference_id == ref_id)).delete(synchronize_session=False)
 
                         for new in new_pmid_list:
                             if new not in old_pmid_list:
-                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == new).scalar()
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                    Referencedbentity.pmid == new).scalar()
                                 if ref_id:
-                                    new_locus_ref = LocusReferences(reference_id = ref_id,
-                                                                    locus_id = self.dbentity_id,
-                                                                    source_id = SGD_SOURCE_ID,
-                                                                    reference_class = 'description',
-                                                                    created_by = username
+                                    new_locus_ref = LocusReferences(reference_id=ref_id,
+                                                                    locus_id=self.dbentity_id,
+                                                                    source_id=SGD_SOURCE_ID,
+                                                                    reference_class='description',
+                                                                    created_by=username
                                                                     )
                                     curator_session.add(new_locus_ref)
 
@@ -6286,29 +6785,33 @@ class Locusdbentity(Dbentity):
 
                     elif key == 'name_description_pmids':
                         # delete the old name name_description PMIDS
-                        
-                        old_pmid_list = convert_space_separated_pmids_to_list(old_info['name_description_pmids'])
-                        new_pmid_list = convert_space_separated_pmids_to_list(new_info['name_description_pmids'])
-                        
+
+                        old_pmid_list = convert_space_separated_pmids_to_list(
+                            old_info['name_description_pmids'])
+                        new_pmid_list = convert_space_separated_pmids_to_list(
+                            new_info['name_description_pmids'])
+
                         for old in old_pmid_list:
                             if old not in new_pmid_list:
-                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                    Referencedbentity.pmid == old).scalar()
                                 if ref_id:
-                                    curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='name_description',LocusReferences.reference_id == ref_id)).delete(synchronize_session=False)
-
+                                    curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id == self.dbentity_id, LocusReferences.reference_class ==
+                                                                                       'name_description', LocusReferences.reference_id == ref_id)).delete(synchronize_session=False)
 
                         for new in new_pmid_list:
                             if new not in old_pmid_list:
-                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == new).scalar()
+                                ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                    Referencedbentity.pmid == new).scalar()
                                 if ref_id:
-                                    new_locus_ref = LocusReferences(reference_id = ref_id,
-                                                                    locus_id = self.dbentity_id,
-                                                                    source_id = SGD_SOURCE_ID,
-                                                                    reference_class = 'name_description',
-                                                                    created_by = username
+                                    new_locus_ref = LocusReferences(reference_id=ref_id,
+                                                                    locus_id=self.dbentity_id,
+                                                                    source_id=SGD_SOURCE_ID,
+                                                                    reference_class='name_description',
+                                                                    created_by=username
                                                                     )
                                     curator_session.add(new_locus_ref)
-                        
+
                         # curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id==self.dbentity_id, LocusReferences.reference_class=='name_description')).delete(synchronize_session=False)
                         # pmid_list = convert_space_separated_pmids_to_list(new_info['name_description_pmids'])
                         # # add new entries
@@ -6326,101 +6829,122 @@ class Locusdbentity(Dbentity):
                         # delete old aliases and references
                         old_aliases = old_info['aliases']
                         new_aliases = new_info['aliases']
-                        existing_ids = [ i['alias_id'] for i in old_aliases]
-                        new_ids = [ i['alias_id'] for i in new_aliases]
-                        existing_aliases_dict = {i['alias_id'] : i for i in old_aliases}
-                        
-                        #delete the one removed from the new_aliases
+                        existing_ids = [i['alias_id'] for i in old_aliases]
+                        new_ids = [i['alias_id'] for i in new_aliases]
+                        existing_aliases_dict = {
+                            i['alias_id']: i for i in old_aliases}
+
+                        # delete the one removed from the new_aliases
                         for alias in old_aliases:
                             if alias['alias_id'] not in new_ids:
-                                alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                alias_in_db = curator_session.query(LocusAlias).filter(and_(
+                                    LocusAlias.alias_id == alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
                                 note = '<b>Name:</b> '+alias['alias']
-                                aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==alias_in_db.locus_id,Locusnote.note == note)).one_or_none()
+                                aliasnote_in_db = curator_session.query(Locusnote).filter(and_(
+                                    Locusnote.locus_id == alias_in_db.locus_id, Locusnote.note == note)).one_or_none()
                                 if aliasnote_in_db:
-                                    curator_session.query(LocusnoteReference).filter(LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
-                                    curator_session.delete(aliasnote_in_db)    
-                                curator_session.query(LocusAliasReferences).filter(LocusAliasReferences.alias_id == alias['alias_id']).delete(synchronize_session=False)
+                                    curator_session.query(LocusnoteReference).filter(
+                                        LocusnoteReference.note_id == aliasnote_in_db.note_id).delete(synchronize_session=False)
+                                    curator_session.delete(aliasnote_in_db)
+                                curator_session.query(LocusAliasReferences).filter(
+                                    LocusAliasReferences.alias_id == alias['alias_id']).delete(synchronize_session=False)
                                 curator_session.delete(alias_in_db)
-                        
+
                         curator_session.flush()
 
-                        #TODO: Work on add/updating alias,aliasreference,notes
-                        #add or update the one in new_aliases
+                        # TODO: Work on add/updating alias,aliasreference,notes
+                        # add or update the one in new_aliases
                         for alias in new_aliases:
-                            #Adding new LocusAlias, LocusAliasReference, Locusanote, Locusnote_reference
+                            # Adding new LocusAlias, LocusAliasReference, Locusanote, Locusnote_reference
                             if alias['alias_id'] is None:
-                                new_alias = LocusAlias(display_name = alias['alias'],
-                                                       locus_id = self.dbentity_id,
-                                                       alias_type = alias['type'],
-                                                       has_external_id_section = False,
-                                                       source_id = SGD_SOURCE_ID,
-                                                       created_by = username)
+                                new_alias = LocusAlias(display_name=alias['alias'],
+                                                       locus_id=self.dbentity_id,
+                                                       alias_type=alias['type'],
+                                                       has_external_id_section=False,
+                                                       source_id=SGD_SOURCE_ID,
+                                                       created_by=username)
                                 curator_session.add(new_alias)
                                 curator_session.flush()
 
-                                int_pmids = convert_space_separated_pmids_to_list(alias['pmids'])
-                                
-                                #Add Locusnote
+                                int_pmids = convert_space_separated_pmids_to_list(
+                                    alias['pmids'])
+
+                                # Add Locusnote
                                 note = '<b>Name:</b> '+alias['alias']
-                                locusnote = Locusnote(source_id = SGD_SOURCE_ID,locus_id = self.dbentity_id,note_class = 'Locus',
-                                                      note_type = 'Name',note = note,created_by = username)
+                                locusnote = Locusnote(source_id=SGD_SOURCE_ID, locus_id=self.dbentity_id, note_class='Locus',
+                                                      note_type='Name', note=note, created_by=username)
                                 curator_session.add(locusnote)
                                 curator_session.flush()
 
                                 for p in int_pmids:
-                                    new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
-                                    new_locus_alias_ref = LocusAliasReferences(alias_id = new_alias.alias_id,
-                                                                               reference_id = new_ref_id,
-                                                                               source_id = SGD_SOURCE_ID,
-                                                                               created_by = username)
-                                    #Add LocusnoteReference
-                                    new_locus_note_ref = LocusnoteReference(note_id = locusnote.note_id,reference_id = new_ref_id,source_id = SGD_SOURCE_ID,created_by = username)
+                                    new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                        Referencedbentity.pmid == p).scalar()
+                                    new_locus_alias_ref = LocusAliasReferences(alias_id=new_alias.alias_id,
+                                                                               reference_id=new_ref_id,
+                                                                               source_id=SGD_SOURCE_ID,
+                                                                               created_by=username)
+                                    # Add LocusnoteReference
+                                    new_locus_note_ref = LocusnoteReference(
+                                        note_id=locusnote.note_id, reference_id=new_ref_id, source_id=SGD_SOURCE_ID, created_by=username)
                                     curator_session.add(new_locus_alias_ref)
                                     curator_session.add(new_locus_note_ref)
 
-                            #Update exisiting LocusAlias, LocusAliasReference, Locusnote, Locusnote_reference
+                            # Update exisiting LocusAlias, LocusAliasReference, Locusnote, Locusnote_reference
                             elif alias['alias_id'] in existing_ids:
-                                    note = '<b>Name:</b> '+existing_aliases_dict[alias['alias_id']]['alias']
-                                    alias_in_db = curator_session.query(LocusAlias).filter(and_(LocusAlias.alias_id==alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
-                                    aliasnote_in_db = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id==self.dbentity_id,Locusnote.note == note)).one_or_none()
-                                    #Only check for alias and type
-                                    if alias['alias'] != existing_aliases_dict[alias['alias_id']]['alias'] or alias['type'] != existing_aliases_dict[alias['alias_id']]['type']:
-                                        alias_in_db.display_name = alias['alias']
-                                        alias_in_db.alias_type = alias['type']
-                                        
-                                        if aliasnote_in_db:    
-                                            note = '<b>Name:</b> '+alias['alias']
-                                            aliasnote_in_db.note = note
-                                    
-                                    #Check if pmids are add or deleted
-                                    existing_pmids = convert_space_separated_pmids_to_list(existing_aliases_dict[alias['alias_id']]['pmids'])
-                                    new_pmids = convert_space_separated_pmids_to_list(alias['pmids'])
-                                    
-                                    for new in new_pmids:
-                                        if new not in existing_pmids:
-                                            new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == new).scalar()
-                                            new_locus_alias_ref = LocusAliasReferences(alias_id = alias_in_db.alias_id,
-                                                                                       reference_id = new_ref_id,
-                                                                                       source_id = SGD_SOURCE_ID,
-                                                                                       created_by = username)
-                                            if aliasnote_in_db:    
-                                                new_locus_note_ref = LocusnoteReference(note_id = aliasnote_in_db.note_id,
-                                                                                        reference_id = new_ref_id,
-                                                                                        source_id = SGD_SOURCE_ID,
-                                                                                        created_by = username)
-                                                curator_session.add(new_locus_note_ref)    
-                                            curator_session.add(new_locus_alias_ref)
-                                    for old in existing_pmids:
-                                        if old not in new_pmids:
-                                            old_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == old).scalar()
-                                            old_locus_alias_ref = curator_session.query(LocusAliasReferences).filter(and_(LocusAliasReferences.alias_id==alias_in_db.alias_id,LocusAliasReferences.reference_id==old_ref_id)).one_or_none()
-                                            
-                                            if aliasnote_in_db:
-                                                #delete any locus note reference 
-                                                old_locus_note_ref = curator_session.query(LocusnoteReference).filter(and_(LocusnoteReference.note_id==aliasnote_in_db.note_id,LocusnoteReference.reference_id==old_ref_id)).one_or_none()
-                                                curator_session.delete(old_locus_note_ref)
-                                            
-                                            curator_session.delete(old_locus_alias_ref)
+                                note = '<b>Name:</b> ' + \
+                                    existing_aliases_dict[alias['alias_id']]['alias']
+                                alias_in_db = curator_session.query(LocusAlias).filter(and_(
+                                    LocusAlias.alias_id == alias['alias_id'], LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).one_or_none()
+                                aliasnote_in_db = curator_session.query(Locusnote).filter(and_(
+                                    Locusnote.locus_id == self.dbentity_id, Locusnote.note == note)).one_or_none()
+                                # Only check for alias and type
+                                if alias['alias'] != existing_aliases_dict[alias['alias_id']]['alias'] or alias['type'] != existing_aliases_dict[alias['alias_id']]['type']:
+                                    alias_in_db.display_name = alias['alias']
+                                    alias_in_db.alias_type = alias['type']
+
+                                    if aliasnote_in_db:
+                                        note = '<b>Name:</b> '+alias['alias']
+                                        aliasnote_in_db.note = note
+
+                                # Check if pmids are add or deleted
+                                existing_pmids = convert_space_separated_pmids_to_list(
+                                    existing_aliases_dict[alias['alias_id']]['pmids'])
+                                new_pmids = convert_space_separated_pmids_to_list(
+                                    alias['pmids'])
+
+                                for new in new_pmids:
+                                    if new not in existing_pmids:
+                                        new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                            Referencedbentity.pmid == new).scalar()
+                                        new_locus_alias_ref = LocusAliasReferences(alias_id=alias_in_db.alias_id,
+                                                                                   reference_id=new_ref_id,
+                                                                                   source_id=SGD_SOURCE_ID,
+                                                                                   created_by=username)
+                                        if aliasnote_in_db:
+                                            new_locus_note_ref = LocusnoteReference(note_id=aliasnote_in_db.note_id,
+                                                                                    reference_id=new_ref_id,
+                                                                                    source_id=SGD_SOURCE_ID,
+                                                                                    created_by=username)
+                                            curator_session.add(
+                                                new_locus_note_ref)
+                                        curator_session.add(
+                                            new_locus_alias_ref)
+                                for old in existing_pmids:
+                                    if old not in new_pmids:
+                                        old_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(
+                                            Referencedbentity.pmid == old).scalar()
+                                        old_locus_alias_ref = curator_session.query(LocusAliasReferences).filter(and_(
+                                            LocusAliasReferences.alias_id == alias_in_db.alias_id, LocusAliasReferences.reference_id == old_ref_id)).one_or_none()
+
+                                        if aliasnote_in_db:
+                                            # delete any locus note reference
+                                            old_locus_note_ref = curator_session.query(LocusnoteReference).filter(and_(
+                                                LocusnoteReference.note_id == aliasnote_in_db.note_id, LocusnoteReference.reference_id == old_ref_id)).one_or_none()
+                                            curator_session.delete(
+                                                old_locus_note_ref)
+
+                                        curator_session.delete(
+                                            old_locus_alias_ref)
 
                         # old_aliases = curator_session.query(LocusAlias).filter(and_(LocusAlias.locus_id==self.dbentity_id, LocusAlias.alias_type.in_(['Uniform', 'Non-uniform', 'Retired name']))).all()
                         # for a in old_aliases:
@@ -6441,7 +6965,7 @@ class Locusdbentity(Dbentity):
                         #     curator_session.flush()
 
                         #     int_pmids = convert_space_separated_pmids_to_list(a['pmids'])
-                            
+
                         #     for p in int_pmids:
                         #         new_ref_id = curator_session.query(Referencedbentity.dbentity_id).filter(Referencedbentity.pmid == p).scalar()
                         #         new_locus_alias_ref = LocusAliasReferences(
@@ -6464,13 +6988,14 @@ class Locusdbentity(Dbentity):
                         new_val = new_info[key]
                     update_dict[key] = new_val
                 new_curate_activity = CuratorActivity(
-                    display_name = self.display_name,
-                    obj_url = self.obj_url,
-                    activity_category = 'locus',
-                    dbentity_id = self.dbentity_id,
-                    message = 'updated locus information',
-                    json = json.dumps({ 'keys': update_dict, 'modified_date': str(datetime.now())}),
-                    created_by = username
+                    display_name=self.display_name,
+                    obj_url=self.obj_url,
+                    activity_category='locus',
+                    dbentity_id=self.dbentity_id,
+                    message='updated locus information',
+                    json=json.dumps(
+                        {'keys': update_dict, 'modified_date': str(datetime.now())}),
+                    created_by=username
                 )
                 curator_session.add(new_curate_activity)
                 transaction.commit()
@@ -6478,7 +7003,7 @@ class Locusdbentity(Dbentity):
             except Exception as e:
                 transaction.abort()
                 traceback.print_exc()
-                raise(e)
+                raise (e)
             finally:
                 if curator_session:
                     curator_session.remove()
@@ -6492,10 +7017,12 @@ class Locusdbentity(Dbentity):
                 raise ValueError('Regulation summaries require PMIDs.')
             # get a special session we can close
             curator_session = get_curator_session(username)
-            summary = curator_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created, Locussummary.text).filter_by(locus_id=self.dbentity_id, summary_type=summary_type).one_or_none()
+            summary = curator_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created,
+                                            Locussummary.text).filter_by(locus_id=self.dbentity_id, summary_type=summary_type).one_or_none()
             num_summary_refs = 0
             if summary and len(pmid_list):
-                num_summary_refs = curator_session.query(LocussummaryReference).filter_by(summary_id=summary.summary_id).count()
+                num_summary_refs = curator_session.query(LocussummaryReference).filter_by(
+                    summary_id=summary.summary_id).count()
             # ignore if same as old summary
             if summary and summary.text == text and num_summary_refs == len(pmid_list):
                 return
@@ -6504,60 +7031,71 @@ class Locusdbentity(Dbentity):
                 return
             # if old summary exists and new value is blank, delete summary and locus summary references
             if summary and len(text) == 0:
-                curator_session.query(LocussummaryReference).filter_by(summary_id=summary.summary_id).delete(synchronize_session=False)
-                curator_session.query(Locussummary).filter_by(locus_id=self.dbentity_id, summary_type=summary_type).delete(synchronize_session=False)
+                curator_session.query(LocussummaryReference).filter_by(
+                    summary_id=summary.summary_id).delete(synchronize_session=False)
+                curator_session.query(Locussummary).filter_by(
+                    locus_id=self.dbentity_id, summary_type=summary_type).delete(synchronize_session=False)
                 transaction.commit()
                 curator_session.flush()
                 return
-            locus_names_ids = curator_session.query(Locusdbentity.display_name, Locusdbentity.sgdid).all()
-            summary_html = link_gene_names(text, locus_names_ids, self.gene_name)
+            locus_names_ids = curator_session.query(
+                Locusdbentity.display_name, Locusdbentity.sgdid).all()
+            summary_html = link_gene_names(
+                text, locus_names_ids, self.gene_name)
             # update
             if summary:
-                curator_session.query(Locussummary).filter_by(summary_id=summary.summary_id).update({ 'text': text, 'html': summary_html })
+                curator_session.query(Locussummary).filter_by(
+                    summary_id=summary.summary_id).update({'text': text, 'html': summary_html})
             else:
                 new_summary = Locussummary(
-                    locus_id = self.dbentity_id,
-                    summary_type = summary_type,
-                    text = text,
-                    html = summary_html,
-                    created_by = username,
-                    source_id = SGD_SOURCE_ID
+                    locus_id=self.dbentity_id,
+                    summary_type=summary_type,
+                    text=text,
+                    html=summary_html,
+                    created_by=username,
+                    source_id=SGD_SOURCE_ID
                 )
                 curator_session.add(new_summary)
                 summary = new_summary
             new_curate_activity = CuratorActivity(
-                display_name = self.display_name,
-                obj_url = self.obj_url,
-                activity_category = 'locus',
-                dbentity_id = self.dbentity_id,
-                message = 'updated  ' + summary_type + ' summary',
-                json = json.dumps({ 'keys': { 'summary': text },'modified_date': str(datetime.now()) }),
-                created_by = username
+                display_name=self.display_name,
+                obj_url=self.obj_url,
+                activity_category='locus',
+                dbentity_id=self.dbentity_id,
+                message='updated  ' + summary_type + ' summary',
+                json=json.dumps({'keys': {'summary': text},
+                                'modified_date': str(datetime.now())}),
+                created_by=username
             )
             curator_session.add(new_curate_activity)
-            summary = curator_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(locus_id=self.dbentity_id, summary_type=summary_type).one_or_none()
+            summary = curator_session.query(Locussummary.summary_type, Locussummary.summary_id, Locussummary.html, Locussummary.date_created).filter_by(
+                locus_id=self.dbentity_id, summary_type=summary_type).one_or_none()
             # add LocussummaryReference(s)
             if len(pmid_list):
-                matching_refs = curator_session.query(Referencedbentity).filter(Referencedbentity.pmid.in_(pmid_list)).all()
+                matching_refs = curator_session.query(Referencedbentity).filter(
+                    Referencedbentity.pmid.in_(pmid_list)).all()
                 if len(matching_refs) != len(pmid_list):
                     raise ValueError('PMID is not currently in SGD.')
                 pmids = pmid_list
                 for _i, p in enumerate(pmids):
-                    matching_ref = [x for x in matching_refs if x.pmid == int(p)][0]
+                    matching_ref = [
+                        x for x in matching_refs if x.pmid == int(p)][0]
                     summary_id = summary.summary_id
                     reference_id = matching_ref.dbentity_id
                     order = _i + 1
                     # look for matching LocussummaryReference
-                    matching_locussummary_refs = curator_session.query(LocussummaryReference).filter_by(summary_id=summary_id, reference_id=reference_id).all()
+                    matching_locussummary_refs = curator_session.query(LocussummaryReference).filter_by(
+                        summary_id=summary_id, reference_id=reference_id).all()
                     if len(matching_locussummary_refs):
-                        curator_session.query(LocussummaryReference).filter_by(summary_id=summary_id,reference_id=reference_id).update({ 'reference_order': order })
+                        curator_session.query(LocussummaryReference).filter_by(
+                            summary_id=summary_id, reference_id=reference_id).update({'reference_order': order})
                     else:
                         new_locussummaryref = LocussummaryReference(
-                            summary_id = summary_id,
-                            reference_id = reference_id,
-                            reference_order = order,
-                            source_id = SGD_SOURCE_ID,
-                            created_by = username
+                            summary_id=summary_id,
+                            reference_id=reference_id,
+                            reference_order=order,
+                            source_id=SGD_SOURCE_ID,
+                            created_by=username
                         )
                         curator_session.add(new_locussummaryref)
             # commit and close session to keep user session out of connection pool
@@ -6578,13 +7116,16 @@ class Locusdbentity(Dbentity):
         else:
             return self.systematic_name
 
+
 class Straindbentity(Dbentity):
     __tablename__ = 'straindbentity'
     __table_args__ = {'schema': 'nex'}
     __url_segment__ = '/strain/'
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
     strain_type = Column(String(40), nullable=False)
     genotype = Column(String(500))
     genbank_id = Column(String(40))
@@ -6608,7 +7149,8 @@ class Straindbentity(Dbentity):
         if taxon_id in Straindbentity.db_cache:
             return Straindbentity.db_cache[taxon_id]
         else:
-            strain = DBSession.query(Straindbentity).filter_by(taxonomy_id=taxon_id).all()
+            strain = DBSession.query(Straindbentity).filter_by(
+                taxonomy_id=taxon_id).all()
             Straindbentity.db_cache[taxon_id] = strain
             return strain
         """
@@ -6665,13 +7207,15 @@ class Straindbentity(Dbentity):
                 "references": [r.to_dict_citation() for r in references]
             }
 
-        contigs = DBSession.query(Contig).filter_by(taxonomy_id=self.taxonomy_id).all()
+        contigs = DBSession.query(Contig).filter_by(
+            taxonomy_id=self.taxonomy_id).all()
         obj["contigs"] = []
 
         chromosome_cache = {}
         for co in contigs:
             if co.display_name != "2-micron plasmid":
-                obj["contigs"].append(co.to_dict_strain_table(chromosome_cache))
+                obj["contigs"].append(
+                    co.to_dict_strain_table(chromosome_cache))
 
         return obj
 
@@ -6683,29 +7227,34 @@ class Straindbentity(Dbentity):
         }
         return obj
 
+
 class Dbuser(Base):
     __tablename__ = 'dbuser'
     __table_args__ = {'schema': 'nex'}
 
-    dbuser_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbuser_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     username = Column(String(12), nullable=False, unique=True)
     first_name = Column(String(40), nullable=False)
     last_name = Column(String(40), nullable=False)
     status = Column(String(40), nullable=False)
     is_curator = Column(Boolean, nullable=False)
     email = Column(String(100), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
 
 class Deletelog(Base):
     __tablename__ = 'deletelog'
     __table_args__ = {'schema': 'nex'}
 
-    deletelog_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.deletelog_seq'::regclass)"))
+    deletelog_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.deletelog_seq'::regclass)"))
     bud_id = Column(Integer)
     tab_name = Column(String(60), nullable=False)
     primary_key = Column(BigInteger, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     deleted_row = Column(Text, nullable=False)
 
@@ -6714,14 +7263,17 @@ class Disease(Base):
     __tablename__ = 'disease'
     __table_args__ = {'schema': 'nex'}
 
-    disease_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    disease_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     doid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
 
@@ -6732,16 +7284,19 @@ class Disease(Base):
     allowed_relationships = (169782, 169466, 169299, 169468, 169467)
 
     def to_dict(self):
-        annotations_count = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(disease_id=self.disease_id).group_by(Diseaseannotation.dbentity_id).count()
+        annotations_count = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(
+            disease_id=self.disease_id).group_by(Diseaseannotation.dbentity_id).count()
 
-        children_relation = DBSession.query(DiseaseRelation).filter_by(parent_id=self.disease_id).all()
+        children_relation = DBSession.query(
+            DiseaseRelation).filter_by(parent_id=self.disease_id).all()
         if len(children_relation) > 0:
-            children_annotations = len(set([c.child_id for c in children_relation]))
+            children_annotations = len(
+                set([c.child_id for c in children_relation]))
         else:
             children_annotations = 0
 
         obj = {
-            "display_name": self.display_name.replace("_"," "),
+            "display_name": self.display_name.replace("_", " "),
             "urls": [],
             "disease_id": self.disease_id,
             "description": self.description,
@@ -6753,7 +7308,8 @@ class Disease(Base):
             "descendant_locus_count": annotations_count + children_annotations
         }
 
-        urls = DBSession.query(DiseaseUrl).filter_by(disease_id=self.disease_id).all()
+        urls = DBSession.query(DiseaseUrl).filter_by(
+            disease_id=self.disease_id).all()
 
         for url in urls:
             obj["urls"].append({
@@ -6762,23 +7318,25 @@ class Disease(Base):
                 "category": url.url_type,
             })
 
-        synonyms = DBSession.query(DiseaseAlias).filter_by(disease_id=self.disease_id).all()
+        synonyms = DBSession.query(DiseaseAlias).filter_by(
+            disease_id=self.disease_id).all()
         for synonym in synonyms:
             obj["aliases"].append(synonym.display_name)
 
-        obj["locus_count"] = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(disease_id=self.disease_id).group_by(Diseaseannotation.dbentity_id).count()
+        obj["locus_count"] = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(
+            disease_id=self.disease_id).group_by(Diseaseannotation.dbentity_id).count()
 
         return obj
 
-
     def ontology_graph(self):
-        annotations = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(disease_id=self.disease_id).group_by(Diseaseannotation.dbentity_id).count()
+        annotations = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(
+            disease_id=self.disease_id).group_by(Diseaseannotation.dbentity_id).count()
 
         nodes = [{
             "data": {
                 "link": self.obj_url,
                 "sub_type": "FOCUS",
-                "name": self.display_name.replace("_"," ") + " (" + str(annotations) + ")",
+                "name": self.display_name.replace("_", " ") + " (" + str(annotations) + ")",
                 "id": str(self.disease_id)
             }
         }]
@@ -6786,7 +7344,8 @@ class Disease(Base):
         edges = []
         all_children = []
 
-        children_relation = DBSession.query(DiseaseRelation).filter(and_(DiseaseRelation.parent_id == self.disease_id, DiseaseRelation.ro_id.in_(Go.allowed_relationships))).all()
+        children_relation = DBSession.query(DiseaseRelation).filter(and_(
+            DiseaseRelation.parent_id == self.disease_id, DiseaseRelation.ro_id.in_(Go.allowed_relationships))).all()
 
         for child_relation in children_relation[:6]:
             child_node = child_relation.to_graph(nodes, edges, add_child=True)
@@ -6835,7 +7394,8 @@ class Disease(Base):
         relations = []
 
         level = 0
-        parents_relation = DBSession.query(DiseaseRelation).filter(and_(DiseaseRelation.child_id == self.disease_id, DiseaseRelation.ro_id.in_(Go.allowed_relationships))).all()
+        parents_relation = DBSession.query(DiseaseRelation).filter(and_(
+            DiseaseRelation.child_id == self.disease_id, DiseaseRelation.ro_id.in_(Go.allowed_relationships))).all()
 
         # breath-first-search stopping at level 3
         parents_at_level = len(parents_relation)
@@ -6846,9 +7406,11 @@ class Disease(Base):
             del parents_relation[0]
 
             if level < max_level:
-                new_parents = DBSession.query(DiseaseRelation).filter(and_(DiseaseRelation.child_id == parent_relation.parent.disease_id, DiseaseRelation.ro_id.in_(Disease.allowed_relationships))).all()
+                new_parents = DBSession.query(DiseaseRelation).filter(and_(
+                    DiseaseRelation.child_id == parent_relation.parent.disease_id, DiseaseRelation.ro_id.in_(Disease.allowed_relationships))).all()
 
-                parents_relation_ids = [p.relation_id for p in parents_relation]
+                parents_relation_ids = [
+                    p.relation_id for p in parents_relation]
                 for p in new_parents:
                     if p.relation_id not in parents_relation_ids:
                         parents_relation.append(p)
@@ -6860,12 +7422,12 @@ class Disease(Base):
 
         return relations
 
-
     def annotations_to_dict(self):
-        annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=self.disease_id).all()
+        annotations = DBSession.query(Diseaseannotation).filter_by(
+            disease_id=self.disease_id).all()
         annotations_dict = []
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
+        # human_gene_ids_to_symbols = {}
+        human_gene_ids_to_symbols = {'display name': 'TEST1'}
 
         for a in annotations:
             annotation = a.to_dict(disease=self)
@@ -6878,7 +7440,8 @@ class Disease(Base):
                             entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
                         else:
                             url = ALLIANCE_API_BASE_URL + hgnc_id
-                            symbol = requests.request('GET', url).json()['symbol']
+                            symbol = requests.request(
+                                'GET', url).json()['symbol']
                             entry['display_name'] = symbol
                             human_gene_ids_to_symbols[hgnc_id] = symbol
             except Exception as e:
@@ -6888,11 +7451,12 @@ class Disease(Base):
 
     def annotations_and_children_to_dict(self):
 
-        annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=self.disease_id).all()
+        annotations = DBSession.query(Diseaseannotation).filter_by(
+            disease_id=self.disease_id).all()
 
         annotations_dict = []
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
+        # human_gene_ids_to_symbols = {}
+        human_gene_ids_to_symbols = {'display name': 'TEST1'}
 
         for a in annotations:
             annotation = a.to_dict(disease=self)
@@ -6905,7 +7469,8 @@ class Disease(Base):
                             entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
                         else:
                             url = ALLIANCE_API_BASE_URL + hgnc_id
-                            symbol = requests.request('GET', url).json()['symbol']
+                            symbol = requests.request(
+                                'GET', url).json()['symbol']
                             entry['display_name'] = symbol
                             human_gene_ids_to_symbols[hgnc_id] = symbol
             except Exception as e:
@@ -6918,7 +7483,8 @@ class Disease(Base):
         children_ids = [c.child_id for c in children_relation]
 
         for child in children:
-            annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=child.disease_id).all()
+            annotations = DBSession.query(Diseaseannotation).filter_by(
+                disease_id=child.disease_id).all()
 
             for a in annotations:
                 annotation = a.to_dict(disease=child)
@@ -6931,7 +7497,8 @@ class Disease(Base):
                                 entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
                             else:
                                 url = ALLIANCE_API_BASE_URL + hgnc_id
-                                symbol = requests.request('GET', url).json()['symbol']
+                                symbol = requests.request(
+                                    'GET', url).json()['symbol']
                                 entry['display_name'] = symbol
                                 human_gene_ids_to_symbols[hgnc_id] = symbol
                 except Exception as e:
@@ -6955,7 +7522,8 @@ class Disease(Base):
         return [url1]
 
     def can_skip_cache(self):
-        annotation_count = annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=self.disease_id).count()
+        annotation_count = annotations = DBSession.query(
+            Diseaseannotation).filter_by(disease_id=self.disease_id).count()
         return annotation_count < 100
 
     def get_secondary_base_url(self):
@@ -6985,12 +7553,16 @@ class DiseaseAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    disease_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    disease_id = Column(ForeignKey('nex.disease.disease_id',
+                        ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     disease = relationship('Disease')
@@ -7004,16 +7576,24 @@ class DiseaseRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey('nex.disease.disease_id',
+                       ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.disease.disease_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Disease', primaryjoin='DiseaseRelation.child_id == Disease.disease_id')
-    parent = relationship('Disease', primaryjoin='DiseaseRelation.parent_id == Disease.disease_id')
+    child = relationship(
+        'Disease', primaryjoin='DiseaseRelation.child_id == Disease.disease_id')
+    parent = relationship(
+        'Disease', primaryjoin='DiseaseRelation.parent_id == Disease.disease_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -7026,7 +7606,8 @@ class DiseaseRelation(Base):
             adding_nodes.append(self.child)
 
         for node in adding_nodes:
-            annotations = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(disease_id=node.disease_id).group_by(Diseaseannotation.dbentity_id).count()
+            annotations = DBSession.query(Diseaseannotation.dbentity_id, func.count(Diseaseannotation.dbentity_id)).filter_by(
+                disease_id=node.disease_id).group_by(Diseaseannotation.dbentity_id).count()
 
             type = "development"
             name = node.display_name + " (" + str(annotations) + ")"
@@ -7058,13 +7639,17 @@ class DiseaseUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    disease_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    disease_id = Column(ForeignKey('nex.disease.disease_id',
+                        ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     disease = relationship('Disease')
@@ -7074,22 +7659,31 @@ class DiseaseUrl(Base):
 class Diseaseannotation(Base):
     __tablename__ = 'diseaseannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'disease_id', 'eco_id', 'reference_id', 'annotation_type', 'disease_qualifier', 'source_id'),
+        UniqueConstraint('dbentity_id', 'disease_id', 'eco_id', 'reference_id',
+                         'annotation_type', 'disease_qualifier', 'source_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    disease_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False, index=True)
-    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    disease_id = Column(ForeignKey('nex.disease.disease_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
+    eco_id = Column(ForeignKey('nex.eco.eco_id',
+                    ondelete='CASCADE'), nullable=False, index=True)
     annotation_type = Column(String(40), nullable=False)
     association_type = Column(String(20), nullable=False)
     disease_qualifier = Column(String(40), nullable=False)
     date_assigned = Column(DateTime, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     association_type = Column(ForeignKey('nex.ro.ro_id'), nullable=False)
 
@@ -7194,7 +7788,8 @@ class Diseaseannotation(Base):
             "properties": []
         }
 
-        supporting_evidences = DBSession.query(Diseasesupportingevidence).filter_by(annotation_id=self.annotation_id).all()
+        supporting_evidences = DBSession.query(Diseasesupportingevidence).filter_by(
+            annotation_id=self.annotation_id).all()
         se_groups = {}
         for se in supporting_evidences:
             evidence_dict = se.to_dict()
@@ -7232,16 +7827,20 @@ class Diseasesubset(Base):
     __tablename__ = 'diseasesubset'
     __table_args__ = {'schema': 'nex'}
 
-    diseasesubset_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    diseasesubset_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    disease_id = Column(ForeignKey('nex.disease.disease_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    disease_id = Column(ForeignKey('nex.disease.disease_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
     subset_name = Column(String(50), nullable=False)
     genome_count = Column(Integer, nullable=False)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     disease = relationship('Disease')
@@ -7255,13 +7854,20 @@ class Diseasesubsetannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    diseasesubset_id = Column(ForeignKey('nex.diseasesubset.diseasesubset_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    diseasesubset_id = Column(ForeignKey(
+        'nex.diseasesubset.diseasesubset_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -7274,17 +7880,21 @@ class Diseasesubsetannotation(Base):
 class Diseasesupportingevidence(Base):
     __tablename__ = 'diseasesupportingevidence'
     __table_args__ = (
-        UniqueConstraint('annotation_id', 'dbxref_id', 'group_id', 'evidence_type'),
+        UniqueConstraint('annotation_id', 'dbxref_id',
+                         'group_id', 'evidence_type'),
         {'schema': 'nex'}
     )
 
-    diseasesupportingevidence_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.diseaseannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    diseasesupportingevidence_id = Column(
+        BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.diseaseannotation.annotation_id', ondelete='CASCADE'), nullable=False)
     group_id = Column(BigInteger, nullable=False)
     dbxref_id = Column(String(40), nullable=False)
     obj_url = Column(String(500), nullable=False)
     evidence_type = Column(String(10), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     annotation = relationship('Diseaseannotation')
@@ -7295,7 +7905,8 @@ class Diseasesupportingevidence(Base):
         # the frontend expects a capitalized "role" to place the evidence in the right column of the annotation table
         if source_id[0] == "SGD":
             sgdid = source_id[1]
-            dbentity = DBSession.query(Dbentity).filter_by(sgdid=sgdid).one_or_none()
+            dbentity = DBSession.query(Dbentity).filter_by(
+                sgdid=sgdid).one_or_none()
             return {
                 "bioentity": {
                     "display_name": dbentity.display_name,
@@ -7319,30 +7930,41 @@ class Diseasesupportingevidence(Base):
 class Dnasequenceannotation(Base):
     __tablename__ = 'dnasequenceannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'taxonomy_id', 'contig_id', 'so_id', 'dna_type'),
+        UniqueConstraint('dbentity_id', 'taxonomy_id',
+                         'contig_id', 'so_id', 'dna_type'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     bud_id = Column(Integer)
-    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
+    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
     dna_type = Column(String(50), nullable=False)
-    contig_id = Column(ForeignKey('nex.contig.contig_id', ondelete='CASCADE'), nullable=False, index=True)
+    contig_id = Column(ForeignKey('nex.contig.contig_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     seq_version = Column(DateTime)
     coord_version = Column(DateTime)
-    genomerelease_id = Column(ForeignKey('nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
+    genomerelease_id = Column(ForeignKey(
+        'nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
     strand = Column(String(1), nullable=False)
     file_header = Column(String(200), nullable=False)
     download_filename = Column(String(100), nullable=False)
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), index=True)
     residues = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     contig = relationship('Contig')
@@ -7355,21 +7977,25 @@ class Dnasequenceannotation(Base):
     taxonomy = relationship('Taxonomy')
 
     def to_dict(self, loci=None, dnasubsequences=None):
-        strains = Straindbentity.get_strains_by_taxon_id(self.contig.taxonomy_id)
+        strains = Straindbentity.get_strains_by_taxon_id(
+            self.contig.taxonomy_id)
 
         if len(strains) == 0:
             return None
-        
+
         if loci and self.dbentity.subclass == 'LOCUS':
             locus = loci[self.dbentity_id]
         else:
-            locus = DBSession.query(Locusdbentity).filter_by(dbentity_id=self.dbentity_id).one_or_none()
+            locus = DBSession.query(Locusdbentity).filter_by(
+                dbentity_id=self.dbentity_id).one_or_none()
         if dnasubsequences:
             tags = dnasubsequences[self.annotation_id]
         else:
-            tags = DBSession.query(Dnasubsequence).filter_by(annotation_id=self.annotation_id).all()
+            tags = DBSession.query(Dnasubsequence).filter_by(
+                annotation_id=self.annotation_id).all()
 
-        tags = sorted(tags, key=lambda t: t.contig_end_index, reverse=(self.strand == "-"))
+        tags = sorted(tags, key=lambda t: t.contig_end_index,
+                      reverse=(self.strand == "-"))
 
         if self.dbentity.subclass != 'LOCUS':
             return {
@@ -7401,31 +8027,40 @@ class Dnasequenceannotation(Base):
             "feature_status": locus.dbentity_status
         }
 
+
 class Dnasubsequence(Base):
     __tablename__ = 'dnasubsequence'
     __table_args__ = (
-        UniqueConstraint('annotation_id', 'dbentity_id', 'relative_start_index', 'relative_end_index'),
+        UniqueConstraint('annotation_id', 'dbentity_id',
+                         'relative_start_index', 'relative_end_index'),
         {'schema': 'nex'}
     )
 
-    dnasubsequence_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.dnasequenceannotation.annotation_id', ondelete='CASCADE'), nullable=False)
-    dbentity_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    dnasubsequence_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.detail_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.dnasequenceannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    dbentity_id = Column(ForeignKey(
+        'nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     display_name = Column(String(500), nullable=False)
     bud_id = Column(Integer)
-    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
+    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
     relative_start_index = Column(Integer, nullable=False)
     relative_end_index = Column(Integer, nullable=False)
     contig_start_index = Column(Integer, nullable=False)
     contig_end_index = Column(Integer, nullable=False)
     seq_version = Column(DateTime)
     coord_version = Column(DateTime)
-    genomerelease_id = Column(ForeignKey('nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
+    genomerelease_id = Column(ForeignKey(
+        'nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
     file_header = Column(String(200), nullable=False)
     download_filename = Column(String(100), nullable=False)
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), index=True)
     residues = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     annotation = relationship('Dnasequenceannotation')
@@ -7483,9 +8118,12 @@ class Dnasequencealignment(Base):
         {'schema': 'nex'}
     )
 
-    alignment_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    contig_id = Column(ForeignKey('nex.contig.contig_id', ondelete='CASCADE'), nullable=False)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    alignment_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    contig_id = Column(ForeignKey('nex.contig.contig_id',
+                       ondelete='CASCADE'), nullable=False)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
     display_name = Column(String(500), nullable=False)
     dna_type = Column(String(50), nullable=False)
     block_sizes = Column(String(250), nullable=True)
@@ -7494,7 +8132,8 @@ class Dnasequencealignment(Base):
     contig_end_index = Column(Integer, nullable=False)
     aligned_sequence = Column(String(500000), nullable=False)
     snp_sequence = Column(String(500000), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     contig = relationship('Contig')
@@ -7508,43 +8147,55 @@ class Proteinsequencealignment(Base):
         {'schema': 'nex'}
     )
 
-    alignment_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    alignment_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
     display_name = Column(String(500), nullable=False)
     aligned_sequence = Column(String(50000), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
+
 
 class Sequencevariant(Base):
     __tablename__ = 'sequencevariant'
     __table_args__ = (
-        UniqueConstraint('locus_id', 'seq_type', 'snp_type', 'start_index', 'end_index'),
+        UniqueConstraint('locus_id', 'seq_type', 'snp_type',
+                         'start_index', 'end_index'),
         {'schema': 'nex'}
     )
 
-    variant_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    variant_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
     seq_type = Column(String(50), nullable=False)
     score = Column(Integer, nullable=False)
     variant_type = Column(String(100), nullable=False)
     snp_type = Column(String(100), nullable=False)
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-    
+
+
 class Ec(Base):
     __tablename__ = 'ec'
     __table_args__ = {'schema': 'nex'}
 
-    ec_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    ec_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     ecid = Column(String(20), nullable=False, unique=True)
     description = Column(String(1000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
     source = relationship('Source')
@@ -7566,8 +8217,6 @@ class Ec(Base):
             "id": None
         } for locus in loci_obj]
 
-
-
     def to_dict(self):
         urls = DBSession.query(EcUrl).filter_by(ec_id=self.ec_id).all()
 
@@ -7588,12 +8237,16 @@ class EcAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    ec_id = Column(ForeignKey('nex.ec.ec_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    ec_id = Column(ForeignKey(
+        'nex.ec.ec_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     ec = relationship('Ec')
@@ -7607,13 +8260,17 @@ class EcUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    ec_id = Column(ForeignKey('nex.ec.ec_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    ec_id = Column(ForeignKey(
+        'nex.ec.ec_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     ec = relationship('Ec')
@@ -7630,14 +8287,17 @@ class Eco(Base):
     __tablename__ = 'eco'
     __table_args__ = {'schema': 'nex'}
 
-    eco_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    eco_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     ecoid = Column(String(20), nullable=False, unique=True)
     description = Column(String(1000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
 
@@ -7651,12 +8311,16 @@ class EcoAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    eco_id = Column(ForeignKey('nex.eco.eco_id',
+                    ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     eco = relationship('Eco')
@@ -7670,16 +8334,24 @@ class EcoRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.eco.eco_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Eco', primaryjoin='EcoRelation.child_id == Eco.eco_id')
-    parent = relationship('Eco', primaryjoin='EcoRelation.parent_id == Eco.eco_id')
+    child = relationship(
+        'Eco', primaryjoin='EcoRelation.child_id == Eco.eco_id')
+    parent = relationship(
+        'Eco', primaryjoin='EcoRelation.parent_id == Eco.eco_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -7691,13 +8363,17 @@ class EcoUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    eco_id = Column(ForeignKey('nex.eco.eco_id',
+                    ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     eco = relationship('Eco')
@@ -7708,18 +8384,22 @@ class Edam(Base):
     __tablename__ = 'edam'
     __table_args__ = {'schema': 'nex'}
 
-    edam_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    edam_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     edamid = Column(String(20), nullable=False, unique=True)
     edam_namespace = Column(String(20), nullable=False)
     description = Column(String(2000))
     is_obsolete = Column(Boolean, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     source = relationship('Source')
+
     def to_dict(self):
         return {
             "id": self.edam_id,
@@ -7736,12 +8416,16 @@ class EdamAlia(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    edam_id = Column(ForeignKey('nex.edam.edam_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    edam_id = Column(ForeignKey('nex.edam.edam_id',
+                     ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     edam = relationship('Edam')
@@ -7755,16 +8439,24 @@ class EdamRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.edam.edam_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.edam.edam_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey('nex.edam.edam_id',
+                       ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.edam.edam_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Edam', primaryjoin='EdamRelation.child_id == Edam.edam_id')
-    parent = relationship('Edam', primaryjoin='EdamRelation.parent_id == Edam.edam_id')
+    child = relationship(
+        'Edam', primaryjoin='EdamRelation.child_id == Edam.edam_id')
+    parent = relationship(
+        'Edam', primaryjoin='EdamRelation.parent_id == Edam.edam_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -7776,13 +8468,17 @@ class EdamUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    edam_id = Column(ForeignKey('nex.edam.edam_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    edam_id = Column(ForeignKey('nex.edam.edam_id',
+                     ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     edam = relationship('Edam')
@@ -7796,13 +8492,20 @@ class Enzymeannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    ec_id = Column(ForeignKey('nex.ec.ec_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    ec_id = Column(ForeignKey('nex.ec.ec_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -7819,14 +8522,21 @@ class Expressionannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    datasetsample_id = Column(ForeignKey('nex.datasetsample.datasetsample_id', ondelete='CASCADE'), nullable=False)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    datasetsample_id = Column(ForeignKey(
+        'nex.datasetsample.datasetsample_id', ondelete='CASCADE'), nullable=False)
     normalized_expression_value = Column(Float(53), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     log_ratio_value = Column(Float(53), nullable=False)
 
@@ -7839,25 +8549,35 @@ class Expressionannotation(Base):
     def to_dict(self):
         return self.datasetsample.dataset.to_dict(self.reference)
 
+
 class Functionalcomplementannotation(Base):
     __tablename__ = 'functionalcomplementannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id','taxonomy_id','dbxref_id','direction','eco_id','reference_id'),
+        UniqueConstraint('dbentity_id', 'taxonomy_id',
+                         'dbxref_id', 'direction', 'eco_id', 'reference_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
-    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    ro_id = Column(ForeignKey(
+        'nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
+    eco_id = Column(ForeignKey('nex.eco.eco_id',
+                    ondelete='CASCADE'), nullable=False)
     dbxref_id = Column(String(30), nullable=False)
     obj_url = Column(String(300), nullable=False)
     direction = Column(String(70), nullable=False)
     curator_comment = Column(String(100), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -7870,7 +8590,7 @@ class Functionalcomplementannotation(Base):
     # def to_dict(self, complement=None, reference=None):
     #    if complement == None:
     #        complement = self.complement
-    def to_dict(self, reference=None): 
+    def to_dict(self, reference=None):
         if reference == None:
             reference = self.reference
 
@@ -7880,10 +8600,10 @@ class Functionalcomplementannotation(Base):
         if len(strain) == 1:
             strain_background = strain[0].display_name
         else:
-            strain_background =	"Other"
-            
-        ## todo: add data to gene_name
-    
+            strain_background = "Other"
+
+        # todo: add data to gene_name
+
         obj = {
             "id": self.annotation_id,
             "obj_url": self.obj_url,
@@ -7911,6 +8631,7 @@ class Functionalcomplementannotation(Base):
         }
         return obj
 
+
 class FileKeyword(Base):
     __tablename__ = 'file_keyword'
     __table_args__ = (
@@ -7918,46 +8639,65 @@ class FileKeyword(Base):
         {'schema': 'nex'}
     )
 
-    file_keyword_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    keyword_id = Column(ForeignKey('nex.keyword.keyword_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    file_keyword_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), nullable=False)
+    keyword_id = Column(ForeignKey('nex.keyword.keyword_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     file = relationship('Filedbentity')
     keyword = relationship('Keyword')
     source = relationship('Source')
 
+
 class Geninteractionannotation(Base):
     __tablename__ = 'geninteractionannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity1_id', 'dbentity2_id', 'bait_hit', 'biogrid_experimental_system', 'reference_id'),
+        UniqueConstraint('dbentity1_id', 'dbentity2_id', 'bait_hit',
+                         'biogrid_experimental_system', 'reference_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity1_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    dbentity2_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    phenotype_id = Column(ForeignKey('nex.phenotype.phenotype_id', ondelete='CASCADE'), index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity1_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    dbentity2_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    phenotype_id = Column(ForeignKey(
+        'nex.phenotype.phenotype_id', ondelete='CASCADE'), index=True)
     biogrid_experimental_system = Column(String(100), nullable=False)
     annotation_type = Column(String(20), nullable=False)
     bait_hit = Column(String(10), nullable=False)
-    mutant_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
+    mutant_id = Column(ForeignKey(
+        'nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
     description = Column(String(1000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    dbentity1 = relationship('Dbentity', primaryjoin='Geninteractionannotation.dbentity1_id == Dbentity.dbentity_id')
-    dbentity2 = relationship('Dbentity', primaryjoin='Geninteractionannotation.dbentity2_id == Dbentity.dbentity_id')
+    dbentity1 = relationship(
+        'Dbentity', primaryjoin='Geninteractionannotation.dbentity1_id == Dbentity.dbentity_id')
+    dbentity2 = relationship(
+        'Dbentity', primaryjoin='Geninteractionannotation.dbentity2_id == Dbentity.dbentity_id')
     phenotype = relationship('Phenotype')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
-    mutant = relationship('Apo', primaryjoin='Geninteractionannotation.mutant_id == Apo.apo_id')
+    mutant = relationship(
+        'Apo', primaryjoin='Geninteractionannotation.mutant_id == Apo.apo_id')
 
     def to_dict(self, reference=None):
         dbentity1 = self.dbentity1
@@ -7970,7 +8710,7 @@ class Geninteractionannotation(Base):
         note = self.description
         if note:
             note = self.description.split('|')[0]
-            
+
         obj = {
             "id": self.annotation_id,
             "note": note,
@@ -7992,7 +8732,8 @@ class Geninteractionannotation(Base):
                 "link": None
             },
             "phenotype": None,
-            "mutant_type": "unspecified", # This column exists in NEX, but doesn't in NEX2. In NEX they are "unspecified" for the whole table. It was asked to removed it.
+            # This column exists in NEX, but doesn't in NEX2. In NEX they are "unspecified" for the whole table. It was asked to removed it.
+            "mutant_type": "unspecified",
             "interaction_type": "Genetic",
             "annotation_type": self.annotation_type,
             "source": {
@@ -8011,7 +8752,7 @@ class Geninteractionannotation(Base):
                 "link": phenotype.obj_url
             }
 
-        ## adding alleles/scores/pvalues
+        # adding alleles/scores/pvalues
         alleles = []
         for x in DBSession.query(AlleleGeninteraction).filter_by(interaction_id=self.annotation_id).all():
             allele1_name = ""
@@ -8020,10 +8761,10 @@ class Geninteractionannotation(Base):
             allele2_name = ""
             if x.allele2_id:
                 allele2_name = x.allele2.display_name
-            alleles.append({ "allele1_name": allele1_name,
-                             "allele2_name": allele2_name,
-                             "sga_score": str(x.sga_score),
-                             "pvalue": str(x.pvalue) })
+            alleles.append({"allele1_name": allele1_name,
+                            "allele2_name": allele2_name,
+                            "sga_score": str(x.sga_score),
+                            "pvalue": str(x.pvalue)})
         obj['alleles'] = alleles
 
         return obj
@@ -8033,18 +8774,22 @@ class Genomerelease(Base):
     __tablename__ = 'genomerelease'
     __table_args__ = {'schema': 'nex'}
 
-    genomerelease_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    genomerelease_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), index=True)
     sequence_release = Column(SmallInteger, nullable=False)
     annotation_release = Column(SmallInteger, nullable=False)
     curation_release = Column(SmallInteger, nullable=False)
     release_date = Column(DateTime, nullable=False)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     file = relationship('Filedbentity')
@@ -8055,16 +8800,19 @@ class Go(Base):
     __tablename__ = 'go'
     __table_args__ = {'schema': 'nex'}
 
-    go_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    go_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     goid = Column(String(20), nullable=False, unique=True)
     go_namespace = Column(String(20), nullable=False)
     description = Column(String(2000))
     is_obsolete = Column(Boolean, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -8074,16 +8822,19 @@ class Go(Base):
     allowed_relationships = (169782, 169466, 169299, 169468, 169467)
 
     def to_dict(self):
-        annotations_count = DBSession.query(Goannotation.dbentity_id, func.count(Goannotation.dbentity_id)).filter_by(go_id=self.go_id).group_by(Goannotation.dbentity_id).count()
+        annotations_count = DBSession.query(Goannotation.dbentity_id, func.count(
+            Goannotation.dbentity_id)).filter_by(go_id=self.go_id).group_by(Goannotation.dbentity_id).count()
 
-        children_relation = DBSession.query(GoRelation).filter_by(parent_id=self.go_id).all()
+        children_relation = DBSession.query(
+            GoRelation).filter_by(parent_id=self.go_id).all()
         if len(children_relation) > 0:
-            children_annotations = len(set([c.child_id for c in children_relation]))
+            children_annotations = len(
+                set([c.child_id for c in children_relation]))
         else:
             children_annotations = 0
 
         obj = {
-            "display_name": self.display_name.replace("_"," "),
+            "display_name": self.display_name.replace("_", " "),
             "urls": [],
             "go_id": self.goid,
             "go_aspect": self.go_namespace,
@@ -8110,18 +8861,20 @@ class Go(Base):
         for synonym in synonyms:
             obj["aliases"].append(synonym.display_name)
 
-        obj["locus_count"] = DBSession.query(Goannotation.dbentity_id, func.count(Goannotation.dbentity_id)).filter_by(go_id=self.go_id).group_by(Goannotation.dbentity_id).count()
+        obj["locus_count"] = DBSession.query(Goannotation.dbentity_id, func.count(
+            Goannotation.dbentity_id)).filter_by(go_id=self.go_id).group_by(Goannotation.dbentity_id).count()
 
         return obj
 
     def ontology_graph(self):
-        annotations = DBSession.query(Goannotation.dbentity_id, func.count(Goannotation.dbentity_id)).filter_by(go_id=self.go_id).group_by(Goannotation.dbentity_id).count()
+        annotations = DBSession.query(Goannotation.dbentity_id, func.count(
+            Goannotation.dbentity_id)).filter_by(go_id=self.go_id).group_by(Goannotation.dbentity_id).count()
 
         nodes = [{
             "data": {
                 "link": self.obj_url,
                 "sub_type": "FOCUS",
-                "name": self.display_name.replace("_"," ") + " (" + str(annotations) + ")",
+                "name": self.display_name.replace("_", " ") + " (" + str(annotations) + ")",
                 "id": str(self.go_id)
             }
         }]
@@ -8129,7 +8882,8 @@ class Go(Base):
         edges = []
         all_children = []
 
-        children_relation = DBSession.query(GoRelation).filter(and_(GoRelation.parent_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
+        children_relation = DBSession.query(GoRelation).filter(and_(
+            GoRelation.parent_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
 
         for child_relation in children_relation[:6]:
             child_node = child_relation.to_graph(nodes, edges, add_child=True)
@@ -8178,7 +8932,8 @@ class Go(Base):
         relations = []
 
         level = 0
-        parents_relation = DBSession.query(GoRelation).filter(and_(GoRelation.child_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
+        parents_relation = DBSession.query(GoRelation).filter(and_(
+            GoRelation.child_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
 
         # breath-first-search stopping at level 3
         parents_at_level = len(parents_relation)
@@ -8189,9 +8944,11 @@ class Go(Base):
             del parents_relation[0]
 
             if level < max_level:
-                new_parents = DBSession.query(GoRelation).filter(and_(GoRelation.child_id == parent_relation.parent.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
+                new_parents = DBSession.query(GoRelation).filter(and_(
+                    GoRelation.child_id == parent_relation.parent.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
 
-                parents_relation_ids = [p.relation_id for p in parents_relation]
+                parents_relation_ids = [
+                    p.relation_id for p in parents_relation]
                 for p in new_parents:
                     if p.relation_id not in parents_relation_ids:
                         parents_relation.append(p)
@@ -8203,9 +8960,9 @@ class Go(Base):
 
         return relations
 
-
     def annotations_to_dict(self):
-        annotations = DBSession.query(Goannotation).filter_by(go_id=self.go_id).all()
+        annotations = DBSession.query(
+            Goannotation).filter_by(go_id=self.go_id).all()
 
         annotations_dict = []
         for a in annotations:
@@ -8216,21 +8973,25 @@ class Go(Base):
     def annotations_and_children_to_dict(self):
         annotations_dict = []
 
-        annotations = DBSession.query(Goannotation).filter_by(go_id=self.go_id).all()
+        annotations = DBSession.query(
+            Goannotation).filter_by(go_id=self.go_id).all()
         for a in annotations:
             annotations_dict += a.to_dict(go=self)
 
-        children_relation = DBSession.query(GoRelation).filter(and_(GoRelation.parent_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
+        children_relation = DBSession.query(GoRelation).filter(and_(
+            GoRelation.parent_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
         children = [c.child for c in children_relation]
         children_ids = [c.child_id for c in children_relation]
 
         for child in children:
-            annotations = DBSession.query(Goannotation).filter_by(go_id=child.go_id).all()
+            annotations = DBSession.query(
+                Goannotation).filter_by(go_id=child.go_id).all()
 
             for a in annotations:
                 annotations_dict += a.to_dict(go=child)
 
-            children_relation = DBSession.query(GoRelation).filter(and_(GoRelation.parent_id == child.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
+            children_relation = DBSession.query(GoRelation).filter(and_(
+                GoRelation.parent_id == child.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
             for c in children_relation:
                 if c.child_id not in children_ids:
                     children.append(c.child)
@@ -8246,7 +9007,8 @@ class Go(Base):
         return [url1]
 
     def can_skip_cache(self):
-        annotation_count = annotations = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
+        annotation_count = annotations = DBSession.query(
+            Goannotation).filter_by(go_id=self.go_id).count()
         return annotation_count < 100
 
     def get_secondary_base_url(self):
@@ -8268,6 +9030,7 @@ class Go(Base):
                 urls.append(url)
         return urls
 
+
 class GoAlias(Base):
     __tablename__ = 'go_alias'
     __table_args__ = (
@@ -8275,12 +9038,16 @@ class GoAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    go_id = Column(ForeignKey(
+        'nex.go.go_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     go = relationship('Go')
@@ -8294,12 +9061,18 @@ class GoRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.go.go_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey(
+        'nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     child = relationship('Go', primaryjoin='GoRelation.child_id == Go.go_id')
@@ -8316,7 +9089,8 @@ class GoRelation(Base):
             adding_nodes.append(self.child)
 
         for node in adding_nodes:
-            annotations = DBSession.query(Goannotation.dbentity_id, func.count(Goannotation.dbentity_id)).filter_by(go_id=node.go_id).group_by(Goannotation.dbentity_id).count()
+            annotations = DBSession.query(Goannotation.dbentity_id, func.count(
+                Goannotation.dbentity_id)).filter_by(go_id=node.go_id).group_by(Goannotation.dbentity_id).count()
 
             type = "development"
             name = node.display_name + " (" + str(annotations) + ")"
@@ -8348,13 +9122,17 @@ class GoUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    go_id = Column(ForeignKey(
+        'nex.go.go_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     go = relationship('Go')
@@ -8364,7 +9142,8 @@ class GoUrl(Base):
 class Goannotation(Base):
     __tablename__ = 'goannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'go_id', 'eco_id', 'reference_id', 'annotation_type', 'go_qualifier', 'source_id'),
+        UniqueConstraint('dbentity_id', 'go_id', 'eco_id', 'reference_id',
+                         'annotation_type', 'go_qualifier', 'source_id'),
         {'schema': 'nex'}
     )
 
@@ -8378,7 +9157,8 @@ class Goannotation(Base):
     annotation_type = Column(String(40), nullable=False)
     go_qualifier = Column(String(40), nullable=False)
     date_assigned = Column(DateTime, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity', foreign_keys=[dbentity_id])
@@ -8400,7 +9180,7 @@ class Goannotation(Base):
         }
 
         alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
-        
+
         experiment_name = None
         if len(alias) > 0:
             experiment_name = alias[0].display_name
@@ -8444,7 +9224,7 @@ class Goannotation(Base):
 
         if experiment_name is None and self.eco.display_name.startswith('biological system reconstruction evidence'):
             experiment_name = 'BSR'
-                
+
         alias_url = DBSession.query(EcoUrl).filter_by(eco_id=self.eco_id).all()
 
         experiment_url = None
@@ -8454,7 +9234,7 @@ class Goannotation(Base):
                 break
         if experiment_url == None and len(alias_url) > 1:
             experiment_url = alias_url[1].obj_url
-            
+
         date_created = self.date_created
         if self.annotation_type == 'computational':
             date_created = self.date_assigned
@@ -8505,7 +9285,8 @@ class Goannotation(Base):
 
         properties = []
 
-        extensions = DBSession.query(Goextension).filter_by(annotation_id=self.annotation_id).all()
+        extensions = DBSession.query(Goextension).filter_by(
+            annotation_id=self.annotation_id).all()
         extension_groups = {}
         for extension in extensions:
             extension_dict = extension.to_dict()
@@ -8515,7 +9296,8 @@ class Goannotation(Base):
                 else:
                     extension_groups[extension.group_id].append(extension_dict)
 
-        supporting_evidences = DBSession.query(Gosupportingevidence).filter_by(annotation_id=self.annotation_id).all()
+        supporting_evidences = DBSession.query(Gosupportingevidence).filter_by(
+            annotation_id=self.annotation_id).all()
         se_groups = {}
         for se in supporting_evidences:
             evidence_dict = se.to_dict()
@@ -8557,13 +9339,17 @@ class Goextension(Base):
         {'schema': 'nex'}
     )
 
-    goextension_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.goannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    goextension_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.detail_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.goannotation.annotation_id', ondelete='CASCADE'), nullable=False)
     group_id = Column(BigInteger, nullable=False)
     dbxref_id = Column(String(40), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     annotation = relationship('Goannotation')
@@ -8574,7 +9360,8 @@ class Goextension(Base):
 
         if source_id[0] == "SGD":
             sgdid = source_id[1]
-            dbentity = DBSession.query(Dbentity).filter_by(sgdid=sgdid).one_or_none()
+            dbentity = DBSession.query(Dbentity).filter_by(
+                sgdid=sgdid).one_or_none()
             return {
                 "bioentity": {
                     "display_name": dbentity.display_name,
@@ -8584,7 +9371,8 @@ class Goextension(Base):
                 "role": self.ro.display_name
             }
         elif source_id[0] == "GO":
-            go_evidence = DBSession.query(Go).filter_by(goid=self.dbxref_id).one_or_none()
+            go_evidence = DBSession.query(Go).filter_by(
+                goid=self.dbxref_id).one_or_none()
             if go_evidence:
                 return {
                     "bioentity": {
@@ -8594,7 +9382,8 @@ class Goextension(Base):
                     "role": self.ro.display_name
                 }
         elif source_id[0] == "CHEBI":
-            chebi = DBSession.query(Chebi).filter_by(chebiid=self.dbxref_id).one_or_none()
+            chebi = DBSession.query(Chebi).filter_by(
+                chebiid=self.dbxref_id).one_or_none()
             if chebi:
                 return {
                     "bioentity": {
@@ -8608,7 +9397,7 @@ class Goextension(Base):
             dbxref_id = source_id[1]
             if dbxref_id in ['MGI', 'locus']:
                 dbxref_id = dbxref_id + ":" + source_id[2]
-                
+
             return {
                 "bioentity": {
                     "display_name": dbxref_id,
@@ -8624,17 +9413,21 @@ class Goslim(Base):
     __tablename__ = 'goslim'
     __table_args__ = {'schema': 'nex'}
 
-    goslim_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    goslim_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
+    go_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
     slim_name = Column(String(40), nullable=False)
     genome_count = Column(Integer, nullable=False)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     go = relationship('Go')
@@ -8652,7 +9445,8 @@ class Goslim(Base):
         #    return None
 
     def to_snapshot_dict(self):
-        direct_annotation_gene_count = DBSession.query(Goannotation).filter_by(go_id=self.go_id).count()
+        direct_annotation_gene_count = DBSession.query(
+            Goannotation).filter_by(go_id=self.go_id).count()
         return {
             "descendant_annotation_gene_count": self.genome_count,
             "format_name": self.display_name if self.display_name in ['molecular_function', 'biological_process', 'cellular_component'] else self.obj_url.split('/')[2],
@@ -8663,6 +9457,7 @@ class Goslim(Base):
             "is_root": True if self.display_name in ['molecular_function', 'biological_process', 'cellular_component'] else False
         }
 
+
 class Goslimannotation(Base):
     __tablename__ = 'goslimannotation'
     __table_args__ = (
@@ -8670,13 +9465,20 @@ class Goslimannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    goslim_id = Column(ForeignKey('nex.goslim.goslim_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    goslim_id = Column(ForeignKey('nex.goslim.goslim_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -8692,17 +9494,21 @@ class Goslimannotation(Base):
 class Gosupportingevidence(Base):
     __tablename__ = 'gosupportingevidence'
     __table_args__ = (
-        UniqueConstraint('annotation_id', 'dbxref_id', 'group_id', 'evidence_type'),
+        UniqueConstraint('annotation_id', 'dbxref_id',
+                         'group_id', 'evidence_type'),
         {'schema': 'nex'}
     )
 
-    gosupportingevidence_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.goannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    gosupportingevidence_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.detail_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.goannotation.annotation_id', ondelete='CASCADE'), nullable=False)
     group_id = Column(BigInteger, nullable=False)
     dbxref_id = Column(String(40), nullable=False)
     obj_url = Column(String(500), nullable=False)
     evidence_type = Column(String(10), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     annotation = relationship('Goannotation')
@@ -8714,7 +9520,8 @@ class Gosupportingevidence(Base):
 
         if source_id[0] == "SGD":
             sgdid = source_id[1]
-            dbentity = DBSession.query(Dbentity).filter_by(sgdid=sgdid).one_or_none()
+            dbentity = DBSession.query(Dbentity).filter_by(
+                sgdid=sgdid).one_or_none()
             return {
                 "bioentity": {
                     "display_name": dbentity.display_name,
@@ -8724,7 +9531,8 @@ class Gosupportingevidence(Base):
                 "role": self.evidence_type.capitalize()
             }
         elif source_id[0] == "GO":
-            go_evidence = DBSession.query(Go).filter_by(goid=self.dbxref_id).one_or_none()
+            go_evidence = DBSession.query(Go).filter_by(
+                goid=self.dbxref_id).one_or_none()
             if go_evidence:
                 return {
                     "bioentity": {
@@ -8734,7 +9542,8 @@ class Gosupportingevidence(Base):
                     "role": self.evidence_type.capitalize()
                 }
         elif source_id[0] == "CHEBI":
-            chebi = DBSession.query(Chebi).filter_by(chebiid=self.dbxref_id).one_or_none()
+            chebi = DBSession.query(Chebi).filter_by(
+                chebiid=self.dbxref_id).one_or_none()
             if chebi:
                 return {
                     "bioentity": {
@@ -8759,6 +9568,7 @@ class Gosupportingevidence(Base):
 
         return None
 
+
 class Journal(Base):
     __tablename__ = 'journal'
     __table_args__ = (
@@ -8766,17 +9576,20 @@ class Journal(Base):
         {'schema': 'nex'}
     )
 
-    journal_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    journal_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
     med_abbr = Column(String(100))
     title = Column(String(200))
     issn_print = Column(String(10))
     issn_electronic = Column(String(10))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -8786,16 +9599,19 @@ class Keyword(Base):
     __tablename__ = 'keyword'
     __table_args__ = {'schema': 'nex'}
 
-    keyword_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    keyword_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False, index=True)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
-    
+
     source = relationship('Source')
 
     def to_simple_dict(self):
@@ -8811,14 +9627,17 @@ class Keyword(Base):
             "bioitems": []
         }
 
-        dataset_keywords = DBSession.query(DatasetKeyword).filter_by(keyword_id=self.keyword_id).all()
+        dataset_keywords = DBSession.query(DatasetKeyword).filter_by(
+            keyword_id=self.keyword_id).all()
 
         dataset_ids = [d.dataset_id for d in dataset_keywords]
-        datasets = DBSession.query(Dataset).filter(Dataset.dataset_id.in_(list(dataset_ids))).all()
+        datasets = DBSession.query(Dataset).filter(
+            Dataset.dataset_id.in_(list(dataset_ids))).all()
         for dataset in datasets:
             obj["bioitems"].append(dataset.to_dict())
 
         return obj
+
 
 class Literatureannotation(Base):
     __tablename__ = 'literatureannotation'
@@ -8827,14 +9646,20 @@ class Literatureannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     topic = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -8886,11 +9711,13 @@ class Literatureannotation(Base):
             if entity.subclass == 'COMPLEX':
                 link = '/complex/' + entity.format_name
             elif entity.subclass == 'PATHWAY':
-                pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
-                link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + pathway.biocyc_id + '&detail-level=2'
+                pathway = DBSession.query(Pathwaydbentity).filter_by(
+                    dbentity_id=entity.dbentity_id).one_or_none()
+                link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + \
+                    pathway.biocyc_id + '&detail-level=2'
             elif entity.subclass == 'ALLELE':
                 link = '/allele/' + entity.format_name
-                
+
             obj["locus"] = {
                 "display_name": entity.display_name,
                 "link": link
@@ -8905,6 +9732,7 @@ class Literatureannotation(Base):
                 return key
         return None
 
+
 class LocusAlias(Base):
     __tablename__ = 'locus_alias'
     __table_args__ = (
@@ -8912,15 +9740,19 @@ class LocusAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False)
     has_external_id_section = Column(Boolean, nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     locus = relationship('Locusdbentity')
@@ -8934,11 +9766,16 @@ class LocusAliasReferences(Base):
         {'schema': 'nex'}
     )
 
-    locusalias_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
-    alias_id = Column(ForeignKey('nex.locus_alias.alias_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    locusalias_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(ForeignKey('nex.locus_alias.alias_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     alias = relationship('LocusAlias')
@@ -8953,12 +9790,17 @@ class LocusReferences(Base):
         {'schema': 'nex'}
     )
 
-    locus_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    locus_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     reference_class = Column(String(40), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     locus = relationship('Locusdbentity', foreign_keys=[locus_id])
@@ -8973,17 +9815,25 @@ class LocusRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    parent_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    parent_id = Column(ForeignKey(
+        'nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Locusdbentity', primaryjoin='LocusRelation.child_id == Locusdbentity.dbentity_id')
-    parent = relationship('Locusdbentity', primaryjoin='LocusRelation.parent_id == Locusdbentity.dbentity_id')
+    child = relationship(
+        'Locusdbentity', primaryjoin='LocusRelation.child_id == Locusdbentity.dbentity_id')
+    parent = relationship(
+        'Locusdbentity', primaryjoin='LocusRelation.parent_id == Locusdbentity.dbentity_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -8995,7 +9845,8 @@ class LocusRelation(Base):
         if self.child_id == real_parent_id:
             parent = self.child
             child = self.parent
-        locusrelation_refs = DBSession.query(LocusRelationReference).filter_by(relation_id=self.relation_id).all()
+        locusrelation_refs = DBSession.query(LocusRelationReference).filter_by(
+            relation_id=self.relation_id).all()
         refs = [a.to_dict() for a in locusrelation_refs]
         return {
             'id': self.relation_id,
@@ -9049,15 +9900,19 @@ class LocusUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
     placement = Column(String(100), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     locus = relationship('Locusdbentity')
@@ -9068,7 +9923,8 @@ class LocusUrl(Base):
         if placement.endswith('INTERACTION_RESOURCES') or placement.endswith('EXPRESSION_RESOURCES') or placement.startswith('LOCUS_PROTEIN'):
             placement = self.placement.replace("_RESOURCES", "", 1)
 
-        if placement == "LOCUS_PROTEIN_LOCALIZATION": # yes, this typo is propagated in the frontend, so it needs to be 'adjusted' here
+        # yes, this typo is propagated in the frontend, so it needs to be 'adjusted' here
+        if placement == "LOCUS_PROTEIN_LOCALIZATION":
             placement = "LOCUS_PROEIN_LOCALIZATION"
 
         if placement == "LOCUS_PROTEIN_PTM":
@@ -9085,20 +9941,25 @@ class Locusnote(Base):
     __tablename__ = 'locusnote'
     __table_args__ = {'schema': 'nex'}
 
-    note_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.note_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    note_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.note_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    locus_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    locus_id = Column(ForeignKey('nex.dbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False)
     note_class = Column(String(40), nullable=False)
     note_type = Column(String(40), nullable=False)
     note = Column(String(2000), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
 
     def to_dict(self):
-        references = DBSession.query(LocusnoteReference).filter_by(note_id=self.note_id).all()
+        references = DBSession.query(LocusnoteReference).filter_by(
+            note_id=self.note_id).all()
 
         return {
             "category": self.note_type,
@@ -9113,11 +9974,16 @@ class LocusnoteReference(Base):
     __tablename__ = 'locusnote_reference'
     __table_args__ = {'schema': 'nex'}
 
-    note_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    note_id = Column(ForeignKey('nex.locusnote.note_id', ondelete='CASCADE'), index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    note_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    note_id = Column(ForeignKey('nex.locusnote.note_id',
+                     ondelete='CASCADE'), index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     note = relationship('Locusnote')
@@ -9132,15 +9998,20 @@ class Locussummary(Base):
         {'schema': 'nex'}
     )
 
-    summary_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.summary_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    summary_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.summary_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False)
     summary_type = Column(String(40), nullable=False)
-    summary_order = Column(SmallInteger, nullable=False, server_default=text("1"))
+    summary_order = Column(SmallInteger, nullable=False,
+                           server_default=text("1"))
     text = Column(Text, nullable=False)
     html = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=FetchedValue())
+    date_created = Column(DateTime, nullable=False,
+                          server_default=FetchedValue())
     created_by = Column(String(12), nullable=False)
 
     locus = relationship('Locusdbentity')
@@ -9153,7 +10024,7 @@ class Locussummary(Base):
         preview_url = '/locus/' + self.locus.sgdid + '/' + summary_type_url_segment
         return {
             'category': 'locus',
-            'created_by' : self.created_by,
+            'created_by': self.created_by,
             'href': preview_url,
             'date_created': self.date_created.strftime("%Y-%m-%d"),
             'time_created': self.date_created.isoformat(),
@@ -9162,7 +10033,7 @@ class Locussummary(Base):
             'value': self.text
         }
 
-   
+
 class LocussummaryReference(Base):
     __tablename__ = 'locussummary_reference'
     __table_args__ = (
@@ -9170,17 +10041,23 @@ class LocussummaryReference(Base):
         {'schema': 'nex'}
     )
 
-    summary_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    summary_id = Column(ForeignKey('nex.locussummary.summary_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    summary_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    summary_id = Column(ForeignKey(
+        'nex.locussummary.summary_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     reference_order = Column(SmallInteger, nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
     source = relationship('Source')
     summary = relationship('Locussummary')
+
 
 class LocusRelationReference(Base):
     __tablename__ = 'locusrelation_reference'
@@ -9189,11 +10066,16 @@ class LocusRelationReference(Base):
         {'schema': 'nex'}
     )
 
-    locusrelation_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    relation_id = Column(ForeignKey('nex.locus_relation.relation_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    locusrelation_reference_id = Column(
+        BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
+    relation_id = Column(ForeignKey(
+        'nex.locus_relation.relation_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -9211,18 +10093,22 @@ class LocusRelationReference(Base):
             'id': ref.dbentity_id
         }
 
+
 class Obi(Base):
     __tablename__ = 'obi'
     __table_args__ = {'schema': 'nex'}
 
-    obi_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    obi_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     obiid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
 
@@ -9236,16 +10122,24 @@ class ObiRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.obi.obi_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.obi.obi_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Obi', primaryjoin='ObiRelation.child_id == Obi.obi_id')
-    parent = relationship('Obi', primaryjoin='ObiRelation.parent_id == Obi.obi_id')
+    child = relationship(
+        'Obi', primaryjoin='ObiRelation.child_id == Obi.obi_id')
+    parent = relationship(
+        'Obi', primaryjoin='ObiRelation.parent_id == Obi.obi_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -9257,13 +10151,17 @@ class ObiUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    obi_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    obi_id = Column(ForeignKey('nex.obi.obi_id',
+                    ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     obi = relationship('Obi')
@@ -9277,12 +10175,16 @@ class PathwayAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    pathway_id = Column(ForeignKey('nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    pathway_id = Column(ForeignKey(
+        'nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     pathway = relationship('Pathwaydbentity')
@@ -9296,13 +10198,17 @@ class PathwayUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    pathway_id = Column(ForeignKey('nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    pathway_id = Column(ForeignKey(
+        'nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     pathway = relationship('Pathwaydbentity')
@@ -9316,14 +10222,21 @@ class Pathwayannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    pathway_id = Column(ForeignKey('nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    pathway_id = Column(ForeignKey('nex.pathwaydbentity.dbentity_id',
+                        ondelete='CASCADE'), nullable=False, index=True)
     ec_id = Column(ForeignKey('nex.ec.ec_id', ondelete='CASCADE'), index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -9352,13 +10265,17 @@ class Pathwaysummary(Base):
         {'schema': 'nex'}
     )
 
-    summary_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.summary_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    pathway_id = Column(ForeignKey('nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    summary_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.summary_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    pathway_id = Column(ForeignKey(
+        'nex.pathwaydbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     summary_type = Column(String(40), nullable=False)
     text = Column(Text, nullable=False)
     html = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=FetchedValue())
+    date_created = Column(DateTime, nullable=False,
+                          server_default=FetchedValue())
     created_by = Column(String(12), nullable=False)
 
     pathway = relationship('Pathwaydbentity')
@@ -9372,12 +10289,17 @@ class PathwaysummaryReference(Base):
         {'schema': 'nex'}
     )
 
-    summary_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    summary_id = Column(ForeignKey('nex.pathwaysummary.summary_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    summary_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    summary_id = Column(ForeignKey(
+        'nex.pathwaysummary.summary_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     reference_order = Column(BigInteger, nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -9389,24 +10311,31 @@ class Phenotype(Base):
     __tablename__ = 'phenotype'
     __table_args__ = {'schema': 'nex'}
 
-    phenotype_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    phenotype_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    observable_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
-    qualifier_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), index=True)
+    observable_id = Column(ForeignKey(
+        'nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
+    qualifier_id = Column(ForeignKey(
+        'nex.apo.apo_id', ondelete='CASCADE'), index=True)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    observable = relationship('Apo', primaryjoin='Phenotype.observable_id == Apo.apo_id')
-    qualifier = relationship('Apo', primaryjoin='Phenotype.qualifier_id == Apo.apo_id')
+    observable = relationship(
+        'Apo', primaryjoin='Phenotype.observable_id == Apo.apo_id')
+    qualifier = relationship(
+        'Apo', primaryjoin='Phenotype.qualifier_id == Apo.apo_id')
     source = relationship('Source')
 
     def to_main_dict(self):
-        return { c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs }
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
     def to_dict(self):
         obj = {
@@ -9427,13 +10356,15 @@ class Phenotype(Base):
 
         return obj
 
-
     def annotations_to_dict(self):
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=self.phenotype_id).all()
+        phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(
+            phenotype_id=self.phenotype_id).all()
         temp = [p.annotation_id for p in phenotype_annotations]
         pheno_ids = clear_list_empty_values(temp)
-        conditions = DBSession.query(PhenotypeannotationCond).filter(PhenotypeannotationCond.annotation_id.in_(pheno_ids)).all()
-        condition_names = clear_list_empty_values(list(set([c.condition_name for c in conditions])))
+        conditions = DBSession.query(PhenotypeannotationCond).filter(
+            PhenotypeannotationCond.annotation_id.in_(pheno_ids)).all()
+        condition_names = clear_list_empty_values(
+            list(set([c.condition_name for c in conditions])))
 
         conditions_dict = {}
         for condition in conditions:
@@ -9442,7 +10373,8 @@ class Phenotype(Base):
             else:
                 conditions_dict[condition.annotation_id] = [condition]
         if len(condition_names) > 0:
-            urls = DBSession.query(Chebi.display_name, Chebi.obj_url).filter(Chebi.display_name.in_(condition_names)).all()
+            urls = DBSession.query(Chebi.display_name, Chebi.obj_url).filter(
+                Chebi.display_name.in_(condition_names)).all()
         else:
             urls = []
         chebi_urls = {}
@@ -9451,14 +10383,16 @@ class Phenotype(Base):
 
         obj = []
         for annotation in phenotype_annotations:
-            obj += annotation.to_dict(phenotype=self, conditions=conditions_dict.get(annotation.annotation_id, []), chebi_urls=chebi_urls)
+            obj += annotation.to_dict(phenotype=self, conditions=conditions_dict.get(
+                annotation.annotation_id, []), chebi_urls=chebi_urls)
         return obj
 
     def get_base_url(self):
         return '/phenotype/' + self.format_name
 
     def can_skip_cache(self):
-        annotation_count = annotations = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=self.phenotype_id).count()
+        annotation_count = annotations = DBSession.query(
+            Phenotypeannotation).filter_by(phenotype_id=self.phenotype_id).count()
         return annotation_count < 100
 
     def get_secondary_cache_urls(self, is_quick=False):
@@ -9468,28 +10402,42 @@ class Phenotype(Base):
     def get_secondary_base_url(self):
         return '/webservice/phenotype/' + str(self.phenotype_id)
 
+
 class Phenotypeannotation(Base):
     __tablename__ = 'phenotypeannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'phenotype_id', 'experiment_id', 'mutant_id', 'reference_id', 'taxonomy_id'),
+        UniqueConstraint('dbentity_id', 'phenotype_id', 'experiment_id',
+                         'mutant_id', 'reference_id', 'taxonomy_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    phenotype_id = Column(ForeignKey('nex.phenotype.phenotype_id', ondelete='CASCADE'), nullable=False, index=True)
-    experiment_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
-    mutant_id = Column(ForeignKey('nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
-    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    reporter_id = Column(ForeignKey('nex.reporter.reporter_id', ondelete='CASCADE'), index=True)
-    assay_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    phenotype_id = Column(ForeignKey(
+        'nex.phenotype.phenotype_id', ondelete='CASCADE'), nullable=False, index=True)
+    experiment_id = Column(ForeignKey(
+        'nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
+    mutant_id = Column(ForeignKey(
+        'nex.apo.apo_id', ondelete='CASCADE'), nullable=False, index=True)
+    allele_id = Column(ForeignKey(
+        'nex.alleledbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    reporter_id = Column(ForeignKey(
+        'nex.reporter.reporter_id', ondelete='CASCADE'), index=True)
+    assay_id = Column(ForeignKey('nex.obi.obi_id',
+                      ondelete='CASCADE'), index=True)
     strain_name = Column(String(100))
     details = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     experiment_comment = Column(String(200))
     allele_comment = Column(String(200))
@@ -9498,8 +10446,10 @@ class Phenotypeannotation(Base):
     allele = relationship('Alleledbentity', foreign_keys=[allele_id])
     assay = relationship('Obi')
     dbentity = relationship('Dbentity')
-    experiment = relationship('Apo', primaryjoin='Phenotypeannotation.experiment_id == Apo.apo_id')
-    mutant = relationship('Apo', primaryjoin='Phenotypeannotation.mutant_id == Apo.apo_id')
+    experiment = relationship(
+        'Apo', primaryjoin='Phenotypeannotation.experiment_id == Apo.apo_id')
+    mutant = relationship(
+        'Apo', primaryjoin='Phenotypeannotation.mutant_id == Apo.apo_id')
     phenotype = relationship('Phenotype')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     reporter = relationship('Reporter')
@@ -9517,11 +10467,13 @@ class Phenotypeannotation(Base):
         strains_result = []
 
         if annotations is None:
-            annotations = DBSession.query(Phenotypeannotation.taxonomy_id, Phenotypeannotation.annotation_id).filter(Phenotypeannotation.phenotype_id.in_(phenotype_ids)).all()
+            annotations = DBSession.query(Phenotypeannotation.taxonomy_id, Phenotypeannotation.annotation_id).filter(
+                Phenotypeannotation.phenotype_id.in_(phenotype_ids)).all()
 
         annotation_ids = [a.annotation_id for a in annotations]
 
-        number_conditions_tuples = DBSession.query(PhenotypeannotationCond.annotation_id, func.count(distinct(PhenotypeannotationCond.group_id))).filter(PhenotypeannotationCond.annotation_id.in_(annotation_ids)).group_by(PhenotypeannotationCond.annotation_id).all()
+        number_conditions_tuples = DBSession.query(PhenotypeannotationCond.annotation_id, func.count(distinct(PhenotypeannotationCond.group_id))).filter(
+            PhenotypeannotationCond.annotation_id.in_(annotation_ids)).group_by(PhenotypeannotationCond.annotation_id).all()
 
         number_conditions = {}
         for t in number_conditions_tuples:
@@ -9558,11 +10510,13 @@ class Phenotypeannotation(Base):
     @staticmethod
     def count_experiment_categories(phenotype_ids=None, annotations=None):
         if annotations is None:
-            annotations = DBSession.query(Phenotypeannotation).filter(Phenotypeannotation.phenotype_id.in_(phenotype_ids)).all()
+            annotations = DBSession.query(Phenotypeannotation).filter(
+                Phenotypeannotation.phenotype_id.in_(phenotype_ids)).all()
 
         annotation_ids = [a.annotation_id for a in annotations]
 
-        number_conditions_tuples = DBSession.query(PhenotypeannotationCond.annotation_id, func.count(distinct(PhenotypeannotationCond.group_id))).filter(PhenotypeannotationCond.annotation_id.in_(annotation_ids)).group_by(PhenotypeannotationCond.annotation_id).all()
+        number_conditions_tuples = DBSession.query(PhenotypeannotationCond.annotation_id, func.count(distinct(PhenotypeannotationCond.group_id))).filter(
+            PhenotypeannotationCond.annotation_id.in_(annotation_ids)).group_by(PhenotypeannotationCond.annotation_id).all()
 
         number_conditions = {}
         for t in number_conditions_tuples:
@@ -9586,7 +10540,8 @@ class Phenotypeannotation(Base):
 
         experiment_categories = []
         for key in list(mt.keys()):
-            experiment_categories.append([key, mt[key]["classical genetics"], mt[key]["large-scale survey"]])
+            experiment_categories.append(
+                [key, mt[key]["classical genetics"], mt[key]["large-scale survey"]])
 
         return sorted(experiment_categories, key=lambda k: k[1] + k[2], reverse=True)
 
@@ -9596,12 +10551,12 @@ class Phenotypeannotation(Base):
         if phenotype_annotations is None:
             return {
                 "strains": [["Strain", "Annotations"]] + Phenotypeannotation.count_strains(phenotype_ids=phenotype_ids),
-                "experiment_categories": [["Mutant Type", "classical genetics", "large-scale survey"]] +  Phenotypeannotation.count_experiment_categories(phenotype_ids=phenotype_ids)
+                "experiment_categories": [["Mutant Type", "classical genetics", "large-scale survey"]] + Phenotypeannotation.count_experiment_categories(phenotype_ids=phenotype_ids)
             }
         else:
             return {
                 "strains": [["Strain", "Annotations"]] + Phenotypeannotation.count_strains(annotations=phenotype_annotations),
-                "experiment_categories": [["Mutant Type", "classical genetics", "large-scale survey"]] +  Phenotypeannotation.count_experiment_categories(annotations=phenotype_annotations)
+                "experiment_categories": [["Mutant Type", "classical genetics", "large-scale survey"]] + Phenotypeannotation.count_experiment_categories(annotations=phenotype_annotations)
             }
 
     def to_dict_lsp(self):
@@ -9831,17 +10786,21 @@ class Phenotypeannotation(Base):
 class PhenotypeannotationCond(Base):
     __tablename__ = 'phenotypeannotation_cond'
     __table_args__ = (
-        UniqueConstraint('annotation_id', 'condition_class', 'condition_name', 'condition_value'),
+        UniqueConstraint('annotation_id', 'condition_class',
+                         'condition_name', 'condition_value'),
         {'schema': 'nex'}
     )
 
-    condition_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.condition_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.phenotypeannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    condition_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.condition_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.phenotypeannotation.annotation_id', ondelete='CASCADE'), nullable=False)
     condition_class = Column(String(40), nullable=False)
     condition_name = Column(String(500), nullable=False)
     condition_value = Column(String(150))
     condition_unit = Column(String(25))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     group_id = Column(Integer, nullable=False)
 
@@ -9851,26 +10810,37 @@ class PhenotypeannotationCond(Base):
 class Physinteractionannotation(Base):
     __tablename__ = 'physinteractionannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity1_id', 'dbentity2_id', 'bait_hit', 'biogrid_experimental_system', 'reference_id'),
+        UniqueConstraint('dbentity1_id', 'dbentity2_id', 'bait_hit',
+                         'biogrid_experimental_system', 'reference_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity1_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    dbentity2_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    psimod_id = Column(ForeignKey('nex.psimod.psimod_id', ondelete='CASCADE'), index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity1_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    dbentity2_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    psimod_id = Column(ForeignKey('nex.psimod.psimod_id',
+                       ondelete='CASCADE'), index=True)
     biogrid_experimental_system = Column(String(100), nullable=False)
     annotation_type = Column(String(20), nullable=False)
     bait_hit = Column(String(10), nullable=False)
     description = Column(String(1000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    dbentity1 = relationship('Dbentity', primaryjoin='Physinteractionannotation.dbentity1_id == Dbentity.dbentity_id')
-    dbentity2 = relationship('Dbentity', primaryjoin='Physinteractionannotation.dbentity2_id == Dbentity.dbentity_id')
+    dbentity1 = relationship(
+        'Dbentity', primaryjoin='Physinteractionannotation.dbentity1_id == Dbentity.dbentity_id')
+    dbentity2 = relationship(
+        'Dbentity', primaryjoin='Physinteractionannotation.dbentity2_id == Dbentity.dbentity_id')
     psimod = relationship('Psimod')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
@@ -9907,8 +10877,8 @@ class Physinteractionannotation(Base):
                 "display_name": self.biogrid_experimental_system,
                 "link": None
             },
-            "phenotype": None, # None for physical interactions
-            "mutant_type": None, # None for physical interactions
+            "phenotype": None,  # None for physical interactions
+            "mutant_type": None,  # None for physical interactions
             "modification": modification,
             "interaction_type": "Physical",
             "annotation_type": self.annotation_type,
@@ -9926,24 +10896,35 @@ class Physinteractionannotation(Base):
 class Posttranslationannotation(Base):
     __tablename__ = 'posttranslationannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'psimod_id', 'site_residue', 'site_index', 'reference_id', 'modifier_id'),
+        UniqueConstraint('dbentity_id', 'psimod_id', 'site_residue',
+                         'site_index', 'reference_id', 'modifier_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     site_index = Column(Integer, nullable=False)
     site_residue = Column(String(1), nullable=False)
-    psimod_id = Column(ForeignKey('nex.psimod.psimod_id', ondelete='CASCADE'), nullable=False, index=True)
-    modifier_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    psimod_id = Column(ForeignKey('nex.psimod.psimod_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    modifier_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    dbentity = relationship('Dbentity', primaryjoin='Posttranslationannotation.dbentity_id == Dbentity.dbentity_id')
-    modifier = relationship('Dbentity', primaryjoin='Posttranslationannotation.modifier_id == Dbentity.dbentity_id')
+    dbentity = relationship(
+        'Dbentity', primaryjoin='Posttranslationannotation.dbentity_id == Dbentity.dbentity_id')
+    modifier = relationship(
+        'Dbentity', primaryjoin='Posttranslationannotation.modifier_id == Dbentity.dbentity_id')
     psimod = relationship('Psimod')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
@@ -9992,18 +10973,22 @@ class Posttranslationannotation(Base):
             "id": self.annotation_id
         }
 
+
 class Proteindomain(Base):
     __tablename__ = 'proteindomain'
     __table_args__ = {'schema': 'nex'}
 
-    proteindomain_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    proteindomain_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     interpro_id = Column(String(20))
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -10030,7 +11015,8 @@ class Proteindomain(Base):
         return obj
 
     def locus_details(self):
-        annotations = DBSession.query(Proteindomainannotation).filter_by(proteindomain_id=self.proteindomain_id).all()
+        annotations = DBSession.query(Proteindomainannotation).filter_by(
+            proteindomain_id=self.proteindomain_id).all()
         return [a.to_dict(proteindomain=self) for a in annotations]
 
     def enrichment(self):
@@ -10046,7 +11032,8 @@ class Proteindomain(Base):
         })
 
         try:
-            req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
+            req = Request(url=os.environ['BATTER_URI'],
+                          data=data.encode('utf-8'))
             res = urlopen(req)
             response_json = json.loads(res.read().decode('utf-8'))
         except:
@@ -10073,13 +11060,17 @@ class ProteindomainUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    proteindomain_id = Column(ForeignKey('nex.proteindomain.proteindomain_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    proteindomain_id = Column(ForeignKey(
+        'nex.proteindomain.proteindomain_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     proteindomain = relationship('Proteindomain')
@@ -10095,20 +11086,28 @@ class ProteindomainUrl(Base):
 class Proteindomainannotation(Base):
     __tablename__ = 'proteindomainannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'proteindomain_id', 'start_index', 'end_index'),
+        UniqueConstraint('dbentity_id', 'proteindomain_id',
+                         'start_index', 'end_index'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    proteindomain_id = Column(ForeignKey('nex.proteindomain.proteindomain_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    proteindomain_id = Column(ForeignKey(
+        'nex.proteindomain.proteindomain_id', ondelete='CASCADE'), nullable=False, index=True)
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
     date_of_run = Column(DateTime, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -10124,7 +11123,8 @@ class Proteindomainannotation(Base):
         if proteindomain is None:
             proteindomain = self.proteindomain
 
-        count = DBSession.query(Proteindomainannotation).distinct(Proteindomainannotation.dbentity_id).filter_by(proteindomain_id=self.proteindomain_id).count()
+        count = DBSession.query(Proteindomainannotation).distinct(
+            Proteindomainannotation.dbentity_id).filter_by(proteindomain_id=self.proteindomain_id).count()
 
         domain_link_url = proteindomain.obj_url
         if "mobidb" in domain_link_url:
@@ -10166,16 +11166,23 @@ class Proteinexptannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
     experiment_type = Column(String(40), nullable=False)
     data_value = Column(String(25), nullable=False)
     data_unit = Column(String(25), nullable=False)
-    assay_id = Column(ForeignKey('nex.obi.obi_id', ondelete='CASCADE'), index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    assay_id = Column(ForeignKey('nex.obi.obi_id',
+                      ondelete='CASCADE'), index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     assay = relationship('Obi')
@@ -10217,17 +11224,21 @@ class Proteinexptannotation(Base):
 class ProteinexptannotationCond(Base):
     __tablename__ = 'proteinexptannotation_cond'
     __table_args__ = (
-        UniqueConstraint('annotation_id', 'condition_class', 'condition_name', 'condition_value'),
+        UniqueConstraint('annotation_id', 'condition_class',
+                         'condition_name', 'condition_value'),
         {'schema': 'nex'}
     )
 
-    condition_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.condition_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.proteinexptannotation.annotation_id', ondelete='CASCADE'), nullable=False)
+    condition_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.condition_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.proteinexptannotation.annotation_id', ondelete='CASCADE'), nullable=False)
     condition_class = Column(String(40), nullable=False)
     condition_name = Column(String(500), nullable=False)
     condition_value = Column(String(25))
     condition_unit = Column(String(25))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     annotation = relationship('Proteinexptannotation')
@@ -10237,8 +11248,10 @@ class ProteinsequenceDetail(Base):
     __tablename__ = 'proteinsequence_detail'
     __table_args__ = {'schema': 'nex'}
 
-    detail_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.detail_seq'::regclass)"))
-    annotation_id = Column(ForeignKey('nex.proteinsequenceannotation.annotation_id', ondelete='CASCADE'), nullable=False, unique=True)
+    detail_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.detail_seq'::regclass)"))
+    annotation_id = Column(ForeignKey(
+        'nex.proteinsequenceannotation.annotation_id', ondelete='CASCADE'), nullable=False, unique=True)
     molecular_weight = Column(Numeric, nullable=False)
     protein_length = Column(BigInteger, nullable=False)
     n_term_seq = Column(String(10), nullable=False)
@@ -10278,7 +11291,8 @@ class ProteinsequenceDetail(Base):
     carbon = Column(Integer)
     no_cys_ext_coeff = Column(Integer)
     all_cys_ext_coeff = Column(Integer)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     annotation = relationship('Proteinsequenceannotation', uselist=False)
@@ -10294,7 +11308,7 @@ class ProteinsequenceDetail(Base):
             "pi": self.float_safe('pi')
         }
 
-    def to_dict(self): # I followed the NEX endpoint to convert floats to strings
+    def to_dict(self):  # I followed the NEX endpoint to convert floats to strings
         return {
             "molecular_weight": str(float(self.molecular_weight)),
             "protein_length": self.protein_length,
@@ -10337,6 +11351,7 @@ class ProteinsequenceDetail(Base):
             "all_cys_ext_coeff": str(self.float_safe('all_cys_ext_coeff'))
         }
 
+
 class Proteinsequenceannotation(Base):
     __tablename__ = 'proteinsequenceannotation'
     __table_args__ = (
@@ -10344,20 +11359,28 @@ class Proteinsequenceannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
     bud_id = Column(Integer)
-    contig_id = Column(ForeignKey('nex.contig.contig_id', ondelete='CASCADE'), nullable=False, index=True)
+    contig_id = Column(ForeignKey('nex.contig.contig_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     seq_version = Column(DateTime)
-    genomerelease_id = Column(ForeignKey('nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
+    genomerelease_id = Column(ForeignKey(
+        'nex.genomerelease.genomerelease_id', ondelete='CASCADE'), index=True)
     file_header = Column(String(200), nullable=False)
     download_filename = Column(String(100), nullable=False)
     file_id = Column(BigInteger)
     residues = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     contig = relationship('Contig')
@@ -10369,14 +11392,17 @@ class Proteinsequenceannotation(Base):
 
     def to_dict(self, locus=None):
         if locus is None:
-            locus = DBSession.query(Locusdbentity).filter_by(dbentity_id=self.dbentity_id).one_or_none()
+            locus = DBSession.query(Locusdbentity).filter_by(
+                dbentity_id=self.dbentity_id).one_or_none()
 
-        strains = Straindbentity.get_strains_by_taxon_id(self.contig.taxonomy_id)
+        strains = Straindbentity.get_strains_by_taxon_id(
+            self.contig.taxonomy_id)
 
         if len(strains) == 0:
             return None
 
-        details = DBSession.query(ProteinsequenceDetail).filter_by(annotation_id=self.annotation_id).one_or_none()
+        details = DBSession.query(ProteinsequenceDetail).filter_by(
+            annotation_id=self.annotation_id).one_or_none()
         if details:
             obj = details.to_dict()
         else:
@@ -10398,17 +11424,19 @@ class Psimod(Base):
     __tablename__ = 'psimod'
     __table_args__ = {'schema': 'nex'}
 
-    psimod_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    psimod_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     psimodid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
     is_obsolete = Column(Boolean, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-
 
     source = relationship('Source')
 
@@ -10420,16 +11448,24 @@ class PsimodRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.psimod.psimod_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.psimod.psimod_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey('nex.psimod.psimod_id',
+                       ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.psimod.psimod_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Psimod', primaryjoin='PsimodRelation.child_id == Psimod.psimod_id')
-    parent = relationship('Psimod', primaryjoin='PsimodRelation.parent_id == Psimod.psimod_id')
+    child = relationship(
+        'Psimod', primaryjoin='PsimodRelation.child_id == Psimod.psimod_id')
+    parent = relationship(
+        'Psimod', primaryjoin='PsimodRelation.parent_id == Psimod.psimod_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -10441,13 +11477,17 @@ class PsimodUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    psimod_id = Column(ForeignKey('nex.psimod.psimod_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    psimod_id = Column(ForeignKey('nex.psimod.psimod_id',
+                       ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     psimod = relationship('Psimod')
@@ -10458,14 +11498,17 @@ class Psimi(Base):
     __tablename__ = 'psimi'
     __table_args__ = {'schema': 'nex'}
 
-    psimi_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    psimi_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     psimiid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
 
@@ -10479,16 +11522,24 @@ class PsimiRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey('nex.psimi.psimi_id',
+                       ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.psimi.psimi_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Psimi', primaryjoin='PsimiRelation.child_id == Psimi.psimi_id')
-    parent = relationship('Psimi', primaryjoin='PsimiRelation.parent_id == Psimi.psimi_id')
+    child = relationship(
+        'Psimi', primaryjoin='PsimiRelation.child_id == Psimi.psimi_id')
+    parent = relationship(
+        'Psimi', primaryjoin='PsimiRelation.parent_id == Psimi.psimi_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -10500,13 +11551,17 @@ class PsimiUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    psimi_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    psimi_id = Column(ForeignKey('nex.psimi.psimi_id',
+                      ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     psimi = relationship('Psimi')
@@ -10520,29 +11575,37 @@ class PsimiAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False,index=True)
-    psimi_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    psimi_id = Column(ForeignKey('nex.psimi.psimi_id',
+                      ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     psimi = relationship('Psimi')
     source = relationship('Source')
 
+
 class Efo(Base):
     __tablename__ = 'efo'
     __table_args__ = {'schema': 'nex'}
 
-    efo_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    efo_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     efoid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
 
@@ -10556,18 +11619,27 @@ class EfoRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.efo.efo_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.efo.efo_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.efo.efo_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.efo.efo_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Efo', primaryjoin='EfoRelation.child_id == Efo.efo_id')
-    parent = relationship('Efo', primaryjoin='EfoRelation.parent_id == Efo.efo_id')
+    child = relationship(
+        'Efo', primaryjoin='EfoRelation.child_id == Efo.efo_id')
+    parent = relationship(
+        'Efo', primaryjoin='EfoRelation.parent_id == Efo.efo_id')
     ro = relationship('Ro')
     source = relationship('Source')
+
 
 class EfoUrl(Base):
     __tablename__ = 'efo_url'
@@ -10576,17 +11648,22 @@ class EfoUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    efo_id = Column(ForeignKey('nex.efo.efo_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    efo_id = Column(ForeignKey('nex.efo.efo_id',
+                    ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     efo = relationship('Efo')
     source = relationship('Source')
+
 
 class EfoAlias(Base):
     __tablename__ = 'efo_alias'
@@ -10595,12 +11672,16 @@ class EfoAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False,index=True)
-    efo_id = Column(ForeignKey('nex.efo.efo_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    efo_id = Column(ForeignKey('nex.efo.efo_id',
+                    ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     efo = relationship('Efo')
@@ -10610,37 +11691,50 @@ class EfoAlias(Base):
 class Proteinabundanceannotation(Base):
     __tablename__ = 'proteinabundanceannotation'
     __table_args__ = (
-        UniqueConstraint('dbentity_id', 'original_reference_id', 'assay_id', 'media_id', 'taxonomy_id', 'chemical_id', 'process_id'),
+        UniqueConstraint('dbentity_id', 'original_reference_id', 'assay_id',
+                         'media_id', 'taxonomy_id', 'chemical_id', 'process_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    original_reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    assay_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
-    media_id = Column(ForeignKey('nex.efo.efo_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    original_reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    assay_id = Column(ForeignKey('nex.eco.eco_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    media_id = Column(ForeignKey('nex.efo.efo_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
     data_value = Column(Integer)
     data_unit = Column(String)
     fold_change = Column(Float)
-    chemical_id = Column(ForeignKey('nex.chebi.chebi_id', ondelete='CASCADE'), nullable=False, index=True)
-    process_id = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
+    chemical_id = Column(ForeignKey('nex.chebi.chebi_id',
+                         ondelete='CASCADE'), nullable=False, index=True)
+    process_id = Column(ForeignKey(
+        'nex.go.go_id', ondelete='CASCADE'), nullable=False, index=True)
     concentration_value = Column(Float)
     concentration_unit = Column(String)
     time_value = Column(Integer)
     time_unit = Column(String)
     median_value = Column(Integer)
     median_abs_dev_value = Column(Integer)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
-    
+
     eco = relationship('Eco')
     efo = relationship('Efo')
     dbentity = relationship('Dbentity')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
-    original_reference = relationship('Referencedbentity', foreign_keys=[original_reference_id])
+    original_reference = relationship(
+        'Referencedbentity', foreign_keys=[original_reference_id])
     chebi = relationship('Chebi')
     go = relationship('Go')
     source = relationship('Source')
@@ -10657,10 +11751,10 @@ class Proteinabundanceannotation(Base):
 
         if locus is None:
             locus = self.dbentity
-            
+
         if chebi is None:
             chebi = self.chebi
-            
+
         process = ""
         chemical_name = ""
         p = '0'
@@ -10671,14 +11765,15 @@ class Proteinabundanceannotation(Base):
         if self.chemical_id:
             chemical_name = chebi.display_name
             c = '1'
-        order_by = original_reference.display_name + "_" + p + c + "_" + process + "_" + chemical_name 
+        order_by = original_reference.display_name + "_" + \
+            p + c + "_" + process + "_" + chemical_name
 
         # strain = self.taxonomy.display_name.replace("Saccharomyces cerevisiae ", "").upper()
         # if strain == '':
         #    strain = "Other";
 
         strains = Straindbentity.get_strains_by_taxon_id(self.taxonomy_id)
-        
+
         strain_name = None
         strain_link = None
         if len(strains) == 1:
@@ -10739,13 +11834,15 @@ class Tools(Base):
         {'schema': 'nex'}
     )
 
-    tool_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
+    tool_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
     format_name = Column(String(200), nullable=False)
     display_name = Column(String(200), nullable=False)
     link_url = Column(String(200), nullable=False)
     index_key = Column(String(200), nullable=True)
     status = Column(String(200), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
 
@@ -10754,8 +11851,10 @@ class Alleledbentity(Dbentity):
     __table_args__ = {'schema': 'nex'}
     __url_segment__ = '/allele/'
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
     description = Column(String(500), nullable=True)
 
     so = relationship('So')
@@ -10788,9 +11887,11 @@ class Alleledbentity(Dbentity):
         reference_mapping = {}
         unique_references = []
         ref_order = 1
-        obj = { "sgdid": self.sgdid }
-        (obj["name"], ref_order) = self.get_basic_info(self.display_name, 'allele_name', reference_mapping, ref_order)
-        (obj['aliases'], ref_order) = self.get_aliases(reference_mapping, ref_order)
+        obj = {"sgdid": self.sgdid}
+        (obj["name"], ref_order) = self.get_basic_info(
+            self.display_name, 'allele_name', reference_mapping, ref_order)
+        (obj['aliases'], ref_order) = self.get_aliases(
+            reference_mapping, ref_order)
         # obj['affected_gene'] = self.get_gene_name_info()
         obj['affected_gene'] = self.get_gene_name()  
         (obj['allele_type'], ref_order) = self.get_basic_info(self.so.display_name, 'so_term', reference_mapping, ref_order)
@@ -10804,30 +11905,39 @@ class Alleledbentity(Dbentity):
         obj['interaction'] = self.interaction_to_dict(check_count=True)
         obj['network_graph'] = self.allele_network(check_count=True) 
         obj['references'] = self.get_references()
-        obj['phenotype_references'] = self.get_phenotype_references(unique_references)
-        obj['interaction_references'] = self.get_interaction_references(unique_references)
-        obj['primary_references'] = self.get_literatureannotation_references("Primary Literature", unique_references )
-        obj['additional_references'] = self.get_literatureannotation_references("Additional Literature", unique_references)
-        obj['review_references'] = self.get_literatureannotation_references("Reviews", unique_references)
+        obj['phenotype_references'] = self.get_phenotype_references(
+            unique_references)
+        obj['interaction_references'] = self.get_interaction_references(
+            unique_references)
+        obj['primary_references'] = self.get_literatureannotation_references(
+            "Primary Literature", unique_references)
+        obj['additional_references'] = self.get_literatureannotation_references(
+            "Additional Literature", unique_references)
+        obj['review_references'] = self.get_literatureannotation_references(
+            "Reviews", unique_references)
         obj['urls'] = self.get_resource_urls()
         obj["reference_mapping"] = reference_mapping
         obj['unique_references'] = unique_references
-        
+
         return obj
+
     def get_affected_geneObjs(self):
         geneObjList = []
 
         try:
-            la = DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).all()
+            la = DBSession.query(LocusAllele).filter_by(
+                allele_id=self.dbentity_id).all()
             for each in la:
                 geneObjList.append(each.locus)
             return geneObjList
         except:
             return None
+
     def get_basic_info(self, display_text, reference_class, reference_mapping, ref_order):
 
         references = []
-        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id, reference_class=reference_class).all()
+        alleleRefs = DBSession.query(AlleleReference).filter_by(
+            allele_id=self.dbentity_id, reference_class=reference_class).all()
         for x in alleleRefs:
             reference = x.reference.to_dict_citation()
             references.append(reference)
@@ -10835,15 +11945,16 @@ class Alleledbentity(Dbentity):
                 reference_mapping[reference["id"]] = ref_order
                 ref_order = ref_order + 1
 
-        return ({ "display_text": display_text,
-                  "references": references }, ref_order)
-    
+        return ({"display_text": display_text,
+                 "references": references}, ref_order)
+
     def get_resource_urls(self):
-        
+
         gene_names = self.get_gene_name()
         gene_name = gene_names[0]
-        
-        locus = DBSession.query(Locusdbentity).filter(or_(Locusdbentity.gene_name == gene_name, Locusdbentity.systematic_name == gene_name)).one_or_none()
+
+        locus = DBSession.query(Locusdbentity).filter(or_(
+            Locusdbentity.gene_name == gene_name, Locusdbentity.systematic_name == gene_name)).one_or_none()
         if locus is None:
             return []
 
@@ -10870,7 +11981,7 @@ class Alleledbentity(Dbentity):
             if x.to_dict_citation() not in references:
                 references.append(x.to_dict_citation())
         return references
-        
+
     def get_phenotype_references(self, unique_references):
         reference_ids = set([])
         for x in DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all():
@@ -10913,39 +12024,44 @@ class Alleledbentity(Dbentity):
         references = []
         found = {}
         # allele_reference for allele_name
-        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id, reference_class='allele_name').all()
+        alleleRefs = DBSession.query(AlleleReference).filter_by(
+            allele_id=self.dbentity_id, reference_class='allele_name').all()
         for x in alleleRefs:
             if x.reference.dbentity_id in found:
                 continue
             references.append(x.reference.to_dict_citation())
             found[x.reference.dbentity_id] = 1
-            
+
         # allelealias_reference
-        alleleAliases = DBSession.query(AlleleAlias).filter_by(allele_id=self.dbentity_id).all()
+        alleleAliases = DBSession.query(AlleleAlias).filter_by(
+            allele_id=self.dbentity_id).all()
         for x in alleleAliases:
-            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(
+                allele_alias_id=x.allele_alias_id).all()
             for x in allelealiasRefs:
                 if x.reference.dbentity_id not in found:
                     references.append(x.reference.to_dict_citation())
                     found[x.reference.dbentity_id] = 1
 
-        # allele_reference for so term                                                                                                          
-        alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id, reference_class='so_term').all()
+        # allele_reference for so term
+        alleleRefs = DBSession.query(AlleleReference).filter_by(
+            allele_id=self.dbentity_id, reference_class='so_term').all()
         for x in alleleRefs:
             if x.reference.dbentity_id in found:
                 continue
             references.append(x.reference.to_dict_citation())
             found[x.reference.dbentity_id] = 1
-                 
+
         # allele_reference for allele_description
         if self.description:
-            alleleRefs = DBSession.query(AlleleReference).filter_by(allele_id=self.dbentity_id, reference_class='allele_description').all()
+            alleleRefs = DBSession.query(AlleleReference).filter_by(
+                allele_id=self.dbentity_id, reference_class='allele_description').all()
             for x in alleleRefs:
                 if x.reference.dbentity_id in found:
                     continue
                 references.append(x.reference.to_dict_citation())
                 found[x.reference.dbentity_id] = 1
-                
+
         return references
 
     def interaction_to_dict(self, check_count=False):
@@ -10990,35 +12106,37 @@ class Alleledbentity(Dbentity):
 
         return obj
 
-
     def get_gene_name(self):
 
         names = []
-        for x in DBSession.query(LocusAllele).filter_by(allele_id = self.dbentity_id).all():
+        for x in DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).all():
             names.append(x.locus.display_name)
         return names
-    
+
     def get_gene_name_info(self):
 
         data = []
-        for x in DBSession.query(LocusAllele).filter_by(allele_id = self.dbentity_id).all():
+        for x in DBSession.query(LocusAllele).filter_by(allele_id=self.dbentity_id).all():
             gene = x.locus.display_name
             references = []
-            locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(locus_allele_id=x.locus_allele_id).all()
+            locusalleleRefs = DBSession.query(LocusalleleReference).filter_by(
+                locus_allele_id=x.locus_allele_id).all()
             for y in locusalleleRefs:
                 reference = y.reference.to_dict_citation()
                 references.append(reference)
-            data.append({ "display_name": gene,
-                          "references": references })
+            data.append({"display_name": gene,
+                         "references": references})
 
         return data
-    
+
     def get_aliases(self, reference_mapping, ref_order):
 
-        alleleAliases = DBSession.query(AlleleAlias).filter_by(allele_id = self.dbentity_id, alias_type='Synonym').all()
+        alleleAliases = DBSession.query(AlleleAlias).filter_by(
+            allele_id=self.dbentity_id, alias_type='Synonym').all()
         objs = []
         for x in alleleAliases:
-            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(allele_alias_id=x.allele_alias_id).all()
+            allelealiasRefs = DBSession.query(AllelealiasReference).filter_by(
+                allele_alias_id=x.allele_alias_id).all()
             references = []
             for y in allelealiasRefs:
                 reference = y.reference.to_dict_citation()
@@ -11026,8 +12144,8 @@ class Alleledbentity(Dbentity):
                 if reference["id"] not in reference_mapping:
                     reference_mapping[reference["id"]] = ref_order
                     ref_order += 1
-            objs.append({ "display_name": x.display_name,
-                          "references": references })
+            objs.append({"display_name": x.display_name,
+                         "references": references})
         return (objs, ref_order)
 
     
@@ -11057,8 +12175,8 @@ class Alleledbentity(Dbentity):
                 return {"edges": [], "nodes": []}
             # --- END EARLY EXIT ---
 
-        network_nodes =[]
-        network_edges =[]
+        network_nodes = []
+        network_edges = []
 
         network_nodes_ids = {}
         network_edges_added = {}
@@ -11071,25 +12189,29 @@ class Alleledbentity(Dbentity):
         })
         network_nodes_ids[self.format_name] = True
 
-        ## phenotype
-                
-        phenotype_annotations = DBSession.query(Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all()
-        allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(Dbentity).filter_by(subclass='ALLELE').all()])
+        # phenotype
+
+        phenotype_annotations = DBSession.query(
+            Phenotypeannotation).filter_by(allele_id=self.dbentity_id).all()
+        allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(
+            Dbentity).filter_by(subclass='ALLELE').all()])
 
         allele_key_to_phenotype_list = {}
-        
+
         for p in phenotype_annotations:
             if p.allele_id is None:
                 continue
 
-            ## one phenotype = combination of phenotype_id, experiment_id, mutant_id, taxonomy_id
-            ## in order to show up in the diagram, other allele nodes have to share
-            ## at least two phenotypes with the focus one
+            # one phenotype = combination of phenotype_id, experiment_id, mutant_id, taxonomy_id
+            # in order to show up in the diagram, other allele nodes have to share
+            # at least two phenotypes with the focus one
 
-            pheno_id = "phenotype_" + str(p.phenotype_id) + "_"	+ str(p.experiment_id) + "_" + str(p.mutant_id) + "_" + str(p.taxonomy_id)
+            pheno_id = "phenotype_" + str(p.phenotype_id) + "_" + str(
+                p.experiment_id) + "_" + str(p.mutant_id) + "_" + str(p.taxonomy_id)
 
-            other_annotations = DBSession.query(Phenotypeannotation).filter_by(phenotype_id=p.phenotype_id, experiment_id=p.experiment_id, mutant_id=p.mutant_id, taxonomy_id=p.taxonomy_id).all()
-                
+            other_annotations = DBSession.query(Phenotypeannotation).filter_by(
+                phenotype_id=p.phenotype_id, experiment_id=p.experiment_id, mutant_id=p.mutant_id, taxonomy_id=p.taxonomy_id).all()
+
             for x in other_annotations:
                 if x.allele_id is None:
                     continue
@@ -11100,18 +12222,20 @@ class Alleledbentity(Dbentity):
                     continue
                 allele_format_name = allele_display_name.replace(' ', '_')
                 phenotype_list = []
-                allele_key = (allele_display_name, allele_format_name, "/allele/" + allele_format_name)
+                allele_key = (allele_display_name, allele_format_name,
+                              "/allele/" + allele_format_name)
                 if allele_key in allele_key_to_phenotype_list:
                     phenotype_list = allele_key_to_phenotype_list[allele_key]
-                phenotype_key = (p.phenotype.display_name, pheno_id, p.phenotype.obj_url)
+                phenotype_key = (p.phenotype.display_name,
+                                 pheno_id, p.phenotype.obj_url)
                 if phenotype_key not in phenotype_list:
                     phenotype_list.append(phenotype_key)
                     allele_key_to_phenotype_list[allele_key] = phenotype_list
-                
+
         for key in allele_key_to_phenotype_list:
             phenotype_list = allele_key_to_phenotype_list[key]
             if len(phenotype_list) > 1:
-                (allele_display_name, allele_format_name, allele_link) = key                
+                (allele_display_name, allele_format_name, allele_link) = key
                 if allele_format_name not in network_nodes_ids:
                     network_nodes.append({
                         "name": allele_display_name,
@@ -11135,7 +12259,8 @@ class Alleledbentity(Dbentity):
                             "source": self.format_name,
                             "target": pheno_id
                         })
-                        network_edges_added[(self.format_name, pheno_id)] = True
+                        network_edges_added[(
+                            self.format_name, pheno_id)] = True
                     if (allele_format_name, pheno_id) not in network_edges_added:
                         network_edges.append({
                             "source": allele_format_name,
@@ -11145,7 +12270,8 @@ class Alleledbentity(Dbentity):
             
         ## interaction 
 
-        allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(Dbentity).filter_by(subclass='ALLELE').all()])
+        allele_id_to_name = dict([(x.dbentity_id, x.display_name) for x in DBSession.query(
+            Dbentity).filter_by(subclass='ALLELE').all()])
 
         curr_allele = self.display_name
 
@@ -11153,12 +12279,14 @@ class Alleledbentity(Dbentity):
 
         # network_nodes_ids = {}
 
-        all_positives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score > 0).order_by(AlleleGeninteraction.sga_score.desc()).all()
+        all_positives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id == self.dbentity_id, AlleleGeninteraction.allele2_id == self.dbentity_id)).filter(
+            AlleleGeninteraction.sga_score > 0).order_by(AlleleGeninteraction.sga_score.desc()).all()
 
-        all_negatives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id==self.dbentity_id, AlleleGeninteraction.allele2_id==self.dbentity_id)).filter(AlleleGeninteraction.sga_score < 0).order_by(AlleleGeninteraction.sga_score).all()
-        
+        all_negatives = DBSession.query(AlleleGeninteraction).filter(or_(AlleleGeninteraction.allele1_id == self.dbentity_id, AlleleGeninteraction.allele2_id == self.dbentity_id)).filter(
+            AlleleGeninteraction.sga_score < 0).order_by(AlleleGeninteraction.sga_score).all()
+
         for x in all_positives[0:30] + all_negatives[0:30]:
-                
+
             if x.allele2_id is None:
                 continue
             other_allele = None
@@ -11170,7 +12298,7 @@ class Alleledbentity(Dbentity):
                 all_linked_allele_ids.append(x.allele2_id)
             if other_allele is None:
                 continue
-            allele_format_name = other_allele.replace(' ', '_') 
+            allele_format_name = other_allele.replace(' ', '_')
 
             if allele_format_name not in network_nodes_ids:
                 network_nodes.append({
@@ -11197,30 +12325,30 @@ class Alleledbentity(Dbentity):
                         "href": '',
                         "category": "NEGATIVE INTERACTION",
                     })
-                
+
                 network_edges.append({
                     "source": self.format_name,
                     "target": interaction_format_name
                 })
-                
+
                 network_edges.append({
                     "source": allele_format_name,
                     "target": interaction_format_name
                 })
-                
+
         # for x in DBSession.query(AlleleGeninteraction).filter(AlleleGeninteraction.allele1_id.in_(all_linked_allele_ids)).filter(AlleleGeninteraction.allele2_id.in_(all_linked_allele_ids)).all():
-        #    allele1_format_name = allele_id_to_name.get(x.allele1_id, '').replace(' ', '_') 
-        #    allele2_format_name = allele_id_to_name.get(x.allele2_id, '').replace(' ', '_') 
+        #    allele1_format_name = allele_id_to_name.get(x.allele1_id, '').replace(' ', '_')
+        #    allele2_format_name = allele_id_to_name.get(x.allele2_id, '').replace(' ', '_')
         #    network_edges.append({
         #        "source": allele1_format_name,
         #        "target": allele2_format_name
         #    })
-                
-        data = { "edges": network_edges, "nodes": network_nodes }
+
+        data = {"edges": network_edges, "nodes": network_nodes}
 
         return data
 
-    
+
 class AlleleReference(Base):
     __tablename__ = 'allele_reference'
     __table_args__ = (
@@ -11228,18 +12356,24 @@ class AlleleReference(Base):
         {'schema': 'nex'}
     )
 
-    allele_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    allele_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    allele_id = Column(ForeignKey(
+        'nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     reference_class = Column(String(100), nullable=True)
-    
+
     allele = relationship('Alleledbentity')
     source = relationship('Source')
     reference = relationship('Referencedbentity')
-    
+
+
 class AlleleGeninteraction(Base):
     __tablename__ = 'allele_geninteraction'
     __table_args__ = (
@@ -11247,22 +12381,30 @@ class AlleleGeninteraction(Base):
         {'schema': 'nex'}
     )
 
-    allele_geninteraction_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    allele1_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
-    allele2_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
-    interaction_id = Column(ForeignKey('nex.geninteractionannotation.annotation_id', ondelete='CASCADE'), nullable=False, index=True)
+    allele_geninteraction_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    allele1_id = Column(ForeignKey(
+        'nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
+    allele2_id = Column(ForeignKey(
+        'nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=True)
+    interaction_id = Column(ForeignKey(
+        'nex.geninteractionannotation.annotation_id', ondelete='CASCADE'), nullable=False, index=True)
     sga_score = Column(Numeric, nullable=False)
     pvalue = Column(Numeric, nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    allele1 = relationship('Alleledbentity', primaryjoin='AlleleGeninteraction.allele1_id == Alleledbentity.dbentity_id')
-    allele2 = relationship('Alleledbentity', primaryjoin='AlleleGeninteraction.allele2_id == Alleledbentity.dbentity_id')
+    allele1 = relationship(
+        'Alleledbentity', primaryjoin='AlleleGeninteraction.allele1_id == Alleledbentity.dbentity_id')
+    allele2 = relationship(
+        'Alleledbentity', primaryjoin='AlleleGeninteraction.allele2_id == Alleledbentity.dbentity_id')
     source = relationship('Source')
     interaction = relationship('Geninteractionannotation')
 
-    
+
 class AlleleAlias(Base):
     __tablename__ = 'allele_alias'
     __table_args__ = (
@@ -11270,17 +12412,22 @@ class AlleleAlias(Base):
         {'schema': 'nex'}
     )
 
-    allele_alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    allele_alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    allele_id = Column(ForeignKey(
+        'nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     allele = relationship('Alleledbentity')
     source = relationship('Source')
+
 
 class AllelealiasReference(Base):
     __tablename__ = 'allelealias_reference'
@@ -11289,16 +12436,22 @@ class AllelealiasReference(Base):
         {'schema': 'nex'}
     )
 
-    allelealias_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    allele_alias_id = Column(ForeignKey('nex.allele_alias.allele_alias_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    allelealias_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    allele_alias_id = Column(ForeignKey(
+        'nex.allele_alias.allele_alias_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     alias = relationship('AlleleAlias')
     source = relationship('Source')
     reference = relationship('Referencedbentity')
+
 
 class LocusAllele(Base):
     __tablename__ = 'locus_allele'
@@ -11307,44 +12460,58 @@ class LocusAllele(Base):
         {'schema': 'nex'}
     )
 
-    locus_allele_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    locus_allele_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    allele_id = Column(ForeignKey('nex.alleledbentity.dbentity_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     locus = relationship('Locusdbentity')
     source = relationship('Source')
     allele = relationship('Alleledbentity')
 
+
 class LocusalleleReference(Base):
     __tablename__ = 'locusallele_reference'
     __table_args__ = (
-	UniqueConstraint('locus_allele_id', 'reference_id'),
+        UniqueConstraint('locus_allele_id', 'reference_id'),
         {'schema': 'nex'}
     )
 
-    locusallele_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    locus_allele_id = Column(ForeignKey('nex.locus_allele.locus_allele_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    locusallele_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    locus_allele_id = Column(ForeignKey(
+        'nex.locus_allele.locus_allele_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     locusallele = relationship('LocusAllele')
     source = relationship('Source')
     reference = relationship('Referencedbentity')
 
+
 class Transcriptdbentity(Dbentity):
     __tablename__ = 'transcriptdbentity'
     __table_args__ = {'schema': 'nex'}
     __url_segment__ = '/transcript/'
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
     in_gal = Column(Boolean, nullable=False)
     in_ypd = Column(Boolean, nullable=False)
     in_ncbi = Column(Boolean, nullable=False)
+
 
 class TranscriptReference(Base):
     __tablename__ = 'transcript_reference'
@@ -11353,26 +12520,34 @@ class TranscriptReference(Base):
         {'schema': 'nex'}
     )
 
-    transcript_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    transcript_id = Column(ForeignKey('nex.transcriptdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    transcript_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    transcript_id = Column(ForeignKey(
+        'nex.transcriptdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     transcript = relationship('Transcriptdbentity')
     source = relationship('Source')
     reference = relationship('Referencedbentity')
-    
+
+
 class Complexdbentity(Dbentity):
     __tablename__ = 'complexdbentity'
     __table_args__ = {'schema': 'nex'}
     __url_segment__ = '/complex/'
 
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'),
+                         primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
     intact_id = Column(String(40), nullable=False)
     systematic_name = Column(String(500), nullable=False)
-    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
+    eco_id = Column(ForeignKey('nex.eco.eco_id',
+                    ondelete='CASCADE'), nullable=False, index=True)
     description = Column(Text, nullable=True)
     properties = Column(Text, nullable=True)
     complex_accession = Column(String(40), nullable=False)
@@ -11407,9 +12582,10 @@ class Complexdbentity(Dbentity):
         nodes_ids = {}
         network_nodes_ids = {}
 
-        ## aliases                                                                                                                                    
+        # aliases
 
-        alias_objs = DBSession.query(ComplexAlias).filter_by(complex_id=self.dbentity_id).order_by(ComplexAlias.alias_type, ComplexAlias.display_name).all()
+        alias_objs = DBSession.query(ComplexAlias).filter_by(complex_id=self.dbentity_id).order_by(
+            ComplexAlias.alias_type, ComplexAlias.display_name).all()
 
         aliases = []
         pdbs = []
@@ -11419,14 +12595,15 @@ class Complexdbentity(Dbentity):
                 if ca.alias_type == 'Synonym':
                     aliases.append(ca.display_name)
                 elif ca.alias_type == 'PDB':
-                    pdbs.append({ "display_name": ca.display_name.upper() })
+                    pdbs.append({"display_name": ca.display_name.upper()})
                 else:
-                    crossRefs.append({ "alias_type": ca.alias_type,
-                                       "display_name": ca.display_name })
+                    crossRefs.append({"alias_type": ca.alias_type,
+                                      "display_name": ca.display_name})
         data['aliases'] = sorted(aliases)
         data['pdbs'] = sorted(pdbs, key=lambda p: p['display_name'])
         crossRefs2 = sorted(crossRefs, key=lambda c: c['display_name'])
-        data["cross_references"] = sorted(crossRefs2, key=lambda c: c['alias_type'])
+        data["cross_references"] = sorted(
+            crossRefs2, key=lambda c: c['alias_type'])
 
         if include_literature:
             unique_references = []
@@ -11572,13 +12749,13 @@ class Complexdbentity(Dbentity):
 
                 if go.go_id not in network_nodes_ids:
                     network_nodes.append({
-                            "name": go.display_name,
-                            "id": go.go_id,
-                            "href": go.obj_url,
-                            "category": 'GO',
+                        "name": go.display_name,
+                        "id": go.go_id,
+                        "href": go.obj_url,
+                        "category": 'GO',
                     })
                     network_nodes_ids[go.go_id] = True
-                
+
                 for g2 in goComplexes:
                     complex = g2.dbentity
                     if complex.format_name == self.format_name:
@@ -11605,26 +12782,26 @@ class Complexdbentity(Dbentity):
 
                             if complex.format_name not in network_nodes_ids:
                                 network_nodes.append({
-                                        "name": complex.display_name,
-                                        "id": complex.format_name,
-                                        "href": "/complex/" + complex.format_name,
-                                        "category": "complex"
+                                    "name": complex.display_name,
+                                    "id": complex.format_name,
+                                    "href": "/complex/" + complex.format_name,
+                                    "category": "complex"
                                 })
                                 network_nodes_ids[complex.format_name] = True
-                            
-                            ### link this complex to preGoid as well as this goid
+
+                            # link this complex to preGoid as well as this goid
                             network_edges.append({
-                                    "source": complex.format_name,
-                                    "target": preGoid
+                                "source": complex.format_name,
+                                "target": preGoid
                             })
                             network_edges.append({
-                                    "source": complex.format_name,
-                                    "target": go.go_id
+                                "source": complex.format_name,
+                                "target": go.go_id
                             })
                             foundComplex[complex.format_name] = 1
                         else:
-                            ## this 3rd or 4th.. time see this complex
-                            ## simply link this complex to current goid
+                            # this 3rd or 4th.. time see this complex
+                            # simply link this complex to current goid
                             network_edges.append({
                                 "source": complex.format_name,
                                 "target": go.go_id
@@ -11633,7 +12810,7 @@ class Complexdbentity(Dbentity):
                                 "source": self.format_name,
                                 "target": go.go_id
                             })
-                            
+
                     else:
                         foundComplex[complex.format_name] = go.go_id
 
@@ -11657,7 +12834,7 @@ class Complexdbentity(Dbentity):
             data['function'] = sorted(function, key=lambda f: f['go']['display_name'])
             data['component'] = sorted(component, key=lambda c: c['go']['display_name'])
 
-        ## reference
+        # reference
 
         if include_references:
             ref_objs = DBSession.query(ComplexReference).filter_by(complex_id=self.dbentity_id).all()
@@ -11668,7 +12845,7 @@ class Complexdbentity(Dbentity):
             refs2 = sorted(refs, key=lambda r: r['display_name'])
             data["references"] = sorted(refs2, key=lambda r: r['year'], reverse=True)
 
-        ## subunits
+        # subunits
 
         # The subunit table + graphs are the last (and heaviest) section; tabs
         # that don't render them return before this point. The subunit loop below
@@ -11883,7 +13060,7 @@ class Complexdbentity(Dbentity):
             for annot in annot_objs2:
                 complex = annot.complex
                 unique_complexes[complex.display_name] = 1
-                
+
             if len(unique_complexes) == 1:
                 continue
 
@@ -11908,19 +13085,19 @@ class Complexdbentity(Dbentity):
 
                     if foundComplex[complex.format_name] != 1:
                         preTarget = foundComplex[complex.format_name]
-                        ## this is 2nd time we can see this complex, we want to keep this complex 
-                        ## in the network so need to link "self" complex to preTarget (either goid or 
-                        ## subunit) as well as this subunit (interactor) 
+                        # this is 2nd time we can see this complex, we want to keep this complex
+                        # in the network so need to link "self" complex to preTarget (either goid or
+                        # subunit) as well as this subunit (interactor)
                         network_edges.append({
-                                "source": self.format_name,
-                                "target": preTarget
+                            "source": self.format_name,
+                            "target": preTarget
                         })
                         network_edges.append({
-                                "source": self.format_name,
-                                "target": interactor.format_name
+                            "source": self.format_name,
+                            "target": interactor.format_name
                         })
 
-                        ### also need to add this complex to the network 
+                        # also need to add this complex to the network
 
                         if complex.format_name not in network_nodes_ids:
                             network_nodes.append({
@@ -11930,26 +13107,24 @@ class Complexdbentity(Dbentity):
                                 "category": "complex"
                             })
                             network_nodes_ids[complex.format_name] = True
-                            
-                        
 
-                        ### link this complex to preTarget (either goid or subunit) as well 
-                        ### as this subunit
+                        # link this complex to preTarget (either goid or subunit) as well
+                        # as this subunit
                         network_edges.append({
-                                "source": complex.format_name,
-                                "target": preTarget
+                            "source": complex.format_name,
+                            "target": preTarget
                         })
                         network_edges.append({
-                                "source": complex.format_name,
-                                "target": interactor.format_name
+                            "source": complex.format_name,
+                            "target": interactor.format_name
                         })
                         foundComplex[complex.format_name] = 1
                     else:
-                        ## this 3rd or 4th.. time see this complex
-                        ## simply link this complex to current subunit
+                        # this 3rd or 4th.. time see this complex
+                        # simply link this complex to current subunit
                         network_edges.append({
-                                "source": complex.format_name,
-                                "target": interactor.format_name
+                            "source": complex.format_name,
+                            "target": interactor.format_name
                         })
                 else:
                     foundComplex[complex.format_name] = interactor.format_name
@@ -12012,7 +13187,8 @@ class Complexdbentity(Dbentity):
 
     def go_overview_to_dict(self):
 
-        go_slims = DBSession.query(Goslimannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        go_slims = DBSession.query(Goslimannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         process_go_slim_list = []
         function_go_slim_list = []
         component_go_slim_list = []
@@ -12023,7 +13199,8 @@ class Complexdbentity(Dbentity):
                 if go_slim_dict not in complex_go_slim_list:
                     complex_go_slim_list.append(go_slim_dict)
             else:
-                go = DBSession.query(Go).filter_by(go_id=go_slim_dict['go_id']).one_or_none()
+                go = DBSession.query(Go).filter_by(
+                    go_id=go_slim_dict['go_id']).one_or_none()
                 if go is None:
                     continue
                 if 'component' in go.go_namespace:
@@ -12035,30 +13212,35 @@ class Complexdbentity(Dbentity):
                 elif go_slim_dict not in process_go_slim_list:
                     process_go_slim_list.append(go_slim_dict)
 
-        obj = { 'date_last_reviewed': None,
-                'go_slim_grouped': [] }
-        
-        ## sort goslim terms here
-        process_go_slim_sorted_list = sorted(process_go_slim_list, key=lambda p: p['display_name'])
-        function_go_slim_sorted_list = sorted(function_go_slim_list, key=lambda p: p['display_name'])
-        component_go_slim_sorted_list = sorted(component_go_slim_list, key=lambda p: p['display_name'])
-        complex_go_slim_sorted_list = sorted(complex_go_slim_list, key=lambda p: p['display_name'])
-        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + component_go_slim_sorted_list + complex_go_slim_sorted_list
+        obj = {'date_last_reviewed': None,
+               'go_slim_grouped': []}
 
-        go_annotations = DBSession.query(Goannotation).filter_by(dbentity_id=self.dbentity_id).all()
+        # sort goslim terms here
+        process_go_slim_sorted_list = sorted(
+            process_go_slim_list, key=lambda p: p['display_name'])
+        function_go_slim_sorted_list = sorted(
+            function_go_slim_list, key=lambda p: p['display_name'])
+        component_go_slim_sorted_list = sorted(
+            component_go_slim_list, key=lambda p: p['display_name'])
+        complex_go_slim_sorted_list = sorted(
+            complex_go_slim_list, key=lambda p: p['display_name'])
+        obj['go_slim_grouped'] = function_go_slim_sorted_list + process_go_slim_sorted_list + \
+            component_go_slim_sorted_list + complex_go_slim_sorted_list
+
+        go_annotations = DBSession.query(Goannotation).filter_by(
+            dbentity_id=self.dbentity_id).all()
         for annotation in go_annotations:
             if obj["date_last_reviewed"] is None or annotation.date_assigned.strftime("%Y-%m-%d") > obj["date_last_reviewed"]:
-                obj["date_last_reviewed"] = annotation.date_assigned.strftime("%Y-%m-%d")
-
+                obj["date_last_reviewed"] = annotation.date_assigned.strftime(
+                    "%Y-%m-%d")
 
         return obj
 
-    
     def get_literatureannotation_references(self, topic, unique_references):
 
         references = []
 
-        #for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
+        # for x in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id, topic=topic).all():
         #    if x.reference.to_dict_citation() not in references:
         #        references.append(x.reference.to_dict_citation())
         #    if x.reference.dbentity_id not in unique_references:
@@ -12070,7 +13252,7 @@ class Complexdbentity(Dbentity):
 
         for x in DBSession.query(Referencedbentity).filter(Referencedbentity.dbentity_id.in_(ref_ids)).order_by(Referencedbentity.year.desc(), Referencedbentity.display_name.asc()).all():
             if x.to_dict_citation() not in references:
-                references.append(x.to_dict_citation())  
+                references.append(x.to_dict_citation())
             if x.dbentity_id not in unique_references:
                 unique_references.append(x.dbentity_id)
 
@@ -12084,13 +13266,17 @@ class ComplexAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    complex_id = Column(ForeignKey('nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    complex_id = Column(ForeignKey(
+        'nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     complex = relationship('Complexdbentity')
@@ -12114,6 +13300,7 @@ class ComplexAlias(Base):
 #     source = relationship('Source')
 #     go = relationship('Go')
 
+
 class ComplexReference(Base):
     __tablename__ = 'complex_reference'
     __table_args__ = (
@@ -12121,11 +13308,16 @@ class ComplexReference(Base):
         {'schema': 'nex'}
     )
 
-    complex_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    complex_id = Column(ForeignKey('nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    complex_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    complex_id = Column(ForeignKey(
+        'nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     complex = relationship('Complexdbentity')
@@ -12149,47 +13341,63 @@ class Complexbindingannotation(Base):
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    complex_id = Column(ForeignKey('nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    interactor_id = Column(ForeignKey('nex.interactor.interactor_id', ondelete='CASCADE'), nullable=False, index=True)
-    binding_interactor_id = Column(ForeignKey('nex.interactor.interactor_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    binding_type_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    complex_id = Column(ForeignKey(
+        'nex.complexdbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    interactor_id = Column(ForeignKey(
+        'nex.interactor.interactor_id', ondelete='CASCADE'), nullable=False, index=True)
+    binding_interactor_id = Column(ForeignKey(
+        'nex.interactor.interactor_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    binding_type_id = Column(ForeignKey(
+        'nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False, index=True)
     range_start = Column(Integer)
     range_end = Column(Integer)
     # Human-readable label of the binding region from the IntAct source
     # (linkedFeatures[].name), e.g. "mg2+ binding site (asn-577)".
     binding_region_name = Column(String(500))
     stoichiometry = Column(Integer)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     interactor = relationship('Interactor', foreign_keys=[interactor_id])
-    binding_interactor = relationship('Interactor', foreign_keys=[binding_interactor_id])
+    binding_interactor = relationship(
+        'Interactor', foreign_keys=[binding_interactor_id])
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
     source = relationship('Source')
     taxonomy = relationship('Taxonomy')
     complex = relationship('Complexdbentity')
     psimi = relationship('Psimi')
-    
+
 
 class Interactor(Base):
     __tablename__ = 'interactor'
     __table_args__ = {'schema': 'nex'}
 
-    interactor_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    interactor_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False, index=True)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), nullable=True, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=True, index=True)
     description = Column(String(500))
-    type_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False, index=True)
-    role_id = Column(ForeignKey('nex.psimi.psimi_id', ondelete='CASCADE'), nullable=False, index=True)
+    type_id = Column(ForeignKey('nex.psimi.psimi_id',
+                     ondelete='CASCADE'), nullable=False, index=True)
+    role_id = Column(ForeignKey('nex.psimi.psimi_id',
+                     ondelete='CASCADE'), nullable=False, index=True)
     residues = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     locus = relationship('Locusdbentity')
@@ -12204,13 +13412,17 @@ class ReferenceAlias(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -12224,11 +13436,16 @@ class ReferenceFile(Base):
         {'schema': 'nex'}
     )
 
-    reference_file_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    reference_file_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    file_id = Column(ForeignKey('nex.filedbentity.dbentity_id',
+                     ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     file_type = Column(String(100), nullable=False)
 
@@ -12244,16 +13461,23 @@ class ReferenceRelation(Base):
         {'schema': 'nex'}
     )
 
-    reference_relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    child_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey('nex.referencedbentity.dbentity_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    child_id = Column(ForeignKey('nex.referencedbentity.dbentity_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
     relation_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Referencedbentity', primaryjoin='ReferenceRelation.child_id == Referencedbentity.dbentity_id')
-    parent = relationship('Referencedbentity', primaryjoin='ReferenceRelation.parent_id == Referencedbentity.dbentity_id')
+    child = relationship(
+        'Referencedbentity', primaryjoin='ReferenceRelation.child_id == Referencedbentity.dbentity_id')
+    parent = relationship(
+        'Referencedbentity', primaryjoin='ReferenceRelation.parent_id == Referencedbentity.dbentity_id')
     source = relationship('Source')
 
 
@@ -12264,14 +13488,18 @@ class ReferenceUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -12285,16 +13513,20 @@ class Referenceauthor(Base):
         {'schema': 'nex'}
     )
 
-    referenceauthor_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    referenceauthor_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     orcid = Column(String(20))
     author_order = Column(SmallInteger, nullable=False)
     author_type = Column(String(10), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -12305,11 +13537,13 @@ class Referencedeleted(Base):
     __tablename__ = 'referencedeleted'
     __table_args__ = {'schema': 'nex'}
 
-    referencedeleted_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    referencedeleted_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     pmid = Column(BigInteger, nullable=False, unique=True)
     sgdid = Column(String(20), unique=True)
     reason_deleted = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
 
@@ -12320,13 +13554,17 @@ class Referencedocument(Base):
         {'schema': 'nex'}
     )
 
-    referencedocument_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    referencedocument_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     document_type = Column(String(40), nullable=False)
     text = Column(Text, nullable=False)
     html = Column(Text, nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=FetchedValue())
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False,
+                          server_default=FetchedValue())
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -12337,12 +13575,14 @@ class Referencetriage(Base):
     __tablename__ = 'referencetriage'
     __table_args__ = {'schema': 'nex'}
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.curation_seq'::regclass)"))
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.curation_seq'::regclass)"))
     pmid = Column(BigInteger, nullable=False, unique=True)
     citation = Column(String(500), nullable=False)
     fulltext_url = Column(String(500))
     abstract = Column(Text)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     json = Column(Text)
     abstract_genes = Column(String(500))
 
@@ -12373,6 +13613,7 @@ class Referencetriage(Base):
         if 'data' in json_obj:
             self.json = json.dumps(json_obj['data'])
 
+
 class Referencetype(Base):
     __tablename__ = 'referencetype'
     __table_args__ = (
@@ -12380,13 +13621,17 @@ class Referencetype(Base):
         {'schema': 'nex'}
     )
 
-    referencetype_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    referencetype_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -12400,11 +13645,15 @@ class Referenceunlink(Base):
         {'schema': 'nex'}
     )
 
-    referenceunlink_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    referenceunlink_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    dbentity_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     dbentity = relationship('Dbentity')
@@ -12414,40 +13663,51 @@ class Referenceunlink(Base):
 class Regulationannotation(Base):
     __tablename__ = 'regulationannotation'
     __table_args__ = (
-        UniqueConstraint('target_id', 'regulator_id', 'eco_id', 'reference_id'),
+        UniqueConstraint('target_id', 'regulator_id',
+                         'eco_id', 'reference_id'),
         {'schema': 'nex'}
     )
 
-    annotation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.annotation_seq'::regclass)"))
-    target_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
-    regulator_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
-    eco_id = Column(ForeignKey('nex.eco.eco_id', ondelete='CASCADE'), nullable=False, index=True)
+    annotation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.annotation_seq'::regclass)"))
+    target_id = Column(ForeignKey('nex.dbentity.dbentity_id',
+                       ondelete='CASCADE'), nullable=False)
+    regulator_id = Column(ForeignKey(
+        'nex.dbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    eco_id = Column(ForeignKey('nex.eco.eco_id',
+                    ondelete='CASCADE'), nullable=False, index=True)
     regulator_type = Column(String(40), nullable=False)
     regulation_type = Column(String(100), nullable=False)
     direction = Column(String(10))
-    happens_during = Column(ForeignKey('nex.go.go_id', ondelete='CASCADE'), index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    happens_during = Column(ForeignKey(
+        'nex.go.go_id', ondelete='CASCADE'), index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     annotation_type = Column(String(40), nullable=False)
 
     eco = relationship('Eco')
     go = relationship('Go')
     reference = relationship('Referencedbentity', foreign_keys=[reference_id])
-    regulator = relationship('Dbentity', primaryjoin='Regulationannotation.regulator_id == Dbentity.dbentity_id')
+    regulator = relationship(
+        'Dbentity', primaryjoin='Regulationannotation.regulator_id == Dbentity.dbentity_id')
     source = relationship('Source')
-    target = relationship('Dbentity', primaryjoin='Regulationannotation.target_id == Dbentity.dbentity_id')
+    target = relationship(
+        'Dbentity', primaryjoin='Regulationannotation.target_id == Dbentity.dbentity_id')
     taxonomy = relationship('Taxonomy')
 
     def get_happens_during(self):
-        item = DBSession.query(Go).filter(Go.go_id == self.happens_during).first()
-        if(item != None):
+        item = DBSession.query(Go).filter(
+            Go.go_id == self.happens_during).first()
+        if (item != None):
             return item.display_name
         return None
-
-
 
     def to_dict(self, reference=None):
         if reference is None:
@@ -12509,14 +13769,17 @@ class Reporter(Base):
     __tablename__ = 'reporter'
     __table_args__ = {'schema': 'nex'}
 
-    reporter_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    reporter_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -12526,19 +13789,27 @@ class Reservedname(Base):
     __tablename__ = 'reservedname'
     __table_args__ = {'schema': 'nex'}
 
-    reservedname_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    reservedname_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
-    locus_id = Column(ForeignKey('nex.locusdbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False, index=True)
-    reservation_date = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
-    expiration_date = Column(DateTime, nullable=False, server_default=text("(('now'::text)::timestamp without time zone + '365 days'::interval)"))
+    locus_id = Column(ForeignKey(
+        'nex.locusdbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), index=True)
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), nullable=False, index=True)
+    reservation_date = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
+    expiration_date = Column(DateTime, nullable=False, server_default=text(
+        "(('now'::text)::timestamp without time zone + '365 days'::interval)"))
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     name_description = Column(String(500))
 
@@ -12600,48 +13871,52 @@ class Reservedname(Base):
         try:
             curator_session = get_curator_session(username)
             self = curator_session.merge(self)
-            locus_id = curator_session.query(Locusdbentity.dbentity_id).filter(Locusdbentity.systematic_name == systematic_name).scalar()
+            locus_id = curator_session.query(Locusdbentity.dbentity_id).filter(
+                Locusdbentity.systematic_name == systematic_name).scalar()
             if not locus_id:
                 raise ValueError('Not a valid systematic name.')
-            has_locusreferences = curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id == locus_id, LocusReferences.reference_class == 'gene_name')).count()
+            has_locusreferences = curator_session.query(LocusReferences).filter(and_(
+                LocusReferences.locus_id == locus_id, LocusReferences.reference_class == 'gene_name')).count()
             if not has_locusreferences:
-                personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.dbentity_id == self.reference_id).one_or_none()
+                personal_communication_ref = curator_session.query(Referencedbentity).filter(
+                    Referencedbentity.dbentity_id == self.reference_id).one_or_none()
                 gene_name_locus_ref = LocusReferences(
-                    locus_id = locus_id,
-                    reference_id = personal_communication_ref.dbentity_id,
-                    reference_class = 'gene_name',
-                    source_id = SGD_SOURCE_ID,
-                    created_by = username
+                    locus_id=locus_id,
+                    reference_id=personal_communication_ref.dbentity_id,
+                    reference_class='gene_name',
+                    source_id=SGD_SOURCE_ID,
+                    created_by=username
                 )
                 curator_session.add(gene_name_locus_ref)
                 name_description_locus_ref = LocusReferences(
-                    locus_id = locus_id,
-                    reference_id = personal_communication_ref.dbentity_id,
-                    reference_class = 'name_description',
-                    source_id = SGD_SOURCE_ID,
-                    created_by = username
+                    locus_id=locus_id,
+                    reference_id=personal_communication_ref.dbentity_id,
+                    reference_class='name_description',
+                    source_id=SGD_SOURCE_ID,
+                    created_by=username
                 )
                 curator_session.add(name_description_locus_ref)
             # new locus_note and locusnote locusnote_reference
-            has_locusnote = curator_session.query(Locusnote).filter(and_(Locusnote.locus_id == locus_id, Locusnote.note_type == 'Name', Locusnote.note_class == 'Locus')).count()
+            has_locusnote = curator_session.query(Locusnote).filter(and_(
+                Locusnote.locus_id == locus_id, Locusnote.note_type == 'Name', Locusnote.note_class == 'Locus')).count()
             if not has_locusnote:
                 note_html_str = '<b>Name:</b> ' + self.display_name
                 new_locusnote = Locusnote(
-                    source_id = SGD_SOURCE_ID,
-                    locus_id = locus_id,
-                    note_class = 'Locus',
-                    note_type = 'Name',
-                    note = note_html_str,
-                    created_by = username
+                    source_id=SGD_SOURCE_ID,
+                    locus_id=locus_id,
+                    note_class='Locus',
+                    note_type='Name',
+                    note=note_html_str,
+                    created_by=username
                 )
                 curator_session.add(new_locusnote)
                 curator_session.flush()
                 curator_session.refresh(new_locusnote)
                 new_locusnote_ref = LocusnoteReference(
-                    note_id = new_locusnote.note_id,
-                    reference_id = self.reference_id,
-                    source_id = SGD_SOURCE_ID,
-                    created_by = username
+                    note_id=new_locusnote.note_id,
+                    reference_id=self.reference_id,
+                    source_id=SGD_SOURCE_ID,
+                    created_by=username
                 )
                 curator_session.add(new_locusnote_ref)
             transaction.commit()
@@ -12649,48 +13924,55 @@ class Reservedname(Base):
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
 
     def associate_published_reference(self, ref_id, username, new_reference_class):
         if not self.locus_id:
-            raise ValueError('Reserved name must be associated with a locus before adding published reference.')
+            raise ValueError(
+                'Reserved name must be associated with a locus before adding published reference.')
         curator_session = None
         try:
             curator_session = get_curator_session(username)
             self = curator_session.merge(self)
             # see how many reserved name use this reference exist for personal communication, save for later
-            ref_count = curator_session.query(Reservedname).filter(Reservedname.reference_id == self.reference_id).count()
+            ref_count = curator_session.query(Reservedname).filter(
+                Reservedname.reference_id == self.reference_id).count()
             # delete old locusreferences
-            curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id == self.locus_id, LocusReferences.reference_id == self.reference_id, LocusReferences.reference_class == new_reference_class)).delete(synchronize_session=False)
-            has_ref_name = curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id == self.locus_id, LocusReferences.reference_id == ref_id, LocusReferences.reference_class == new_reference_class)).count()
+            curator_session.query(LocusReferences).filter(and_(LocusReferences.locus_id == self.locus_id, LocusReferences.reference_id ==
+                                                               self.reference_id, LocusReferences.reference_class == new_reference_class)).delete(synchronize_session=False)
+            has_ref_name = curator_session.query(LocusReferences).filter(and_(
+                LocusReferences.locus_id == self.locus_id, LocusReferences.reference_id == ref_id, LocusReferences.reference_class == new_reference_class)).count()
             if not has_ref_name:
                 new_locus_ref = LocusReferences(
-                    locus_id = self.locus_id,
-                    reference_id = ref_id,
-                    reference_class = new_reference_class,
-                    source_id = SGD_SOURCE_ID,
-                    created_by = username
+                    locus_id=self.locus_id,
+                    reference_id=ref_id,
+                    reference_class=new_reference_class,
+                    source_id=SGD_SOURCE_ID,
+                    created_by=username
                 )
                 curator_session.add(new_locus_ref)
             if new_reference_class == 'gene_name':
                 # update LocusnoteReference to have new ref id
-                curator_session.query(LocusnoteReference).filter_by(reference_id=self.reference_id).update({ 'reference_id': ref_id })
+                curator_session.query(LocusnoteReference).filter_by(
+                    reference_id=self.reference_id).update({'reference_id': ref_id})
                 # finally change reference_id
                 personal_communication_ref_id = self.reference_id
-                personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.dbentity_id == personal_communication_ref_id).one_or_none()
+                personal_communication_ref = curator_session.query(Referencedbentity).filter(
+                    Referencedbentity.dbentity_id == personal_communication_ref_id).one_or_none()
                 self.reference_id = ref_id
             transaction.commit()
             # if this is only one reference for personal communication, delete it
             if new_reference_class == 'gene_name' and ref_count == 1 and personal_communication_ref.publication_status != 'Published':
-                personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.dbentity_id == personal_communication_ref_id).one_or_none()
+                personal_communication_ref = curator_session.query(Referencedbentity).filter(
+                    Referencedbentity.dbentity_id == personal_communication_ref_id).one_or_none()
                 personal_communication_ref.delete_with_children(username)
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
@@ -12698,40 +13980,45 @@ class Reservedname(Base):
     def standardize(self, username):
         # a few validations
         if not self.is_ref_published():
-            raise ValueError('Associated reference must be published before standardizing reservation.')
+            raise ValueError(
+                'Associated reference must be published before standardizing reservation.')
         if not self.locus_id:
-            raise ValueError('Reserved name must be associated with an ORF before being standardized.')
+            raise ValueError(
+                'Reserved name must be associated with an ORF before being standardized.')
         try:
             curator_session = get_curator_session(username)
             self = curator_session.merge(self)
-            locus = curator_session.query(Locusdbentity).filter(Locusdbentity.dbentity_id == self.locus_id).one_or_none()
+            locus = curator_session.query(Locusdbentity).filter(
+                Locusdbentity.dbentity_id == self.locus_id).one_or_none()
             locus.gene_name = self.display_name
             locus.display_name = self.display_name
             locus.name_description = self.name_description
             # archlocuschange update or add
-            existing_archlocus = curator_session.query(ArchLocuschange).filter(and_(ArchLocuschange.dbentity_id == self.locus_id, ArchLocuschange.change_type == 'Gene name')).all()
+            existing_archlocus = curator_session.query(ArchLocuschange).filter(and_(
+                ArchLocuschange.dbentity_id == self.locus_id, ArchLocuschange.change_type == 'Gene name')).all()
             if len(existing_archlocus):
                 existing_archlocus = existing_archlocus[0]
                 existing_archlocus.date_name_standardized = datetime.now()
             else:
                 new_archlocuschange = ArchLocuschange(
-                    dbentity_id = self.locus_id,
-                    change_type = 'Gene name',
-                    new_value = self.display_name,
-                    source_id = SGD_SOURCE_ID,
-                    date_name_standardized = datetime.now(),
-                    added_by = username
+                    dbentity_id=self.locus_id,
+                    change_type='Gene name',
+                    new_value=self.display_name,
+                    source_id=SGD_SOURCE_ID,
+                    date_name_standardized=datetime.now(),
+                    added_by=username
                 )
                 curator_session.add(new_archlocuschange)
             # add curator activity
             new_curate_activity = CuratorActivity(
-                display_name = locus.display_name,
-                obj_url = locus.obj_url,
-                activity_category = 'locus',
-                dbentity_id = locus.dbentity_id,
-                message = 'standardized gene name',
-                json = json.dumps({ 'keys': { 'gene_name': self.display_name }, 'modified_date': str(datetime.now())}),
-                created_by = username
+                display_name=locus.display_name,
+                obj_url=locus.obj_url,
+                activity_category='locus',
+                dbentity_id=locus.dbentity_id,
+                message='standardized gene name',
+                json=json.dumps(
+                    {'keys': {'gene_name': self.display_name}, 'modified_date': str(datetime.now())}),
+                created_by=username
             )
             curator_session.add(new_curate_activity)
             curator_session.delete(self)
@@ -12740,7 +14027,7 @@ class Reservedname(Base):
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
@@ -12752,15 +14039,21 @@ class Reservedname(Base):
             self = curator_session.merge(self)
             if new_info['systematic_name']:
                 res_systematic_name = new_info['systematic_name'].strip()
-                is_locus = curator_session.query(Locusdbentity).filter(Locusdbentity.systematic_name == res_systematic_name).one_or_none()
+                is_locus = curator_session.query(Locusdbentity).filter(
+                    Locusdbentity.systematic_name == res_systematic_name).one_or_none()
                 if not is_locus:
-                    raise ValueError(res_systematic_name + ' is not a valid systematic_name.')
+                    raise ValueError(res_systematic_name +
+                                     ' is not a valid systematic_name.')
                 if is_locus.gene_name:
-                    raise ValueError(res_systematic_name + ' already has a standard name.')
-                is_already_reserved = curator_session.query(Reservedname).filter(and_(Reservedname.locus_id == is_locus.dbentity_id, Reservedname.reservedname_id != self.reservedname_id)).one_or_none()
+                    raise ValueError(res_systematic_name +
+                                     ' already has a standard name.')
+                is_already_reserved = curator_session.query(Reservedname).filter(and_(
+                    Reservedname.locus_id == is_locus.dbentity_id, Reservedname.reservedname_id != self.reservedname_id)).one_or_none()
                 if is_already_reserved:
-                    raise ValueError(res_systematic_name + ' is already reserved for ' + is_already_reserved.display_name)
-                new_locus_id = self.associate_locus(res_systematic_name, username)
+                    raise ValueError(
+                        res_systematic_name + ' is already reserved for ' + is_already_reserved.display_name)
+                new_locus_id = self.associate_locus(
+                    res_systematic_name, username)
                 self = curator_session.merge(self)
                 self.locus_id = new_locus_id
             elif self.locus_id:
@@ -12768,13 +14061,18 @@ class Reservedname(Base):
             if new_info['display_name'] and new_info['display_name'] != self.display_name:
                 potential_name = new_info['display_name'].upper().strip()
                 if not Locusdbentity.is_valid_gene_name(potential_name):
-                    raise ValueError(potential_name + ' does not follow gene name conventions.')
-                exists_in_locus = curator_session.query(Locusdbentity).filter(Locusdbentity.gene_name == potential_name).one_or_none()
+                    raise ValueError(potential_name +
+                                     ' does not follow gene name conventions.')
+                exists_in_locus = curator_session.query(Locusdbentity).filter(
+                    Locusdbentity.gene_name == potential_name).one_or_none()
                 if exists_in_locus:
-                    raise ValueError(potential_name + ' is already a standard gene name.')
-                exists_in_res = curator_session.query(Reservedname).filter(Reservedname.display_name == potential_name).one_or_none()
+                    raise ValueError(potential_name +
+                                     ' is already a standard gene name.')
+                exists_in_res = curator_session.query(Reservedname).filter(
+                    Reservedname.display_name == potential_name).one_or_none()
                 if exists_in_res:
-                    raise ValueError(potential_name + ' is a reserved gene name.')
+                    raise ValueError(potential_name +
+                                     ' is a reserved gene name.')
                 self.display_name = potential_name
             if new_info['name_description']:
                 self.name_description = new_info['name_description']
@@ -12786,7 +14084,7 @@ class Reservedname(Base):
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
@@ -12804,7 +14102,7 @@ class Reservedname(Base):
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
@@ -12814,11 +14112,14 @@ class ReservednameTriage(Base):
     __tablename__ = 'reservednametriage'
     __table_args__ = {'schema': 'nex'}
 
-    curation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    curation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     proposed_gene_name = Column(String(100), nullable=False)
-    colleague_id = Column(ForeignKey('nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
+    colleague_id = Column(ForeignKey(
+        'nex.colleague.colleague_id', ondelete='CASCADE'), index=True)
     json = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
 
     def get_author_list(self):
         obj = json.loads(self.json)
@@ -12829,8 +14130,10 @@ class ReservednameTriage(Base):
                 a_str = x['last_name'] + ' ' + x['first_name'][:1]
                 author_list.append(a_str)
         if len(author_list) == 0:
-            colleague = DBSession.query(Colleague).filter(Colleague.colleague_id == self.colleague_id).one_or_none()
-            author_list = [colleague.last_name + ' ' + colleague.first_name[:1]]
+            colleague = DBSession.query(Colleague).filter(
+                Colleague.colleague_id == self.colleague_id).one_or_none()
+            author_list = [colleague.last_name +
+                           ' ' + colleague.first_name[:1]]
         return author_list
 
     def to_citation(self):
@@ -12847,7 +14150,7 @@ class ReservednameTriage(Base):
         obj = json.loads(self.json)
         return_obj = {
             'id': self.curation_id,
-            'display_name' : self.proposed_gene_name,
+            'display_name': self.proposed_gene_name,
             'reservation_status': 'Unprocessed',
             'name_description': obj['description'],
             'notes': obj['notes'],
@@ -12857,8 +14160,10 @@ class ReservednameTriage(Base):
                 'display_name': self.to_citation()
             }
         }
-        colleague = DBSession.query(Colleague).filter(Colleague.colleague_id == self.colleague_id).one_or_none()
-        return_obj['submitter_name'] = colleague.first_name + ' ' + colleague.last_name
+        colleague = DBSession.query(Colleague).filter(
+            Colleague.colleague_id == self.colleague_id).one_or_none()
+        return_obj['submitter_name'] = colleague.first_name + \
+            ' ' + colleague.last_name
         return_obj['submitter_email'] = colleague.email
         return_obj['submitter_phone'] = colleague.work_phone
         return return_obj
@@ -12870,12 +14175,16 @@ class ReservednameTriage(Base):
             data = json.loads(self.json)
             if new_info['systematic_name']:
                 res_systematic_name = new_info['systematic_name'].upper()
-                is_locus = curator_session.query(Locusdbentity).filter(Locusdbentity.systematic_name == res_systematic_name).one_or_none()
+                is_locus = curator_session.query(Locusdbentity).filter(
+                    Locusdbentity.systematic_name == res_systematic_name).one_or_none()
                 if not is_locus:
-                    raise ValueError(res_systematic_name + ' is not a valid systematic_name.')
-                is_already_reserved = curator_session.query(Reservedname).filter(Reservedname.locus_id == is_locus.dbentity_id).one_or_none()
+                    raise ValueError(res_systematic_name +
+                                     ' is not a valid systematic_name.')
+                is_already_reserved = curator_session.query(Reservedname).filter(
+                    Reservedname.locus_id == is_locus.dbentity_id).one_or_none()
                 if is_already_reserved:
-                    raise ValueError(res_systematic_name + ' is already reserved for ' + is_already_reserved.display_name)
+                    raise ValueError(
+                        res_systematic_name + ' is already reserved for ' + is_already_reserved.display_name)
                 data['systematic_name'] = res_systematic_name
             if new_info['name_description']:
                 data['description'] = new_info['name_description']
@@ -12888,7 +14197,7 @@ class ReservednameTriage(Base):
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
@@ -12901,7 +14210,8 @@ class ReservednameTriage(Base):
             # create personal communication
             citation = self.to_citation()
             # see if there is already personal communication for this and add if not yet added
-            personal_communication_ref = curator_session.query(Referencedbentity).filter(Referencedbentity.citation == citation).one_or_none()
+            personal_communication_ref = curator_session.query(Referencedbentity).filter(
+                Referencedbentity.citation == citation).one_or_none()
             if not personal_communication_ref:
                 title = None
                 if 'publication_title' in list(obj.keys()):
@@ -12911,22 +14221,23 @@ class ReservednameTriage(Base):
                 journal_id = None
                 if 'journal' in list(obj.keys()):
                     journal_name = obj['journal']
-                    existing_journal = curator_session.query(Journal).filter(Journal.display_name == journal_name).all()
+                    existing_journal = curator_session.query(Journal).filter(
+                        Journal.display_name == journal_name).all()
                     if len(existing_journal) > 0:
                         journal_id = existing_journal[0].journal_id
                 personal_communication_ref = Referencedbentity(
-                    display_name = citation,
-                    source_id = DIRECT_SUBMISSION_SOURCE_ID,
-                    subclass = 'REFERENCE',
-                    dbentity_status = 'Active',
-                    method_obtained = 'Gene registry',
-                    publication_status = obj['status'],
-                    fulltext_status = 'NAP',
-                    citation = citation,
-                    year = int(obj['year']),
-                    title = title,
-                    journal_id = journal_id,
-                    created_by = username
+                    display_name=citation,
+                    source_id=DIRECT_SUBMISSION_SOURCE_ID,
+                    subclass='REFERENCE',
+                    dbentity_status='Active',
+                    method_obtained='Gene registry',
+                    publication_status=obj['status'],
+                    fulltext_status='NAP',
+                    citation=citation,
+                    year=int(obj['year']),
+                    title=title,
+                    journal_id=journal_id,
+                    created_by=username
                 )
                 curator_session.add(personal_communication_ref)
                 curator_session.flush()
@@ -12934,52 +14245,54 @@ class ReservednameTriage(Base):
                 author_list = self.get_author_list()
                 for i, author in enumerate(author_list):
                     new_ref_author = Referenceauthor(
-                        display_name = author,
-                        obj_url = '/author/' + author.replace(' ', '_'),
-                        source_id = DIRECT_SUBMISSION_SOURCE_ID,
-                        reference_id = personal_communication_ref.dbentity_id,
-                        author_order = i,
-                        author_type = 'Author',
-                        created_by = username
+                        display_name=author,
+                        obj_url='/author/' + author.replace(' ', '_'),
+                        source_id=DIRECT_SUBMISSION_SOURCE_ID,
+                        reference_id=personal_communication_ref.dbentity_id,
+                        author_order=i,
+                        author_type='Author',
+                        created_by=username
                     )
                     curator_session.add(new_ref_author)
                 # add referencetype
                 new_reftype = Referencetype(
-                    display_name = 'Personal Communication to SGD',
-                    obj_url = '/referencetype/Personal_Communication_to_SGD',
-                    source_id = DIRECT_SUBMISSION_SOURCE_ID,
-                    reference_id = personal_communication_ref.dbentity_id,
-                    created_by = username
+                    display_name='Personal Communication to SGD',
+                    obj_url='/referencetype/Personal_Communication_to_SGD',
+                    source_id=DIRECT_SUBMISSION_SOURCE_ID,
+                    reference_id=personal_communication_ref.dbentity_id,
+                    created_by=username
                 )
                 curator_session.add(new_reftype)
             # see if there is a locus
             locus_id = None
             if 'systematic_name' in list(obj.keys()):
-                locus_id = curator_session.query(Locusdbentity.dbentity_id).filter(Locusdbentity.systematic_name == obj['systematic_name']).scalar()
+                locus_id = curator_session.query(Locusdbentity.dbentity_id).filter(
+                    Locusdbentity.systematic_name == obj['systematic_name']).scalar()
             # actually add gene name reservation
             new_res = Reservedname(
-                format_name = self.proposed_gene_name,
-                display_name = self.proposed_gene_name,
-                obj_url = '/reservedname/' + self.proposed_gene_name,
-                source_id = DIRECT_SUBMISSION_SOURCE_ID,
-                locus_id = locus_id,
-                reference_id = personal_communication_ref.dbentity_id,
-                colleague_id = self.colleague_id,
-                name_description = obj['description'],
-                description = obj['notes'],
-                date_created = self.date_created,
-                created_by = username
+                format_name=self.proposed_gene_name,
+                display_name=self.proposed_gene_name,
+                obj_url='/reservedname/' + self.proposed_gene_name,
+                source_id=DIRECT_SUBMISSION_SOURCE_ID,
+                locus_id=locus_id,
+                reference_id=personal_communication_ref.dbentity_id,
+                colleague_id=self.colleague_id,
+                name_description=obj['description'],
+                description=obj['notes'],
+                date_created=self.date_created,
+                created_by=username
             )
             curator_session.add(new_res)
             curator_session.flush()
             curator_session.refresh(new_res)
             new_curate_activity = CuratorActivity(
-                display_name = new_res.display_name,
-                obj_url = new_res.obj_url,
-                activity_category = 'reserved_name',
-                json = json.dumps({'summary text': new_res.description , 'modified_date':str(datetime.now())}),
-                message = 'gene name reservation added',
-                created_by = username
+                display_name=new_res.display_name,
+                obj_url=new_res.obj_url,
+                activity_category='reserved_name',
+                json=json.dumps(
+                    {'summary text': new_res.description, 'modified_date': str(datetime.now())}),
+                message='gene name reservation added',
+                created_by=username
             )
             curator_session.add(new_curate_activity)
             curator_session.delete(self)
@@ -12990,25 +14303,29 @@ class ReservednameTriage(Base):
         except Exception as e:
             transaction.abort()
             traceback.print_exc()
-            raise(e)
+            raise (e)
         finally:
             if curator_session:
                 curator_session.remove()
         return True
 
+
 class Ro(Base):
     __tablename__ = 'ro'
     __table_args__ = {'schema': 'nex'}
 
-    ro_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    ro_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     roid = Column(String(20), nullable=False, unique=True)
     description = Column(String(1000))
     is_obsolete = Column(Boolean, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -13021,12 +14338,17 @@ class RoRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey(
+        'nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
     relation_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     child = relationship('Ro', primaryjoin='RoRelation.child_id == Ro.ro_id')
@@ -13041,13 +14363,17 @@ class RoUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey(
+        'nex.ro.ro_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     ro = relationship('Ro')
@@ -13058,16 +14384,19 @@ class Sgdid(Base):
     __tablename__ = 'sgdid'
     __table_args__ = {'schema': 'nex'}
 
-    sgdid_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    sgdid_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     bud_id = Column(Integer)
     subclass = Column(String(40), nullable=False)
     sgdid_status = Column(String(40), nullable=False)
     description = Column(String(1000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -13077,18 +14406,21 @@ class So(Base):
     __tablename__ = 'so'
     __table_args__ = {'schema': 'nex'}
 
-    so_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    so_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     soid = Column(String(20), nullable=False, unique=True)
     description = Column(String(2000))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
     term_name = Column(String(500), nullable=False)
-    
+
     source = relationship('Source')
 
 
@@ -13099,12 +14431,16 @@ class SoAlia(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    so_id = Column(ForeignKey(
+        'nex.so.so_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     so = relationship('So')
@@ -13118,12 +14454,18 @@ class SoRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey(
+        'nex.so.so_id', ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey(
+        'nex.so.so_id', ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     child = relationship('So', primaryjoin='SoRelation.child_id == So.so_id')
@@ -13139,13 +14481,17 @@ class SoUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    so_id = Column(ForeignKey('nex.so.so_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    so_id = Column(ForeignKey(
+        'nex.so.so_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     so = relationship('So')
@@ -13156,12 +14502,14 @@ class Source(Base):
     __tablename__ = 'source'
     __table_args__ = {'schema': 'nex'}
 
-    source_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    source_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     bud_id = Column(Integer)
     description = Column(String(500))
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     def to_dict(self):
@@ -13180,13 +14528,17 @@ class StrainUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    strain_id = Column(ForeignKey('nex.straindbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    strain_id = Column(ForeignKey(
+        'nex.straindbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -13200,13 +14552,17 @@ class Strainsummary(Base):
         {'schema': 'nex'}
     )
 
-    summary_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.summary_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    strain_id = Column(ForeignKey('nex.straindbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
+    summary_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.summary_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    strain_id = Column(ForeignKey(
+        'nex.straindbentity.dbentity_id', ondelete='CASCADE'), nullable=False)
     summary_type = Column(String(40), nullable=False)
     text = Column(Text, nullable=False)
     html = Column(Text, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=FetchedValue())
+    date_created = Column(DateTime, nullable=False,
+                          server_default=FetchedValue())
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -13220,12 +14576,17 @@ class StrainsummaryReference(Base):
         {'schema': 'nex'}
     )
 
-    summary_reference_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.link_seq'::regclass)"))
-    summary_id = Column(ForeignKey('nex.strainsummary.summary_id', ondelete='CASCADE'), nullable=False)
-    reference_id = Column(ForeignKey('nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
+    summary_reference_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.link_seq'::regclass)"))
+    summary_id = Column(ForeignKey(
+        'nex.strainsummary.summary_id', ondelete='CASCADE'), nullable=False)
+    reference_id = Column(ForeignKey(
+        'nex.referencedbentity.dbentity_id', ondelete='CASCADE'), nullable=False, index=True)
     reference_order = Column(SmallInteger, nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     reference = relationship('Referencedbentity')
@@ -13237,15 +14598,18 @@ class Taxonomy(Base):
     __tablename__ = 'taxonomy'
     __table_args__ = {'schema': 'nex'}
 
-    taxonomy_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
+    taxonomy_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.object_seq'::regclass)"))
     format_name = Column(String(100), nullable=False, unique=True)
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
     taxid = Column(String(20), nullable=False, unique=True)
     common_name = Column(String(100))
     rank = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     is_obsolete = Column(Boolean, nullable=False)
     source = relationship('Source')
@@ -13258,12 +14622,16 @@ class TaxonomyAlia(Base):
         {'schema': 'nex'}
     )
 
-    alias_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.alias_seq'::regclass)"))
+    alias_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.alias_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False)
     alias_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -13277,16 +14645,24 @@ class TaxonomyRelation(Base):
         {'schema': 'nex'}
     )
 
-    relation_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.relation_seq'::regclass)"))
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    parent_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False)
-    child_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False, index=True)
-    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'), nullable=False, index=True)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    relation_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.relation_seq'::regclass)"))
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    parent_id = Column(ForeignKey('nex.taxonomy.taxonomy_id',
+                       ondelete='CASCADE'), nullable=False)
+    child_id = Column(ForeignKey('nex.taxonomy.taxonomy_id',
+                      ondelete='CASCADE'), nullable=False, index=True)
+    ro_id = Column(ForeignKey('nex.ro.ro_id', ondelete='CASCADE'),
+                   nullable=False, index=True)
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
-    child = relationship('Taxonomy', primaryjoin='TaxonomyRelation.child_id == Taxonomy.taxonomy_id')
-    parent = relationship('Taxonomy', primaryjoin='TaxonomyRelation.parent_id == Taxonomy.taxonomy_id')
+    child = relationship(
+        'Taxonomy', primaryjoin='TaxonomyRelation.child_id == Taxonomy.taxonomy_id')
+    parent = relationship(
+        'Taxonomy', primaryjoin='TaxonomyRelation.parent_id == Taxonomy.taxonomy_id')
     ro = relationship('Ro')
     source = relationship('Source')
 
@@ -13298,13 +14674,17 @@ class TaxonomyUrl(Base):
         {'schema': 'nex'}
     )
 
-    url_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.url_seq'::regclass)"))
+    url_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.url_seq'::regclass)"))
     display_name = Column(String(500), nullable=False)
     obj_url = Column(String(500), nullable=False)
-    source_id = Column(ForeignKey('nex.source.source_id', ondelete='CASCADE'), nullable=False, index=True)
-    taxonomy_id = Column(ForeignKey('nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False)
+    source_id = Column(ForeignKey('nex.source.source_id',
+                       ondelete='CASCADE'), nullable=False, index=True)
+    taxonomy_id = Column(ForeignKey(
+        'nex.taxonomy.taxonomy_id', ondelete='CASCADE'), nullable=False)
     url_type = Column(String(40), nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
 
     source = relationship('Source')
@@ -13315,12 +14695,14 @@ class Updatelog(Base):
     __tablename__ = 'updatelog'
     __table_args__ = {'schema': 'nex'}
 
-    updatelog_id = Column(BigInteger, primary_key=True, server_default=text("nextval('nex.updatelog_seq'::regclass)"))
+    updatelog_id = Column(BigInteger, primary_key=True, server_default=text(
+        "nextval('nex.updatelog_seq'::regclass)"))
     bud_id = Column(Integer)
     tab_name = Column(String(60), nullable=False)
     col_name = Column(String(60), nullable=False)
     primary_key = Column(BigInteger, nullable=False)
-    date_created = Column(DateTime, nullable=False, server_default=text("('now'::text)::timestamp without time zone"))
+    date_created = Column(DateTime, nullable=False, server_default=text(
+        "('now'::text)::timestamp without time zone"))
     created_by = Column(String(12), nullable=False)
     old_value = Column(Text)
     new_value = Column(Text)
@@ -13328,11 +14710,12 @@ class Updatelog(Base):
 
 # should be valid genes (by standard name or systematic name) and should not be primary, additional, or review for same gene
 def validate_tags(tags):
-    extra_tag_list = ['regulation_information', 'ptm', 'homology_disease', 'gene_model', 'pathways', 'engineering', 'alleles']
+    extra_tag_list = ['regulation_information', 'ptm', 'homology_disease',
+                      'gene_model', 'pathways', 'engineering', 'alleles']
     primary_obj = {}
     additional_obj = {}
     review_obj = {}
-    extra_obj = {} # tracks if in extra topics and might add additional tag for that gene
+    extra_obj = {}  # tracks if in extra topics and might add additional tag for that gene
     high_priority_obj = {}
     gene_ids = []
     has_reviews = False
@@ -13372,18 +14755,22 @@ def validate_tags(tags):
     a_keys = list(additional_obj.keys())
     r_keys = list(review_obj.keys())
     if (has_reviews > 0 and (len(p_keys) + len(a_keys)) > 0):
-        raise ValueError('Review tags are mutually exclusive with primary and additional tags.')
+        raise ValueError(
+            'Review tags are mutually exclusive with primary and additional tags.')
     unique_keys = set(p_keys + a_keys + r_keys)
     extra_keys = set(extra_obj.keys())
     high_priority_keys = set(high_priority_obj.keys())
-    all_keys = list(set(list(unique_keys) + list(extra_keys) + list(high_priority_keys)))
+    all_keys = list(
+        set(list(unique_keys) + list(extra_keys) + list(high_priority_keys)))
     # upper_all_keys = [x.upper() for x in all_keys]
     if len(unique_keys) != (len(p_keys) + len(a_keys) + len(r_keys)):
-        raise ValueError('The same gene can only be used as a primary tag, additional tag, or review.')
+        raise ValueError(
+            'The same gene can only be used as a primary tag, additional tag, or review.')
     # validate that all genes are proper identifiers
-    valid_genes = DBSession.query(Locusdbentity.gene_name, Locusdbentity.systematic_name).filter(or_(Locusdbentity.display_name.in_(all_keys), (Locusdbentity.format_name.in_(all_keys)))).all()
+    valid_genes = DBSession.query(Locusdbentity.gene_name, Locusdbentity.systematic_name).filter(
+        or_(Locusdbentity.display_name.in_(all_keys), (Locusdbentity.format_name.in_(all_keys)))).all()
     num_valid_genes = len(valid_genes)
-    
+
     valid_identifiers = []
     for x in valid_genes:
         valid_identifiers.append(x[0])
@@ -13392,31 +14779,36 @@ def validate_tags(tags):
     added = 0
     for x in all_keys:
         if x not in valid_identifiers:
-            complex = DBSession.query(Dbentity).filter_by(subclass='COMPLEX', format_name=x).one_or_none()
+            complex = DBSession.query(Dbentity).filter_by(
+                subclass='COMPLEX', format_name=x).one_or_none()
             if complex is None:
-                pathway = DBSession.query(Pathwaydbentity).filter_by(biocyc_id=x).one_or_none()
+                pathway = DBSession.query(Pathwaydbentity).filter_by(
+                    biocyc_id=x).one_or_none()
                 if pathway is not None:
                     valid_identifiers.append(x)
                     added = added + 1
                 else:
-                    allele = DBSession.query(Alleledbentity).filter(Alleledbentity.display_name.ilike(x)).one_or_none()
+                    allele = DBSession.query(Alleledbentity).filter(
+                        Alleledbentity.display_name.ilike(x)).one_or_none()
                     if allele is not None:
                         valid_identifiers.append(x)
-                        added = added + 1 
+                        added = added + 1
             else:
                 valid_identifiers.append(x)
                 added = added + 1
-                
+
     num_valid_genes = num_valid_genes + added
-    
+
     if num_valid_genes != len(all_keys):
         # get invalid gene identifiers
         try:
-            invalid_identifiers = [x for x in all_keys if x not in valid_identifiers]
+            invalid_identifiers = [
+                x for x in all_keys if x not in valid_identifiers]
             invalid_identifiers = ', '.join(invalid_identifiers)
         except:
             invalid_identifiers = ''
-        raise ValueError('Genes must be a space-separated list of valid genes by standard name or systematic name. Invalid identifier(s): ' + invalid_identifiers)
+        raise ValueError(
+            'Genes must be a space-separated list of valid genes by standard name or systematic name. Invalid identifier(s): ' + invalid_identifiers)
     # maybe modify "extra" tags: if homology/disease, PTM, or regulation for a gene and no public top for that gene, then add to additional information
     new_additional_genes = []
     for x in extra_keys:
@@ -13439,17 +14831,21 @@ def validate_tags(tags):
             tags.append(new_tag)
     return tags
 
+
 def convert_space_separated_pmids_to_list(str_pmids):
     if str_pmids == '' or str_pmids is None:
         return []
-    str_pmids = ' '.join(str_pmids.split())# remove extra spaces
+    str_pmids = ' '.join(str_pmids.split())  # remove extra spaces
     str_list = str_pmids.split(SEPARATOR)
     int_list = [int(x) for x in str_list]
     return int_list
 
+
 def get_transcript_so_id():
-    so = DBSession.query(So).filter_by(display_name = 'primary transcript').one_or_none()
+    so = DBSession.query(So).filter_by(
+        display_name='primary transcript').one_or_none()
     return so.so_id
+
 
 def map_id_species(id):
     if id.startswith('HGNC:'):

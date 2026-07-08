@@ -1,3 +1,8 @@
+from src.models import Dbentity, DBSession, Locusdbentity, LocusAlias, Dnasequenceannotation, \
+    Dnasubsequence, So, Contig, Go, Goannotation, Edam, Path, \
+    FilePath, Filedbentity, Source, Transcriptdbentity
+from sqlalchemy import create_engine
+from datetime import datetime
 import logging
 import os
 import sys
@@ -6,11 +11,6 @@ import gzip
 import importlib
 importlib.reload(sys)  # Reload does the trick!
 
-from datetime import datetime
-from sqlalchemy import create_engine
-from src.models import Dbentity, DBSession, Locusdbentity, LocusAlias, Dnasequenceannotation, \
-    Dnasubsequence, So, Contig, Go, Goannotation, Edam, Path, \
-    FilePath, Filedbentity, Source, Transcriptdbentity
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
@@ -23,14 +23,15 @@ log.setLevel(logging.INFO)
 
 CREATED_BY = os.environ['DEFAULT_USER']
 
-gff_file = "/Users/kkarra/Dev/SGDBackend-Nex2/scripts/dumping/alliance/data/saccharomyces_cerevisiae_forAlliance.gff"
-landmark_file = "/Users/kkarra/Dev/SGDBackend-Nex2/scripts/dumping/alliance/data/landmark_gene.txt"
+gff_file = "./scripts/dumping/alliance/data/saccharomyces_cerevisiae_forAlliance.gff"
+landmark_file = "./scripts/dumping/alliance/data/landmark_gene.txt"
 
 chromosomes = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX',
                'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'Mito']
 
-## If transcript < gene start/stop then add start/stop as transcript and SKIP transcript in the database;
+# If transcript < gene start/stop then add start/stop as transcript and SKIP transcript in the database;
 # workaround until transcripts fixed after updates ##
+
 
 def dump_data():
 
@@ -159,11 +160,12 @@ def dump_data():
                 transcript_end = transSeqAnnot.end_index
             transcript_range[sysName] = (transcript_start, transcript_end)
 
-            #if sysName == 'YBL043W':
+            # if sysName == 'YBL043W':
             #    print(sysName, transSeqAnnot.start_index, transSeqAnnot.end_index)
             #    print(sysName ,  transcript_range[sysName])
         else:
-            transcript_range[sysName] = (transSeqAnnot.start_index, transSeqAnnot.end_index)
+            transcript_range[sysName] = (
+                transSeqAnnot.start_index, transSeqAnnot.end_index)
 
         if sysName in systematic_name_to_transcripts.keys():
             systematic_name_to_transcripts[sysName].append({"sgdid": "SGD:" + transcriptObj.sgdid,
@@ -272,7 +274,8 @@ def dump_data():
             gene_end = end_index
 
             if systematic_name in transcript_range:
-                (transcript_start, transcript_stop) = transcript_range[systematic_name]
+                (transcript_start,
+                 transcript_stop) = transcript_range[systematic_name]
                 if transcript_start < gene_start:
                     gene_start = transcript_start
                 if transcript_stop > gene_end:
@@ -282,7 +285,7 @@ def dump_data():
                          "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + name_attribute)
             else:
                 fw.write("chr" + chr + "\tSGD\t" + type + "\t" + str(start_index) + "\t" + str(end_index) +
-                     "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + name_attribute)
+                         "\t.\t" + strand + "\t.\tID=" + systematic_name + ";Name=" + name_attribute)
 
             if gene_name:
                 fw.write(";gene=" + gene_name)
@@ -305,7 +308,7 @@ def dump_data():
             if qualifier:
                 fw.write(";orf_classification=" + qualifier)
 
- # FOR Alliance GFF3; 
+ # FOR Alliance GFF3;
 
             if "gene" in type:
                 fw.write(";gene_id=" + sgdid)
@@ -387,7 +390,7 @@ def dump_data():
                 # fw.write("chr" + chr + "\tSGD\t" + display_name + "\t" + str(contig_start_index) + "\t" + str(contig_end_index) + "\t.\t" + strand + "\t" + str(phase) + "\tID=" + name + ";Name=" + name + ";dbxref=" + sgdid + ";curie=" + sgdid + "\n");
 
             if type == 'gene':
-                if systematic_name in systematic_name_to_transcripts.keys(): #add exprimental transcripts #
+                if systematic_name in systematic_name_to_transcripts.keys():  # add exprimental transcripts #
                     for each in systematic_name_to_transcripts[systematic_name]:
                         if refseqid != "":
                             fw.write("chr" + chr + "\tSGD\tmRNA\t" + str(each["start"]) + "\t" + str(each["end"]) + "\t.\t" + each["strand"] + "\t.\tID=" + each["name"] +
@@ -429,6 +432,7 @@ def dump_data():
     DBSession.close()
     log.info(str(datetime.now()))
     log.info("Done!")
+
 
 def formated_seq(sequence):
 
@@ -476,7 +480,7 @@ def do_escape(text):
     return text
 
 
-#def upload_gff_to_s3(file, filename):
+# def upload_gff_to_s3(file, filename):
 
 #    s3_path = filename
 #    conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY)
@@ -484,7 +488,7 @@ def do_escape(text):
 #    k = Key(bucket)
 #    k.key = s3_path
 #    k.set_contents_from_file(file, rewind=True)
-##    k.make_public()
+# k.make_public()
 #    transaction.commit()
 
 
@@ -587,12 +591,12 @@ def update_database_load_file_to_s3(DBSession, gff_file, gzip_file, source_to_id
 def write_header(fw, datestamp):
 
     fw.write("##gff-version 3\n")
-    fw.write("#!date-produced " + datestamp+"\n") #.split(".")[0] + "\n")
+    fw.write("#!date-produced " + datestamp+"\n")  # .split(".")[0] + "\n")
     fw.write("#!data-source SGD\n")
-    fw.write("#!assembly R64-4-1\n")
+    fw.write("#!assembly R64-5-1\n")
     fw.write("#!refseq-version GCF_000146045.2\n")
     fw.write("#\n")
-    fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-3-1)\n")
+    fw.write("# Saccharomyces cerevisiae S288C genome (version=R64-5-1)\n")
     fw.write("#\n")
     fw.write("# Features from the 16 nuclear chromosomes labeled chrI to chrXVI,\n")
     fw.write("# plus the mitochondrial genome labeled chrmt.\n")

@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600)
 DBSession.configure(bind=engine)
-SUBMISSION_VERSION = "2024-03-12"
+SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
 
 local_dir = 'scripts/dumping/alliance/data/'
 
@@ -22,8 +22,9 @@ COND_TO_ZECO = {
     "phase": "ZECO:0000104"  # experimental conditions
 }
 
+
 def get_phenotypephenotype_data():
-    #phenotype_data = DBSession.query(Phenotypeannotation).filter_by(allele_id='2242896').all()
+    # phenotype_data = DBSession.query(Phenotypeannotation).filter_by(allele_id='2242896').all()
     phenotype_data = DBSession.query(Phenotypeannotation).all()
     result = []
     print(("computing " + str(len(phenotype_data)) + " phenotypes"))
@@ -57,30 +58,39 @@ def get_phenotypephenotype_data():
                             continue
                         if class_type == 'media':
                             cObj = {"conditionId": COND_TO_ZECO[class_type],
-                                    "conditionClassId": COND_TO_ZECO['chemical'] }
-                            #cObj = {"conditionClassId": COND_TO_ZECO['chemical']}
+                                    "conditionClassId": COND_TO_ZECO['chemical']}
+                            # cObj = {"conditionClassId": COND_TO_ZECO['chemical']}
                         else:
-                            cObj = {"conditionClassId": COND_TO_ZECO[class_type]}
+                            cObj = {
+                                "conditionClassId": COND_TO_ZECO[class_type]}
                         if class_type == 'chemical':
-                            cObj["conditionStatement"] = class_type + ":" + cond['bioitem']['display_name']
+                            cObj["conditionStatement"] = class_type + \
+                                ":" + cond['bioitem']['display_name']
                             if str(cond['bioitem']['link']) != 'None':
-                                urllist = str(cond['bioitem']['link']).split("/")
+                                urllist = str(
+                                    cond['bioitem']['link']).split("/")
                                 chebi_id = urllist[2].split("'")[0]
                                 cObj["chemicalOntologyId"] = chebi_id
                             if cond['unit']:
-                                cObj["conditionQuantity"] = cond['concentration'] + " " + cond['unit']
+                                cObj["conditionQuantity"] = cond['concentration'] + \
+                                    " " + cond['unit']
                         else:
-                            cObj["conditionStatement"] = class_type + ":" + cond['note']
+                            cObj["conditionStatement"] = class_type + \
+                                ":" + cond['note']
                             if cond['unit'] and class_type == 'temperature':
                                 if re.match(", ", cond['note']):
-                                    cObj["conditionQuantity"] = cond["note"].split(", ")[1]
+                                    cObj["conditionQuantity"] = cond["note"].split(", ")[
+                                        1]
                                 else:
                                     cObj["conditionQuantity"] = cond["note"]
-                        conditionList = [{'conditionRelationType': 'has_condition', 'conditions': [cObj]}]
+                        conditionList = [
+                            {'conditionRelationType': 'has_condition', 'conditions': [cObj]}]
                         if alleleObj:
-                            alleleObj.setdefault("conditionRelations", []).extend(conditionList)
+                            alleleObj.setdefault(
+                                "conditionRelations", []).extend(conditionList)
                         else:
-                            obj.setdefault("conditionRelations", []).extend(conditionList)
+                            obj.setdefault("conditionRelations",
+                                           []).extend(conditionList)
                 # Code for adding phenotype, evidence, and dateAssigned remains unchanged from your original script.
                 # Ensure to complete the obj and alleleObj properties as needed here.
                 if item.phenotype.qualifier:
@@ -91,7 +101,7 @@ def get_phenotypephenotype_data():
                         "termOrder":
                         1
                     })
-                    if item.allele: #add phenotype to allele obj
+                    if item.allele:  # add phenotype to allele obj
                         alleleObj["phenotypeTermIdentifiers"].append({
                             "termId":
                             str(item.phenotype.qualifier.apoid),
@@ -106,7 +116,7 @@ def get_phenotypephenotype_data():
                             "termOrder":
                             2
                         })
-                        if item.allele: # adding observable to allele pheno obj
+                        if item.allele:  # adding observable to allele pheno obj
                             alleleObj["phenotypeTermIdentifiers"].append({
                                 "termId":
                                 str(item.phenotype.observable.apoid),
@@ -122,7 +132,7 @@ def get_phenotypephenotype_data():
                             "termOrder":
                             1
                         })
-                        if item.allele: # adding only observable to allele pheno obj
+                        if item.allele:  # adding only observable to allele pheno obj
                             alleleObj["phenotypeTermIdentifiers"].append({
                                 "termId":
                                 str(item.phenotype.observable.apoid),
@@ -142,7 +152,8 @@ def get_phenotypephenotype_data():
 
                 if item.allele:
                     # add allele SGDID to gene-level phenotype if there is an allele; ADD STRAIN_BACKGROUND too? -- NCBI TaxonID? if NOT 'OTHER'
-                    obj["primaryGeneticEntityIDs"] = ["SGD:" + item.allele.sgdid]
+                    obj["primaryGeneticEntityIDs"] = [
+                        "SGD:" + item.allele.sgdid]
                     # adding basic info to allele obj # ## already added conditions to it #
                     # alleleObj["primaryGeneticEntityIDs"] = ["SGD:" + item.allele.sgdid]
                     alleleObj["objectId"] = "SGD:" + item.allele.sgdid
@@ -150,24 +161,24 @@ def get_phenotypephenotype_data():
                     alleleObj["evidence"] = {"publicationId": pubId}
                     alleleObj["dateAssigned"] = item.date_created.strftime(
                         "%Y-%m-%dT%H:%m:%S-00:00")
-                
+
                 row_count += 1
                 result.append(obj)
                 if item.allele:
                     result.append(alleleObj)
-                #print("row=", row_count, ", obj=", obj, "\n")
-                #print("row=", row_count, ", alleleObj=", alleleObj, "\n")
-        
+                # print("row=", row_count, ", obj=", obj, "\n")
+                # print("row=", row_count, ", alleleObj=", alleleObj, "\n")
+
         if len(result) > 0:
             output_obj = get_output(result)
             file_name = 'SGD' + SUBMISSION_VERSION + 'phenotype.json'
             json_file_str = os.path.join(local_dir, file_name)
             with open(json_file_str, 'w+') as res_file:
-                res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+                res_file.write(json.dumps(
+                    output_obj, indent=4, sort_keys=True))
 
     DBSession.close()
 
 
 if __name__ == '__main__':
     get_phenotypephenotype_data()
-       

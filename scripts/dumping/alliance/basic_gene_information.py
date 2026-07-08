@@ -8,22 +8,28 @@ from src.data_helpers import get_output, get_locus_alias_data
 engine = create_engine(os.getenv('NEX2_URI'), pool_recycle=3600, pool_size=100)
 DBSession.configure(bind=engine)
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION')
+ASSEMBLY_VERSION = os.getenv('ASSEMBLY_VERSION')
+
 local_dir = 'scripts/dumping/alliance/data/'
+
 SO_TYPES_TO_EXCLUDE = [
     'SO:0000186', 'SO:0000577', 'SO:0000286', 'SO:0000296', 'SO:0005855',
     'SO:0001984', 'SO:0002026', 'SO:0001789', 'SO:0000436', 'SO:0000624',
     'SO:0000036', 'SO:0002059'
 ]
 
+
 def get_basic_gene_information():
 
     combined_list = Locusdbentity.get_s288c_genes()
     print(("computing " + str(len(combined_list)) + " s288c genes"))
     result = []
+
     if (len(combined_list) > 0):
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             for item in combined_list:
+
                 obj = {
                     "basicGeneticEntity": {
                         "crossReferences": [],
@@ -32,7 +38,7 @@ def get_basic_gene_information():
                         "genomeLocations": [{
                             "startPosition": 0,
                             "chromosome": "",
-                            "assembly": "R64-4-1",
+                            "assembly": ASSEMBLY_VERSION,
                             "endPosition": 0,
                             "strand": ""
                         }],
@@ -49,7 +55,7 @@ def get_basic_gene_information():
                 temp_itm.append("homepage")
                 if (item.has_expression):
                     temp_itm.append("gene/expression")
-                    temp_itm.append("gene/spell")
+                   # spellXref.append("gene/spell")
                 if (item.has_interaction):
                     temp_itm.append("gene/interactions")
                 if (item.has_disease):
@@ -63,6 +69,12 @@ def get_basic_gene_information():
                     "pages":
                     temp_itm
                 })
+                if (item.has_interaction):  # special linkout for SPELL
+                    obj["basicGeneticEntity"]["crossReferences"].append({
+                        "id":
+                        "SGD:" + item.systematic_name,
+                        "pages": ["gene/spell"]
+                    })
 
                 item_panther = DBSession.query(LocusAlias).filter(
                     LocusAlias.locus_id == item.dbentity_id,
@@ -72,7 +84,7 @@ def get_basic_gene_information():
                 locus_alias_data = DBSession.query(LocusAlias).filter(
                     LocusAlias.locus_id == item.dbentity_id).all()
 
-                #do the following if there is locus alias info #
+                # do the following if there is locus alias info #
                 #  if (len(locus_alias_data) > 0):
                 dna_seq_annotation_obj = DBSession.query(
                     Dnasequenceannotation).filter(
@@ -90,8 +102,15 @@ def get_basic_gene_information():
                     else:
                         strnd = dna_seq_annotation_obj[0].strand
 
-                    chromosome = dna_seq_annotation_obj[
-                        0].contig.display_name.split(" ")
+                    chromosome = dna_seq_annotation_obj[0].contig.display_name.split(
+                        " ")
+
+                    # need to change this to 'mt' so that viewer will work on Alliance
+                    if chromosome[1] == 'Mito':
+                        chrName = "mt"
+                    else:
+                        chrName = chromosome[1]
+
                     obj["basicGeneticEntity"]["genomeLocations"][0][
                         "startPosition"] = dna_seq_annotation_obj[
                             0].start_index
@@ -103,10 +122,10 @@ def get_basic_gene_information():
                         "startPosition"] = dna_seq_annotation_obj[
                             0].start_index
                     obj["basicGeneticEntity"]["genomeLocations"][0][
-                        "chromosome"] = "chr" + chromosome[1]
+                        "chromosome"] = "chr" + chrName
 
                     if dna_seq_annotation_obj[
-                            0].so.so_id == 263757:  #change ORF to gene SO ID
+                            0].so.so_id == 263757:  # change ORF to gene SO ID
                         obj["soTermId"] = "SO:0001217"
                     else:
                         obj["soTermId"] = dna_seq_annotation_obj[0].so.soid
@@ -135,13 +154,13 @@ def get_basic_gene_information():
                                         obj["basicGeneticEntity"][
                                             "secondaryIds"] = [
                                                 str(x) for x in temp_sec_item
-                                            ]
+                                        ]
                                     else:
                                         if (len(temp_sec_item) == 1):
                                             obj["basicGeneticEntity"][
                                                 "secondaryIds"] = [
                                                     str(temp_sec_item[0])
-                                                ]
+                                            ]
                             if (mod_value.get("crossReferences") is not None):
                                 temp_cross_item = mod_value.get(
                                     "crossReferences")
@@ -157,22 +176,21 @@ def get_basic_gene_information():
                                                 "id":
                                                 str(temp_cross_item[0])
                                             })
-                                        #obj["crossReferences"] = [str(temp_cross_item[0])]
+                                        # obj["crossReferences"] = [str(temp_cross_item[0])]
 
                 # add synonyms,geneSynopsis, symbol, primaryId
                 obj["geneSynopsis"] = item.description
                 obj["symbol"] = item.gene_name if item.gene_name is not None else item.systematic_name
-                #if item.systematic_name is not None:
+                # if item.systematic_name is not None:
                 #    obj["gene_systematic_name"] = item.systematic_name
                 obj["basicGeneticEntity"]["synonyms"].append(
                     item.systematic_name)
                 obj["basicGeneticEntity"]["primaryId"] = "SGD:" + item.sgdid
 
-                ## ADD PANTHER DATA if there is any
+                # ADD PANTHER DATA if there is any
                 if (item_panther is not None):
                     obj["basicGeneticEntity"]["crossReferences"].append(
                         {"id": "PANTHER:" + item_panther.display_name})
-
 
                 # Add name_description if it exists
                 if (item.name_description is not None):
@@ -186,9 +204,11 @@ def get_basic_gene_information():
                 file_name = 'SGD' + SUBMISSION_VERSION + 'basicGeneInformation.json'
                 json_file_str = os.path.join(local_dir, file_name)
                 with open(json_file_str, 'w+') as res_file:
-                    res_file.write(json.dumps(output_obj, indent=4, sort_keys=True))
+                    res_file.write(json.dumps(
+                        output_obj, indent=4, sort_keys=True))
 
     DBSession.close()
+
 
 if __name__ == '__main__':
     get_basic_gene_information()

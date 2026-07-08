@@ -3,7 +3,7 @@ import re
 import json
 from datetime import datetime
 from sqlalchemy import create_engine, and_
-from src.models import DBSession, Eco, Locusdbentity, LocusAliasReferences, Referencedbentity,\
+from src.models import DBSession, Eco, Locusdbentity, LocusAliasReferences, Referencedbentity, \
     AllelealiasReference, LocusReferences
 
 SUBMISSION_VERSION = os.getenv('SUBMISSION_VERSION', '_5.4.0_')
@@ -37,7 +37,8 @@ def pair_pantherid_to_sgdids(root_path=None):
             for item in json_data:
                 if (len(item) > 1):
                     temp_str = ','.join(map(str, item))
-                    reg_pattern = r'(SGD=S\d+)|(PTHR\d+)'  # pattern has changed
+                    # pattern has changed
+                    reg_pattern = r'(SGD=S\d+)|(PTHR\d+)'
                     reg_result = sorted(
                         list(set(re.findall(reg_pattern, temp_str))))
                     if (len(reg_result) > 1):
@@ -127,17 +128,19 @@ def get_locus_synonyms(locus_alias_list):
             a_pmids = DBSession.query(LocusAliasReferences,
                                       Referencedbentity.pmid).filter(
                 LocusAliasReferences.alias_id == item.alias_id).outerjoin(Referencedbentity).all()
-            alias_pmids_results = ["PMID:"+str(y[1]) for y in a_pmids if str(y[1]) != 'None']
+            alias_pmids_results = ["PMID:"+str(y[1])
+                                   for y in a_pmids if str(y[1]) != 'None']
             entry = {
-             "name_type_name": syn, #item.alias_type.lower(),
-             "format_text": item.display_name,
-             "display_text": item.display_name,
-             "internal": False
+                "name_type_name": syn,  # item.alias_type.lower(),
+                "format_text": item.display_name,
+                "display_text": item.display_name,
+                "internal": False
             }
             if len(alias_pmids_results) > 0:
                 entry["evidence_curies"] = alias_pmids_results
             obj.append(entry)
     return obj
+
 
 def get_locus_symbols(item):
 
@@ -147,19 +150,20 @@ def get_locus_symbols(item):
         and_(LocusReferences.locus_id == item.dbentity_id,
              LocusReferences.reference_class == 'gene_name')).outerjoin(
         Referencedbentity).all()
-    gene_name_pmids = ["PMID:" + str(x[1]) for x in pmids_results if str(x[1]) != 'None']
+    gene_name_pmids = ["PMID:" + str(x[1])
+                       for x in pmids_results if str(x[1]) != 'None']
 
     if (len(gene_name_pmids) == 0):
         obj.append({
-        "created_by_curie": "SGD",
-        "updated_by_curie": "SGD",
-        "name_type_name": "nomenclature_symbol",
-        "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
-        "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
-        "internal": False,
-        "obsolete": False,
-        "synonym_scope_name": "exact"
-    })
+            "created_by_curie": "SGD",
+            "updated_by_curie": "SGD",
+            "name_type_name": "nomenclature_symbol",
+            "format_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+            "display_text": item.gene_name if item.gene_name is not None else item.systematic_name,
+            "internal": False,
+            "obsolete": False,
+            "synonym_scope_name": "exact"
+        })
 
     if (len(gene_name_pmids) > 0):
         obj.append({
@@ -180,64 +184,160 @@ def get_allele_synonyms(allele_alias_list):
     obj = []
     for item in allele_alias_list:
         a_pmids = DBSession.query(AllelealiasReference,
-                                  Referencedbentity.pmid).filter\
-            (AllelealiasReference.allele_alias_id == item.allele_alias_id).outerjoin(Referencedbentity).all()
-        alias_pmids_results = ["PMID:"+str(y[1]) for y in a_pmids if str(y[1]) != 'None']
+                                  Referencedbentity.pmid).filter(AllelealiasReference.allele_alias_id ==
+                                                                 item.allele_alias_id).outerjoin(Referencedbentity).all()
+        alias_pmids_results = ["PMID:"+str(y[1])
+                               for y in a_pmids if str(y[1]) != 'None']
 
         if (len(alias_pmids_results) == 0):
             obj.append({
-            "display_text": item.display_name,
-            "format_text": item.display_name,
-            "synonym_scope_name": "exact",
-            "name_type_name": "uniform",
-            "internal": False,
-            "obsolete": False,
-            "created_by_curie": "SGD",
-            "updated_by_curie": "SGD",
-            "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
-            "date_updated": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
+                "display_text": item.display_name,
+                "format_text": item.display_name,
+                "synonym_scope_name": "exact",
+                "name_type_name": "uniform",
+                "internal": False,
+                "obsolete": False,
+                "created_by_curie": "SGD:" + item.created_by,
+                "updated_by_curie": "SGD:" + item.created_by,
+                "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                "date_updated": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00")
             })
         if (len(alias_pmids_results) > 0):
             obj.append({
-            "display_text": item.display_name,
-            "format_text": item.display_name,
-            "synonym_scope_name": "exact",
-            "name_type_name": "unspecified",
-            "internal": False,
-            "obsolete": False,
-            "created_by_curie": "SGD",
-            "updated_by_curie": "SGD",
-            "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
-            "date_updated": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
-            "evidence_curies": alias_pmids_results
+                "display_text": item.display_name,
+                "format_text": item.display_name,
+                "synonym_scope_name": "exact",
+                "name_type_name": "unspecified",
+                "internal": False,
+                "obsolete": False,
+                "created_by_curie": "SGD:" + item.created_by,
+                "updated_by_curie": "SGD:" + item.created_by,
+                "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                "date_updated": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                "evidence_curies": alias_pmids_results
             })
     return obj
 
+
+def get_locus_gcrp(locus_alias_list):
+    obj = []
+    for item in locus_alias_list:
+        if item.source.format_name == 'UniProtKB':
+            # do stuff#
+            obj.append({
+                "referenced_curie": item.source.format_name + ":" + item.display_name,
+                "created_by_curie": "SGD:" + item.created_by,
+                "updated_by_curie": "SGD:" + item.created_by,
+                "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                "page_area": "default",
+                "prefix": item.source.format_name,
+                "display_name": item.source.format_name + ":" + item.display_name,
+                "internal": False
+            })
+        else:
+            continue
+
+    return obj
+
+
 def get_locus_crossrefs(locus_alias_list):
+    CROSSREFS = ['BioGRID', 'DIP', 'NCBI', 'RNAcentral']  # 'UniProtKB',
+    # SKIP_XREFS = ['UniParc', 'LoQAtE', 'ExPASy', 'FungiDB', 'MetaCyc', 'GenBank-EMBL-DDBJ', 'CGD', 'TCDB', 'AspGD', 'PomBase', 'PDB', 'GenBank-EMBL-DDBJ']
+# need special 'page area' for 'GeneBank-EMBL-DDBJ' - 'gene' for IDs with alias_type 'protein', otherwise 'default'
+    SKIP_TYPES = ['Non-uniform', 'NCBI protein name',
+                  'SGDID Secondary', 'Uniform', 'Retired name']
+    SKIP_SOURCES = ['Alliance', 'MetaCyc', 'AspGD',
+                    'UniProtKB']  # no UniProtKB -- in GCRP
 
     obj = []
     for item in locus_alias_list:
-        if (item.alias_type == "UniProtKB ID"):
-            obj.append({
-                "referenced_curie": "UniProtKB:"+item.display_name,
-                "created_by_curie": "SGD",
-                "updated_by_curie": "SGD",
-                "page_area": "default",
-                "prefix": "UniProtKB",
-                "display_name": "UniProtKB:"+item.display_name,
-                "internal": False
-            })
-        if (item.alias_type == "Gene ID" and item.source.display_name == 'NCBI'):
-            obj.append({
-                "referenced_curie": "NCBI_Gene:"+item.display_name,
-                "created_by_curie": "SGD",
-                "updated_by_curie": "SGD",
-                "page_area": "default",
-                "prefix": "NCBI_Gene",
-                "display_name": "NCBI_Gene:"+item.display_name,
-                "internal": False
-            })
+        if item.source.format_name in SKIP_SOURCES or item.alias_type in SKIP_TYPES:
+            # skip Alliance, MetaCyc, AspGD cross references for now
+            # skip Non-uniform (in synonyms, NCBI protein name, SGDID Secondary
+            continue
+        else:
+            print('adding xref:' + item.source.format_name +
+                  ':' + item.display_name)
+        # skip if it is UniProtKB -- separate slot #
+        # == 'UniProtKB' or item.source.format_name in SKIP_XREFS:
+        #   if item.source.format_name not in CROSSREFS:
+        #       print('skipping xref ' + item.source.format_name)
+        #       continue
+        #   else:  # non UniProtKB cross refs
+        # if item.source.format_name in CROSSREFS: #
+            if item.source.format_name == 'BioGRID':  # change sourcename if BioGrid
+                sourceName = 'BIOGRID'
+            #   pageName = 'Biological General Repository for Interaction Datasets'
+            else:
+                sourceName = item.source.format_name
+            #  pageName = item.source.format_name
+            if item.source.format_name == 'NCBI':  # Special NCBI cases #
+                if re.search('protein', item.alias_type, flags=re.IGNORECASE):  # skip protein ids
+                    continue
+                # add to cross refs and to gene expression section
+                elif (item.alias_type == "Gene ID"):
+                    obj.append({
+                        "referenced_curie": "NCBI_Gene:"+item.display_name,
+                        "created_by_curie": "SGD:" + item.created_by,
+                        "updated_by_curie": "SGD:" + item.created_by,
+                        "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                        "page_area": "default",
+                        "prefix": "NCBI_Gene",
+                        "display_name": "NCBI_Gene:"+item.display_name,
+                        "internal": False
+                    }
+                        # , { # in case needed for GEO
+                        #    "referenced_curie": "NCBI_Gene:"+item.display_name,
+                        #    "created_by_curie": "SGD:" + item.created_by,
+                        #    "updated_by_curie": "SGD:" + item.created_by,
+                        #    "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                        #    "page_area": "gene/other_expression",
+                        #    "prefix": "NCBI_Gene",
+                        #    "display_name": "GEO",
+                        #    "internal": False
+                        # }]
+                    )
+                else:  # re.search('RefSeq', item.alias_type): # other NCBI gene cases #
+                    obj.append({
+                        "referenced_curie": "RefSeq:" + item.display_name,
+                        "created_by_curie": "SGD:" + item.created_by,
+                        "updated_by_curie": "SGD:" + item.created_by,
+                        "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                        "page_area": "default",
+                        "prefix": "RefSeq",  # item.source.format_name,
+                        "display_name": sourceName + ":" + item.display_name,
+                        "internal": False
+                    })
+            # non-NCBI cases (BioGRID, DIP, RNAcentral, etc)
+            else:
+                page = 'default'
+                uid = item.display_name
+
+                if sourceName == 'GenBank-EMBL-DDBJ':
+                    if re.search('Protein', item.alias_type):
+                        page = 'default'
+                if sourceName == 'PANTHER':
+                    page = 'SGD'
+                if sourceName == 'PDB':
+                    page = 'gene/interactions'
+     #           if sourceName == 'AspGD':
+     #               uid = text.lower(item.display_name)
+
+                obj.append({
+                    "referenced_curie": sourceName + ":" + uid,
+                    "created_by_curie": "SGD:" + item.created_by,
+                    "updated_by_curie": "SGD:" + item.created_by,
+                    "date_created": item.date_created.strftime("%Y-%m-%dT%H:%m:%S-00:00"),
+                    "page_area": page,
+                    "prefix": sourceName,
+                    "display_name": sourceName + ":" + uid,
+                    "internal": False
+                })
+        # else:
+        #    continue
+
     return obj
+
 
 def get_locus_secondaryids(locus_alias_list):
 
@@ -245,10 +345,11 @@ def get_locus_secondaryids(locus_alias_list):
     for item in locus_alias_list:
         if (item.alias_type == "SGDID Secondary"):
             obj.append({
-             "secondary_id": item.source.display_name + ":" +item.display_name,
-              "internal": False
+                "secondary_id": item.source.display_name + ":" + item.display_name,
+                "internal": False
             })
     return obj
+
 
 def get_output(result_data):
 
@@ -274,12 +375,13 @@ def get_output(result_data):
     else:
         return None
 
+
 def get_pers_output(submission_type, result_data, linkml_version):
 
     if (result_data):
         output_obj = {
             "linkml_version": linkml_version,
-            submission_type : result_data
+            submission_type: result_data
         }
         return output_obj
     else:
