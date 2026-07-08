@@ -11857,6 +11857,19 @@ class Complexdbentity(Dbentity):
                 })
                 network_nodes_ids[interactor.format_name] = True
 
+            # Always link the focus complex to every subunit it shares with
+            # another complex. The foundComplex "seen twice" gate below decides
+            # whether OTHER complexes (and their focus links) are drawn, to keep
+            # the graph from ballooning; it must not gate the focus itself.
+            # Without this edge the focus is only linked to a shared subunit when
+            # it happens to have >=2 of them, so a complex sharing a single
+            # subunit leaves the focus with no subunit edges and it drops out of
+            # the Subunits view entirely (ignoreFloaters hides the isolated node).
+            network_edges.append({
+                "source": self.format_name,
+                "target": interactor.format_name
+            })
+
             found = {}
             for annot in annot_objs2:
                 complex = annot.complex
