@@ -11538,7 +11538,19 @@ class Complexdbentity(Dbentity):
                             "category": 'GO',
                     })
                     network_nodes_ids[go.go_id] = True
-                
+
+                # Always link the focus complex to every GO term it shares with
+                # another complex, so the current complex never drops out of the
+                # GO Terms view. The foundComplex "seen twice" gate below applies
+                # only to OTHER complexes (hairball avoidance) and must not decide
+                # whether the focus itself is linked. (Mirrors the subunit loop.)
+                if (self.format_name, go.go_id) not in foundSourceTargetPair:
+                    network_edges.append({
+                        "source": self.format_name,
+                        "target": go.go_id
+                    })
+                    foundSourceTargetPair[(self.format_name, go.go_id)] = 1
+
                 for g2 in goComplexes:
                     complex = g2.dbentity
                     if complex.format_name == self.format_name:
