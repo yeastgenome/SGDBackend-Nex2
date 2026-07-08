@@ -1,8 +1,9 @@
 import json
 from urllib.request import Request, urlopen
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 import logging
 import os
+import time
 from datetime import datetime
 import sys
 import importlib
@@ -92,7 +93,9 @@ def load_complex():
 
     fw = open(log_file, "w")
     
-    all_json = get_json(all_json_url)
+    # The search endpoint returns 404/503 interchangeably while EBI is
+    # overloaded, so a 404 here is transient (not "missing") -- retry it.
+    all_json = get_json(all_json_url, treat_404_as_missing=False)
     elements = all_json['elements']
 
     
@@ -566,20 +569,47 @@ def update_complexdbentity(nex_session, fw, intact_id, complexAC, systematicName
         nex_session.add(x)
         fw.write("Update complexdbentity row for format_name = " + intact_id + "\n")
 
-def get_json(url):
+def get_json(url, max_retries=6, base_delay=10, max_delay=60,
+             treat_404_as_missing=True):
+    # Fetch and parse JSON, retrying transient failures. The EBI complex-ws
+    # endpoint intermittently returns 503 ("Web service overload") -- and even
+    # 404 -- while overloaded, which previously made this return the int 404 and
+    # surfaced downstream as a cryptic "'int' object is not subscriptable".
+    #
+    # A genuine HTTP 404 on a per-complex detail/sequence call means "no such
+    # record", so it is returned as the sentinel 404 (callers check `== 404`).
+    # For the search call, a 404 is transient overload, not "missing", so pass
+    # treat_404_as_missing=False to retry it. All other errors (503/500,
+    # connection errors, non-JSON bodies) are retried with linear backoff, and a
+    # persistent failure raises loudly instead of silently loading partial data.
 
     print("get json:", url)
 
-    try:
-        req = Request(url)
-        res = urlopen(req)
-        raw_data = res.read().decode('utf-8', "ignore")
-        # u_raw_data = str(raw_data, 'latin-1')
-        # data = json.loads(u_raw_data)
-        data = json.loads(raw_data) 
-        return data
-    except URLError:
-        return 404
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            req = Request(url)
+            res = urlopen(req)
+            raw_data = res.read().decode('utf-8', "ignore")
+            return json.loads(raw_data)
+        except HTTPError as e:
+            if e.code == 404 and treat_404_as_missing:
+                return 404
+            last_error = "HTTP " + str(e.code)
+        except URLError as e:
+            last_error = "URLError: " + str(e.reason)
+        except ValueError as e:
+            # Body was not valid JSON (e.g. an HTML error/overload page).
+            last_error = "JSON decode error: " + str(e)
+
+        if attempt < max_retries:
+            delay = min(max_delay, base_delay * attempt)
+            print("  " + str(last_error) + " (attempt " + str(attempt) + "/" +
+                  str(max_retries) + "); retrying in " + str(delay) + "s...")
+            time.sleep(delay)
+
+    raise RuntimeError("get_json failed after " + str(max_retries) +
+                       " attempts (" + str(last_error) + "): " + url)
 
 if __name__ == "__main__":
 
