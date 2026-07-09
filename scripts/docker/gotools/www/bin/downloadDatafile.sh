@@ -2,14 +2,14 @@
 
 cd /var/www/data/new/
 
-/usr/bin/wget http://snapshot.geneontology.org/annotations/sgd.gaf.gz
+/usr/bin/wget http://current.geneontology.org/annotations/gaf/YEAST-mod.gaf.gz
 /usr/bin/wget http://snapshot.geneontology.org/ontology/go-basic.obo
 
-/bin/gunzip -f sgd.gaf.gz
+/bin/gunzip -f YEAST-mod.gaf.gz
 
 /bin/cp ../gene_association.sgd ../gene_association.sgd_old
 /bin/cp ../gene_ontology.obo ../gene_ontology.obo_old
-/bin/mv sgd.gaf ../gene_association.sgd
+/bin/mv YEAST-mod.gaf ../gene_association.sgd
 /bin/mv go-basic.obo ../gene_ontology.obo
 
 echo "creating slim component gaf file..."

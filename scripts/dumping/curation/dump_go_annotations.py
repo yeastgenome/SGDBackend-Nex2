@@ -25,7 +25,7 @@ CREATED_BY = os.environ['DEFAULT_USER']
 
 gaf_file = "scripts/dumping/curation/data/gene_association.sgd"
 go_central_url = "http://release.geneontology.org/"
-gaf_from_go = "sgd.gaf.gz"
+gaf_from_go = "YEAST-mod.gaf.gz"
 
 namespace_to_code = {"biological process": 'P',
                      "molecular function": 'F',
@@ -371,7 +371,9 @@ def download_file_with_headers(url, local_filename):
 
 def download_sgd_gaf_from_go_central():
 
-    sgd_gaf_url = "http://current.geneontology.org/annotations/sgd.gaf.gz"
+    # New QuickGO/EBI by-taxon endpoint (GO announcement geneontology/go-announcements#1153);
+    # replaces the retired by-group name sgd.gaf.gz.
+    sgd_gaf_url = "http://current.geneontology.org/annotations/gaf/YEAST-mod.gaf.gz"
     download_file_with_headers(sgd_gaf_url, gaf_from_go)
     
 def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_id, edam_to_id, datestamp):
