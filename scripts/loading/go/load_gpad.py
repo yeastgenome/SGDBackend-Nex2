@@ -13,10 +13,9 @@ from src.models import Go, Taxonomy, Source, Goannotation, Gosupportingevidence,
                        Goextension, EcoAlias, Edam, Dbentity, Filedbentity
 from scripts.loading.database_session import get_session
 from src.helpers import upload_file
-from scripts.loading.util import get_relation_to_ro_id, read_gpi_file, \
-                                 read_gpad_file, read_noctua_gpad_file, \
-                                 read_complex_gpad_file, get_go_extension_link, \
-                                 send_email
+from scripts.loading.util import get_relation_to_ro_id, read_gpi2_file, \
+                                 read_gpad2_file, read_complex_gpad_file, \
+                                 get_go_extension_link, send_email
 
 __author__ = 'sweng66'
 
@@ -29,10 +28,21 @@ logging.basicConfig(format='%(message)s')
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 
-NOCTUA_MIN_ROWS = 56000
+## Lower bound on annotations parsed from YEAST-mod.gpad; abort if the file
+## looks truncated. Calibrated against the 2026-07 QA load (136,759 parsed).
+GPAD_MIN_ROWS = 125000
 CREATED_BY = os.environ['DEFAULT_USER']
 
-def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file, annotation_type, log_file):
+## YEAST-mod.gpad folds in third-party manual annotations that the old
+## load_gpad.py never loaded as SGD manual curation. The old manual load came
+## from noctua (which read_noctua_gpad_file restricted to SGD/UniProt) plus the
+## complex portal file (ComplexPortal). To keep the same manual source set as
+## load_gpad.py - SGD (its own curation) and ComplexPortal - drop these sources
+## from the 'manually curated' run. Their computational (IEA/IBA) annotations
+## are still loaded on the 'computational' run, matching load_gpad.py.
+EXCLUDED_MANUAL_SOURCES = frozenset(['IntAct', 'UniProt', 'CACAO', 'GO_Central', 'FlyBase', 'MGI'])
+
+def load_go_annotations(gpad_file, complex_gpad_file, gpi_file, annotation_type, log_file):
 
     nex_session = get_session()
 
@@ -81,7 +91,9 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
 
     fw.write(str(datetime.now()) + "\n")
     fw.write("reading gpi file...\n")
-    [uniprot_to_date_assigned, uniprot_to_sgdid_list] = read_gpi_file(gpi_file)
+    ## YEAST-mod.gpi is SGD-keyed, so it yields sgdid_to_date_assigned directly
+    ## (no UniProt->SGDID map needed anymore).
+    sgdid_to_date_assigned = read_gpi2_file(gpi_file)
 
     log.info(str(datetime.now()))
     log.info("Reading GPAD file...")
@@ -92,39 +104,26 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
     yes_gosupport = 1
     new_pmids = []
     dbentity_id_with_new_pmid = {}
-    dbentity_id_with_uniprot = {}
+    dbentity_id_with_annotation = {}
     bad_ref = []
     foundAnnotation = {}
-    data = read_gpad_file(gpad_file, nex_session, uniprot_to_date_assigned, 
-    	   	          uniprot_to_sgdid_list, foundAnnotation, 
-                          yes_goextension, yes_gosupport,
-                          dbentity_id_with_uniprot, bad_ref)
-    
-    log.info(str(datetime.now()))
-    log.info("Reading noctua GPAD file...")
+    ## YEAST-mod.gpad folds in the GO-CAM/noctua annotations, so this single read
+    ## replaces the old read_gpad_file() + read_noctua_gpad_file() pair. The
+    ## separate noctua file is no longer downloaded or read.
+    data = read_gpad2_file(gpad_file, nex_session, sgdid_to_date_assigned,
+                           foundAnnotation, yes_goextension, yes_gosupport,
+                           new_pmids, dbentity_id_with_new_pmid,
+                           dbentity_id_with_annotation, bad_ref)
 
-    fw.write(str(datetime.now()) + "\n")
-    fw.write("reading noctua gpad file...\n")
+    ## noctua is folded into the GPAD file above; keep an empty list so the
+    ## existing load_new_data()/delete signatures are unchanged.
+    noctua_data = []
 
-    sgdid_to_date_assigned = {}
-    for uniprot in uniprot_to_date_assigned:
-        date_assigned = uniprot_to_date_assigned[uniprot]
-        sgdid_list = uniprot_to_sgdid_list.get(uniprot, [])
-        for sgdid in sgdid_list:
-            sgdid_to_date_assigned[sgdid] = date_assigned
+    if len(data) < GPAD_MIN_ROWS:
+        log.info("GPAD rows read (" + str(len(data)) + ") is below GPAD_MIN_ROWS; aborting.")
+        fw.close()
+        return
 
-    noctua_data = read_noctua_gpad_file(noctua_gpad_file, nex_session, 
-                                        sgdid_to_date_assigned, foundAnnotation,
-                                        yes_goextension, yes_gosupport, new_pmids, 
-                                        dbentity_id_with_new_pmid,
-                                        dbentity_id_with_uniprot, bad_ref)
-    noctua_row_count = len(noctua_data)
-    log.info("Noctua GPAD rows read: " + str(noctua_row_count))
-
-    if noctua_row_count < NOCTUA_MIN_ROWS:
-       fw.close()
-       return
-    
     complex_data = []
     if annotation_type == 'manually curated':
         log.info(str(datetime.now()))
@@ -170,7 +169,7 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
                                 annotation_update_log, 
                                 source_to_id,
                                 dbentity_id_with_new_pmid,
-                                dbentity_id_with_uniprot,
+                                dbentity_id_with_annotation,
                                 bad_complex_annots,
                                 all_complex_go_ids,
                                 fw)
@@ -186,9 +185,8 @@ def load_go_annotations(gpad_file, noctua_gpad_file, complex_gpad_file, gpi_file
         ENGINE_CREATED = 1
         update_database_load_file_to_s3(nex_session, gpi_file, source_to_id,
                                         edam_to_id, ENGINE_CREATED)
-        ENGINE_CREATED = 1
-        update_database_load_file_to_s3(nex_session, noctua_gpad_file, source_to_id, 
-                                        edam_to_id, ENGINE_CREATED)
+        ## noctua_sgd.gpad is no longer downloaded/loaded separately - its
+        ## annotations are folded into YEAST-mod.gpad above.
 
     log.info(str(datetime.now()))
     log.info("Writing summary...")
@@ -227,13 +225,22 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
     key_to_annotation_id = {}
     annotation_id_to_extension = {}
     annotation_id_to_support = {}
+    ## YEAST-mod.gpad now supplies manual (incl. GO-CAM), high-throughput and
+    ## computational annotations in a single 'data' list; noctua_data is empty.
+    ## The complex portal file is still merged in for the manual run.
     allData = None
     if annotation_type == 'manually curated':
-        allData = noctua_data + complex_data
+        allData = data + complex_data
     else:
-        allData = data + noctua_data
+        allData = data
     for x in allData:
         if x['annotation_type'] not in allowed_types:
+            continue
+        ## Keep the manually curated set to the same sources as load_gpad.py
+        ## (SGD + ComplexPortal); skip third-party manual annotations folded in
+        ## by YEAST-mod.gpad. Computational annotations from these sources are
+        ## unaffected (this only fires for annotation_type 'manually curated').
+        if x['annotation_type'] == 'manually curated' and x['source'] in EXCLUDED_MANUAL_SOURCES:
             continue
         if x['dbentity_id'] in deleted_merged_dbentity_ids:
             continue
@@ -433,7 +440,9 @@ def update_goextension(nex_session, annotation_id, goextension, annotation_id_to
                 continue
             link = get_go_extension_link(dbxref_id)
             if link.startswith('Unknown'):
-                if dbxref_id.startswith('IntAct:'):
+                ## IntAct and ARBA (UniProt automatic-annotation rules) are known
+                ## namespaces we intentionally do not load; skip without warning.
+                if dbxref_id.startswith('IntAct:') or dbxref_id.startswith('ARBA:'):
                     continue
                 elif not dbxref_id.startswith('SGD_PWY:'):
                     print("Unknown ID: ", dbxref_id)
@@ -503,7 +512,10 @@ def update_gosupportevidence(nex_session, annotation_id, gosupport, annotation_i
                 continue
             link = get_go_extension_link(dbxref_id)
             if link.startswith('Unknown'):
-                print("Unknown ID: ", dbxref_id)
+                ## ARBA (UniProt automatic-annotation rules) is a known namespace
+                ## we intentionally do not load; skip it without warning.
+                if not dbxref_id.startswith('ARBA:'):
+                    print("Unknown ID: ", dbxref_id)
                 continue
             evidence_type = 'with'
             if dbxref_id.startswith('GO:'):
@@ -657,7 +669,7 @@ def update_database_load_file_to_s3(nex_session, go_file, source_to_id, edam_to_
     import hashlib
 
     desc = "Gene Product Association Data (GPAD)"
-    if "gp_information" in go_file:
+    if "gp_information" in go_file or ".gpi" in go_file:
         desc = "Gene Product Information (GPI)"
 
     go_local_file = open(go_file, mode='rb')
@@ -672,12 +684,10 @@ def update_database_load_file_to_s3(nex_session, go_file, source_to_id, edam_to_
     
     log.info("Adding " + go_file + " to the database.\n")
 
-    if "gp_association" in go_file:
-        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_association.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
-    elif "gp_information" in go_file:
-        nex_session.query(Dbentity).filter(Dbentity.display_name.like('gp_information.559292_sgd%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
-    elif "noctua_sgd.gpad" in go_file:
-        nex_session.query(Dbentity).filter(Dbentity.display_name.like('noctua_sgd.gpad%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+    if "YEAST-mod.gpad" in go_file:
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('YEAST-mod.gpad%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
+    elif "YEAST-mod.gpi" in go_file:
+        nex_session.query(Dbentity).filter(Dbentity.display_name.like('YEAST-mod.gpi%')).filter(Dbentity.dbentity_status=='Active').update({"dbentity_status":'Archived'}, synchronize_session='fetch')
     nex_session.commit()
 
     data_id = edam_to_id.get('EDAM:2353')   ## data:2353 Ontology data
@@ -772,21 +782,23 @@ def download_url(url, out_path, timeout=120):
 if __name__ == "__main__":
     
     datestamp = str(datetime.now()).split(" ")[0].replace("-", "")
-    url_path = 'https://ftp.ebi.ac.uk/pub/contrib/goa/'
-    gpad_file = 'gp_association.559292_sgd.gz'
-    gpi_file = 'gp_information.559292_sgd.gz'
-    noctua_gpad_file = 'noctua_sgd.gpad.gz'
+
+    ## New QuickGO/EBI by-taxon endpoints (GO announcement geneontology/go-announcements#1153).
+    ## GPAD is SGD-keyed and folds in the GO-CAM/noctua annotations, so the
+    ## separate noctua_sgd.gpad download has been removed. The complex portal
+    ## file is still fetched from IntAct for the dedicated complex loader.
+    annotations_base = 'http://current.geneontology.org/annotations/'
+    gpad_url = annotations_base + 'gpad/YEAST-mod.gpad.gz'
+    gpi_url = annotations_base + 'gpi/YEAST-mod.gpi.gz'
     complex_gpad_file = 'complex_portal.v2.gpad'
-    
-    dated_gpad_file = 'gp_association.559292_sgd_' + datestamp + '.gpad.gz'
-    dated_gpi_file = 'gp_information.559292_sgd_' + datestamp + '.gpi.gz'
-    dated_noctua_gpad_file = 'noctua_sgd.gpad_' + datestamp + '.gz'
+
+    dated_gpad_file = 'YEAST-mod.gpad_' + datestamp + '.gz'
+    dated_gpi_file = 'YEAST-mod.gpi_' + datestamp + '.gz'
     dated_complex_gpad_file = 'complex_portal.v2.gpad_' + datestamp
 
     retrieval_file_list = [
-        (url_path + gpad_file, dated_gpad_file),
-        (url_path + gpi_file, dated_gpi_file),
-        ('http://snapshot.geneontology.org/products/upstream_and_raw_data/' + noctua_gpad_file, dated_noctua_gpad_file),
+        (gpad_url, dated_gpad_file),
+        (gpi_url, dated_gpi_file),
         ('http://ftp.ebi.ac.uk/pub/databases/intact/complex/current/various/go/' + complex_gpad_file, dated_complex_gpad_file)
     ]
     for (retrieval_url, file) in retrieval_file_list:
@@ -797,10 +809,12 @@ if __name__ == "__main__":
             print(error_msg)
             send_report(error_msg)
             exit()
+    ## Minimum expected sizes; abort if a download looks truncated. GPAD/GPI are
+    ## the compressed (.gz) downloads (2026-07 QA: gpad.gz ~2.60MB, gpi.gz ~0.47MB);
+    ## complex_portal.v2.gpad is uncompressed (~2.94MB).
     file_sizes = {
-        dated_gpad_file: 750000,
-        dated_gpi_file: 340000,
-        dated_noctua_gpad_file: 780000,
+        dated_gpad_file: 2400000,
+        dated_gpi_file: 425000,
         dated_complex_gpad_file: 2700000
     }
     
@@ -820,12 +834,12 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2:
         annotation_type = sys.argv[1]
     else:
-        print("Usage: python load_gpad.py annotation_type[manually curated|computational]")
+        print("Usage: python load_new_gpad.py annotation_type[manually curated|computational]")
         exit()
 
-    
+
     log_file = "scripts/loading/go/logs/GPAD_loading_" + annotation_type.replace(" ", "-") + ".log"
-    load_go_annotations(dated_gpad_file, dated_noctua_gpad_file, dated_complex_gpad_file,
+    load_go_annotations(dated_gpad_file, dated_complex_gpad_file,
                         dated_gpi_file, annotation_type, log_file)
     
         
