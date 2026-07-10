@@ -1113,6 +1113,11 @@ def read_gpad2_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotati
         sgdid_to_reference_id[x.sgdid] = x.dbentity_id
 
     sgdid_to_dbentity_id = dict([(x.sgdid, x.dbentity_id) for x in nex_session.query(Dbentity).filter(or_(Dbentity.subclass == 'LOCUS', Dbentity.subclass == 'COMPLEX')).all()])
+    ## ComplexPortal annotations are only meaningful on complexes (they describe
+    ## the complex itself, not its member ORFs/RNAs). Keep the set of COMPLEX
+    ## dbentity_ids so ComplexPortal-sourced rows on a LOCUS gene product can be
+    ## suppressed below.
+    complex_dbentity_ids = set(x.dbentity_id for x in nex_session.query(Dbentity).filter(Dbentity.subclass == 'COMPLEX').all())
 
     f = gzip.open(filename, 'rt') if filename.endswith('.gz') else open(filename)
 
@@ -1195,6 +1200,13 @@ def read_gpad2_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotati
             source = 'SGD'
         elif source == 'UniProtKB':
             source = 'UniProt'
+
+        ## Only load ComplexPortal annotations for complexes; suppress any
+        ## ComplexPortal-sourced annotation whose gene product is an ORF/RNA
+        ## (LOCUS). Complex annotations come from the dedicated complex portal
+        ## GPAD file (read_complex_gpad_file), so nothing valid is lost here.
+        if source == 'ComplexPortal' and dbentity_id not in complex_dbentity_ids:
+            continue
 
         ## created_by
         if (source != 'SGD' and go_evidence == 'IEA') or source == 'GO_Central':
