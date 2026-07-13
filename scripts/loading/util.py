@@ -1208,6 +1208,14 @@ def read_gpad2_file(filename, nex_session, sgdid_to_date_assigned, foundAnnotati
         if source == 'ComplexPortal' and dbentity_id not in complex_dbentity_ids:
             continue
 
+        ## Drop ComplexPortal NAS annotations. The by-taxon GPAD maps the NAS
+        ## evidence code to the generic ECO:0000303, but read_complex_gpad_file
+        ## loads the same assertions from complex_portal.v2.gpad with the
+        ## ComplexPortal-native ECO:0005547 ('biological system reconstruction
+        ## evidence ...'), so the NAS-coded rows here are just duplicates.
+        if source == 'ComplexPortal' and go_evidence == 'NAS':
+            continue
+
         ## created_by
         if (source != 'SGD' and go_evidence == 'IEA') or source == 'GO_Central':
             created_by = computational_created_by
