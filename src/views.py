@@ -627,11 +627,16 @@ def recent_updates(request):
         if days < 1 or days > MAX_RECENT_DAYS:
             days = DEFAULT_RECENT_DAYS
         start_date = datetime.datetime.now() - datetime.timedelta(days=days)
+        # GO annotations are loaded in infrequent batches and carry the GPAD
+        # curation date in date_created, so they use a wider window (matching the
+        # /go/recent page) to avoid showing an empty count between loads.
+        go_days = max(days, 40)
+        go_start_date = datetime.datetime.now() - datetime.timedelta(days=go_days)
 
         new_reference_count = DBSession.query(Referencedbentity).filter(
             Referencedbentity.date_created >= start_date).count()
         new_go_count = DBSession.query(Goannotation).filter(
-            Goannotation.date_created >= start_date).count()
+            Goannotation.date_created >= go_start_date).count()
         new_phenotype_count = DBSession.query(Phenotypeannotation).filter(
             Phenotypeannotation.date_created >= start_date).count()
         new_allele_count = DBSession.query(Alleledbentity).filter(
@@ -646,7 +651,7 @@ def recent_updates(request):
             },
             {
                 'category': 'go',
-                'label': 'new GO annotations',
+                'label': 'new GO annotations (last %d days)' % go_days,
                 'count': new_go_count,
                 'href': '/go/recent'
             },
