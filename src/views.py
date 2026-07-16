@@ -749,13 +749,13 @@ def reference_this_week(request):
 # to_dict() (which is query-heavy) cannot blow up on an unusually large window.
 MAX_RECENT_ANNOTATIONS = 1000
 
-def _recent_window_days(request):
+def _recent_window_days(request, default=30):
     try:
-        days = int(request.params.get('days', 30))
+        days = int(request.params.get('days', default))
     except (TypeError, ValueError):
-        days = 30
+        days = default
     if days < 1 or days > 365:
-        days = 30
+        days = default
     return days
 
 @view_config(route_name='phenotype_this_week', renderer='json', request_method='GET')
@@ -791,11 +791,12 @@ def phenotype_this_week(request):
 
 @view_config(route_name='go_this_week', renderer='json', request_method='GET')
 def go_this_week(request):
-    # GO annotations added in the past N days (default 30), serialized in the
-    # same shape the GO annotation DataTable consumes, by reusing
-    # Goannotation.to_dict() (which returns one row per extension/evidence group).
+    # GO annotations added in the past N days (default 40, since GO is loaded in
+    # infrequent batches), serialized in the same shape the GO annotation
+    # DataTable consumes, by reusing Goannotation.to_dict() (one row per
+    # extension/evidence group).
     try:
-        days = _recent_window_days(request)
+        days = _recent_window_days(request, 40)
         start_date = datetime.datetime.today() - datetime.timedelta(days=days)
         end_date = datetime.datetime.today()
         recent = DBSession.query(Goannotation).filter(
