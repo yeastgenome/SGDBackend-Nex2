@@ -43,6 +43,7 @@ def main(global_config, **settings):
     #search
     config.add_route('search', '/get_search_results')
     config.add_route('autocomplete_results', '/autocomplete_results')
+    config.add_route('recent_updates', '/recent_updates', request_method='GET')
 
     #variant viewer
     config.add_route('search_sequence_objects', '/search_sequence_objects', request_method='GET')

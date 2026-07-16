@@ -609,6 +609,83 @@ def genomesnapshot(request):
         if DBSession:
             DBSession.remove()
 
+# Public "What's new in SGD" feed for the search landing page. Returns counts of
+# recently created entries per category plus a short list of the newest references.
+# All data is derived from date_created, so no curation/editorial input is needed.
+DEFAULT_RECENT_DAYS = 7
+MAX_RECENT_DAYS = 90
+MAX_RECENT_REFERENCES = 5
+
+@view_config(route_name='recent_updates', renderer='json', request_method='GET')
+def recent_updates(request):
+    try:
+        try:
+            days = int(request.params.get('days', DEFAULT_RECENT_DAYS))
+        except (TypeError, ValueError):
+            days = DEFAULT_RECENT_DAYS
+        if days < 1 or days > MAX_RECENT_DAYS:
+            days = DEFAULT_RECENT_DAYS
+        start_date = datetime.datetime.now() - datetime.timedelta(days=days)
+
+        new_reference_count = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.date_created >= start_date).count()
+        new_phenotype_count = DBSession.query(Phenotypeannotation).filter(
+            Phenotypeannotation.date_created >= start_date).count()
+        new_allele_count = DBSession.query(Alleledbentity).filter(
+            Alleledbentity.date_created >= start_date).count()
+
+        counts = [
+            {
+                'category': 'reference',
+                'label': 'new references',
+                'count': new_reference_count,
+                'href': '/search?q=&category=reference'
+            },
+            {
+                'category': 'phenotype',
+                'label': 'new phenotype annotations',
+                'count': new_phenotype_count,
+                'href': '/search?q=&category=phenotype'
+            },
+            {
+                'category': 'allele',
+                'label': 'new alleles',
+                'count': new_allele_count,
+                'href': '/search?q=&category=allele'
+            }
+        ]
+
+        recent_references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.date_created >= start_date).order_by(
+            Referencedbentity.date_created.desc()).limit(MAX_RECENT_REFERENCES).all()
+        references = []
+        for ref in recent_references:
+            references.append({
+                'display_name': ref.display_name,
+                'citation': ref.citation,
+                'link': ref.obj_url,
+                'year': ref.year,
+                'sgdid': ref.sgdid,
+                'date_created': ref.date_created.strftime('%Y-%m-%d')
+            })
+
+        return {
+            'since_days': days,
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'counts': counts,
+            'references': references
+        }
+    except Exception as e:
+        log.error(e)
+        return {
+            'since_days': DEFAULT_RECENT_DAYS,
+            'counts': [],
+            'references': []
+        }
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='formats', renderer='json', request_method='GET')
 def formats(request):
     try:
