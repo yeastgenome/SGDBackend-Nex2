@@ -59,6 +59,8 @@ def main(global_config, **settings):
     config.add_route('strain', '/strain/{id}', request_method='GET')
 
     config.add_route('reference_this_week', '/references/this_week', request_method='GET')
+    config.add_route('phenotype_this_week', '/phenotypes/this_week', request_method='GET')
+    config.add_route('allele_this_week', '/alleles/this_week', request_method='GET')
     config.add_route('reference', '/reference/{id}', request_method='GET')
 
     config.add_route('reference_literature_details', '/reference/{id}/literature_details', request_method='GET')
@@ -94,6 +96,7 @@ def main(global_config, **settings):
     config.add_route('observable_locus_details_all', '/observable/{id}/locus_details_all', request_method='GET')
 
     config.add_route('get_all_go_for_regulations','/go/regulations', request_method='GET')
+    config.add_route('go_this_week', '/go/this_week', request_method='GET')
     config.add_route('go', '/go/{format_name}', request_method='GET')
     config.add_route('go_ontology_graph', '/go/{id}/ontology_graph', request_method='GET')
     config.add_route('go_locus_details', '/go/{id}/locus_details', request_method='GET')

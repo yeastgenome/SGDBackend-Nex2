@@ -21,7 +21,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Goannotation, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -612,8 +612,9 @@ def genomesnapshot(request):
 # Public "What's new in SGD" feed for the search landing page. Returns counts of
 # recently created entries per category plus a short list of the newest references.
 # All data is derived from date_created, so no curation/editorial input is needed.
-DEFAULT_RECENT_DAYS = 7
-MAX_RECENT_DAYS = 90
+# Default window is the past month; callers may request 1..MAX_RECENT_DAYS via ?days=.
+DEFAULT_RECENT_DAYS = 30
+MAX_RECENT_DAYS = 365
 MAX_RECENT_REFERENCES = 5
 
 @view_config(route_name='recent_updates', renderer='json', request_method='GET')
@@ -629,6 +630,8 @@ def recent_updates(request):
 
         new_reference_count = DBSession.query(Referencedbentity).filter(
             Referencedbentity.date_created >= start_date).count()
+        new_go_count = DBSession.query(Goannotation).filter(
+            Goannotation.date_created >= start_date).count()
         new_phenotype_count = DBSession.query(Phenotypeannotation).filter(
             Phenotypeannotation.date_created >= start_date).count()
         new_allele_count = DBSession.query(Alleledbentity).filter(
@@ -639,35 +642,39 @@ def recent_updates(request):
                 'category': 'reference',
                 'label': 'new references',
                 'count': new_reference_count,
-                'href': '/search?q=&category=reference'
+                'href': '/reference/recent'
+            },
+            {
+                'category': 'go',
+                'label': 'new GO annotations',
+                'count': new_go_count,
+                'href': '/go/recent'
             },
             {
                 'category': 'phenotype',
                 'label': 'new phenotype annotations',
                 'count': new_phenotype_count,
-                'href': '/search?q=&category=phenotype'
+                'href': '/phenotype/recent'
             },
             {
                 'category': 'allele',
                 'label': 'new alleles',
                 'count': new_allele_count,
-                'href': '/search?q=&category=allele'
+                'href': '/allele/recent'
             }
         ]
 
+        # Return the newest references in the same shape the ReferenceList
+        # component/reference_list template expect (citation, display_name, link,
+        # pubmed_id, urls[]) so the landing sidebar can render the rich format.
         recent_references = DBSession.query(Referencedbentity).filter(
             Referencedbentity.date_created >= start_date).order_by(
             Referencedbentity.date_created.desc()).limit(MAX_RECENT_REFERENCES).all()
         references = []
         for ref in recent_references:
-            references.append({
-                'display_name': ref.display_name,
-                'citation': ref.citation,
-                'link': ref.obj_url,
-                'year': ref.year,
-                'sgdid': ref.sgdid,
-                'date_created': ref.date_created.strftime('%Y-%m-%d')
-            })
+            citation_dict = ref.to_dict_citation()
+            citation_dict['date_created'] = ref.date_created.strftime('%Y-%m-%d')
+            references.append(citation_dict)
 
         return {
             'since_days': days,
@@ -737,7 +744,114 @@ def reference_this_week(request):
     finally:
         if DBSession:
             DBSession.remove()
-            
+
+# Cap on annotations processed by the "recently added" feeds so per-row
+# to_dict() (which is query-heavy) cannot blow up on an unusually large window.
+MAX_RECENT_ANNOTATIONS = 1000
+
+def _recent_window_days(request):
+    try:
+        days = int(request.params.get('days', 30))
+    except (TypeError, ValueError):
+        days = 30
+    if days < 1 or days > 365:
+        days = 30
+    return days
+
+@view_config(route_name='phenotype_this_week', renderer='json', request_method='GET')
+def phenotype_this_week(request):
+    # Phenotype annotations added in the past N days (default 30), serialized in
+    # the same shape the phenotype annotation DataTable consumes, by reusing
+    # Phenotypeannotation.to_dict() (which returns one row per condition group).
+    try:
+        days = _recent_window_days(request)
+        start_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        end_date = datetime.datetime.today()
+        recent = DBSession.query(Phenotypeannotation).filter(
+            Phenotypeannotation.date_created >= start_date).order_by(
+            Phenotypeannotation.date_created.desc()).limit(
+            MAX_RECENT_ANNOTATIONS).all()
+        phenotypes = []
+        for a in recent:
+            try:
+                phenotypes.extend(a.to_dict())
+            except Exception as e:
+                log.error(e)
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'phenotypes': phenotypes
+        }
+    except Exception as e:
+        log.error(e)
+        return {'start': None, 'end': None, 'phenotypes': []}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='go_this_week', renderer='json', request_method='GET')
+def go_this_week(request):
+    # GO annotations added in the past N days (default 30), serialized in the
+    # same shape the GO annotation DataTable consumes, by reusing
+    # Goannotation.to_dict() (which returns one row per extension/evidence group).
+    try:
+        days = _recent_window_days(request)
+        start_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        end_date = datetime.datetime.today()
+        recent = DBSession.query(Goannotation).filter(
+            Goannotation.date_created >= start_date).order_by(
+            Goannotation.date_created.desc()).limit(
+            MAX_RECENT_ANNOTATIONS).all()
+        go_annotations = []
+        for a in recent:
+            try:
+                go_annotations.extend(a.to_dict())
+            except Exception as e:
+                log.error(e)
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'go_annotations': go_annotations
+        }
+    except Exception as e:
+        log.error(e)
+        return {'start': None, 'end': None, 'go_annotations': []}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='allele_this_week', renderer='json', request_method='GET')
+def allele_this_week(request):
+    # Alleles added in the past 30 days, for the "recently added alleles" page.
+    # Uses inherited Dbentity columns plus so.display_name to stay lightweight.
+    try:
+        start_date = datetime.datetime.today() - datetime.timedelta(days=30)
+        end_date = datetime.datetime.today()
+        recent = DBSession.query(Alleledbentity).filter(
+            Alleledbentity.date_created >= start_date).order_by(
+            Alleledbentity.date_created.desc()).all()
+        alleles = []
+        for a in recent:
+            alleles.append({
+                'display_name': a.display_name,
+                'link': a.obj_url,
+                'sgdid': a.sgdid,
+                'allele_type': a.so.display_name if a.so else None,
+                'description': a.description,
+                'date_created': a.date_created.strftime('%Y-%m-%d')
+            })
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'alleles': alleles
+        }
+    except Exception as e:
+        log.error(e)
+        return {'start': None, 'end': None, 'alleles': []}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='reference_list', renderer='json', request_method='POST')
 def reference_list(request):
     reference_ids = request.POST.get('reference_ids', request.json_body.get('reference_ids', None))
