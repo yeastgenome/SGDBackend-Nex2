@@ -331,16 +331,20 @@ def load_new_data(data, noctua_data, complex_data, source_to_id, annotation_type
                 if created_by == '<NULL>' or created_by is None or created_by == 'NULL':
                     created_by = CREATED_BY
 
-                thisAnnot = Goannotation(dbentity_id = dbentity_id, 
-                                         source_id = source_id, 
-                                         taxonomy_id = taxonomy_id, 
-                                         reference_id = x['reference_id'], 
-                                         go_id = go_id, 
-                                         eco_id = x['eco_id'], 
-                                         annotation_type = x['annotation_type'], 
-                                         go_qualifier = x['go_qualifier'], 
-                                         date_assigned = x['date_assigned'], 
-                                         date_created = x['date_created'], 
+                # date_created records when the annotation entered SGD (the load
+                # time), so "recently added" views stay consistent with the
+                # reference/phenotype/allele tables. The GPAD/GPI curation date is
+                # preserved in date_assigned.
+                thisAnnot = Goannotation(dbentity_id = dbentity_id,
+                                         source_id = source_id,
+                                         taxonomy_id = taxonomy_id,
+                                         reference_id = x['reference_id'],
+                                         go_id = go_id,
+                                         eco_id = x['eco_id'],
+                                         annotation_type = x['annotation_type'],
+                                         go_qualifier = x['go_qualifier'],
+                                         date_assigned = x['date_assigned'],
+                                         date_created = datetime.now(),
                                          created_by = created_by)
                 try:
                     nex_session.add(thisAnnot)
