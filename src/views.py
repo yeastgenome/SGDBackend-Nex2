@@ -794,18 +794,29 @@ def phenotype_this_week(request):
         if DBSession:
             DBSession.remove()
 
+GO_ANNOTATION_TYPES = ('manually curated', 'high-throughput', 'computational')
+
 @view_config(route_name='go_this_week', renderer='json', request_method='GET')
 def go_this_week(request):
     # GO annotations added in the past N days (default 40, since GO is loaded in
     # infrequent batches), serialized in the same shape the GO annotation
     # DataTable consumes, by reusing Goannotation.to_dict() (one row per
     # extension/evidence group).
+    #
+    # Optional ?annotation_type= (one of GO_ANNOTATION_TYPES) filters at the DB
+    # level, so callers that only want e.g. manually curated annotations avoid
+    # fetching the much larger computational set. An unrecognized/absent value
+    # returns all types (backwards compatible).
     try:
         days = _recent_window_days(request, 40)
         start_date = datetime.datetime.today() - datetime.timedelta(days=days)
         end_date = datetime.datetime.today()
-        recent = DBSession.query(Goannotation).filter(
-            Goannotation.date_created >= start_date).order_by(
+        query = DBSession.query(Goannotation).filter(
+            Goannotation.date_created >= start_date)
+        annotation_type = request.params.get('annotation_type')
+        if annotation_type in GO_ANNOTATION_TYPES:
+            query = query.filter(Goannotation.annotation_type == annotation_type)
+        recent = query.order_by(
             Goannotation.date_created.desc()).limit(
             MAX_RECENT_ANNOTATIONS).all()
         go_annotations = []
