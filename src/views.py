@@ -837,6 +837,46 @@ def go_this_week(request):
         if DBSession:
             DBSession.remove()
 
+# Cached per calendar day so the pick is stable within a day and the DB query
+# runs at most once per day regardless of landing-page traffic.
+_gene_of_the_day_cache = {'ordinal': None, 'data': None}
+
+@view_config(route_name='gene_of_the_day', renderer='json', request_method='GET')
+def gene_of_the_day(request):
+    # A deterministic "gene of the day": pick one Active, named, characterized
+    # (has a headline) locus by the current date, so everyone sees the same gene
+    # for the whole day and it rotates over the set over time.
+    try:
+        today_ordinal = datetime.date.today().toordinal()
+        if (_gene_of_the_day_cache['ordinal'] == today_ordinal and
+                _gene_of_the_day_cache['data']):
+            return _gene_of_the_day_cache['data']
+        query = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_status == 'Active',
+            Locusdbentity.gene_name.isnot(None),
+            Locusdbentity.headline.isnot(None)).order_by(
+            Locusdbentity.systematic_name)
+        total = query.count()
+        if total == 0:
+            return {}
+        gene = query.offset(today_ordinal % total).limit(1).one()
+        data = {
+            'display_name': gene.gene_name or gene.systematic_name,
+            'systematic_name': gene.systematic_name,
+            'headline': gene.headline,
+            'link': gene.obj_url,
+            'sgdid': gene.sgdid,
+        }
+        _gene_of_the_day_cache['ordinal'] = today_ordinal
+        _gene_of_the_day_cache['data'] = data
+        return data
+    except Exception as e:
+        log.error(e)
+        return {}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='allele_this_week', renderer='json', request_method='GET')
 def allele_this_week(request):
     # Alleles added in the past 30 days, for the "recently added alleles" page.

@@ -97,6 +97,7 @@ def main(global_config, **settings):
 
     config.add_route('get_all_go_for_regulations','/go/regulations', request_method='GET')
     config.add_route('go_this_week', '/go/this_week', request_method='GET')
+    config.add_route('gene_of_the_day', '/gene_of_the_day', request_method='GET')
     config.add_route('go', '/go/{format_name}', request_method='GET')
     config.add_route('go_ontology_graph', '/go/{id}/ontology_graph', request_method='GET')
     config.add_route('go_locus_details', '/go/{id}/locus_details', request_method='GET')
