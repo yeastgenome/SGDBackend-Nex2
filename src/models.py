@@ -824,6 +824,66 @@ class Chebi(Base):
                     obj.append(annot)
         return obj
 
+    def go_enrichment(self):
+        # GO biological-process enrichment of the genes that have a phenotype
+        # annotation with this chemical, via the GO Term Finder service
+        # (GOTOOLS_SERVER/gotermfinder). Returns [] if there are no genes or the
+        # service call fails.
+        conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_name=self.display_name).all()
+        annotation_ids = [x.annotation_id for x in conditions]
+        if not annotation_ids:
+            return []
+
+        dbentity_ids = set()
+        for a in DBSession.query(Phenotypeannotation.dbentity_id).filter(
+                Phenotypeannotation.annotation_id.in_(annotation_ids)).all():
+            dbentity_ids.add(a.dbentity_id)
+        if not dbentity_ids:
+            return []
+
+        format_names = DBSession.query(Dbentity.format_name).filter(
+            Dbentity.dbentity_id.in_(list(dbentity_ids))).all()
+        genes = "|".join([f[0] for f in format_names])  # GO Term Finder wants pipe-separated
+        if not genes:
+            return []
+
+        try:
+            base = os.environ['GOTOOLS_SERVER'].rstrip('/')
+            resp = requests.post(base + '/gotermfinder', data={'genes': genes, 'aspect': 'P'}, timeout=60)
+            tab_url = resp.json().get('tab_page')
+            if not tab_url:
+                return []
+            tab = requests.get(tab_url, timeout=30).text
+        except Exception:
+            return []
+
+        lines = tab.splitlines()
+        if len(lines) < 2:
+            return []
+        header = lines[0].split('\t')
+        idx = {name: i for i, name in enumerate(header)}
+        try:
+            gi, ti, ci, pi = idx['GOID'], idx['TERM'], idx['NUM_LIST_ANNOTATIONS'], idx['CORRECTED_PVALUE']
+        except KeyError:
+            return []
+
+        obj = []
+        for line in lines[1:]:
+            cols = line.split('\t')
+            if len(cols) <= max(gi, ti, ci, pi):
+                continue
+            count = cols[ci]
+            obj.append({
+                "go": {
+                    "display_name": cols[ti],
+                    "link": '/go/' + cols[gi],
+                    "id": cols[gi]
+                },
+                "match_count": int(count) if count.isdigit() else count,
+                "pvalue": cols[pi]
+            })
+        return obj
+
     def go_to_dict(self):
 
         extensions = DBSession.query(Goextension).filter_by(dbxref_id=self.chebiid).all()

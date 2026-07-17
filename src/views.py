@@ -1627,6 +1627,22 @@ def chemical_properties(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+@view_config(route_name='chemical_go_enrichment', renderer='json', request_method='GET')
+def chemical_go_enrichment(request):
+    try:
+        id = extract_id_request(request, 'chebi')
+
+        chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+        if chebi:
+            return chebi.go_enrichment()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
             
 @view_config(route_name='phenotype', renderer='json', request_method='GET')
 def phenotype(request):
