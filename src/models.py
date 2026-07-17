@@ -847,8 +847,14 @@ class Chebi(Base):
         if not genes:
             return []
 
+        # Prefer GOTOOLS_SERVER; fall back to the host of BATTER_URI (same GO
+        # Term Finder host) since the backend env may not define GOTOOLS_SERVER.
+        base = os.environ.get('GOTOOLS_SERVER') or ''
+        if not base:
+            m = re.match(r'(https?://[^/]+)', os.environ.get('BATTER_URI', ''))
+            base = m.group(1) if m else 'https://gotermfinder.yeastgenome.org'
+        base = base.rstrip('/')
         try:
-            base = os.environ['GOTOOLS_SERVER'].rstrip('/')
             resp = requests.post(base + '/gotermfinder', data={'genes': genes, 'aspect': 'P'}, timeout=60)
             tab_url = resp.json().get('tab_page')
             if not tab_url:
