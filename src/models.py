@@ -936,6 +936,45 @@ class Chebi(Base):
 
         return ""
 
+    def properties_to_dict(self):
+        """Physicochemical properties (formula, MW, SMILES, InChI, InChIKey,
+        PubChem CID) resolved on demand from PubChem via UniChem, with CIR/name
+        fallbacks. All external lookups are lru_cached. Returns partial data if
+        some fields are unavailable."""
+        result = {
+            "chebi_id": self.chebiid,
+            "pubchem_cid": None,
+            "formula": None,
+            "molecular_weight": None,
+            "smiles": None,
+            "canonical_smiles": None,
+            "inchi": None,
+            "inchikey": None,
+            "sdf_url": None,
+        }
+        try:
+            cid = _chebi_to_pubchem_cid_cached(self.format_name) or _pubchem_cid_from_name(self.display_name)
+            result["pubchem_cid"] = cid
+            if cid:
+                props = _pubchem_properties_from_cid(cid)
+                if props:
+                    result["formula"] = props.get("MolecularFormula")
+                    result["molecular_weight"] = props.get("MolecularWeight")
+                    result["canonical_smiles"] = props.get("ConnectivitySMILES") or props.get("CanonicalSMILES")
+                    result["smiles"] = props.get("SMILES") or props.get("IsomericSMILES") or props.get("CanonicalSMILES")
+                    result["inchi"] = props.get("InChI")
+                    result["inchikey"] = props.get("InChIKey")
+                result["sdf_url"] = (
+                    PUBCHEM_BASE + "/compound/cid/" + str(cid) +
+                    "/record/SDF/?record_type=2d&response_type=save&response_basename=" +
+                    quote(self.display_name or ("CID" + str(cid)))
+                )
+            if not result["smiles"]:
+                result["smiles"] = _smiles_from_chebi_via_cir(self.format_name)
+        except Exception:
+            logger.exception("properties_to_dict failed for %s", self.format_name)
+        return result
+
 
     def get_pharmGKB_url(self):
         rows = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id, alias_type='PharmGKB ID').all()
@@ -13566,4 +13605,22 @@ def _smiles_from_chebi_via_cir(chebi_format_name: str):
         except Exception:
             logger.exception("CIR SMILES lookup failed for %r", ident)
     return None
+
+@functools.lru_cache(maxsize=4096)
+def _pubchem_properties_from_cid(cid: int):
+    """Fetch core physicochemical properties for a PubChem CID. Returns a dict
+    (the PubChem Properties row) or None."""
+    try:
+        # PubChem renamed IsomericSMILES->SMILES and CanonicalSMILES->
+        # ConnectivitySMILES; request both new and old names for resilience.
+        props = "MolecularFormula,MolecularWeight,SMILES,ConnectivitySMILES,IsomericSMILES,CanonicalSMILES,InChI,InChIKey"
+        url = f"{PUBCHEM_BASE}/compound/cid/{cid}/property/{props}/JSON"
+        r = _http.get(url, timeout=6)
+        if r.status_code != 200:
+            return None
+        rows = (r.json().get("PropertyTable") or {}).get("Properties") or []
+        return rows[0] if rows else None
+    except Exception:
+        logger.exception("PubChem properties failed for cid=%s", cid)
+        return None
 
