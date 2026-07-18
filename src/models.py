@@ -890,6 +890,43 @@ class Chebi(Base):
             })
         return obj
 
+    def related_genes(self):
+        # Genes whose SGD description mentions this chemical's name or a synonym
+        # (whole-word, case-insensitive). SGD has no structured chemical->gene
+        # "acts on" link for most chemicals, so this surfaces likely enzymes and
+        # transporters (e.g. sorbitol dehydrogenases, polyol transporters) from
+        # the free-text descriptions. Description snippets let users judge fit.
+        terms = [self.display_name]
+        aliases = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).filter(
+            ChebiAlia.alias_type.in_(['EXACT', 'RELATED', 'IUPAC name'])).all()
+        terms += [a.display_name for a in aliases]
+
+        clean, seen = [], set()
+        for t in terms:
+            t = (t or '').strip()
+            # Skip very short names and IUPAC systematic names (parens/commas).
+            if len(t) < 4 or '(' in t or ',' in t:
+                continue
+            k = t.lower()
+            if k in seen:
+                continue
+            seen.add(k)
+            clean.append(t)
+        if not clean:
+            return []
+
+        pat = r'\y(' + '|'.join(re.escape(t) for t in clean) + r')\y'
+        rows = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_status == 'Active',
+            Locusdbentity.description.op('~*')(pat)).order_by(
+            Locusdbentity.display_name).limit(100).all()
+        return [{
+            "display_name": r.display_name,
+            "systematic_name": r.systematic_name,
+            "link": r.obj_url,
+            "description": r.description
+        } for r in rows]
+
     def go_to_dict(self):
 
         extensions = DBSession.query(Goextension).filter_by(dbxref_id=self.chebiid).all()
