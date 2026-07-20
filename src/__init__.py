@@ -59,6 +59,7 @@ def main(global_config, **settings):
     config.add_route('strain', '/strain/{id}', request_method='GET')
 
     config.add_route('reference_this_week', '/references/this_week', request_method='GET')
+    config.add_route('reference_by_pmids', '/references/by_pmids', request_method='GET')
     config.add_route('phenotype_this_week', '/phenotypes/this_week', request_method='GET')
     config.add_route('allele_this_week', '/alleles/this_week', request_method='GET')
     config.add_route('reference', '/reference/{id}', request_method='GET')

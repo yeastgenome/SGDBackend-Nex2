@@ -750,6 +750,34 @@ def reference_this_week(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='reference_by_pmids', renderer='json', request_method='GET')
+def reference_by_pmids(request):
+    # References for a list of PubMed IDs (?pmids=123,456 or space-separated), in
+    # the same shape as reference_this_week so the frontend can reuse the
+    # reference-list template. Requested order is preserved; missing PMIDs skipped.
+    try:
+        raw = request.params.get('pmids', '') or ''
+        pmids = []
+        for p in raw.replace(',', ' ').split():
+            p = p.strip()
+            if p.isdigit():
+                pmids.append(int(p))
+        if not pmids:
+            return {'references': []}
+        rows = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid.in_(pmids)).all()
+        by_pmid = {}
+        for x in rows:
+            citation_dict = x.to_dict_citation()
+            citation_dict['entity_list'] = x.annotations_to_dict()
+            by_pmid[x.pmid] = citation_dict
+        refs = [by_pmid[p] for p in pmids if p in by_pmid]
+        return {'references': refs}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 # Cap on annotations processed by the "recently added" feeds so per-row
 # to_dict() (which is query-heavy) cannot blow up on an unusually large window.
 MAX_RECENT_ANNOTATIONS = 1000
