@@ -8627,7 +8627,8 @@ class Goannotation(Base):
             "reference": {
                 "display_name": self.reference.display_name,
                 "link": reference_link,
-                "pubmed_id": pmid
+                "pubmed_id": pmid,
+                "citation": self.reference.citation
             },
             "source": {
                 "display_name": self.source.display_name
@@ -9842,7 +9843,8 @@ class Phenotypeannotation(Base):
             "reference": {
                 "display_name": reference.display_name,
                 "link": reference.obj_url,
-                "pubmed_id": reference.pmid
+                "pubmed_id": reference.pmid,
+                "citation": reference.citation
             }
         }
 
