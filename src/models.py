@@ -8597,6 +8597,9 @@ class Goannotation(Base):
 
         reference_link = self.reference.obj_url
         pmid = None
+        # self.reference is a Dbentity (no citation); the Referencedbentity below
+        # carries the citation, so pull it there rather than off self.reference.
+        citation = None
         if "pathway" in reference_link:
             pathwayObj = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
             if pathwayObj:
@@ -8606,6 +8609,7 @@ class Goannotation(Base):
         else:
             refObj = DBSession.query(Referencedbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
             pmid = "PMID:" + str(refObj.pmid)
+            citation = refObj.citation if refObj else None
         go_obj = {
             "id": self.annotation_id,
             "annotation_type": self.annotation_type,
@@ -8628,7 +8632,7 @@ class Goannotation(Base):
                 "display_name": self.reference.display_name,
                 "link": reference_link,
                 "pubmed_id": pmid,
-                "citation": self.reference.citation
+                "citation": citation
             },
             "source": {
                 "display_name": self.source.display_name
