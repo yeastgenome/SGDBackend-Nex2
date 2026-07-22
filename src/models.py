@@ -824,6 +824,109 @@ class Chebi(Base):
                     obj.append(annot)
         return obj
 
+    def go_enrichment(self):
+        # GO biological-process enrichment of the genes that have a phenotype
+        # annotation with this chemical, via the GO Term Finder service
+        # (GOTOOLS_SERVER/gotermfinder). Returns [] if there are no genes or the
+        # service call fails.
+        conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_name=self.display_name).all()
+        annotation_ids = [x.annotation_id for x in conditions]
+        if not annotation_ids:
+            return []
+
+        dbentity_ids = set()
+        for a in DBSession.query(Phenotypeannotation.dbentity_id).filter(
+                Phenotypeannotation.annotation_id.in_(annotation_ids)).all():
+            dbentity_ids.add(a.dbentity_id)
+        if not dbentity_ids:
+            return []
+
+        format_names = DBSession.query(Dbentity.format_name).filter(
+            Dbentity.dbentity_id.in_(list(dbentity_ids))).all()
+        genes = "|".join([f[0] for f in format_names])  # GO Term Finder wants pipe-separated
+        if not genes:
+            return []
+
+        # Prefer GOTOOLS_SERVER; fall back to the host of BATTER_URI (same GO
+        # Term Finder host) since the backend env may not define GOTOOLS_SERVER.
+        base = os.environ.get('GOTOOLS_SERVER') or ''
+        if not base:
+            m = re.match(r'(https?://[^/]+)', os.environ.get('BATTER_URI', ''))
+            base = m.group(1) if m else 'https://gotermfinder.yeastgenome.org'
+        base = base.rstrip('/')
+        try:
+            resp = requests.post(base + '/gotermfinder', data={'genes': genes, 'aspect': 'P'}, timeout=60)
+            tab_url = resp.json().get('tab_page')
+            if not tab_url:
+                return []
+            tab = requests.get(tab_url, timeout=30).text
+        except Exception:
+            return []
+
+        lines = tab.splitlines()
+        if len(lines) < 2:
+            return []
+        header = lines[0].split('\t')
+        idx = {name: i for i, name in enumerate(header)}
+        try:
+            gi, ti, ci, pi = idx['GOID'], idx['TERM'], idx['NUM_LIST_ANNOTATIONS'], idx['CORRECTED_PVALUE']
+        except KeyError:
+            return []
+
+        obj = []
+        for line in lines[1:]:
+            cols = line.split('\t')
+            if len(cols) <= max(gi, ti, ci, pi):
+                continue
+            count = cols[ci]
+            obj.append({
+                "go": {
+                    "display_name": cols[ti],
+                    "link": '/go/' + cols[gi],
+                    "id": cols[gi]
+                },
+                "match_count": int(count) if count.isdigit() else count,
+                "pvalue": cols[pi]
+            })
+        return obj
+
+    def related_genes(self):
+        # Genes whose SGD description mentions this chemical's name or a synonym
+        # (whole-word, case-insensitive). SGD has no structured chemical->gene
+        # "acts on" link for most chemicals, so this surfaces likely enzymes and
+        # transporters (e.g. sorbitol dehydrogenases, polyol transporters) from
+        # the free-text descriptions. Description snippets let users judge fit.
+        terms = [self.display_name]
+        aliases = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).filter(
+            ChebiAlia.alias_type.in_(['EXACT', 'RELATED', 'IUPAC name'])).all()
+        terms += [a.display_name for a in aliases]
+
+        clean, seen = [], set()
+        for t in terms:
+            t = (t or '').strip()
+            # Skip very short names and IUPAC systematic names (parens/commas).
+            if len(t) < 4 or '(' in t or ',' in t:
+                continue
+            k = t.lower()
+            if k in seen:
+                continue
+            seen.add(k)
+            clean.append(t)
+        if not clean:
+            return []
+
+        pat = r'\y(' + '|'.join(re.escape(t) for t in clean) + r')\y'
+        rows = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_status == 'Active',
+            Locusdbentity.description.op('~*')(pat)).order_by(
+            Locusdbentity.display_name).limit(100).all()
+        return [{
+            "display_name": r.display_name,
+            "systematic_name": r.systematic_name,
+            "link": r.obj_url,
+            "description": r.description
+        } for r in rows]
+
     def go_to_dict(self):
 
         extensions = DBSession.query(Goextension).filter_by(dbxref_id=self.chebiid).all()
@@ -935,6 +1038,45 @@ class Chebi(Base):
             logger.exception("get_structure_url failed for %s", self.format_name)
 
         return ""
+
+    def properties_to_dict(self):
+        """Physicochemical properties (formula, MW, SMILES, InChI, InChIKey,
+        PubChem CID) resolved on demand from PubChem via UniChem, with CIR/name
+        fallbacks. All external lookups are lru_cached. Returns partial data if
+        some fields are unavailable."""
+        result = {
+            "chebi_id": self.chebiid,
+            "pubchem_cid": None,
+            "formula": None,
+            "molecular_weight": None,
+            "smiles": None,
+            "canonical_smiles": None,
+            "inchi": None,
+            "inchikey": None,
+            "sdf_url": None,
+        }
+        try:
+            cid = _chebi_to_pubchem_cid_cached(self.format_name) or _pubchem_cid_from_name(self.display_name)
+            result["pubchem_cid"] = cid
+            if cid:
+                props = _pubchem_properties_from_cid(cid)
+                if props:
+                    result["formula"] = props.get("MolecularFormula")
+                    result["molecular_weight"] = props.get("MolecularWeight")
+                    result["canonical_smiles"] = props.get("ConnectivitySMILES") or props.get("CanonicalSMILES")
+                    result["smiles"] = props.get("SMILES") or props.get("IsomericSMILES") or props.get("CanonicalSMILES")
+                    result["inchi"] = props.get("InChI")
+                    result["inchikey"] = props.get("InChIKey")
+                result["sdf_url"] = (
+                    PUBCHEM_BASE + "/compound/cid/" + str(cid) +
+                    "/record/SDF/?record_type=2d&response_type=save&response_basename=" +
+                    quote(self.display_name or ("CID" + str(cid)))
+                )
+            if not result["smiles"]:
+                result["smiles"] = _smiles_from_chebi_via_cir(self.format_name)
+        except Exception:
+            logger.exception("properties_to_dict failed for %s", self.format_name)
+        return result
 
 
     def get_pharmGKB_url(self):
@@ -8455,6 +8597,9 @@ class Goannotation(Base):
 
         reference_link = self.reference.obj_url
         pmid = None
+        # self.reference is a Dbentity (no citation); the Referencedbentity below
+        # carries the citation, so pull it there rather than off self.reference.
+        citation = None
         if "pathway" in reference_link:
             pathwayObj = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
             if pathwayObj:
@@ -8464,6 +8609,7 @@ class Goannotation(Base):
         else:
             refObj = DBSession.query(Referencedbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
             pmid = "PMID:" + str(refObj.pmid)
+            citation = refObj.citation if refObj else None
         go_obj = {
             "id": self.annotation_id,
             "annotation_type": self.annotation_type,
@@ -8485,7 +8631,8 @@ class Goannotation(Base):
             "reference": {
                 "display_name": self.reference.display_name,
                 "link": reference_link,
-                "pubmed_id": pmid
+                "pubmed_id": pmid,
+                "citation": citation
             },
             "source": {
                 "display_name": self.source.display_name
@@ -9700,7 +9847,8 @@ class Phenotypeannotation(Base):
             "reference": {
                 "display_name": reference.display_name,
                 "link": reference.obj_url,
-                "pubmed_id": reference.pmid
+                "pubmed_id": reference.pmid,
+                "citation": reference.citation
             }
         }
 
@@ -13566,4 +13714,22 @@ def _smiles_from_chebi_via_cir(chebi_format_name: str):
         except Exception:
             logger.exception("CIR SMILES lookup failed for %r", ident)
     return None
+
+@functools.lru_cache(maxsize=4096)
+def _pubchem_properties_from_cid(cid: int):
+    """Fetch core physicochemical properties for a PubChem CID. Returns a dict
+    (the PubChem Properties row) or None."""
+    try:
+        # PubChem renamed IsomericSMILES->SMILES and CanonicalSMILES->
+        # ConnectivitySMILES; request both new and old names for resilience.
+        props = "MolecularFormula,MolecularWeight,SMILES,ConnectivitySMILES,IsomericSMILES,CanonicalSMILES,InChI,InChIKey"
+        url = f"{PUBCHEM_BASE}/compound/cid/{cid}/property/{props}/JSON"
+        r = _http.get(url, timeout=6)
+        if r.status_code != 200:
+            return None
+        rows = (r.json().get("PropertyTable") or {}).get("Properties") or []
+        return rows[0] if rows else None
+    except Exception:
+        logger.exception("PubChem properties failed for cid=%s", cid)
+        return None
 

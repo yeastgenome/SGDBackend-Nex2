@@ -21,7 +21,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Goannotation, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -609,6 +609,95 @@ def genomesnapshot(request):
         if DBSession:
             DBSession.remove()
 
+# Public "What's new in SGD" feed for the search landing page. Returns counts of
+# recently created entries per category plus a short list of the newest references.
+# All data is derived from date_created, so no curation/editorial input is needed.
+# Default window is the past month; callers may request 1..MAX_RECENT_DAYS via ?days=.
+DEFAULT_RECENT_DAYS = 30
+MAX_RECENT_DAYS = 365
+MAX_RECENT_REFERENCES = 5
+
+@view_config(route_name='recent_updates', renderer='json', request_method='GET')
+def recent_updates(request):
+    try:
+        try:
+            days = int(request.params.get('days', DEFAULT_RECENT_DAYS))
+        except (TypeError, ValueError):
+            days = DEFAULT_RECENT_DAYS
+        if days < 1 or days > MAX_RECENT_DAYS:
+            days = DEFAULT_RECENT_DAYS
+        start_date = datetime.datetime.now() - datetime.timedelta(days=days)
+        # GO annotations are loaded in infrequent batches and carry the GPAD
+        # curation date in date_created, so they use a wider window (matching the
+        # /go/recent page) to avoid showing an empty count between loads.
+        go_days = max(days, 40)
+        go_start_date = datetime.datetime.now() - datetime.timedelta(days=go_days)
+
+        new_reference_count = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.date_created >= start_date).count()
+        new_go_count = DBSession.query(Goannotation).filter(
+            Goannotation.date_created >= go_start_date).count()
+        new_phenotype_count = DBSession.query(Phenotypeannotation).filter(
+            Phenotypeannotation.date_created >= start_date).count()
+        new_allele_count = DBSession.query(Alleledbentity).filter(
+            Alleledbentity.date_created >= start_date).count()
+
+        counts = [
+            {
+                'category': 'reference',
+                'label': 'new references',
+                'count': new_reference_count,
+                'href': '/reference/recent'
+            },
+            {
+                'category': 'go',
+                'label': 'new GO annotations (last %d days)' % go_days,
+                'count': new_go_count,
+                'href': '/go/recent'
+            },
+            {
+                'category': 'phenotype',
+                'label': 'new phenotype annotations',
+                'count': new_phenotype_count,
+                'href': '/phenotype/recent'
+            },
+            {
+                'category': 'allele',
+                'label': 'new alleles',
+                'count': new_allele_count,
+                'href': '/allele/recent'
+            }
+        ]
+
+        # Return the newest references in the same shape the ReferenceList
+        # component/reference_list template expect (citation, display_name, link,
+        # pubmed_id, urls[]) so the landing sidebar can render the rich format.
+        recent_references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.date_created >= start_date).order_by(
+            Referencedbentity.date_created.desc()).limit(MAX_RECENT_REFERENCES).all()
+        references = []
+        for ref in recent_references:
+            citation_dict = ref.to_dict_citation()
+            citation_dict['date_created'] = ref.date_created.strftime('%Y-%m-%d')
+            references.append(citation_dict)
+
+        return {
+            'since_days': days,
+            'start_date': start_date.strftime('%Y-%m-%d'),
+            'counts': counts,
+            'references': references
+        }
+    except Exception as e:
+        log.error(e)
+        return {
+            'since_days': DEFAULT_RECENT_DAYS,
+            'counts': [],
+            'references': []
+        }
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='formats', renderer='json', request_method='GET')
 def formats(request):
     try:
@@ -660,7 +749,194 @@ def reference_this_week(request):
     finally:
         if DBSession:
             DBSession.remove()
-            
+
+@view_config(route_name='reference_by_pmids', renderer='json', request_method='GET')
+def reference_by_pmids(request):
+    # References for a list of PubMed IDs (?pmids=123,456 or space-separated), in
+    # the same shape as reference_this_week so the frontend can reuse the
+    # reference-list template. Requested order is preserved; missing PMIDs skipped.
+    try:
+        raw = request.params.get('pmids', '') or ''
+        pmids = []
+        for p in raw.replace(',', ' ').split():
+            p = p.strip()
+            if p.isdigit():
+                pmids.append(int(p))
+        if not pmids:
+            return {'references': []}
+        rows = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid.in_(pmids)).all()
+        by_pmid = {}
+        for x in rows:
+            citation_dict = x.to_dict_citation()
+            citation_dict['entity_list'] = x.annotations_to_dict()
+            by_pmid[x.pmid] = citation_dict
+        refs = [by_pmid[p] for p in pmids if p in by_pmid]
+        return {'references': refs}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+# Cap on annotations processed by the "recently added" feeds so per-row
+# to_dict() (which is query-heavy) cannot blow up on an unusually large window.
+MAX_RECENT_ANNOTATIONS = 1000
+
+def _recent_window_days(request, default=30):
+    try:
+        days = int(request.params.get('days', default))
+    except (TypeError, ValueError):
+        days = default
+    if days < 1 or days > 365:
+        days = default
+    return days
+
+@view_config(route_name='phenotype_this_week', renderer='json', request_method='GET')
+def phenotype_this_week(request):
+    # Phenotype annotations added in the past N days (default 30), serialized in
+    # the same shape the phenotype annotation DataTable consumes, by reusing
+    # Phenotypeannotation.to_dict() (which returns one row per condition group).
+    try:
+        days = _recent_window_days(request)
+        start_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        end_date = datetime.datetime.today()
+        recent = DBSession.query(Phenotypeannotation).filter(
+            Phenotypeannotation.date_created >= start_date).order_by(
+            Phenotypeannotation.date_created.desc()).limit(
+            MAX_RECENT_ANNOTATIONS).all()
+        phenotypes = []
+        for a in recent:
+            try:
+                phenotypes.extend(a.to_dict())
+            except Exception as e:
+                log.error(e)
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'phenotypes': phenotypes
+        }
+    except Exception as e:
+        log.error(e)
+        return {'start': None, 'end': None, 'phenotypes': []}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+GO_ANNOTATION_TYPES = ('manually curated', 'high-throughput', 'computational')
+
+@view_config(route_name='go_this_week', renderer='json', request_method='GET')
+def go_this_week(request):
+    # GO annotations added in the past N days (default 40, since GO is loaded in
+    # infrequent batches), serialized in the same shape the GO annotation
+    # DataTable consumes, by reusing Goannotation.to_dict() (one row per
+    # extension/evidence group).
+    #
+    # Optional ?annotation_type= (one of GO_ANNOTATION_TYPES) filters at the DB
+    # level, so callers that only want e.g. manually curated annotations avoid
+    # fetching the much larger computational set. An unrecognized/absent value
+    # returns all types (backwards compatible).
+    try:
+        days = _recent_window_days(request, 40)
+        start_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        end_date = datetime.datetime.today()
+        query = DBSession.query(Goannotation).filter(
+            Goannotation.date_created >= start_date)
+        annotation_type = request.params.get('annotation_type')
+        if annotation_type in GO_ANNOTATION_TYPES:
+            query = query.filter(Goannotation.annotation_type == annotation_type)
+        recent = query.order_by(
+            Goannotation.date_created.desc()).limit(
+            MAX_RECENT_ANNOTATIONS).all()
+        go_annotations = []
+        for a in recent:
+            try:
+                go_annotations.extend(a.to_dict())
+            except Exception as e:
+                log.error(e)
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'go_annotations': go_annotations
+        }
+    except Exception as e:
+        log.error(e)
+        return {'start': None, 'end': None, 'go_annotations': []}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+# Cached per calendar day so the pick is stable within a day and the DB query
+# runs at most once per day regardless of landing-page traffic.
+_gene_of_the_day_cache = {'ordinal': None, 'data': None}
+
+@view_config(route_name='gene_of_the_day', renderer='json', request_method='GET')
+def gene_of_the_day(request):
+    # A deterministic "gene of the day": pick one Active, named, characterized
+    # (has a headline) locus by the current date, so everyone sees the same gene
+    # for the whole day and it rotates over the set over time.
+    try:
+        today_ordinal = datetime.date.today().toordinal()
+        if (_gene_of_the_day_cache['ordinal'] == today_ordinal and
+                _gene_of_the_day_cache['data']):
+            return _gene_of_the_day_cache['data']
+        query = DBSession.query(Locusdbentity).filter(
+            Locusdbentity.dbentity_status == 'Active',
+            Locusdbentity.gene_name.isnot(None),
+            Locusdbentity.headline.isnot(None)).order_by(
+            Locusdbentity.systematic_name)
+        total = query.count()
+        if total == 0:
+            return {}
+        gene = query.offset(today_ordinal % total).limit(1).one()
+        data = {
+            'display_name': gene.gene_name or gene.systematic_name,
+            'systematic_name': gene.systematic_name,
+            'headline': gene.headline,
+            'link': gene.obj_url,
+            'sgdid': gene.sgdid,
+        }
+        _gene_of_the_day_cache['ordinal'] = today_ordinal
+        _gene_of_the_day_cache['data'] = data
+        return data
+    except Exception as e:
+        log.error(e)
+        return {}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='allele_this_week', renderer='json', request_method='GET')
+def allele_this_week(request):
+    # Alleles added in the past 30 days, for the "recently added alleles" page.
+    # Uses inherited Dbentity columns plus so.display_name to stay lightweight.
+    try:
+        start_date = datetime.datetime.today() - datetime.timedelta(days=30)
+        end_date = datetime.datetime.today()
+        recent = DBSession.query(Alleledbentity).filter(
+            Alleledbentity.date_created >= start_date).order_by(
+            Alleledbentity.date_created.desc()).all()
+        alleles = []
+        for a in recent:
+            alleles.append({
+                'display_name': a.display_name,
+                'link': a.obj_url,
+                'sgdid': a.sgdid,
+                'allele_type': a.so.display_name if a.so else None,
+                'description': a.description,
+                'date_created': a.date_created.strftime('%Y-%m-%d')
+            })
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'alleles': alleles
+        }
+    except Exception as e:
+        log.error(e)
+        return {'start': None, 'end': None, 'alleles': []}
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='reference_list', renderer='json', request_method='POST')
 def reference_list(request):
     reference_ids = request.POST.get('reference_ids', request.json_body.get('reference_ids', None))
@@ -1356,6 +1632,54 @@ def chemical_network_graph(request):
         chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
         if chebi:
             return chebi.chemical_network()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='chemical_properties', renderer='json', request_method='GET')
+def chemical_properties(request):
+    try:
+        id = extract_id_request(request, 'chebi')
+
+        chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+        if chebi:
+            return chebi.properties_to_dict()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='chemical_go_enrichment', renderer='json', request_method='GET')
+def chemical_go_enrichment(request):
+    try:
+        id = extract_id_request(request, 'chebi')
+
+        chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+        if chebi:
+            return chebi.go_enrichment()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='chemical_related_genes', renderer='json', request_method='GET')
+def chemical_related_genes(request):
+    try:
+        id = extract_id_request(request, 'chebi')
+
+        chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+        if chebi:
+            return chebi.related_genes()
         else:
             return HTTPNotFound()
     except Exception as e:
