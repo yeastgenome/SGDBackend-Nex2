@@ -2378,8 +2378,22 @@ class Referencedbentity(Dbentity):
             "pubmed_id": self.pmid,
             "link": self.obj_url,
             "year": self.year,
+            "journal": None,
+            "authors": [],
             "urls": []
         }
+
+        if self.pmid is not None and self.journal:
+            obj["journal"] = {
+                "med_abbr": self.journal.med_abbr
+            }
+
+        authors = DBSession.query(Referenceauthor.display_name, Referenceauthor.obj_url).filter_by(reference_id=self.dbentity_id).order_by(Referenceauthor.author_order).all()
+        for author in authors:
+            obj["authors"].append({
+                "display_name": author[0],
+                "link": author[1]
+            })
 
         ref_urls = DBSession.query(ReferenceUrl).filter_by(reference_id=self.dbentity_id).all()
         for url in ref_urls:
