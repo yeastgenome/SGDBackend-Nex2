@@ -2252,6 +2252,122 @@ class Pathwaydbentity(Dbentity):
     dbentity_id = Column(ForeignKey('nex.dbentity.dbentity_id', ondelete='CASCADE'), primary_key=True, server_default=text("nextval('nex.object_seq'::regclass)"))
     biocyc_id = Column(String(40))
 
+    def _identity(self):
+        return {
+            "id": self.dbentity_id,
+            "display_name": self.display_name,
+            "biocyc_id": self.biocyc_id,
+            "format_name": self.format_name,
+            "sgdid": self.sgdid,
+            "link": self.obj_url
+        }
+
+    def yeastpathways_url(self):
+        # Interactive YeastPathways page (the stored PathwayUrl is a static
+        # diagram image, so build the canonical interactive link from biocyc_id).
+        if self.biocyc_id:
+            return "https://pathway.yeastgenome.org/YEAST/NEW-IMAGE?type=NIL&object=" + self.biocyc_id + "&redirect=T"
+        return None
+
+    def diagram_url(self):
+        if not self.biocyc_id:
+            return None
+        return "https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=" + self.biocyc_id + "&detail-level=2"
+
+    def aliases_to_dict(self):
+        rows = DBSession.query(PathwayAlias).filter_by(pathway_id=self.dbentity_id).all()
+        return [{"display_name": r.display_name, "alias_type": r.alias_type} for r in rows]
+
+    def genes_and_ec_to_dict(self):
+        annotations = DBSession.query(Pathwayannotation).filter_by(pathway_id=self.dbentity_id).all()
+        gene_ids = []
+        ec_ids = []
+        for a in annotations:
+            if a.dbentity_id is not None and a.dbentity_id not in gene_ids:
+                gene_ids.append(a.dbentity_id)
+            if a.ec_id is not None and a.ec_id not in ec_ids:
+                ec_ids.append(a.ec_id)
+        genes = []
+        for locus in DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(gene_ids)).all():
+            genes.append({
+                "id": locus.dbentity_id,
+                "display_name": locus.display_name,
+                "format_name": locus.format_name,
+                "link": locus.obj_url
+            })
+        genes = sorted(genes, key=lambda g: g["display_name"])
+        ec_numbers = []
+        for ec in DBSession.query(Ec).filter(Ec.ec_id.in_(ec_ids)).all():
+            ec_numbers.append(ec.to_dict())
+        ec_numbers = sorted(ec_numbers, key=lambda e: e["display_name"])
+        return genes, ec_numbers
+
+    def chemicals_to_dict(self):
+        if not self.biocyc_id:
+            return []
+        rows = DBSession.query(ChebiAlia).filter_by(alias_type='YeastPathway ID', display_name=self.biocyc_id).all()
+        chebi_ids = [r.chebi_id for r in rows]
+        chemicals = []
+        for c in DBSession.query(Chebi).filter(Chebi.chebi_id.in_(chebi_ids)).all():
+            chemicals.append({
+                "id": c.chebi_id,
+                "display_name": c.display_name,
+                "link": c.obj_url
+            })
+        return sorted(chemicals, key=lambda c: c["display_name"])
+
+    def summary_text_to_dict(self):
+        summary = DBSession.query(Pathwaysummary).filter_by(pathway_id=self.dbentity_id).first()
+        if summary is None:
+            return None
+        return {"text": summary.text, "html": summary.html}
+
+    def reference_ids(self):
+        # Curated summary citations first (in curator-assigned order), then any
+        # additional literature annotations; de-duplicated, order preserved.
+        ref_ids = []
+        summary = DBSession.query(Pathwaysummary).filter_by(pathway_id=self.dbentity_id).first()
+        if summary is not None:
+            summary_refs = DBSession.query(PathwaysummaryReference).filter_by(summary_id=summary.summary_id).order_by(PathwaysummaryReference.reference_order).all()
+            for sr in summary_refs:
+                if sr.reference_id not in ref_ids:
+                    ref_ids.append(sr.reference_id)
+        for la in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id).all():
+            if la.reference_id is not None and la.reference_id not in ref_ids:
+                ref_ids.append(la.reference_id)
+        return ref_ids
+
+    def references_to_dict(self):
+        references = []
+        for rid in self.reference_ids():
+            ref = DBSession.query(Referencedbentity).filter_by(dbentity_id=rid).one_or_none()
+            if ref is not None:
+                references.append(ref.to_dict_citation())
+        return references
+
+    def summary_details(self):
+        genes, ec_numbers = self.genes_and_ec_to_dict()
+        obj = self._identity()
+        obj.update({
+            "aliases": self.aliases_to_dict(),
+            "genes": genes,
+            "ec_numbers": ec_numbers,
+            "chemicals": self.chemicals_to_dict(),
+            "pathway_summary": self.summary_text_to_dict(),
+            "diagram_url": self.diagram_url(),
+            "yeastpathways_url": self.yeastpathways_url(),
+            "references": self.references_to_dict()
+        })
+        return obj
+
+    def literature_details(self):
+        obj = self._identity()
+        obj.update({
+            "yeastpathways_url": self.yeastpathways_url(),
+            "references": self.references_to_dict()
+        })
+        return obj
+
 
 class Referencedbentity(Dbentity):
     __tablename__ = 'referencedbentity'
@@ -9490,13 +9606,19 @@ class Pathwayannotation(Base):
 
     def to_dict(self):
         row = DBSession.query(PathwayUrl).filter(and_(PathwayUrl.pathway_id == self.pathway_id, PathwayUrl.url_type == 'YeastPathways')).one_or_none()
-        url = row.obj_url if row else ''
-        row = DBSession.query(Dbentity).filter_by(dbentity_id=self.pathway.dbentity_id).one_or_none()
-        display_name = row.display_name if row else ''
+        external_url = row.obj_url if row else ''
+        pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=self.pathway.dbentity_id).one_or_none()
+        display_name = pathway.display_name if pathway else ''
+        biocyc_id = pathway.biocyc_id if pathway else None
+        # Link to the internal SGD Pathway page when we have an id to build it
+        # from; otherwise fall back to the external YeastPathways URL.
+        link = ('/pathway/' + biocyc_id) if biocyc_id else external_url
         return {
             'pathway': {
-		'display_name': display_name,
-                'link': url
+                'display_name': display_name,
+                'biocyc_id': biocyc_id,
+                'link': link,
+                'external_link': external_url
             }
         }
 

@@ -171,6 +171,9 @@ def main(global_config, **settings):
     config.add_route('complex_go', '/complex/{id}/go', request_method='GET')
     config.add_route('complex_literature', '/complex/{id}/literature', request_method='GET')
     config.add_route('complex_go_cams', '/complex/{id}/go_cams', request_method='GET')
+    config.add_route('pathway', '/pathway/{id}', request_method='GET')
+    config.add_route('pathway_summary', '/pathway/{id}/summary', request_method='GET')
+    config.add_route('pathway_literature', '/pathway/{id}/literature', request_method='GET')
     config.add_route('entity_validation', '/entity/{entity_type}/{ids}', request_method='GET')
     
     config.add_route('goslim', '/goslim', request_method='GET')

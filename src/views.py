@@ -3162,6 +3162,59 @@ def complex_go_cams(request):
         if DBSession:
             DBSession.remove()
 
+def _get_pathway_from_request(request):
+    identifier = request.matchdict['id']
+    id = extract_id_request(request, 'pathway', 'id', True)
+    if id:
+        return DBSession.query(Pathwaydbentity).filter_by(dbentity_id=id).one_or_none()
+    return DBSession.query(Pathwaydbentity).filter(
+        or_(Pathwaydbentity.biocyc_id == identifier.upper(),
+            Pathwaydbentity.format_name.ilike(identifier),
+            Pathwaydbentity.display_name.ilike(identifier),
+            Pathwaydbentity.sgdid == identifier.upper().replace("SGD:", ""))).one_or_none()
+
+@view_config(route_name='pathway', renderer='json', request_method='GET')
+def pathway(request):
+    try:
+        pathway = _get_pathway_from_request(request)
+        if pathway is not None:
+            return pathway.summary_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='pathway_summary', renderer='json', request_method='GET')
+def pathway_summary(request):
+    try:
+        pathway = _get_pathway_from_request(request)
+        if pathway is not None:
+            return pathway.summary_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='pathway_literature', renderer='json', request_method='GET')
+def pathway_literature(request):
+    try:
+        pathway = _get_pathway_from_request(request)
+        if pathway is not None:
+            return pathway.literature_details()
+        else:
+            return {}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='allele', renderer='json', request_method='GET')
 def allele(request):
     try:

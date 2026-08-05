@@ -1128,7 +1128,7 @@ def index_pathways():
             "identifier": p.biocyc_id,
             "pathway_name": p.display_name,
             "biocyc_id": p.biocyc_id,
-            "href": yeastPathwayURL,
+            "href": "/pathway/" + p.biocyc_id,
             "description": summary_text,
             "category": "pathway",
             "synonyms": [s[0] for s in synonyms],
