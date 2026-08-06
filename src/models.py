@@ -2530,6 +2530,85 @@ class Pathwaydbentity(Dbentity):
             m["default"] = default_model_id is not None and m["model_id"] == default_model_id
         return models
 
+    def network_graph(self):
+        # Bounded pathway -> genes -> GO -> phenotype network for the cytoscape
+        # viewer. Nodes: the pathway (focus), the genes involved, the GO
+        # biological-process terms (manually curated) and the phenotypes
+        # annotated to those genes. GO/phenotype nodes carry a gene_count (how
+        # many of the pathway's genes they attach to) so the slider can thin the
+        # graph. To avoid a hairball we use only manually-curated biological
+        # process GO annotations and cap the GO and phenotype nodes to the ones
+        # shared by the most genes.
+        GO_CAP = 30
+        PHENO_CAP = 30
+
+        genes = self.genes_and_ec_to_dict()[0]
+        if not genes:
+            return {"nodes": [], "edges": [], "min_cutoff": 0, "max_cutoff": 0}
+        gene_ids = [g["id"] for g in genes]
+
+        nodes = {}
+        edges = []
+        edge_seen = set()
+        gene_node_id = {}
+
+        pathway_id = self.format_name
+        nodes[pathway_id] = {"data": {
+            "name": self.display_name, "id": pathway_id, "link": self.obj_url,
+            "type": "PATHWAY", "category": "FOCUS"
+        }}
+        for g in genes:
+            nid = g["format_name"]
+            gene_node_id[g["id"]] = nid
+            nodes[nid] = {"data": {
+                "name": g["display_name"], "id": nid, "dbentity_id": g["id"],
+                "link": g["link"], "type": "GENE"
+            }}
+            edges.append({"data": {"source": pathway_id, "target": nid}})
+
+        # Aggregate typed annotation nodes: (gene_dbentity_id, key, name, link)
+        # rows -> one node per key with a gene_count, keeping the most-shared.
+        def add_annotation_nodes(rows, node_type, cap):
+            by_key = {}
+            for gid, key, name, link in rows:
+                entry = by_key.setdefault(key, {"name": name, "link": link, "genes": set()})
+                entry["genes"].add(gid)
+            ranked = sorted(by_key.items(), key=lambda kv: len(kv[1]["genes"]), reverse=True)
+            for key, entry in ranked[:cap]:
+                nodes[key] = {"data": {
+                    "name": entry["name"], "id": key, "link": entry["link"],
+                    "type": node_type, "gene_count": len(entry["genes"])
+                }}
+                for gid in entry["genes"]:
+                    gnid = gene_node_id.get(gid)
+                    if gnid and (gnid, key) not in edge_seen:
+                        edge_seen.add((gnid, key))
+                        edges.append({"data": {"source": gnid, "target": key}})
+
+        go_rows = []
+        for ann, go in DBSession.query(Goannotation, Go).join(
+                Go, Goannotation.go_id == Go.go_id).filter(
+                Goannotation.dbentity_id.in_(gene_ids),
+                Goannotation.annotation_type == 'manually curated',
+                Go.go_namespace == 'biological process').all():
+            go_rows.append((ann.dbentity_id, go.goid, go.display_name.replace("_", " "), go.obj_url))
+        add_annotation_nodes(go_rows, "GO", GO_CAP)
+
+        pheno_rows = []
+        for ann, ph in DBSession.query(Phenotypeannotation, Phenotype).join(
+                Phenotype, Phenotypeannotation.phenotype_id == Phenotype.phenotype_id).filter(
+                Phenotypeannotation.dbentity_id.in_(gene_ids)).all():
+            pheno_rows.append((ann.dbentity_id, "PHENO:" + str(ph.phenotype_id), ph.display_name, ph.obj_url))
+        add_annotation_nodes(pheno_rows, "PHENOTYPE", PHENO_CAP)
+
+        counts = [n["data"]["gene_count"] for n in nodes.values() if "gene_count" in n["data"]]
+        return {
+            "nodes": list(nodes.values()),
+            "edges": edges,
+            "min_cutoff": min(counts) if counts else 0,
+            "max_cutoff": max(counts) if counts else 0
+        }
+
     def go_enrichment(self):
         # GO biological-process enrichment of the pathway's genes (GO Term
         # Finder). Returns [] if there are no genes or the service is down.

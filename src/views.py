@@ -3243,6 +3243,20 @@ def pathway_go_cams(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='pathway_network_graph', renderer='json', request_method='GET')
+def pathway_network_graph(request):
+    try:
+        pathway = _get_pathway_from_request(request)
+        if pathway is not None:
+            return pathway.network_graph()
+        else:
+            return {"nodes": [], "edges": [], "min_cutoff": 0, "max_cutoff": 0}
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='allele', renderer='json', request_method='GET')
 def allele(request):
     try:
