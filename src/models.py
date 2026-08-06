@@ -2245,6 +2245,45 @@ class Dbentity(Base):
 
     source = relationship('Source')
 
+def balance_inline_html(html):
+    """Best-effort balance of inline formatting tags in curated summary HTML.
+
+    Some pathway summaries use inline tags as toggles rather than proper
+    open/close pairs (e.g. "<i>S. cerevisiae<i>", "E<sub>0<sub>'"), which
+    otherwise cascade italic/subscript formatting through the rest of the text.
+    Treat a repeated opening tag as a close, honor real closing tags, drop
+    stray closes, and close anything left open so malformed data can't break
+    the rendered page.
+    """
+    if not html:
+        return html
+    tags = ('i', 'sub', 'sup', 'b', 'em', 'strong', 'u')
+    parts = re.split(r'(</?(?:i|sub|sup|b|em|strong|u)\s*>)', html, flags=re.IGNORECASE)
+    open_state = {t: False for t in tags}
+    out = []
+    for part in parts:
+        m = re.match(r'<(/?)\s*([a-zA-Z]+)\s*>$', part)
+        tag = m.group(2).lower() if m else None
+        if tag in tags:
+            is_close = m.group(1) == '/'
+            if is_close:
+                if open_state[tag]:
+                    out.append('</%s>' % tag)
+                    open_state[tag] = False
+            elif open_state[tag]:
+                out.append('</%s>' % tag)
+                open_state[tag] = False
+            else:
+                out.append('<%s>' % tag)
+                open_state[tag] = True
+        else:
+            out.append(part)
+    for tag in tags:
+        if open_state[tag]:
+            out.append('</%s>' % tag)
+    return ''.join(out)
+
+
 class Pathwaydbentity(Dbentity):
     __tablename__ = 'pathwaydbentity'
     __table_args__ = {'schema': 'nex'}
@@ -2320,7 +2359,7 @@ class Pathwaydbentity(Dbentity):
         summary = DBSession.query(Pathwaysummary).filter_by(pathway_id=self.dbentity_id).first()
         if summary is None:
             return None
-        return {"text": summary.text, "html": summary.html}
+        return {"text": summary.text, "html": balance_inline_html(summary.html)}
 
     def reference_ids(self):
         # Curated summary citations first (in curator-assigned order), then any
