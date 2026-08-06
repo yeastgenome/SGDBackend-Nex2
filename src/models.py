@@ -2407,15 +2407,30 @@ class Pathwaydbentity(Dbentity):
             if a.ec_id is not None and a.ec_id not in ec_ids:
                 ec_ids.append(a.ec_id)
         genes = []
+        gene_rows = []
+        ec_strings = set()
         for locus in DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(gene_ids)).all():
             ec_aliases = DBSession.query(LocusAlias.display_name).filter_by(
                 locus_id=locus.dbentity_id, alias_type='EC number').all()
+            ec_strs = sorted([a[0] for a in ec_aliases])
+            ec_strings.update(ec_strs)
+            gene_rows.append((locus, ec_strs))
+
+        # Map each EC number to its EC page link so the Genes Involved table can
+        # link them (Ec.display_name is stored with an "EC:" prefix).
+        ec_link_map = {}
+        if ec_strings:
+            for ec in DBSession.query(Ec).filter(
+                    Ec.display_name.in_(["EC:" + s for s in ec_strings])).all():
+                ec_link_map[ec.display_name.replace("EC:", "")] = ec.obj_url
+
+        for locus, ec_strs in gene_rows:
             genes.append({
                 "id": locus.dbentity_id,
                 "display_name": locus.display_name,
                 "format_name": locus.format_name,
                 "link": locus.obj_url,
-                "ec_numbers": sorted([a[0] for a in ec_aliases]),
+                "ec_numbers": [{"display_name": s, "link": ec_link_map.get(s)} for s in ec_strs],
                 "headline": locus.headline
             })
         genes = sorted(genes, key=lambda g: g["display_name"])
@@ -2445,9 +2460,9 @@ class Pathwaydbentity(Dbentity):
             return None
         return {"text": summary.text, "html": balance_inline_html(summary.html)}
 
-    def reference_ids(self):
-        # Curated summary citations first (in curator-assigned order), then any
-        # additional literature annotations; de-duplicated, order preserved.
+    def summary_reference_ids(self):
+        # Curated summary citations (pathwaysummary_reference) in curator-assigned
+        # order; shown on the Summary tab.
         ref_ids = []
         summary = DBSession.query(Pathwaysummary).filter_by(pathway_id=self.dbentity_id).first()
         if summary is not None:
@@ -2455,14 +2470,20 @@ class Pathwaydbentity(Dbentity):
             for sr in summary_refs:
                 if sr.reference_id not in ref_ids:
                     ref_ids.append(sr.reference_id)
+        return ref_ids
+
+    def literature_reference_ids(self):
+        # Literature annotations (literatureannotation) for this pathway; shown
+        # on the Literature tab.
+        ref_ids = []
         for la in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id).all():
             if la.reference_id is not None and la.reference_id not in ref_ids:
                 ref_ids.append(la.reference_id)
         return ref_ids
 
-    def references_to_dict(self):
+    def references_to_dict(self, ref_ids):
         references = []
-        for rid in self.reference_ids():
+        for rid in ref_ids:
             ref = DBSession.query(Referencedbentity).filter_by(dbentity_id=rid).one_or_none()
             if ref is not None:
                 references.append(ref.to_dict_citation())
@@ -2479,7 +2500,7 @@ class Pathwaydbentity(Dbentity):
             "pathway_summary": self.summary_text_to_dict(),
             "diagram_url": self.diagram_url(),
             "yeastpathways_url": self.yeastpathways_url(),
-            "references": self.references_to_dict()
+            "references": self.references_to_dict(self.summary_reference_ids())
         })
         return obj
 
@@ -2487,7 +2508,7 @@ class Pathwaydbentity(Dbentity):
         obj = self._identity()
         obj.update({
             "yeastpathways_url": self.yeastpathways_url(),
-            "references": self.references_to_dict()
+            "references": self.references_to_dict(self.literature_reference_ids())
         })
         return obj
 
