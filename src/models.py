@@ -2531,16 +2531,17 @@ class Pathwaydbentity(Dbentity):
         return models
 
     def network_graph(self):
-        # Bounded pathway -> genes -> GO -> phenotype network for the cytoscape
+        # Bounded pathway -> genes -> GO -> observable network for the cytoscape
         # viewer. Nodes: the pathway (focus), the genes involved, the GO
-        # biological-process terms (manually curated) and the phenotypes
-        # annotated to those genes. GO/phenotype nodes carry a gene_count (how
-        # many of the pathway's genes they attach to) so the slider can thin the
-        # graph. To avoid a hairball we use only manually-curated biological
-        # process GO annotations and cap the GO and phenotype nodes to the ones
-        # shared by the most genes.
+        # biological-process terms (manually curated) and the phenotype
+        # observables (the observable term of each phenotype annotation, e.g.
+        # "competitive fitness") of those genes. GO/observable nodes carry a
+        # gene_count (how many of the pathway's genes they attach to) so the
+        # slider can thin the graph. To avoid a hairball we use only
+        # manually-curated biological process GO annotations and cap the GO and
+        # observable nodes to the ones shared by the most genes.
         GO_CAP = 30
-        PHENO_CAP = 30
+        OBSERVABLE_CAP = 30
 
         genes = self.genes_and_ec_to_dict()[0]
         if not genes:
@@ -2594,12 +2595,13 @@ class Pathwaydbentity(Dbentity):
             go_rows.append((ann.dbentity_id, go.goid, go.display_name.replace("_", " "), go.obj_url))
         add_annotation_nodes(go_rows, "GO", GO_CAP)
 
-        pheno_rows = []
-        for ann, ph in DBSession.query(Phenotypeannotation, Phenotype).join(
-                Phenotype, Phenotypeannotation.phenotype_id == Phenotype.phenotype_id).filter(
+        obs_rows = []
+        for ann, apo in DBSession.query(Phenotypeannotation, Apo).join(
+                Phenotype, Phenotypeannotation.phenotype_id == Phenotype.phenotype_id).join(
+                Apo, Phenotype.observable_id == Apo.apo_id).filter(
                 Phenotypeannotation.dbentity_id.in_(gene_ids)).all():
-            pheno_rows.append((ann.dbentity_id, "PHENO:" + str(ph.phenotype_id), ph.display_name, ph.obj_url))
-        add_annotation_nodes(pheno_rows, "PHENOTYPE", PHENO_CAP)
+            obs_rows.append((ann.dbentity_id, "APO:" + str(apo.apo_id), apo.display_name, apo.obj_url))
+        add_annotation_nodes(obs_rows, "OBSERVABLE", OBSERVABLE_CAP)
 
         counts = [n["data"]["gene_count"] for n in nodes.values() if "gene_count" in n["data"]]
         return {
