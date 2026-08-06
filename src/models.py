@@ -2289,8 +2289,9 @@ def run_go_termfinder(format_names, aspect='P'):
 
     Posts the pipe-separated gene list to GOTOOLS_SERVER/gotermfinder (falling
     back to the BATTER_URI host) and parses the tab output. Returns a list of
-    {go:{display_name,link,id}, match_count, pvalue}, or [] if there are no
-    genes or the service call fails.
+    {go:{display_name,link,id}, match_count, pvalue, genes:[{display_name,link}]},
+    or [] if there are no genes or the service call fails. The genes list holds
+    the annotated genes for each term, resolved to standard names + Locus links.
     """
     genes = "|".join([f for f in format_names if f])
     if not genes:
@@ -2317,16 +2318,48 @@ def run_go_termfinder(format_names, aspect='P'):
         gi, ti, ci, pi = idx['GOID'], idx['TERM'], idx['NUM_LIST_ANNOTATIONS'], idx['CORRECTED_PVALUE']
     except KeyError:
         return []
-    obj = []
+    ai = idx.get('ANNOTATED_GENES')
+
+    # The service echoes back the systematic names we submitted; parse them per
+    # term so we can resolve each to a standard name + Locus link below.
+    def parse_annotated(cols):
+        if ai is None or len(cols) <= ai:
+            return []
+        return [g.strip() for g in cols[ai].split(',') if g.strip()]
+
+    rows = []
+    all_names = set()
     for line in lines[1:]:
         cols = line.split('\t')
         if len(cols) <= max(gi, ti, ci, pi):
             continue
+        annotated = parse_annotated(cols)
+        all_names.update(annotated)
+        rows.append((cols, annotated))
+
+    # One DB lookup mapping systematic name -> standard name + Locus url. Names
+    # that don't resolve fall back to a name-based Locus link.
+    name_map = {}
+    if all_names:
+        for locus in DBSession.query(Locusdbentity).filter(
+                Locusdbentity.format_name.in_(list(all_names))).all():
+            name_map[locus.format_name] = {
+                "display_name": locus.display_name,
+                "link": locus.obj_url
+            }
+
+    def resolve(name):
+        return name_map.get(name, {"display_name": name, "link": '/locus/' + name})
+
+    obj = []
+    for cols, annotated in rows:
         count = cols[ci]
+        genes = sorted((resolve(n) for n in annotated), key=lambda g: g["display_name"])
         obj.append({
             "go": {"display_name": cols[ti], "link": '/go/' + cols[gi], "id": cols[gi]},
             "match_count": int(count) if count.isdigit() else count,
-            "pvalue": cols[pi]
+            "pvalue": cols[pi],
+            "genes": genes
         })
     return obj
 
