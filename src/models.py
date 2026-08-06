@@ -2382,7 +2382,8 @@ class Pathwaydbentity(Dbentity):
                 "display_name": locus.display_name,
                 "format_name": locus.format_name,
                 "link": locus.obj_url,
-                "ec_numbers": sorted([a[0] for a in ec_aliases])
+                "ec_numbers": sorted([a[0] for a in ec_aliases]),
+                "headline": locus.headline
             })
         genes = sorted(genes, key=lambda g: g["display_name"])
         ec_numbers = []
