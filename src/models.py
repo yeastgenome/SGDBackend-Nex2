@@ -2284,6 +2284,53 @@ def balance_inline_html(html):
     return ''.join(out)
 
 
+def run_go_termfinder(format_names, aspect='P'):
+    """GO Term Finder enrichment for a set of gene systematic names.
+
+    Posts the pipe-separated gene list to GOTOOLS_SERVER/gotermfinder (falling
+    back to the BATTER_URI host) and parses the tab output. Returns a list of
+    {go:{display_name,link,id}, match_count, pvalue}, or [] if there are no
+    genes or the service call fails.
+    """
+    genes = "|".join([f for f in format_names if f])
+    if not genes:
+        return []
+    base = os.environ.get('GOTOOLS_SERVER') or ''
+    if not base:
+        m = re.match(r'(https?://[^/]+)', os.environ.get('BATTER_URI', ''))
+        base = m.group(1) if m else 'https://gotermfinder.yeastgenome.org'
+    base = base.rstrip('/')
+    try:
+        resp = requests.post(base + '/gotermfinder', data={'genes': genes, 'aspect': aspect}, timeout=60)
+        tab_url = resp.json().get('tab_page')
+        if not tab_url:
+            return []
+        tab = requests.get(tab_url, timeout=30).text
+    except Exception:
+        return []
+    lines = tab.splitlines()
+    if len(lines) < 2:
+        return []
+    header = lines[0].split('\t')
+    idx = {name: i for i, name in enumerate(header)}
+    try:
+        gi, ti, ci, pi = idx['GOID'], idx['TERM'], idx['NUM_LIST_ANNOTATIONS'], idx['CORRECTED_PVALUE']
+    except KeyError:
+        return []
+    obj = []
+    for line in lines[1:]:
+        cols = line.split('\t')
+        if len(cols) <= max(gi, ti, ci, pi):
+            continue
+        count = cols[ci]
+        obj.append({
+            "go": {"display_name": cols[ti], "link": '/go/' + cols[gi], "id": cols[gi]},
+            "match_count": int(count) if count.isdigit() else count,
+            "pvalue": cols[pi]
+        })
+    return obj
+
+
 class Pathwaydbentity(Dbentity):
     __tablename__ = 'pathwaydbentity'
     __table_args__ = {'schema': 'nex'}
@@ -2328,11 +2375,14 @@ class Pathwaydbentity(Dbentity):
                 ec_ids.append(a.ec_id)
         genes = []
         for locus in DBSession.query(Locusdbentity).filter(Locusdbentity.dbentity_id.in_(gene_ids)).all():
+            ec_aliases = DBSession.query(LocusAlias.display_name).filter_by(
+                locus_id=locus.dbentity_id, alias_type='EC number').all()
             genes.append({
                 "id": locus.dbentity_id,
                 "display_name": locus.display_name,
                 "format_name": locus.format_name,
-                "link": locus.obj_url
+                "link": locus.obj_url,
+                "ec_numbers": sorted([a[0] for a in ec_aliases])
             })
         genes = sorted(genes, key=lambda g: g["display_name"])
         ec_numbers = []
@@ -2406,6 +2456,16 @@ class Pathwaydbentity(Dbentity):
             "references": self.references_to_dict()
         })
         return obj
+
+    def go_enrichment(self):
+        # GO biological-process enrichment of the pathway's genes (GO Term
+        # Finder). Returns [] if there are no genes or the service is down.
+        annotations = DBSession.query(Pathwayannotation.dbentity_id).filter_by(pathway_id=self.dbentity_id).all()
+        dbentity_ids = list(set(a[0] for a in annotations if a[0] is not None))
+        if not dbentity_ids:
+            return []
+        format_names = [f[0] for f in DBSession.query(Dbentity.format_name).filter(Dbentity.dbentity_id.in_(dbentity_ids)).all()]
+        return run_go_termfinder(format_names, aspect='P')
 
 
 class Referencedbentity(Dbentity):

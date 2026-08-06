@@ -3215,6 +3215,20 @@ def pathway_literature(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='pathway_go_enrichment', renderer='json', request_method='GET')
+def pathway_go_enrichment(request):
+    try:
+        pathway = _get_pathway_from_request(request)
+        if pathway is not None:
+            return pathway.go_enrichment()
+        else:
+            return []
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='allele', renderer='json', request_method='GET')
 def allele(request):
     try:
