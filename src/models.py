@@ -2512,6 +2512,24 @@ class Pathwaydbentity(Dbentity):
         })
         return obj
 
+    def go_cams(self):
+        # GO-CAM models involving this pathway's genes. A gene can appear in more
+        # than one model, so we aggregate across the pathway's genes
+        # (get_go_cam_models dedupes by pathway). The model for THIS pathway, if
+        # it has one, is flagged as the default selection -- identified
+        # structurally by pathway_id via its own 'GO-CAM' PathwayUrl (the GO-CAM
+        # and pathway titles don't always match, so we don't compare names).
+        gene_ids = list(set(
+            a[0] for a in DBSession.query(Pathwayannotation.dbentity_id).filter_by(
+                pathway_id=self.dbentity_id).all() if a[0] is not None))
+        models = get_go_cam_models(gene_ids)
+        own_url = DBSession.query(PathwayUrl).filter_by(
+            pathway_id=self.dbentity_id, url_type='GO-CAM').first()
+        default_model_id = own_url.obj_url.rstrip('/').split('/')[-1] if own_url else None
+        for m in models:
+            m["default"] = default_model_id is not None and m["model_id"] == default_model_id
+        return models
+
     def go_enrichment(self):
         # GO biological-process enrichment of the pathway's genes (GO Term
         # Finder). Returns [] if there are no genes or the service is down.

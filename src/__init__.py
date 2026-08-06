@@ -175,6 +175,7 @@ def main(global_config, **settings):
     config.add_route('pathway_summary', '/pathway/{id}/summary', request_method='GET')
     config.add_route('pathway_literature', '/pathway/{id}/literature', request_method='GET')
     config.add_route('pathway_go_enrichment', '/pathway/{id}/go_enrichment', request_method='GET')
+    config.add_route('pathway_go_cams', '/pathway/{id}/go_cams', request_method='GET')
     config.add_route('entity_validation', '/entity/{entity_type}/{ids}', request_method='GET')
     
     config.add_route('goslim', '/goslim', request_method='GET')
