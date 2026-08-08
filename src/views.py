@@ -804,11 +804,13 @@ def references_with_entities(request):
             entities = x.entities_to_dict()
             if len(entities) == 0:
                 continue
-            citation_dict = x.to_dict_citation()
-            citation_dict['sgdid'] = x.sgdid
-            citation_dict['date_created'] = x.date_created.strftime("%Y-%m-%d")
-            citation_dict['entities'] = entities
-            references.append(citation_dict)
+            references.append({
+                'sgdid': x.sgdid,
+                'date_created': x.date_created.strftime("%Y-%m-%d"),
+                'entities': [{'entity_type': e['entity_type'],
+                              'entity_name': e['entity_name'],
+                              'entity_sgdid': e['entity_sgdid']} for e in entities]
+            })
         return {
             'start': start_date.strftime("%Y-%m-%d"),
             'end': end_date.strftime("%Y-%m-%d"),
