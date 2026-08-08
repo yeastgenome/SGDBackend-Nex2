@@ -778,6 +778,49 @@ def reference_by_pmids(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='references_with_entities', renderer='json', request_method='GET')
+@view_config(route_name='references_with_entities_default', renderer='json', request_method='GET')
+def references_with_entities(request):
+    # References added to SGD in the last {days_added} days, each with its
+    # associated gene/allele/complex/pathway entities -- the same entity set
+    # displayed on the /reference/{id} pages (from literature annotations).
+    # References with no associated entities are omitted.
+    # URL: /references_with_entities/days_added=2 (default: last 7 days)
+    try:
+        days_added = 7
+        raw_days = request.matchdict.get('days_added')
+        if raw_days is not None:
+            try:
+                days_added = int(raw_days)
+            except ValueError:
+                days_added = 0
+            if days_added < 1:
+                return HTTPBadRequest(body=json.dumps({'error': 'days_added must be a positive integer. Example: /references_with_entities/days_added=7'}), content_type='text/json')
+        start_date = datetime.datetime.today() - datetime.timedelta(days=days_added)
+        end_date = datetime.datetime.today()
+        recent_refs = DBSession.query(Referencedbentity).filter(Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created.desc()).all()
+        references = []
+        for x in recent_refs:
+            entities = x.entities_to_dict()
+            if len(entities) == 0:
+                continue
+            citation_dict = x.to_dict_citation()
+            citation_dict['sgdid'] = x.sgdid
+            citation_dict['date_created'] = x.date_created.strftime("%Y-%m-%d")
+            citation_dict['entities'] = entities
+            references.append(citation_dict)
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'days_added': days_added,
+            'references': references
+        }
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 # Cap on annotations processed by the "recently added" feeds so per-row
 # to_dict() (which is query-heavy) cannot blow up on an unusually large window.
 MAX_RECENT_ANNOTATIONS = 1000

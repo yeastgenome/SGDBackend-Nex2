@@ -2919,7 +2919,53 @@ class Referencedbentity(Dbentity):
                     loci.append(annotation.to_dict())
 
         return loci + complexes + pathways + alleles
-    
+
+    def entities_to_dict(self):
+        # The gene, allele, complex, and pathway entities associated with this
+        # reference through literature annotations -- the same entity set that
+        # annotations_to_dict() feeds to the /reference/{id} pages, but with
+        # the entity type, canonical name, and SGDID resolved and each entity
+        # listed once (annotations_to_dict keeps one entry per topic).
+        annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
+
+        type_order = {'gene': 0, 'complex': 1, 'pathway': 2, 'allele': 3}
+        entities = []
+        seen = set()
+        for annotation in annotations:
+            entity = annotation.dbentity
+            if entity is None or entity.dbentity_id in seen:
+                continue
+            seen.add(entity.dbentity_id)
+            if entity.subclass == 'LOCUS':
+                entity_type = 'gene'
+                entity_name = entity.display_name
+                link = entity.obj_url
+            elif entity.subclass == 'COMPLEX':
+                entity_type = 'complex'
+                entity_name = entity.format_name
+                link = '/complex/' + entity.format_name
+            elif entity.subclass == 'PATHWAY':
+                entity_type = 'pathway'
+                pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
+                entity_name = pathway.biocyc_id if pathway and pathway.biocyc_id else entity.format_name
+                link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + entity_name + '&detail-level=2'
+            elif entity.subclass == 'ALLELE':
+                entity_type = 'allele'
+                entity_name = entity.display_name
+                link = '/allele/' + entity.format_name
+            else:
+                continue
+            entities.append({
+                "entity_type": entity_type,
+                "entity_name": entity_name,
+                "entity_sgdid": entity.sgdid,
+                "display_name": entity.display_name,
+                "link": link
+            })
+
+        entities.sort(key=lambda e: (type_order[e["entity_type"]], e["entity_name"] or ""))
+        return entities
+
     def annotations_summary_to_dict(self):
         preview_url = '/reference/' + self.sgdid
         return {
