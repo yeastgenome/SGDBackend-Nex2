@@ -506,6 +506,31 @@ ALTER TABLE nex.pathway_url ADD CONSTRAINT pathway_url_uk UNIQUE (pathway_id,dis
 ALTER TABLE nex.pathway_url ADD CONSTRAINT pathwayurl_type_ck CHECK (URL_TYPE IN ('BioCyc', 'YeastPathways', 'GO-CAM'));
 CREATE INDEX pathwayurl_source_fk_index ON nex.pathway_url (source_id);
 
+DROP TABLE IF EXISTS nex.complex_alias CASCADE;
+CREATE TABLE nex.complex_alias (
+	alias_id bigint NOT NULL DEFAULT nextval('alias_seq'),
+	display_name varchar(500) NOT NULL,
+	obj_url varchar(500),
+	source_id bigint NOT NULL,
+	complex_id bigint NOT NULL,
+	alias_type varchar(40) NOT NULL,
+	date_created timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	created_by varchar(12) NOT NULL,
+	CONSTRAINT complex_alias_pk PRIMARY KEY (alias_id)
+) ;
+COMMENT ON TABLE nex.complex_alias IS 'Other names, synonyms, dbxrefs, or external-resource links for a complex.';
+COMMENT ON COLUMN nex.complex_alias.display_name IS 'Public display name.';
+COMMENT ON COLUMN nex.complex_alias.obj_url IS 'URL of the linked external resource (e.g. PDB, EMDB, or GO-CAM model); NULL for plain aliases.';
+COMMENT ON COLUMN nex.complex_alias.alias_type IS 'Type of alias, dbxref, or external resource (Synonym, IntEnz, PDB, EMDB, GO-CAM).';
+COMMENT ON COLUMN nex.complex_alias.alias_id IS 'Unique identifier (serial number).';
+COMMENT ON COLUMN nex.complex_alias.date_created IS 'Date the record was entered into the database.';
+COMMENT ON COLUMN nex.complex_alias.source_id IS 'FK to SOURCE.SOURCE_ID.';
+COMMENT ON COLUMN nex.complex_alias.complex_id IS 'FK to COMPLEXDBENTITY.DBENTITY_ID.';
+COMMENT ON COLUMN nex.complex_alias.created_by IS 'Username of the person who entered the record into the database.';
+ALTER TABLE nex.complex_alias ADD CONSTRAINT complex_alias_uk UNIQUE (complex_id,display_name,alias_type);
+ALTER TABLE nex.complex_alias ADD CONSTRAINT complexalias_type_ck CHECK (ALIAS_TYPE IN ('Synonym', 'IntEnz', 'PDB', 'EMDB', 'GO-CAM'));
+CREATE INDEX complexalias_source_fk_index ON nex.complex_alias (source_id);
+
 DROP TABLE IF EXISTS nex.pathwaysummary CASCADE; 
 CREATE TABLE nex.pathwaysummary (
 	summary_id bigint NOT NULL DEFAULT nextval('summary_seq'),

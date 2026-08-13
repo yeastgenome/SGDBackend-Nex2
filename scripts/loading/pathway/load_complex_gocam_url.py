@@ -26,7 +26,7 @@ removes stale GO-CAM aliases that the models no longer support, so re-running it
 keeps nex.complex_alias in sync with the published models.
 
 Usage:
-    python -m scripts.loading.complex.load_complex_gocam_url [--dryrun]
+    python -m scripts.loading.pathway.load_complex_gocam_url [--dryrun]
 
 The model JSON base URL is overridable via the GOCAM_JSON_BASE env var.
 """
@@ -51,7 +51,7 @@ GOCAM_JSON_BASE = os.environ.get(
 ALIAS_TYPE = 'GO-CAM'
 SOURCE = 'SGD'
 CREATED_BY = os.environ.get('CREATED_BY', 'OTTO')
-LOG_FILE = 'scripts/loading/complex/logs/load_complex_gocam_url.log'
+LOG_FILE = 'scripts/loading/pathway/logs/load_complex_gocam_url.log'
 
 # SGD complex SGDIDs all look like S000218158; reused to spot complex objects.
 SGDID_RE = re.compile(r'S0\d{8}')

@@ -5,7 +5,7 @@
 -- obj_url='http://model.geneontology.org/YeastPathways_<biocyc_id>'.
 --
 -- Run as the owner of nex.complex_alias (the application/otto role cannot ALTER
--- it). Source of truth for this constraint is the nex2 schema definition.
+-- it). Source of truth for this constraint is schema/nex2-dbentity-tables.sql.
 
 BEGIN;
 
