@@ -810,7 +810,8 @@ def references_with_entities(request):
                 'created_by': x.created_by,
                 'entities': [{'entity_type': e['entity_type'],
                               'entity_name': e['entity_name'],
-                              'entity_sgdid': e['entity_sgdid']} for e in entities]
+                              'entity_sgdid': e['entity_sgdid'],
+                              'topic': e['topic']} for e in entities]
             })
         return {
             'start': start_date.strftime("%Y-%m-%d"),

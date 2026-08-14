@@ -2925,17 +2925,27 @@ class Referencedbentity(Dbentity):
         # reference through literature annotations -- the same entity set that
         # annotations_to_dict() feeds to the /reference/{id} pages, but with
         # the entity type, canonical name, and SGDID resolved and each entity
-        # listed once (annotations_to_dict keeps one entry per topic).
+        # listed once (annotations_to_dict keeps one entry per topic). Each
+        # entity carries the literature topic it is annotated under (the
+        # section of the reference page it appears in: Primary Literature,
+        # Additional Literature, Reviews, or Omics); an entity annotated under
+        # several topics keeps the highest-precedence one.
         annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
 
         type_order = {'gene': 0, 'complex': 1, 'pathway': 2, 'allele': 3}
+        topic_precedence = {'Primary Literature': 0, 'Reviews': 1, 'Omics': 2, 'Additional Literature': 3}
         entities = []
-        seen = set()
+        seen = {}
         for annotation in annotations:
             entity = annotation.dbentity
-            if entity is None or entity.dbentity_id in seen:
+            if entity is None:
                 continue
-            seen.add(entity.dbentity_id)
+            if entity.dbentity_id in seen:
+                previous = seen[entity.dbentity_id]
+                if topic_precedence.get(annotation.topic, len(topic_precedence)) < \
+                        topic_precedence.get(previous['topic'], len(topic_precedence)):
+                    previous['topic'] = annotation.topic
+                continue
             if entity.subclass == 'LOCUS':
                 entity_type = 'gene'
                 entity_name = entity.display_name
@@ -2955,13 +2965,16 @@ class Referencedbentity(Dbentity):
                 link = '/allele/' + entity.format_name
             else:
                 continue
-            entities.append({
+            entry = {
                 "entity_type": entity_type,
                 "entity_name": entity_name,
                 "entity_sgdid": entity.sgdid,
                 "display_name": entity.display_name,
-                "link": link
-            })
+                "link": link,
+                "topic": annotation.topic
+            }
+            seen[entity.dbentity_id] = entry
+            entities.append(entry)
 
         entities.sort(key=lambda e: (type_order[e["entity_type"]], e["entity_name"] or ""))
         return entities
