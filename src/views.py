@@ -807,6 +807,7 @@ def references_with_entities(request):
             references.append({
                 'sgdid': x.sgdid,
                 'date_created': x.date_created.strftime("%Y-%m-%d"),
+                'created_by': x.created_by,
                 'entities': [{'entity_type': e['entity_type'],
                               'entity_name': e['entity_name'],
                               'entity_sgdid': e['entity_sgdid']} for e in entities]
