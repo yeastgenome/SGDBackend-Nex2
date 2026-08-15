@@ -2947,7 +2947,7 @@ class Referencedbentity(Dbentity):
                 if topic_precedence.get(annotation.topic, len(topic_precedence)) < \
                         topic_precedence.get(previous['topic'], len(topic_precedence)):
                     previous['topic'] = annotation.topic
-                    previous['date_created'] = annotation.date_created.strftime("%Y-%m-%d")
+                    previous['date_created'] = annotation.date_created.strftime("%Y-%m-%d %H:%M:%S")
                     previous['created_by'] = annotation.created_by
                 continue
             if entity.subclass == 'LOCUS':
@@ -2976,7 +2976,7 @@ class Referencedbentity(Dbentity):
                 "display_name": entity.display_name,
                 "link": link,
                 "topic": annotation.topic,
-                "date_created": annotation.date_created.strftime("%Y-%m-%d"),
+                "date_created": annotation.date_created.strftime("%Y-%m-%d %H:%M:%S"),
                 "created_by": annotation.created_by
             }
             seen[entity.dbentity_id] = entry

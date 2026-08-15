@@ -11,9 +11,10 @@ __author__ = 'sweng66'
 #
 # Output format (tab-delimited):
 #     reference_sgdid  entity_type  entity_name  entity_sgdid  date_created  created_by  topic
-# where date_created (YYYY-MM-DD) and created_by are when the entity-reference
-# association (the literature annotation) was curated and by whom -- NOT when
-# the reference itself was added to SGD,
+# where date_created (YYYY-MM-DD HH:MM:SS, in the SGD database's local
+# Pacific time) and created_by are when the entity-reference association (the
+# literature annotation) was curated and by whom -- NOT when the reference
+# itself was added to SGD,
 # entity_type is one of: gene, allele, complex, pathway
 # entity_name is, eg, ACT1 (gene), act1-1 (allele), CPX-2921 (complex),
 # or PWY3O-46 (pathway biocyc id)
@@ -55,7 +56,7 @@ def dump_data():
                                "       d.format_name, "
                                "       d.sgdid AS entity_sgdid, "
                                "       p.biocyc_id, "
-                               "       to_char(la.date_created, 'YYYY-MM-DD') AS date_created, "
+                               "       to_char(la.date_created, 'YYYY-MM-DD HH24:MI:SS') AS date_created, "
                                "       la.created_by, "
                                "       la.topic "
                                "FROM nex.literatureannotation la "
