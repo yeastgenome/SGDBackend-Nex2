@@ -11,8 +11,9 @@ __author__ = 'sweng66'
 #
 # Output format (tab-delimited):
 #     reference_sgdid  entity_type  entity_name  entity_sgdid  date_created  created_by  topic
-# where date_created (YYYY-MM-DD) and created_by are when the reference was
-# added to SGD and by whom,
+# where date_created (YYYY-MM-DD) and created_by are when the entity-reference
+# association (the literature annotation) was curated and by whom -- NOT when
+# the reference itself was added to SGD,
 # entity_type is one of: gene, allele, complex, pathway
 # entity_name is, eg, ACT1 (gene), act1-1 (allele), CPX-2921 (complex),
 # or PWY3O-46 (pathway biocyc id)
@@ -20,7 +21,8 @@ __author__ = 'sweng66'
 # of the reference page it appears in: Primary Literature, Additional
 # Literature, Reviews, or Omics). An entity annotated under several topics for
 # the same reference is written once with the highest-precedence topic
-# (Primary Literature > Reviews > Omics > Additional Literature).
+# (Primary Literature > Reviews > Omics > Additional Literature), carrying
+# that annotation's date_created/created_by.
 #
 # Usage: python scripts/dumping/reference/dump_references_with_entities.py [outfile]
 
@@ -53,8 +55,8 @@ def dump_data():
                                "       d.format_name, "
                                "       d.sgdid AS entity_sgdid, "
                                "       p.biocyc_id, "
-                               "       to_char(r.date_created, 'YYYY-MM-DD') AS date_created, "
-                               "       r.created_by, "
+                               "       to_char(la.date_created, 'YYYY-MM-DD') AS date_created, "
+                               "       la.created_by, "
                                "       la.topic "
                                "FROM nex.literatureannotation la "
                                "JOIN nex.dbentity r ON la.reference_id = r.dbentity_id "
@@ -85,6 +87,9 @@ def dump_data():
             previous = deduped[key]
             if topic_precedence.get(topic, len(topic_precedence)) < \
                     topic_precedence.get(previous[6], len(topic_precedence)):
+                # keep the date/curator of the annotation whose topic wins
+                previous[4] = date_created
+                previous[5] = created_by
                 previous[6] = topic
             continue
         key_order.append(key)

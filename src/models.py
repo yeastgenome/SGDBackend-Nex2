@@ -2928,7 +2928,9 @@ class Referencedbentity(Dbentity):
         # listed once (annotations_to_dict keeps one entry per topic). Each
         # entity carries the literature topic it is annotated under (the
         # section of the reference page it appears in: Primary Literature,
-        # Additional Literature, Reviews, or Omics); an entity annotated under
+        # Additional Literature, Reviews, or Omics) plus that annotation's
+        # date_created/created_by (when the association was curated and by
+        # whom -- not when the reference was added); an entity annotated under
         # several topics keeps the highest-precedence one.
         annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
 
@@ -2945,6 +2947,8 @@ class Referencedbentity(Dbentity):
                 if topic_precedence.get(annotation.topic, len(topic_precedence)) < \
                         topic_precedence.get(previous['topic'], len(topic_precedence)):
                     previous['topic'] = annotation.topic
+                    previous['date_created'] = annotation.date_created.strftime("%Y-%m-%d")
+                    previous['created_by'] = annotation.created_by
                 continue
             if entity.subclass == 'LOCUS':
                 entity_type = 'gene'
@@ -2971,7 +2975,9 @@ class Referencedbentity(Dbentity):
                 "entity_sgdid": entity.sgdid,
                 "display_name": entity.display_name,
                 "link": link,
-                "topic": annotation.topic
+                "topic": annotation.topic,
+                "date_created": annotation.date_created.strftime("%Y-%m-%d"),
+                "created_by": annotation.created_by
             }
             seen[entity.dbentity_id] = entry
             entities.append(entry)
