@@ -19,6 +19,7 @@ s3_latest_dir = "latest/"
 lit_files = [
     "regulation.tab",
     "phenotype_data.tab",
+    "posttranslational_modifications.tab",
     "molecularComplexes.tab",
     "interaction_data_PMID:27708008.tab.gz",
     "interaction_data_PMID:20093466.tab.gz",
