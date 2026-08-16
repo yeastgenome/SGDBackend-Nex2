@@ -69,7 +69,7 @@ TAXON_ID = '559292'
 COMPLEX_NAME_TYPE = 'protein_complex'
 DEFAULT_NAME_TYPE = 'gene'
 
-def dump_data(noctua_gpad_file):
+def dump_data(gpad_file):
 
     nex_session = get_session()
 
@@ -182,7 +182,7 @@ def dump_data(noctua_gpad_file):
 
     loaded = {}
 
-    noctuaData = read_noctua_data(noctua_gpad_file)
+    noctuaData = read_noctua_data(gpad_file)
 
     for x in nex_session.query(Goannotation).all():
 
@@ -471,13 +471,19 @@ def update_database_load_file_to_s3(nex_session, gaf_file, is_public, source_to_
     log.info("Done uploading " + gaf_file)
 
 
-def read_noctua_data(noctua_gpad_file):
+def read_noctua_data(gpad_file):
+    """Return the noctua/GO-CAM-derived annotations from YEAST-mod.gpad.
+
+    The old separate noctua_sgd.gpad (GPAD 1.2) no longer exists; its
+    annotations are folded into the by-taxon GPAD 2.0 file and identified
+    there by a noctua-model-id property in the annotation-properties column.
+    """
 
     f = None
-    if noctua_gpad_file.endswith('.gz'):
-        f = gzip.open(noctua_gpad_file, 'rt')
+    if gpad_file.endswith('.gz'):
+        f = gzip.open(gpad_file, 'rt')
     else:
-        f = open(noctua_gpad_file)
+        f = open(gpad_file)
 
     read_line = {}
     data = {}
@@ -485,17 +491,34 @@ def read_noctua_data(noctua_gpad_file):
         if line.startswith('!'):
             continue
         field = line.strip().split('\t')
+        if len(field) < 12:
+            continue
 
         ## get rid of duplicate lines...
         if line in read_line:
             continue
         read_line[line] = 1
-        sgdid = field[1]
-        go_qualifier = field[2]
-        if 'NOT' in go_qualifier:
+
+        ## keep only the annotations that came through noctua - the set the
+        ## old noctua_sgd.gpad contained
+        if 'noctua-model-id=' not in field[11]:
+            continue
+
+        ## GPAD 2.0: DB_Object_ID (col 1) is 'SGD:S000...'
+        if not field[0].startswith('SGD:'):
+            continue
+        sgdid = field[0][len('SGD:'):]
+
+        ## GPAD 2.0: negation (col 2) + relation (col 3, an RO id) replace
+        ## the old textual qualifier column
+        go_qualifier = ''
+        if field[1].strip() == 'NOT':
             go_qualifier = 'NOT'
-        if go_qualifier not in ['NOT', 'contributes_to', 'colocalizes_with']:
-            go_qualifier = ''
+        elif field[2] == 'RO:0002326':
+            go_qualifier = 'contributes_to'
+        elif field[2] == 'RO:0002325':
+            go_qualifier = 'colocalizes_with'
+
         goid = field[3]
         eco = field[5]
         pmid = field[4].replace(' ', '')
@@ -512,8 +535,12 @@ def read_noctua_data(noctua_gpad_file):
 
 if __name__ == '__main__':
 
-    noctua_path = 'http://snapshot.geneontology.org/products/upstream_and_raw_data/'
-    noctua_gpad_file = 'noctua_sgd.gpad.gz'
-    download_file_with_headers(noctua_path + noctua_gpad_file, noctua_gpad_file)
+    ## The separate noctua_sgd.gpad download no longer exists upstream; its
+    ## annotations are folded into the by-taxon GPAD 2.0 file (the same file
+    ## scripts/loading/go/load_gpad.py loads) and identified there by a
+    ## noctua-model-id annotation property.
+    gpad_url = 'http://current.geneontology.org/annotations/gpad/YEAST-mod.gpad.gz'
+    gpad_file = 'YEAST-mod.gpad.gz'
+    download_file_with_headers(gpad_url, gpad_file)
 
-    dump_data(noctua_gpad_file)
+    dump_data(gpad_file)
