@@ -4,7 +4,8 @@ GO-outreach emails to authors whose publications produced new annotations.
 Input: a tab-delimited email file with a header line and columns
     reference_curie  pmid  source  email  has_email_in_abc
 as produced by the ABC's retrieve_emails_from_pubmed_pmc.py (one row per
-paper/source/email; extra columns are ignored).
+paper/source, multiple emails joined by ' | '; the older one-row-per-email
+format is also accepted; extra columns are ignored).
 
 Annotation source: YEAST-mod.gpad.gz from current.geneontology.org -- the
 same file scripts/loading/go/load_gpad.py loads. The old separate
@@ -15,18 +16,24 @@ id of the form gomodel:SGD_<sgdid> is the gene's own gene-centric model
 GO-CAM pathway model worth showcasing in an outreach email; a blank means the
 annotation is third-party assigned (IntAct, UniProt, ...), not SGD-curated.
 
-Output: one row per (email, GO annotation) for every PMID present in both
-inputs, with gene symbol (from YEAST-mod.gpi.gz) and GO term name/aspect
-(from go-basic.obo) resolved:
-    email  pmid  reference_curie  has_email_in_abc  email_source  gene_sgdid
+Output: one row per (paper, GO annotation) for every PMID present in both
+inputs, with all of the paper's emails joined by ' | ' in one column and
+gene symbol (from YEAST-mod.gpi.gz) and GO term name/aspect (from
+go-basic.obo) resolved:
+    reference_curie  pmid  emails  has_email_in_abc  email_source  gene_sgdid
     gene_symbol  qualifier  go_id  go_term  go_aspect  go_evidence
     assigned_by  annotation_date  gocam_model
+
+Besides the main output, the same rows are split three ways by gocam_model
+into <output>_pathway_models.tsv (hex model ids -- hand-built GO-CAM pathway
+models), <output>_gene_centric.tsv (gomodel:SGD_<sgdid> -- routine
+gene-centric models) and <output>_non_noctua.tsv (blank -- third-party
+annotations, excluded from SGD outreach).
 """
 import argparse
 import gzip
 import re
 import urllib.request
-from collections import defaultdict
 from os import makedirs, path
 
 GPAD_URL = "http://current.geneontology.org/annotations/gpad/YEAST-mod.gpad.gz"
@@ -82,17 +89,22 @@ def open_maybe_gz(filename):
 
 
 def read_emails_by_pmid(email_file):
-    """pmid -> {email: [reference_curie, has_email_in_abc, set(sources)]}"""
-    emails_by_pmid = defaultdict(dict)
+    """pmid -> [reference_curie, has_email_in_abc, emails (list), set(sources)].
+    The email column may carry several addresses joined by ' | ' (one row per
+    paper/source) or a single address (older one-row-per-email format)."""
+    emails_by_pmid = {}
     with open(email_file) as f:
         f.readline()
         for line in f:
             pieces = line.rstrip("\n").split("\t")
             if len(pieces) < 5:
                 continue
-            (curie, pmid, source, email, has_abc) = pieces[:5]
-            entry = emails_by_pmid[pmid].setdefault(email, [curie, has_abc, set()])
-            entry[2].add(source)
+            (curie, pmid, source, email_field, has_abc) = pieces[:5]
+            entry = emails_by_pmid.setdefault(pmid, [curie, has_abc, [], set()])
+            for email in email_field.split(" | "):
+                if email and email not in entry[2]:
+                    entry[2].append(email)
+            entry[3].add(source)
     return emails_by_pmid
 
 
@@ -131,7 +143,7 @@ def read_go_terms(obo_file):
 def dump_data(email_file, output_file, data_dir):
 
     emails_by_pmid = read_emails_by_pmid(email_file)
-    print(str(sum(len(v) for v in emails_by_pmid.values())) +
+    print(str(sum(len(v[2]) for v in emails_by_pmid.values())) +
           " distinct (pmid, email) pairs on " + str(len(emails_by_pmid)) + " papers")
 
     sgdid_to_symbol = read_gene_symbols(download(GPI_URL, data_dir, "YEAST-mod.gpi.gz"))
@@ -165,35 +177,52 @@ def dump_data(email_file, output_file, data_dir):
             goid = field[3]
             evidence_m = evidence_re.search(field[11])
             gocam_m = gocam_re.search(field[11])
-            for email, (curie, has_abc, sources) in sorted(emails_by_pmid[pmid].items()):
-                rows.append((email, pmid, curie, has_abc,
-                             "|".join(sorted(sources)),
-                             field[0], sgdid_to_symbol.get(field[0], ""),
-                             qualifier, goid, go_name.get(goid, ""),
-                             go_aspect.get(goid, ""),
-                             evidence_m.group(1) if evidence_m else "",
-                             field[9], field[8],
-                             gocam_m.group(1).strip() if gocam_m else ""))
+            (curie, has_abc, emails, sources) = emails_by_pmid[pmid]
+            rows.append((curie, pmid, " | ".join(emails), has_abc,
+                         "|".join(sorted(sources)),
+                         field[0], sgdid_to_symbol.get(field[0], ""),
+                         qualifier, goid, go_name.get(goid, ""),
+                         go_aspect.get(goid, ""),
+                         evidence_m.group(1) if evidence_m else "",
+                         field[9], field[8],
+                         gocam_m.group(1).strip() if gocam_m else ""))
 
     ## GPAD lines can differ only in columns not carried into the output
     ## (with/from, annotation extensions) -- collapse those to one row.
     rows = sorted(set(rows))
 
-    fw = open(output_file, "w")
-    fw.write("email\tpmid\treference_curie\thas_email_in_abc\temail_source\t"
-             "gene_sgdid\tgene_symbol\tqualifier\tgo_id\tgo_term\tgo_aspect\t"
-             "go_evidence\tassigned_by\tannotation_date\tgocam_model\n")
-    for row in rows:
-        fw.write("\t".join(row) + "\n")
-    fw.close()
+    header = ("reference_curie\tpmid\temails\thas_email_in_abc\temail_source\t"
+              "gene_sgdid\tgene_symbol\tqualifier\tgo_id\tgo_term\tgo_aspect\t"
+              "go_evidence\tassigned_by\tannotation_date\tgocam_model\n")
 
-    pairs = set([(r[0], r[1]) for r in rows])
-    gocam_rows = sum(1 for r in rows if r[14])
+    def write_rows(filename, file_rows):
+        with open(filename, "w") as fw:
+            fw.write(header)
+            for row in file_rows:
+                fw.write("\t".join(row) + "\n")
+
+    write_rows(output_file, rows)
+
+    ## split by gocam_model: hex model ids are hand-built pathway models,
+    ## gomodel:SGD_<sgdid> are routine gene-centric models, blank means the
+    ## annotation is third-party (non-Noctua) -- excluded from SGD outreach
+    (stem, ext) = path.splitext(output_file)
+    splits = (
+        ("pathway_models",
+         [r for r in rows if r[14] and not r[14].startswith("gomodel:SGD_")]),
+        ("gene_centric", [r for r in rows if r[14].startswith("gomodel:SGD_")]),
+        ("non_noctua", [r for r in rows if not r[14]]),
+    )
+
     print("email papers with GO annotations: " +
           str(len(annotated_pmids)) + "/" + str(len(emails_by_pmid)))
-    print("(email, pmid) pairs mapped: " + str(len(pairs)))
-    print("rows written: " + str(len(rows)) + " (" + str(gocam_rows) +
-          " from GO-CAM/noctua models) -> " + output_file)
+    print("rows written: " + str(len(rows)) + " (" +
+          str(len(set((r[0]) for r in rows))) + " papers) -> " + output_file)
+    for (suffix, split_rows) in splits:
+        split_file = stem + "_" + suffix + ext
+        write_rows(split_file, split_rows)
+        print("  " + suffix + ": " + str(len(split_rows)) + " rows (" +
+              str(len(set(r[0] for r in split_rows))) + " papers) -> " + split_file)
 
 
 if __name__ == "__main__":

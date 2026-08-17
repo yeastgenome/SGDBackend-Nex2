@@ -4,24 +4,25 @@ for outreach emails to authors whose publications produced new annotations.
 Input: a tab-delimited email file with a header line and columns
     reference_curie  pmid  source  email  has_email_in_abc
 as produced by the ABC's retrieve_emails_from_pubmed_pmc.py (one row per
-paper/source/email; extra columns are ignored).
+paper/source, multiple emails joined by ' | '; the older one-row-per-email
+format is also accepted; extra columns are ignored).
 
 Annotation source: phenotype_data.tab from sgd-archive, regenerated weekly by
 scripts/dumping/tab_files_for_download_site/generate_phenotype_file.py. Its
 column 5 carries the reference as 'SGD_REF:<sgdid>|PMID:<pmid>', which is
 joined against the email file's PMIDs.
 
-Output: one row per (email, phenotype annotation row) for every PMID present
-in both inputs -- the email/ABC columns first, then the phenotype file's own
-columns (minus its reference column, folded into the pmid):
-    email  pmid  reference_curie  has_email_in_abc  email_source
+Output: one row per (paper, phenotype annotation row) for every PMID present
+in both inputs, with all of the paper's emails joined by ' | ' in one
+column -- the reference/email/ABC columns first, then the phenotype file's
+own columns (minus its reference column, folded into the pmid):
+    reference_curie  pmid  emails  has_email_in_abc  email_source
     feature_name  feature_type  gene_name  sgdid  experiment_type
     mutant_type  allele  strain_background  phenotype  chemical  condition
     details  reporter
 """
 import argparse
 import urllib.request
-from collections import defaultdict
 from os import makedirs, path
 
 PHENOTYPE_URL = "http://sgd-archive.yeastgenome.org/curation/literature/phenotype_data.tab"
@@ -58,24 +59,29 @@ def download(url, data_dir, filename):
 
 
 def read_emails_by_pmid(email_file):
-    """pmid -> {email: [reference_curie, has_email_in_abc, set(sources)]}"""
-    emails_by_pmid = defaultdict(dict)
+    """pmid -> [reference_curie, has_email_in_abc, emails (list), set(sources)].
+    The email column may carry several addresses joined by ' | ' (one row per
+    paper/source) or a single address (older one-row-per-email format)."""
+    emails_by_pmid = {}
     with open(email_file) as f:
         f.readline()
         for line in f:
             pieces = line.rstrip("\n").split("\t")
             if len(pieces) < 5:
                 continue
-            (curie, pmid, source, email, has_abc) = pieces[:5]
-            entry = emails_by_pmid[pmid].setdefault(email, [curie, has_abc, set()])
-            entry[2].add(source)
+            (curie, pmid, source, email_field, has_abc) = pieces[:5]
+            entry = emails_by_pmid.setdefault(pmid, [curie, has_abc, [], set()])
+            for email in email_field.split(" | "):
+                if email and email not in entry[2]:
+                    entry[2].append(email)
+            entry[3].add(source)
     return emails_by_pmid
 
 
 def dump_data(email_file, output_file, data_dir):
 
     emails_by_pmid = read_emails_by_pmid(email_file)
-    print(str(sum(len(v) for v in emails_by_pmid.values())) +
+    print(str(sum(len(v[2]) for v in emails_by_pmid.values())) +
           " distinct (pmid, email) pairs on " + str(len(emails_by_pmid)) + " papers")
 
     phenotype_file = download(PHENOTYPE_URL, data_dir, "phenotype_data.tab")
@@ -97,12 +103,12 @@ def dump_data(email_file, output_file, data_dir):
                 continue
             annotated_pmids.add(pmid)
             annotation = fields[:REFERENCE_COLUMN] + fields[REFERENCE_COLUMN + 1:]
-            for email, (curie, has_abc, sources) in sorted(emails_by_pmid[pmid].items()):
-                rows.append([email, pmid, curie, has_abc,
-                             "|".join(sorted(sources))] + annotation)
+            (curie, has_abc, emails, sources) = emails_by_pmid[pmid]
+            rows.append([curie, pmid, " | ".join(emails), has_abc,
+                         "|".join(sorted(sources))] + annotation)
 
     rows.sort()
-    header = (["email", "pmid", "reference_curie", "has_email_in_abc", "email_source"] +
+    header = (["reference_curie", "pmid", "emails", "has_email_in_abc", "email_source"] +
               [c for c in PHENOTYPE_COLUMNS if c != "reference"])
     fw = open(output_file, "w")
     fw.write("\t".join(header) + "\n")
@@ -110,11 +116,10 @@ def dump_data(email_file, output_file, data_dir):
         fw.write("\t".join(row) + "\n")
     fw.close()
 
-    pairs = set([(r[0], r[1]) for r in rows])
     print("email papers with phenotype annotations: " +
           str(len(annotated_pmids)) + "/" + str(len(emails_by_pmid)))
-    print("(email, pmid) pairs mapped: " + str(len(pairs)))
-    print("rows written: " + str(len(rows)) + " -> " + output_file)
+    print("rows written: " + str(len(rows)) + " (" +
+          str(len(set(r[0] for r in rows))) + " papers) -> " + output_file)
 
 
 if __name__ == "__main__":
