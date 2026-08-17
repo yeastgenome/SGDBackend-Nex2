@@ -783,8 +783,10 @@ def reference_by_pmids(request):
 def references_with_entities(request):
     # References added to SGD in the last {days_added} days, each with its
     # associated gene/allele/complex/pathway entities -- the same entity set
-    # displayed on the /reference/{id} pages (from literature annotations).
-    # References with no associated entities are omitted.
+    # displayed on the /reference/{id} pages (from literature annotations) --
+    # plus its topic-only literature annotations (no entity; e.g. review
+    # papers and omics/HTP papers tagged with just a literature topic).
+    # References with neither entities nor topic-only annotations are omitted.
     # URL: /references_with_entities/days_added=2 (default: last 7 days)
     try:
         days_added = 7
@@ -802,7 +804,8 @@ def references_with_entities(request):
         references = []
         for x in recent_refs:
             entities = x.entities_to_dict()
-            if len(entities) == 0:
+            topic_only = x.topic_only_annotations_to_dict()
+            if len(entities) == 0 and len(topic_only) == 0:
                 continue
             references.append({
                 'sgdid': x.sgdid,
@@ -813,7 +816,8 @@ def references_with_entities(request):
                               'entity_sgdid': e['entity_sgdid'],
                               'topic': e['topic'],
                               'date_created': e['date_created'],
-                              'created_by': e['created_by']} for e in entities]
+                              'created_by': e['created_by']} for e in entities],
+                'topics': topic_only
             })
         return {
             'start': start_date.strftime("%Y-%m-%d"),

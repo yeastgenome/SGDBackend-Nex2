@@ -2985,6 +2985,24 @@ class Referencedbentity(Dbentity):
         entities.sort(key=lambda e: (type_order[e["entity_type"]], e["entity_name"] or ""))
         return entities
 
+    def topic_only_annotations_to_dict(self):
+        # The literature annotations on this reference that have no entity at
+        # all (dbentity_id is null) -- e.g. review papers and omics (HTP)
+        # papers tagged with just a literature topic. One entry per topic
+        # ((reference, topic) is unique for these rows), each carrying the
+        # annotation's date_created/created_by (when the topic was curated
+        # and by whom -- not when the reference was added).
+        annotations = DBSession.query(Literatureannotation).filter_by(
+            reference_id=self.dbentity_id, dbentity_id=None).all()
+
+        topics = [{
+            "topic": annotation.topic,
+            "date_created": annotation.date_created.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_by": annotation.created_by
+        } for annotation in annotations]
+        topics.sort(key=lambda t: t["topic"])
+        return topics
+
     def annotations_summary_to_dict(self):
         preview_url = '/reference/' + self.sgdid
         return {
