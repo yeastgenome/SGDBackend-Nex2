@@ -24,11 +24,18 @@ go-basic.obo) resolved:
     gene_symbol  qualifier  go_id  go_term  go_aspect  go_evidence
     assigned_by  annotation_date  gocam_model
 
-Besides the main output, the same rows are split three ways by gocam_model
-into <output>_pathway_models.tsv (hex model ids -- hand-built GO-CAM pathway
-models), <output>_gene_centric.tsv (gomodel:SGD_<sgdid> -- routine
-gene-centric models) and <output>_non_noctua.tsv (blank -- third-party
-annotations, excluded from SGD outreach).
+Besides the main output, the same rows are split three ways by gocam_model,
+one file per outreach audience:
+  <output>_pathway_models.tsv -- hex model ids: new GO annotations that are
+      part of a hand-built GO-CAM pathway model; for the GO consortium's
+      author outreach (Suzi).
+  <output>_gene_centric.tsv -- gomodel:SGD_<sgdid>: new GO annotations
+      curated by SGD outside a pathway model (routine gene-centric models);
+      for SGD's own author outreach.
+  <output>_non_noctua.tsv -- blank model id: third-party annotations
+      (IntAct, UniProt, ...), not SGD-curated; excluded from outreach.
+A paper whose annotations span both model kinds appears in both of the
+first two files -- dedupe before emailing so an author is contacted once.
 """
 import argparse
 import gzip

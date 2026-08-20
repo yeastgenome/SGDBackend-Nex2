@@ -119,3 +119,11 @@ pytest_cache/
 test/default_T_dev.py
 users.txt
 sgd.sql
+
+# GO-outreach pipeline runtime files (scripts/dumping/outreach/) -- the sent
+# log and generated TSVs contain author email addresses; never commit them
+scripts/dumping/outreach/data/
+scripts/dumping/outreach/*.tsv
+scripts/dumping/outreach/*.state
+scripts/dumping/outreach/email_previews/
+scripts/dumping/outreach/backups/

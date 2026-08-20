@@ -1,5 +1,6 @@
 """Map author email addresses to the phenotype annotations of their papers,
-for outreach emails to authors whose publications produced new annotations.
+for SGD's own author-outreach emails (phenotype annotations are SGD-curated;
+there is no GO-consortium tier here).
 
 Input: a tab-delimited email file with a header line and columns
     reference_curie  pmid  source  email  has_email_in_abc
