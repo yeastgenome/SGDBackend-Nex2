@@ -518,7 +518,9 @@ def file_upload_to_dict(file_upload, delimiter="\t"):
 
 def send_newsletter_email(subject, recipients, msg):
     try:
-        SENDER_EMAIL = "Mike Cherry <cherry@stanford.edu>" 
+        # sender domain must be SES-verified in the agr-sgd account
+        # (yeastgenome.org is; lists.stanford.edu is not and would bounce)
+        SENDER_EMAIL = "The SGD Team <sgd-helpdesk@yeastgenome.org>"
         REPLY_TO = "sgd-helpdesk@lists.stanford.edu"
 
         message = MIMEMultipart("alternative")        
