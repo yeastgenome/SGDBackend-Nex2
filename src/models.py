@@ -2472,15 +2472,6 @@ class Pathwaydbentity(Dbentity):
                     ref_ids.append(sr.reference_id)
         return ref_ids
 
-    def literature_reference_ids(self):
-        # Literature annotations (literatureannotation) for this pathway; shown
-        # on the Literature tab.
-        ref_ids = []
-        for la in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id).all():
-            if la.reference_id is not None and la.reference_id not in ref_ids:
-                ref_ids.append(la.reference_id)
-        return ref_ids
-
     def references_to_dict(self, ref_ids):
         references = []
         for rid in ref_ids:
@@ -2505,10 +2496,39 @@ class Pathwaydbentity(Dbentity):
         return obj
 
     def literature_details(self):
+        # Literature tab payload. References are grouped by literature topic
+        # (primary/additional/review), mirroring the sections on the gene
+        # Literature tab (Locusdbentity.literature_to_dict); "references"
+        # keeps the flat all-topics list for backward compatibility.
         obj = self._identity()
+
+        primary_ids = set([])
+        additional_ids = set([])
+        reviews_ids = set([])
+        all_ids = set([])
+        for annotation in DBSession.query(Literatureannotation).filter_by(dbentity_id=self.dbentity_id).all():
+            if annotation.reference_id is None:
+                continue
+            all_ids.add(annotation.reference_id)
+            if annotation.topic == "Primary Literature":
+                primary_ids.add(annotation.reference_id)
+            elif annotation.topic == "Additional Literature":
+                additional_ids.add(annotation.reference_id)
+            elif annotation.topic == "Reviews":
+                reviews_ids.add(annotation.reference_id)
+
+        references = DBSession.query(Referencedbentity).filter(
+            Referencedbentity.dbentity_id.in_(list(all_ids))).all()
+        references = sorted(sorted(references, key=lambda r: r.display_name),
+                            key=lambda r: r.year, reverse=True)
+        citations = {r.dbentity_id: r.to_dict_citation() for r in references}
+
         obj.update({
             "yeastpathways_url": self.yeastpathways_url(),
-            "references": self.references_to_dict(self.literature_reference_ids())
+            "references": [citations[r.dbentity_id] for r in references],
+            "primary": [citations[r.dbentity_id] for r in references if r.dbentity_id in primary_ids],
+            "additional": [citations[r.dbentity_id] for r in references if r.dbentity_id in additional_ids],
+            "review": [citations[r.dbentity_id] for r in references if r.dbentity_id in reviews_ids]
         })
         return obj
 
@@ -9494,7 +9514,7 @@ class Literatureannotation(Base):
                 link = '/complex/' + entity.format_name
             elif entity.subclass == 'PATHWAY':
                 pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
-                link = 'https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=' + pathway.biocyc_id + '&detail-level=2'
+                link = '/pathway/' + pathway.biocyc_id
             elif entity.subclass == 'ALLELE':
                 link = '/allele/' + entity.format_name
                 
