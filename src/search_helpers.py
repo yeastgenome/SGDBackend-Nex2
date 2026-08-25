@@ -4,6 +4,11 @@ import re
 MAX_AGG_SIZE = 999
 FIELD_MAP = mapping['mappings']['properties']
 
+# Categories whose documents carry the is_obsolete flag (GO terms); obsolete
+# terms are sorted below current ones on these categories' search results.
+GO_CATEGORIES = ['biological_process', 'cellular_component',
+                 'molecular_function']
+
 
 def build_autocomplete_search_body_request(query,
                                            category='locus',
@@ -209,6 +214,21 @@ def build_es_search_body_request(query, category, es_query, json_response_fields
                 }
             }
         ]
+
+    if category in GO_CATEGORIES:
+        # Sort obsolete GO terms below current ones whatever the requested
+        # ordering: primary sort on is_obsolete, then the requested ordering
+        # within each group. missing/unmapped_type keep the query valid for
+        # documents (or an index) predating the is_obsolete field.
+        demote_obsolete = {
+            "is_obsolete": {
+                "order": "asc",
+                "missing": "_first",
+                "unmapped_type": "boolean"
+            }
+        }
+        es_search_body['sort'] = [demote_obsolete] + \
+            es_search_body.get('sort', ["_score"])
 
     return es_search_body
 

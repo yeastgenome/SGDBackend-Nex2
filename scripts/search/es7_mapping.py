@@ -281,6 +281,9 @@ mapping = {
             "number_annotations": {
                 "type": "integer"
             },
+            "is_obsolete": {
+                "type": "boolean"
+            },
             "feature_type": {
                 "type": "keyword"
             },
