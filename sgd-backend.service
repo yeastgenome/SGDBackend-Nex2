@@ -1,0 +1,26 @@
+[Unit]
+Description=SGD Backend Nex2 Pyramid Application
+After=network.target
+
+[Service]
+Type=simple
+User=sgd
+Group=sgd
+LimitNOFILE=655360
+WorkingDirectory=/data/www/SGDBackend-Nex2
+Environment="PATH=/home/sgd/.local/node14/bin:/data/www/SGDBackend-Nex2/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="INI_FILE=/data/www/SGDBackend-Nex2/production.ini"
+Environment="PIP_NO_BUILD_ISOLATION=1"
+Environment="SETUPTOOLS_USE_DISTUTILS=local"
+Environment="SETUPTOOLS_ENABLE_FEATURES=legacy-editable"
+ExecStart=/data/www/SGDBackend-Nex2/start.sh
+#ExecStart=/data/www/SGDBackend-Nex2/venv/bin/pserve ${INI_FILE} http_host=0.0.0.0
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+StandardOutput=append:/var/log/sgd-backend/output.log
+StandardError=append:/var/log/sgd-backend/error.log
