@@ -18,7 +18,9 @@ Modes:
                  real recipient); logged with mode=test, which does NOT block
                  a later production send
 - --send         production send to the real author emails; logged with
-                 mode=production
+                 mode=production. Every production send is envelope-BCC'd to
+                 --bcc (default the SGD helpdesk list) so curators can see the
+                 outgoing campaign; the author never sees a Bcc header.
 
 Citations and author names come from NCBI esummary (batched, cached as one
 JSON file per PMID under --cache-dir). Requires network for uncached PMIDs.
@@ -94,6 +96,11 @@ def parse_args():
                         help='comma-separated recipients for --test mode')
     parser.add_argument('--from-email', default=SENDER_EMAIL,
                         help='override the SMTP From address (must be SES-verified)')
+    parser.add_argument('--bcc', default=HELPDESK_EMAIL,
+                        help='comma-separated BCC for every PRODUCTION send, so '
+                             'curators see what went out (envelope-only, never a '
+                             'header the author could see; pass an empty string '
+                             'to disable; not applied to --test sends)')
     parser.add_argument('--smtp-host', default='localhost')
     parser.add_argument('--smtp-port', type=int, default=25)
     parser.add_argument('--smtp-user', default=os.environ.get('SMTP_USER'))
@@ -340,6 +347,7 @@ def main():
     docs = fetch_esummaries(sorted(papers), args.cache_dir)
     sent_pairs = load_sent_pairs(args.sent_log)
     test_recipients = [r.strip() for r in args.test_recipients.split(',') if r.strip()]
+    bcc = [a.strip() for a in args.bcc.split(',') if a.strip()] if mode == 'production' else []
 
     queue = []
     skipped = 0
@@ -395,9 +403,9 @@ def main():
         message['Subject'] = subject
         message.set_content(plain_text)
         message.add_alternative(html_body, subtype='html')
-        smtp.send_message(message, from_addr=args.from_email, to_addrs=recipients)
-        append_sent_log(args.sent_log, mode, pmid, email, genes, ','.join(recipients))
-        print('sent ({}): {} -> {}'.format(mode, pmid, ','.join(recipients)))
+        smtp.send_message(message, from_addr=args.from_email, to_addrs=recipients + bcc)
+        append_sent_log(args.sent_log, mode, pmid, email, genes, ','.join(recipients + bcc))
+        print('sent ({}): {} -> {}'.format(mode, pmid, ','.join(recipients + bcc)))
         time.sleep(args.sleep)
 
     if smtp:
