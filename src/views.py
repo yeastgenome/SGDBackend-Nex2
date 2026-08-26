@@ -129,12 +129,9 @@ def search(request):
                                                      "phenotype_loci"),
                       ("chemical", "chemical"), ("mutant_type", "mutant_type")],
 
-        "biological_process": [("go_locus", "gene_ontology_loci"),
-                               ("obsolete term", "is_obsolete")],
-        "cellular_component": [("go_locus", "gene_ontology_loci"),
-                               ("obsolete term", "is_obsolete")],
-        "molecular_function": [("go_locus", "gene_ontology_loci"),
-                               ("obsolete term", "is_obsolete")],
+        "biological_process": [("go_locus", "gene_ontology_loci")],
+        "cellular_component": [("go_locus", "gene_ontology_loci")],
+        "molecular_function": [("go_locus", "gene_ontology_loci")],
 
         "disease": [("disease_locus", "disease_loci")],
         "reference": [("author", "author"), ("journal", "journal"),

@@ -631,7 +631,6 @@ def index_go_terms():
             "number_annotations": len(annotations),
             "references": list(references),
             "category": go.go_namespace.replace(" ", "_"),
-            "is_obsolete": go.is_obsolete,
             "keys": list(keys)
         }
 
