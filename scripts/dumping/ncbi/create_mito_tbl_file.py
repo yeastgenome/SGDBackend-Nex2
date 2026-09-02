@@ -51,7 +51,7 @@ for key in ncbi_key2lines:
         ncbi_new.write(ncbi_key2lines[key])
         
 for key in key2lines:
-    if key not in ncbi_key2lines[key]:
+    if key not in ncbi_key2lines:
         log.write("NEW: \n")
         log.write(key2lines[key] + "\n")
         ncbi_new.write(key2lines[key])
