@@ -2395,7 +2395,9 @@ class Pathwaydbentity(Dbentity):
 
     def aliases_to_dict(self):
         rows = DBSession.query(PathwayAlias).filter_by(pathway_id=self.dbentity_id).all()
-        return [{"display_name": r.display_name, "alias_type": r.alias_type} for r in rows]
+        # legacy loads inserted blank-synonym rows; don't surface them
+        return [{"display_name": r.display_name, "alias_type": r.alias_type}
+                for r in rows if r.display_name and r.display_name.strip()]
 
     def genes_and_ec_to_dict(self):
         annotations = DBSession.query(Pathwayannotation).filter_by(pathway_id=self.dbentity_id).all()

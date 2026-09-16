@@ -107,7 +107,8 @@ def load_pathway():
         pmids = pieces[3].split('|')
         summary = pieces[4]
         pmids4summary = pieces[5].split('|')
-        synonyms = pieces[6].split('|')
+        # filter blanks: ''.split('|') == [''] would insert an empty alias row
+        synonyms = [s for s in pieces[6].split('|') if s.strip()]
         created_by = pieces[7] 
         if created_by is None:
             created_by = CREATED_BY
