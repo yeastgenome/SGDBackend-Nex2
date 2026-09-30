@@ -147,6 +147,7 @@ def main(global_config, **settings):
     config.add_route('locus_binding_site_details', '/locus/{id}/binding_site_details', request_method='GET')
     config.add_route('locus_regulation_details', '/locus/{id}/regulation_details', request_method='GET')
     config.add_route('locus_regulation_target_enrichment', '/locus/{id}/regulation_target_enrichment', request_method='GET')
+    config.add_route('go_enrichment', '/go_enrichment', request_method='POST')
 
     config.add_route('domain','/domain/{format_name}', request_method='GET')
     config.add_route('domain_locus_details','/domain/{id}/locus_details', request_method='GET')

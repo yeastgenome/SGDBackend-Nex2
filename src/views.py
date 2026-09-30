@@ -26,6 +26,7 @@ from .helpers import extract_id_request, link_references_to_file, link_keywords_
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
 from .models import SGD_SOURCE_ID, TAXON_ID
+from .models import run_batter_enrichment
 from .variant_helpers import get_variant_data, get_all_variant_data
 
 logging.basicConfig()
@@ -2620,6 +2621,24 @@ def locus_regulation_target_enrichment(request):
             return HTTPNotFound()
     except Exception as e:
         log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='go_enrichment', renderer='json', request_method='POST')
+def go_enrichment(request):
+    # GO biological-process enrichment for an arbitrary set of dbentity_ids;
+    # used by the "recalculate enrichment" button on the Regulation pages
+    # after the targets table has been filtered.
+    try:
+        bioent_ids = request.json_body.get('bioent_ids')
+        if not bioent_ids:
+            return []
+        format_names = DBSession.query(Dbentity.format_name).filter(Dbentity.dbentity_id.in_(bioent_ids)).all()
+        return run_batter_enrichment([f[0] for f in format_names], context='go_enrichment')
+    except Exception as e:
+        log.error(e)
+        return []
     finally:
         if DBSession:
             DBSession.remove()

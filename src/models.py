@@ -2284,6 +2284,54 @@ def balance_inline_html(html):
     return ''.join(out)
 
 
+def get_batter_url():
+    """URL of the termfinder (BATTER) GO-enrichment JSON service.
+
+    Uses BATTER_URI when it is a usable http(s) URL; otherwise falls back to
+    GOTOOLS_SERVER (or the default GO Term Finder host) + /termfinder, so a
+    missing or malformed BATTER_URI doesn't silently disable enrichment.
+    """
+    batter = os.environ.get('BATTER_URI', '')
+    if batter.startswith('http://') or batter.startswith('https://'):
+        return batter
+    base = os.environ.get('GOTOOLS_SERVER') or 'https://gotermfinder.yeastgenome.org'
+    return base.rstrip('/') + '/termfinder'
+
+
+def run_batter_enrichment(format_names, aspect='P', context='enrichment'):
+    """GO enrichment for a set of gene systematic names via the termfinder
+    (BATTER) JSON service. Returns a list of {go: {display_name, link, id},
+    match_count, pvalue}, or [] if the gene list is empty or the call fails.
+    """
+    format_names = [f for f in format_names if f]
+    if not format_names:
+        return []
+    data = urllib.parse.urlencode({
+        "genes": "|".join(format_names),  # the termfinder service wants pipe-separated
+        "aspect": aspect
+    })
+    try:
+        req = Request(url=get_batter_url(), data=data.encode('utf-8'))
+        res = urlopen(req)
+        response_json = json.loads(res.read().decode('utf-8'))
+    except Exception as e:
+        logger.error("%s: termfinder enrichment call failed: %s", context, e)
+        return []
+
+    obj = []
+    for row in response_json:
+        obj.append({
+            "go": {
+                "display_name": row["term"],
+                "link": '/go/' + row["goid"],
+                "id": row["goid"]
+            },
+            "match_count": row["num_gene_annotated"],
+            "pvalue": row["pvalue"]
+        })
+    return obj
+
+
 def run_go_termfinder(format_names, aspect='P'):
     """GO Term Finder enrichment for a set of gene systematic names.
 
@@ -3913,32 +3961,7 @@ class Locusdbentity(Dbentity):
         format_names = []
         for x in DBSession.query(Dbentity).filter(Dbentity.dbentity_id.in_(target_ids)).all():
             format_names.append(x.format_name)
-
-        genes = ",".join(format_names)
-        data = urllib.parse.urlencode({
-            "genes": genes,
-            "aspect": "P"
-        })
-    
-        try:
-            req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
-            res = urlopen(req)
-            response_json = json.loads(res.read().decode('utf-8'))
-        except:
-            return []
-        
-        obj = []
-        for row in response_json:
-            obj.append({
-                "go": {
-                    "display_name": row["term"],
-                    "link": '/go/' + row["goid"],
-                    "id": row["goid"]
-                },
-                "match_count": row["num_gene_annotated"],
-                "pvalue": row["pvalue"]
-            })
-        return obj
+        return run_batter_enrichment(format_names, context='regulation_target_enrichment ' + self.format_name)
 
 
     def regulation_details(self):
@@ -10674,31 +10697,7 @@ class Proteindomain(Base):
             dbentity_ids.append(x.dbentity_id)
 
         format_names = DBSession.query(Dbentity.format_name).filter(Dbentity.dbentity_id.in_(dbentity_ids)).all()
-
-        data = urllib.parse.urlencode({
-            "genes": ",".join([f[0] for f in format_names]),
-            "aspect": "P"
-        })
-
-        try:
-            req = Request(url=os.environ['BATTER_URI'], data=data.encode('utf-8'))
-            res = urlopen(req)
-            response_json = json.loads(res.read().decode('utf-8'))
-        except:
-            return []
-
-        obj = []
-        for row in response_json:
-            obj.append({
-                "go": {
-                    "display_name": row["term"],
-                    "link": '/go/' + row["goid"],
-                    "id": row["goid"]
-                },
-                "match_count": row["num_gene_annotated"],
-                "pvalue": row["pvalue"]
-            })
-        return obj
+        return run_batter_enrichment([f[0] for f in format_names], context='domain enrichment ' + self.format_name)
 
 
 class ProteindomainUrl(Base):
