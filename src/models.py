@@ -18,6 +18,8 @@ import logging
 from datetime import datetime, timedelta
 from itertools import groupby
 import hashlib
+import threading
+import time
 import urllib.request, urllib.parse, urllib.error
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
@@ -2298,14 +2300,32 @@ def get_batter_url():
     return base.rstrip('/') + '/termfinder'
 
 
+# The termfinder service forks GOTermFinder.pl per request (~10s fixed cost,
+# ~25s for large lists), and its result only changes when annotations are
+# reloaded, so successful responses are cached in-process for a day.
+BATTER_CACHE_TTL = int(os.environ.get('BATTER_CACHE_TTL', 86400))
+BATTER_CACHE_MAX_ENTRIES = 500
+_batter_cache = {}
+_batter_cache_lock = threading.Lock()
+
+
 def run_batter_enrichment(format_names, aspect='P', context='enrichment'):
     """GO enrichment for a set of gene systematic names via the termfinder
     (BATTER) JSON service. Returns a list of {go: {display_name, link, id},
     match_count, pvalue}, or [] if the gene list is empty or the call fails.
+    Successful results are cached for BATTER_CACHE_TTL seconds, keyed by the
+    sorted gene list + aspect; failures are never cached.
     """
     format_names = [f for f in format_names if f]
     if not format_names:
         return []
+
+    cache_key = hashlib.sha256(
+        (aspect + '|' + '|'.join(sorted(format_names))).encode('utf-8')).hexdigest()
+    cached = _batter_cache.get(cache_key)
+    if cached and time.time() - cached[0] < BATTER_CACHE_TTL:
+        return cached[1]
+
     data = urllib.parse.urlencode({
         "genes": "|".join(format_names),  # the termfinder service wants pipe-separated
         "aspect": aspect
@@ -2329,6 +2349,17 @@ def run_batter_enrichment(format_names, aspect='P', context='enrichment'):
             "match_count": row["num_gene_annotated"],
             "pvalue": row["pvalue"]
         })
+
+    with _batter_cache_lock:
+        if len(_batter_cache) >= BATTER_CACHE_MAX_ENTRIES:
+            now = time.time()
+            expired = [k for k, v in _batter_cache.items() if now - v[0] >= BATTER_CACHE_TTL]
+            for k in expired:
+                del _batter_cache[k]
+            while len(_batter_cache) >= BATTER_CACHE_MAX_ENTRIES:
+                oldest = min(_batter_cache, key=lambda k: _batter_cache[k][0])
+                del _batter_cache[oldest]
+        _batter_cache[cache_key] = (time.time(), obj)
     return obj
 
 
