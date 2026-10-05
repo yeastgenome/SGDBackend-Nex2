@@ -586,15 +586,14 @@ def index_go_terms():
     go_id_blacklist = load_go_id_blacklist(
         "scripts/search/go_id_blacklist.lst")
 
-    gos = DBSession.query(Go).all()
+    # Obsolete GO terms (go.is_obsolete = true) are suppressed from search
+    gos = [go for go in DBSession.query(Go).filter_by(is_obsolete=False).all()
+           if go.goid not in go_id_blacklist]
 
-    print(("Indexing " + str(len(gos) - len(go_id_blacklist)) + " GO terms"))
+    print(("Indexing " + str(len(gos)) + " GO terms"))
 
     bulk_data = []
     for go in gos:
-        if go.goid in go_id_blacklist:
-            continue
-
         synonyms = DBSession.query(GoAlias.display_name).filter_by(
             go_id=go.go_id).all()
 
