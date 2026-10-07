@@ -1,9 +1,11 @@
-"""Resolve author emails for the papers behind a GO release's annotations.
+"""Resolve author emails for the papers behind newly added annotations.
 
-Reads YEAST-mod.gpad.gz (downloaded to --data-dir if absent), collects the
-PMIDs of SGD-assigned gene-centric annotations (noctua-model-id of the form
-gomodel:SGD_<sgdid>) with annotation_date >= --since, and resolves author
-emails for each PMID, cheapest source first:
+By default reads YEAST-mod.gpad.gz (downloaded to --data-dir if absent),
+collects the PMIDs of SGD-assigned gene-centric annotations (noctua-model-id
+of the form gomodel:SGD_<sgdid>) with annotation_date >= --since. With
+--pmid-file it instead takes the PMIDs from the 'pmid' column of a TSV (used
+by the phenotype pipeline, whose annotations come from the database). Then
+resolves author emails for each PMID, cheapest source first:
 
   1. ABC (Alliance literature service) reference_email rows via its REST API.
      Works without authentication only from IP-allowlisted hosts (sgd-curate,
@@ -26,6 +28,9 @@ Output (input format of map_emails_to_go_annotations.py), one row per
 Part of the per-GO-release outreach pipeline (go_release_email_pipeline.sh):
 resolve_pmid_emails.py -> map_emails_to_go_annotations.py ->
 send_go_annotation_emails.py
+and of the weekly phenotype pipeline (phenotype_weekly_email_pipeline.sh):
+extract_new_phenotype_annotations.py -> resolve_pmid_emails.py --pmid-file ->
+send_phenotype_annotation_emails.py
 """
 
 import argparse
@@ -160,6 +165,19 @@ def gene_centric_pmids(gpad_file, since):
             if "noctua-model-id=gomodel:SGD_" not in field[11]:
                 continue
             pmids.add(field[4].split(":")[1])
+    return sorted(pmids)
+
+
+def pmids_from_file(pmid_file):
+    """Distinct numeric PMIDs from the 'pmid' column of a TSV with a header."""
+    pmids = set()
+    with open(pmid_file) as f:
+        header = f.readline().rstrip("\n").split("\t")
+        pmid_column = header.index("pmid")
+        for line in f:
+            fields = line.rstrip("\n").split("\t")
+            if len(fields) > pmid_column and fields[pmid_column].isdigit():
+                pmids.add(fields[pmid_column])
     return sorted(pmids)
 
 
@@ -320,12 +338,16 @@ def fetch_pmc_emails(pmid_to_pmcid):
     return emails_by_pmid
 
 
-def resolve(since, output_file, data_dir, abc_api_url, gpad_file):
+def resolve(since, output_file, data_dir, abc_api_url, gpad_file, pmid_file=None):
 
-    if not gpad_file:
-        gpad_file = download(GPAD_URL, data_dir, "YEAST-mod.gpad.gz")
-    pmids = gene_centric_pmids(gpad_file, since)
-    print(str(len(pmids)) + " PMIDs on gene-centric SGD annotations since " + since)
+    if pmid_file:
+        pmids = pmids_from_file(pmid_file)
+        print(str(len(pmids)) + " PMIDs from " + pmid_file)
+    else:
+        if not gpad_file:
+            gpad_file = download(GPAD_URL, data_dir, "YEAST-mod.gpad.gz")
+        pmids = gene_centric_pmids(gpad_file, since)
+        print(str(len(pmids)) + " PMIDs on gene-centric SGD annotations since " + since)
     if not pmids:
         with open(output_file, "w") as fw:
             fw.write("reference_curie\tpmid\tsource\temail\thas_email_in_abc\n")
@@ -367,7 +389,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Resolve author emails (ABC -> PubMed -> PMC) for PMIDs on "
-                    "gene-centric SGD GO annotations in the current GO release")
+                    "gene-centric SGD GO annotations in the current GO release, "
+                    "or for the PMIDs listed in --pmid-file")
     parser.add_argument("-s", "--since", default=DEFAULT_SINCE,
                         help="only annotations with annotation_date >= this "
                              "(default: " + DEFAULT_SINCE + ")")
@@ -381,6 +404,11 @@ if __name__ == "__main__":
                         help="ABC REST API base url (default: " + ABC_API_URL + ")")
     parser.add_argument("--gpad-file", default=None,
                         help="use this GPAD file instead of downloading")
+    parser.add_argument("--pmid-file", default=None,
+                        help="take PMIDs from the 'pmid' column of this TSV "
+                             "instead of the GPAD (--since and --gpad-file "
+                             "are then ignored)")
     args = parser.parse_args()
 
-    resolve(args.since, args.output_file, args.data_dir, args.abc_api, args.gpad_file)
+    resolve(args.since, args.output_file, args.data_dir, args.abc_api,
+            args.gpad_file, args.pmid_file)
