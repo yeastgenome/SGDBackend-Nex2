@@ -1,7 +1,7 @@
 import logging
 import functools
 from sqlalchemy import Column, BigInteger, UniqueConstraint, Float, Boolean, SmallInteger, Integer, DateTime, ForeignKey, Index, Numeric, String, Text, text, FetchedValue, func, or_, and_, distinct, inspect
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, joinedload
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, joinedload, selectinload
 from sqlalchemy.ext.declarative import declarative_base
 from zope.sqlalchemy import register
 from elasticsearch import Elasticsearch
@@ -4465,13 +4465,34 @@ class Locusdbentity(Dbentity):
         return obj
 
     def interactions_to_dict(self):
-        physical_interactions = DBSession.query(Physinteractionannotation).filter(or_(Physinteractionannotation.dbentity1_id == self.dbentity_id, Physinteractionannotation.dbentity2_id == self.dbentity_id)).all()
+        # Batch-load everything to_dict() reads (one query per relationship)
+        # instead of lazy-loading it row by row: heavily studied genes have
+        # thousands of interactions, and the per-row loads made this endpoint
+        # take 20-40 s for ACT1.
+        physical_interactions = DBSession.query(Physinteractionannotation).options(
+            selectinload(Physinteractionannotation.dbentity1),
+            selectinload(Physinteractionannotation.dbentity2),
+            selectinload(Physinteractionannotation.psimod),
+            selectinload(Physinteractionannotation.reference),
+            selectinload(Physinteractionannotation.source)).filter(
+                or_(Physinteractionannotation.dbentity1_id == self.dbentity_id,
+                    Physinteractionannotation.dbentity2_id == self.dbentity_id)).all()
 
-        genetic_interactions = DBSession.query(Geninteractionannotation).filter(or_(Geninteractionannotation.dbentity1_id == self.dbentity_id, Geninteractionannotation.dbentity2_id == self.dbentity_id)).all()
+        genetic_interactions = DBSession.query(Geninteractionannotation).options(
+            selectinload(Geninteractionannotation.dbentity1),
+            selectinload(Geninteractionannotation.dbentity2),
+            selectinload(Geninteractionannotation.phenotype),
+            selectinload(Geninteractionannotation.reference),
+            selectinload(Geninteractionannotation.source)).filter(
+                or_(Geninteractionannotation.dbentity1_id == self.dbentity_id,
+                    Geninteractionannotation.dbentity2_id == self.dbentity_id)).all()
 
-        obj = []
-        for interaction in physical_interactions + genetic_interactions:
-            obj.append(interaction.to_dict())
+        alleles_by_interaction = allele_geninteractions_by_interaction(
+            [interaction.annotation_id for interaction in genetic_interactions])
+
+        obj = [interaction.to_dict() for interaction in physical_interactions]
+        obj.extend(interaction.to_dict(alleles=alleles_by_interaction.get(interaction.annotation_id, []))
+                   for interaction in genetic_interactions)
 
         return obj
 
@@ -8637,7 +8658,9 @@ class Geninteractionannotation(Base):
     taxonomy = relationship('Taxonomy')
     mutant = relationship('Apo', primaryjoin='Geninteractionannotation.mutant_id == Apo.apo_id')
 
-    def to_dict(self, reference=None):
+    def to_dict(self, reference=None, alleles=None):
+        """alleles: this interaction's allele dicts, pre-loaded in bulk by
+        allele_geninteractions_by_interaction(); queried here when None."""
         dbentity1 = self.dbentity1
         dbentity2 = self.dbentity2
         phenotype = self.phenotype
@@ -8690,18 +8713,9 @@ class Geninteractionannotation(Base):
             }
 
         ## adding alleles/scores/pvalues
-        alleles = []
-        for x in DBSession.query(AlleleGeninteraction).filter_by(interaction_id=self.annotation_id).all():
-            allele1_name = ""
-            if x.allele1_id:
-                allele1_name = x.allele1.display_name
-            allele2_name = ""
-            if x.allele2_id:
-                allele2_name = x.allele2.display_name
-            alleles.append({ "allele1_name": allele1_name,
-                             "allele2_name": allele2_name,
-                             "sga_score": str(x.sga_score),
-                             "pvalue": str(x.pvalue) })
+        if alleles is None:
+            alleles = [allele_geninteraction_to_dict(x) for x in
+                       DBSession.query(AlleleGeninteraction).filter_by(interaction_id=self.annotation_id).all()]
         obj['alleles'] = alleles
 
         return obj
@@ -11894,6 +11908,39 @@ class AlleleGeninteraction(Base):
     allele2 = relationship('Alleledbentity', primaryjoin='AlleleGeninteraction.allele2_id == Alleledbentity.dbentity_id')
     source = relationship('Source')
     interaction = relationship('Geninteractionannotation')
+
+
+def allele_geninteraction_to_dict(allele_geninteraction):
+    """The allele/score/p-value entry Geninteractionannotation.to_dict() emits."""
+    allele1_name = ""
+    if allele_geninteraction.allele1_id:
+        allele1_name = allele_geninteraction.allele1.display_name
+    allele2_name = ""
+    if allele_geninteraction.allele2_id:
+        allele2_name = allele_geninteraction.allele2.display_name
+    return {"allele1_name": allele1_name,
+            "allele2_name": allele2_name,
+            "sga_score": str(allele_geninteraction.sga_score),
+            "pvalue": str(allele_geninteraction.pvalue)}
+
+
+ALLELE_GENINTERACTION_CHUNK = 1000
+
+
+def allele_geninteractions_by_interaction(interaction_ids):
+    """Map genetic interaction annotation_id -> its allele dicts, loading the
+    allele rows (and both alleles) in a few bulk queries."""
+    by_interaction = {}
+    for start in range(0, len(interaction_ids), ALLELE_GENINTERACTION_CHUNK):
+        chunk = interaction_ids[start:start + ALLELE_GENINTERACTION_CHUNK]
+        rows = DBSession.query(AlleleGeninteraction).options(
+            selectinload(AlleleGeninteraction.allele1),
+            selectinload(AlleleGeninteraction.allele2)).filter(
+                AlleleGeninteraction.interaction_id.in_(chunk)).order_by(
+                    AlleleGeninteraction.allele_geninteraction_id).all()
+        for row in rows:
+            by_interaction.setdefault(row.interaction_id, []).append(allele_geninteraction_to_dict(row))
+    return by_interaction
 
     
 class AlleleAlias(Base):
