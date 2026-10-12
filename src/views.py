@@ -3,8 +3,6 @@ from pyramid.response import Response, FileResponse
 from pyramid.view import view_config
 from pyramid.compat import escape
 from sqlalchemy import func, distinct, and_, or_
-from sqlalchemy.orm.exc import DetachedInstanceError
-from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
 from primer3 import bindings, designPrimers
 from collections import defaultdict
@@ -15,7 +13,6 @@ from intermine.webservice import Service
 import os
 import re
 import transaction
-import traceback
 import datetime
 import logging
 import json
@@ -3482,29 +3479,22 @@ def alignment(request):
         if DBSession:
             DBSession.remove()
 
-# check for basic rad54 response
+# load balancer / watchdog health check: a trivial DB round trip only. It used
+# to render the full RAD54 locus to_dict, which made every LB probe cost as
+# much as a gene page and so slowed a node further when it was already busy.
+# It still runs on a waitress worker thread, so a node whose threads are all
+# stuck still fails the probe (times out).
 @view_config(route_name='healthcheck', renderer='json', request_method='GET')
 def healthcheck(request):
-    MAX_QUERY_ATTEMPTS = 3
-    attempts = 0
-    ldict = None
-    while attempts < MAX_QUERY_ATTEMPTS:
-        try:
-            locus = get_locus_by_id(1268789)
-            ldict = locus.to_dict()
-            break
-        except DetachedInstanceError:
-            traceback.print_exc()
-            log.info('DB session closed from detached instance state.')
-            DBSession.remove()
-            attempts += 1
-        except IntegrityError:
-            traceback.print_exc()
-            log.info('DB rolled back from integrity error.')
-            DBSession.rollback()
-            DBSession.remove()
-            attempts += 1
-    return ldict
+    try:
+        DBSession.execute('SELECT 1').scalar()
+    except Exception as e:
+        log.error('healthcheck DB query failed: %s', e)
+        DBSession.rollback()
+        DBSession.remove()
+        request.response.status = 503
+        return {'status': 'error'}
+    return {'status': 'ok'}
 
 
 # api portal with swagger
