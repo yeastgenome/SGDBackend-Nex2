@@ -18,7 +18,7 @@ import logging
 import json
 from pathlib import Path
 
-from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Goannotation, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl
+from .models import DBSession, ESearch, Colleague, Dbentity, Edam, Referencedbentity, ReferenceFile, Referenceauthor, FileKeyword, Keyword, Referencedocument, Chebi, ChebiUrl, PhenotypeannotationCond, Phenotypeannotation, Reservedname, Straindbentity, Literatureannotation, Phenotype, Apo, Go, Goannotation, Referencetriage, Referencedeleted, Locusdbentity, LocusAlias, Dataset, DatasetKeyword, Contig, Proteindomain, Ec, Dnasequenceannotation, Straindbentity, Disease, Complexdbentity, Filedbentity, Goslim, So, ApoRelation, GoRelation, Psimod,Posttranslationannotation, Alleledbentity, AlleleAlias, Pathwaydbentity, PathwayUrl, reference_citation_batch
 from .helpers import extract_id_request, link_references_to_file, link_keywords_to_file, FILE_EXTENSIONS, get_locus_by_id, get_go_by_id, get_disease_by_id, primer3_parser, count_alias
 from .search_helpers import build_autocomplete_search_body_request, format_autocomplete_results, build_search_query, build_es_search_body_request, build_es_aggregation_body_request, format_search_results, format_aggregation_results, build_sequence_objects_search_query, is_digit, has_special_characters, get_multiple_terms, has_long_query, is_ncbi_term, get_ncbi_search_item
 from .models_helpers import ModelsHelper
@@ -725,18 +725,26 @@ def extensions(request):
     except Exception as e:
         log.error(e)
 
+def citations_with_entities(references):
+    # to_dict_citation() + annotations_to_dict() for each reference, with the
+    # per-reference authors/urls/annotations preloaded in bulk (a 30-day window
+    # is hundreds of references; one-by-one this took 10-80 s).
+    authors, urls, annotations, pathway_biocyc_ids = reference_citation_batch([x.dbentity_id for x in references])
+    refs = []
+    for x in references:
+        citation_dict = x.to_dict_citation(authors=authors.get(x.dbentity_id, []), urls=urls.get(x.dbentity_id, []))
+        citation_dict['entity_list'] = x.annotations_to_dict(annotations=annotations.get(x.dbentity_id, []),
+                                                             pathway_biocyc_ids=pathway_biocyc_ids)
+        refs.append(citation_dict)
+    return refs
+
 @view_config(route_name='reference_this_week', renderer='json', request_method='GET')
 def reference_this_week(request):
     try:
         start_date = datetime.datetime.today() - datetime.timedelta(days=30)
         end_date = datetime.datetime.today()
-        recent_literature = DBSession.query(Referencedbentity).filter(Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created.desc()).all()
-        # refs = [x.to_dict_citation() for x in recent_literature]
-        refs = []
-        for x in recent_literature:
-            citation_dict = x.to_dict_citation()
-            citation_dict['entity_list'] = x.annotations_to_dict()
-            refs.append(citation_dict)
+        recent_literature = DBSession.query(Referencedbentity).options(joinedload(Referencedbentity.journal)).filter(Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created.desc()).all()
+        refs = citations_with_entities(recent_literature)
         return {
             'start': start_date.strftime("%Y-%m-%d"),
             'end': end_date.strftime("%Y-%m-%d"),
@@ -762,11 +770,9 @@ def reference_by_pmids(request):
                 pmids.append(int(p))
         if not pmids:
             return {'references': []}
-        rows = DBSession.query(Referencedbentity).filter(Referencedbentity.pmid.in_(pmids)).all()
+        rows = DBSession.query(Referencedbentity).options(joinedload(Referencedbentity.journal)).filter(Referencedbentity.pmid.in_(pmids)).all()
         by_pmid = {}
-        for x in rows:
-            citation_dict = x.to_dict_citation()
-            citation_dict['entity_list'] = x.annotations_to_dict()
+        for x, citation_dict in zip(rows, citations_with_entities(rows)):
             by_pmid[x.pmid] = citation_dict
         refs = [by_pmid[p] for p in pmids if p in by_pmid]
         return {'references': refs}

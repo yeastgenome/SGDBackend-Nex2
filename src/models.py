@@ -2838,7 +2838,9 @@ class Referencedbentity(Dbentity):
             "text": '\n'.join(entries)
         }
 
-    def to_dict_citation(self):
+    def to_dict_citation(self, authors=None, urls=None):
+        # authors / urls: optional preloaded author and URL dicts (see
+        # reference_citation_batch); None = query them for this reference.
         if(self.pmid == 23241746):
             print('found pmid')
         obj = {
@@ -2858,19 +2860,25 @@ class Referencedbentity(Dbentity):
                 "med_abbr": self.journal.med_abbr
             }
 
-        authors = DBSession.query(Referenceauthor.display_name, Referenceauthor.obj_url).filter_by(reference_id=self.dbentity_id).order_by(Referenceauthor.author_order).all()
-        for author in authors:
-            obj["authors"].append({
-                "display_name": author[0],
-                "link": author[1]
-            })
+        if authors is not None:
+            obj["authors"] = authors
+        else:
+            authors = DBSession.query(Referenceauthor.display_name, Referenceauthor.obj_url).filter_by(reference_id=self.dbentity_id).order_by(Referenceauthor.author_order).all()
+            for author in authors:
+                obj["authors"].append({
+                    "display_name": author[0],
+                    "link": author[1]
+                })
 
-        ref_urls = DBSession.query(ReferenceUrl).filter_by(reference_id=self.dbentity_id).all()
-        for url in ref_urls:
-            obj["urls"].append({
-                "display_name": url.display_name,
-                "link": url.obj_url,
-            })
+        if urls is not None:
+            obj["urls"] = urls
+        else:
+            ref_urls = DBSession.query(ReferenceUrl).filter_by(reference_id=self.dbentity_id).all()
+            for url in ref_urls:
+                obj["urls"].append({
+                    "display_name": url.display_name,
+                    "link": url.obj_url,
+                })
 
         return obj
 
@@ -2998,26 +3006,29 @@ class Referencedbentity(Dbentity):
 
         return obj
 
-    def annotations_to_dict(self):
-        
-        annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
+    def annotations_to_dict(self, annotations=None, pathway_biocyc_ids=None):
+        # annotations / pathway_biocyc_ids: optional preloaded Literatureannotation
+        # rows and pathway dbentity_id -> biocyc_id map (see
+        # reference_citation_batch); None = query them for this reference.
+        if annotations is None:
+            annotations = DBSession.query(Literatureannotation).filter_by(reference_id=self.dbentity_id).all()
 
         loci = []
         complexes = []
         pathways = []
         alleles = []
         for annotation in annotations:
-            annotation_dict = annotation.to_dict()
+            annotation_dict = annotation.to_dict(pathway_biocyc_ids=pathway_biocyc_ids)
             if annotation_dict["locus"] is not None:
                 locus = annotation_dict["locus"]
                 if 'complex' in locus["link"]:
-                    complexes.append(annotation.to_dict())
+                    complexes.append(annotation_dict)
                 elif 'pathway' in locus["link"]:
-                    pathways.append(annotation.to_dict())
+                    pathways.append(annotation_dict)
                 elif 'allele' in locus["link"]:
-                    alleles.append(annotation.to_dict()) 
+                    alleles.append(annotation_dict)
                 else:
-                    loci.append(annotation.to_dict())
+                    loci.append(annotation_dict)
 
         return loci + complexes + pathways + alleles
 
@@ -9570,7 +9581,9 @@ class Literatureannotation(Base):
             created_by=created_by
         )
 
-    def to_dict(self):
+    def to_dict(self, pathway_biocyc_ids=None):
+        # pathway_biocyc_ids: optional preloaded pathway dbentity_id -> biocyc_id
+        # map; None = query the pathway row.
         obj = {
             "topic": self.topic,
             "locus": None
@@ -9583,8 +9596,11 @@ class Literatureannotation(Base):
             if entity.subclass == 'COMPLEX':
                 link = '/complex/' + entity.format_name
             elif entity.subclass == 'PATHWAY':
-                pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
-                link = '/pathway/' + pathway.biocyc_id
+                if pathway_biocyc_ids is not None:
+                    link = '/pathway/' + pathway_biocyc_ids[entity.dbentity_id]
+                else:
+                    pathway = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=entity.dbentity_id).one_or_none()
+                    link = '/pathway/' + pathway.biocyc_id
             elif entity.subclass == 'ALLELE':
                 link = '/allele/' + entity.format_name
                 
@@ -9601,6 +9617,48 @@ class Literatureannotation(Base):
             if value == c_name:
                 return key
         return None
+
+
+REFERENCE_BATCH_CHUNK = 1000
+
+def reference_citation_batch(reference_ids):
+    """Preload what Referencedbentity.to_dict_citation() and
+    annotations_to_dict() need for many references in a few bulk queries
+    (instead of ~5 queries per reference plus one per annotated entity).
+    Returns (authors, urls, annotations, pathway_biocyc_ids): the first three
+    map reference_id -> list, for the authors=/urls=/annotations= kwargs.
+    The per-reference queries this replaces had no ORDER BY, and pages show
+    rows in the order returned, so keep that order: URLs stay unordered (same
+    sequential scan), and annotations are ordered by topic, dbentity_id -- the
+    order the old per-reference query got from literatureannotation_uk_index
+    (reference_id, topic, COALESCE(dbentity_id, 0))."""
+    authors = {}
+    urls = {}
+    annotations = {}
+    for start in range(0, len(reference_ids), REFERENCE_BATCH_CHUNK):
+        chunk = reference_ids[start:start + REFERENCE_BATCH_CHUNK]
+        rows = DBSession.query(Referenceauthor.reference_id, Referenceauthor.display_name, Referenceauthor.obj_url).filter(
+            Referenceauthor.reference_id.in_(chunk)).order_by(Referenceauthor.reference_id, Referenceauthor.author_order).all()
+        for reference_id, display_name, link in rows:
+            authors.setdefault(reference_id, []).append({"display_name": display_name, "link": link})
+        rows = DBSession.query(ReferenceUrl.reference_id, ReferenceUrl.display_name, ReferenceUrl.obj_url).filter(
+            ReferenceUrl.reference_id.in_(chunk)).all()
+        for reference_id, display_name, link in rows:
+            urls.setdefault(reference_id, []).append({"display_name": display_name, "link": link})
+        rows = DBSession.query(Literatureannotation).options(joinedload(Literatureannotation.dbentity)).filter(
+            Literatureannotation.reference_id.in_(chunk)).order_by(
+                Literatureannotation.topic, func.coalesce(Literatureannotation.dbentity_id, 0)).all()
+        for annotation in rows:
+            annotations.setdefault(annotation.reference_id, []).append(annotation)
+    pathway_ids = list({a.dbentity_id for rows in annotations.values() for a in rows
+                        if a.dbentity is not None and a.dbentity.subclass == 'PATHWAY'})
+    pathway_biocyc_ids = {}
+    for start in range(0, len(pathway_ids), REFERENCE_BATCH_CHUNK):
+        chunk = pathway_ids[start:start + REFERENCE_BATCH_CHUNK]
+        for dbentity_id, biocyc_id in DBSession.query(Pathwaydbentity.dbentity_id, Pathwaydbentity.biocyc_id).filter(
+                Pathwaydbentity.dbentity_id.in_(chunk)).all():
+            pathway_biocyc_ids[dbentity_id] = biocyc_id
+    return authors, urls, annotations, pathway_biocyc_ids
 
 class LocusAlias(Base):
     __tablename__ = 'locus_alias'
