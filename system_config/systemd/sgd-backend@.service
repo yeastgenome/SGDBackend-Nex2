@@ -1,0 +1,40 @@
+# Extra SGD Backend Nex2 process on its own port; the instance name is the
+# port, e.g. sgd-backend@6544. Runs alongside sgd-backend.service (port 6543).
+#
+# Why: each pserve process is one waitress server whose Python threads share
+# one GIL, so a single process tops out at about one CPU core; a second
+# process lets a 2-vCPU backend use its second core. Register each extra
+# port in the backend load balancer's target group.
+#
+# Install on the host:
+#   sudo cp system_config/systemd/sgd-backend@.service /etc/systemd/system/
+#   sudo cp system_config/systemd/sgd-backend-instance.example \
+#       /etc/default/sgd-backend-instance   # then set ENV_SCRIPT / INI_FILE
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now sgd-backend@6544.service
+#
+# ExecStart runs start_backend_instance.sh, which sources the env file and
+# serves the host's ini with only the port changed. Logs go to
+# /var/log/sgd-backend/{output,error}-<port>.log.
+[Unit]
+Description=SGD Backend Nex2 Pyramid Application (port %i)
+After=network.target
+
+[Service]
+Type=simple
+User=sgd
+Group=sgd
+WorkingDirectory=/data/www/SGDBackend-Nex2
+EnvironmentFile=/etc/default/sgd-backend-instance
+Environment="PATH=/home/sgd/.local/node14/bin:/data/www/SGDBackend-Nex2/venv-py39/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PIP_NO_BUILD_ISOLATION=1"
+Environment="SETUPTOOLS_USE_DISTUTILS=local"
+Environment="SETUPTOOLS_ENABLE_FEATURES=legacy-editable"
+ExecStart=/data/www/SGDBackend-Nex2/system_config/systemd/start_backend_instance.sh %i
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/sgd-backend/output-%i.log
+StandardError=append:/var/log/sgd-backend/error-%i.log
+
+[Install]
+WantedBy=multi-user.target

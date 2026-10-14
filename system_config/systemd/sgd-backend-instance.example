@@ -1,0 +1,9 @@
+# /etc/default/sgd-backend-instance: per-host settings for sgd-backend@.service.
+# Use the same env file and ini as the host's start.sh:
+#
+#   Host                         ENV_SCRIPT  INI_FILE
+#   ---------------------------  ----------  ---------------
+#   sgd-backend-qa               qa.sh       development.ini
+#   sgd-backend-2a / 2b (prod)   prod.sh     production.ini
+ENV_SCRIPT=prod.sh
+INI_FILE=production.ini
