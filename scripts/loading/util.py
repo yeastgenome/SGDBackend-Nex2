@@ -1314,7 +1314,9 @@ def read_gpi2_file(filename):
     This file is keyed on SGDIDs (col 1), so - unlike read_gpi_file(), which
     builds a UniProt->SGDID map from the EBI gp_information.559292_sgd file -
     it returns sgdid_to_date_assigned directly, taken from the
-    'go_annotation_complete' gene-product property (col 11).
+    'go-annotation-complete' gene-product property (col 11). Files generated
+    before GPI property names switched to dashes spell it
+    'go_annotation_complete', so both are accepted.
     """
     f = gzip.open(filename, 'rt') if filename.endswith('.gz') else open(filename)
 
@@ -1333,10 +1335,10 @@ def read_gpi2_file(filename):
 
         sgdid = field[0].split(':')[1]
         for pair in field[10].split('|'):
-            if pair.startswith('go_annotation_complete='):
+            if pair.startswith(('go-annotation-complete=', 'go_annotation_complete=')):
                 date = pair.split('=', 1)[1]
                 if date == '':
-                    ## some rows carry an empty go_annotation_complete= ; do not
+                    ## some rows carry an empty go-annotation-complete= ; do not
                     ## store it, so the caller falls back to date_created
                     break
                 if len(date) >= 8 and date[:8].isdigit():

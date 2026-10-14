@@ -151,12 +151,12 @@ def dump_data():
         # col11: Gene_Product_Properties
         col11 = ''
         if x.dbentity_id not in dbentity_id_to_rnacentral_id:
-            col11 = "db_subset=Swiss-Prot|"
-        col11 = col11 + "go_annotation_complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
+            col11 = "db-subset=Swiss-Prot|"
+        col11 = col11 + "go-annotation-complete=" + dbentity_id_to_date_assigned.get(x.dbentity_id, '')
         if x.dbentity_id in dbentity_id_to_function:
-            col11 = col11 + "|go_annotation_summary=" + dbentity_id_to_function[x.dbentity_id]
+            col11 = col11 + "|go-annotation-summary=" + dbentity_id_to_function[x.dbentity_id]
         if x.dbentity_id in dbentity_id_to_uniprot:
-            col11 = col11 + "|uniprot_proteome=" + dbentity_id_to_uniprot[x.dbentity_id]
+            col11 = col11 + "|uniprot-proteome=" + dbentity_id_to_uniprot[x.dbentity_id]
 
         fw.write(col1 + "\t" + col2 + "\t" + col3 + "\t" + col4 + "\t" + col5 + "\t")
         fw.write(col6 + "\t" + col7 + "\t" + col8 + "\t" + col9 + "\t" + col10 + "\t")
