@@ -1,12 +1,13 @@
+import gzip
 import json
 import logging
 import os
+import sys
 from threading import Thread
 import time
 import traceback
 
-import boto
-from boto.s3.key import Key
+import boto3
 from sqlalchemy import create_engine
 from src.models import Base, DBSession, Dnasequenceannotation, Locusdbentity
 
@@ -14,6 +15,15 @@ __author__ = 'tshepp'
 
 '''
     For a set of loci, get expression details, make a JSON string and upload to sgd-prod-expression-details bucket with name [SGDID].json.
+
+    Files are stored gzipped (Content-Encoding: gzip) as application/json with a
+    1-day browser cache, so pages download ~10x less and repeat visits skip S3.
+    Re-run after loading expression data (load_expression_data.py) or editing
+    dataset metadata shown on expression pages.
+
+    usage:
+        python scripts/loading/dataset/upload_expression_details.py               # all loci with expression
+        python scripts/loading/dataset/upload_expression_details.py S000001855 ... # just these SGDIDs
 '''
 
 engine = create_engine(os.environ['NEX2_URI'], pool_recycle=3600, pool_size=20)
@@ -28,20 +38,28 @@ DEBUG_SIZE = 5
 S3_BUCKET = os.environ['EXPRESSION_S3_BUCKET']
 S3_ACCESS_KEY = os.environ['S3_ACCESS_KEY']
 S3_SECRET_KEY = os.environ['S3_SECRET_KEY']
-S3_HOST = 's3-us-west-2.amazonaws.com'
+S3_REGION = 'us-west-2'
+CACHE_CONTROL = 'public, max-age=86400'
+
+# boto3 clients are thread-safe; one is shared by the upload threads
+s3_client = boto3.client('s3', region_name=S3_REGION, aws_access_key_id=S3_ACCESS_KEY,
+                         aws_secret_access_key=S3_SECRET_KEY)
 
 def get_all_genes(limit, offset):
-    return DBSession.query(Locusdbentity).filter(Locusdbentity.has_expression == True).limit(limit).offset(offset).all()
+    # stable order so the LIMIT/OFFSET chunks don't overlap or skip loci
+    return DBSession.query(Locusdbentity).filter(Locusdbentity.has_expression == True).order_by(
+        Locusdbentity.dbentity_id).limit(limit).offset(offset).all()
 
 def upload_gene(gene):
     try:
         expression_details_json = json.dumps(gene.expression_to_dict())
-        conn = boto.connect_s3(S3_ACCESS_KEY, S3_SECRET_KEY, host=S3_HOST)
-        bucket = conn.get_bucket(S3_BUCKET)
-        k = Key(bucket)
-        k.key = gene.sgdid + '.json'
-        k.set_contents_from_string(expression_details_json)
-        k.make_public()
+        s3_client.put_object(Bucket=S3_BUCKET,
+                             Key=gene.sgdid + '.json',
+                             Body=gzip.compress(expression_details_json.encode('utf-8')),
+                             ContentType='application/json',
+                             ContentEncoding='gzip',
+                             CacheControl=CACHE_CONTROL,
+                             ACL='public-read')
         return True
     except:
         log.error('Error uploading ' + gene.sgdid)
@@ -96,7 +114,20 @@ def upload_genes_f():
     genes = get_all_genes(CHUNK_SIZE + FINAL_EXTRA_CHUNK_SIZE, 5 * CHUNK_SIZE)
     upload_gene_list(genes, 'f' )
     
+def upload_sgdids(sgdids):
+    genes = DBSession.query(Locusdbentity).filter(Locusdbentity.sgdid.in_(sgdids)).all()
+    missing = set(sgdids) - set(gene.sgdid for gene in genes)
+    if missing:
+        log.error('Not in the database: ' + ', '.join(sorted(missing)))
+    for gene in genes:
+        start = time.time()
+        if upload_gene(gene):
+            log.info(gene.sgdid + ' uploaded in ' + str(round(time.time() - start, 1)) + ' seconds')
+
 if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        upload_sgdids(sys.argv[1:])
+        sys.exit(0)
     log.info('Starting expression upload.')
     t1 = Thread(target=upload_genes_a)
     t2 = Thread(target=upload_genes_b)

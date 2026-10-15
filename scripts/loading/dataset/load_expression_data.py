@@ -31,6 +31,9 @@ Datasets with no channel_count are reported and skipped.
 Dry run by default: prints per-dataset counts of rows that would be added and
 writes a per-PCL mapping report. Pass --load to insert.
 
+Expression pages read precomputed S3 JSON, so after a load run
+upload_expression_details.py (same folder) to publish the new values.
+
 usage (from the repo root, with the env script sourced):
     python scripts/loading/dataset/load_expression_data.py \\
         scripts/loading/dataset/data/spell_dump.tsv [--load] [--only GSE86358,GSE24681]
