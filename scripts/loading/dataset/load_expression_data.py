@@ -418,6 +418,13 @@ def summarize(data, states, order, do_load, inserted):
         log.info("%-28s %d", key, totals[key])
     if do_load:
         log.info("Inserted %d rows (rest already present)", inserted)
+        if inserted:
+            # expression pages read precomputed S3 JSON, not the database
+            log.info("")
+            log.info("REMINDER: expression pages still show the old values until the S3 JSON is regenerated.")
+            log.info("  all loci:      python scripts/loading/dataset/upload_expression_details.py")
+            log.info("  some loci:     python scripts/loading/dataset/upload_expression_details.py S000001855 ...")
+            log.info("  Run it with the same environment (NEX2_URI) as this load; a full run takes hours.")
     else:
         log.info("Dry run: nothing written. Re-run with --load to insert.")
 
