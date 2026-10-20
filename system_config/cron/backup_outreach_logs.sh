@@ -1,12 +1,12 @@
 #! /bin/sh
 # Weekly S3 backup of the author outreach email sent logs and pipeline state.
 #
-# The sent logs are what stop the GO and phenotype outreach pipelines from
+# The sent logs are what stop the GO, phenotype and regulation outreach pipelines from
 # emailing the same author twice; they are gitignored (author emails), so
 # without this copy a lost checkout would re-send every past email.
 #
-# Runs Wednesday 12:00 UTC, after the phenotype (Tue 03:00/04:00 UTC) and GO
-# (go_update.sh, Tue/Wed 03:30 UTC) runs:
+# Runs Wednesday 12:00 UTC, after the phenotype (Tue 03:00/04:00 UTC),
+# regulation (Tue 02:00/03:00 UTC) and GO (go_update.sh, Tue/Wed 03:30 UTC) runs:
 #   0 12 * * 3 /bin/bash /data/www/SGDBackend-Nex2/system_config/cron/backup_outreach_logs.sh
 #
 # Each file goes to latest/ (overwritten) and to a dated folder. The bucket
@@ -27,8 +27,10 @@ S3_PREFIX=s3://sgd-prod-server-data/outreach
 TODAY=$(date -u +%Y-%m-%d)
 FILES="sgd_go_email_sent_log.tsv
 sgd_phenotype_email_sent_log.tsv
+sgd_regulation_email_sent_log.tsv
 go_release_email_pipeline.state
-phenotype_weekly_email_pipeline.state"
+phenotype_weekly_email_pipeline.state
+regulation_weekly_email_pipeline.state"
 
 status=0
 for f in $FILES; do
