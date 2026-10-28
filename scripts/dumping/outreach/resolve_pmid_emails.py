@@ -89,6 +89,12 @@ BLOCKED_LOCAL_KEYWORDS = {
     "correspondence", "journal", "journals", "reviewer",
 }
 
+# Known-bad addresses that pass the checks below (e.g. two addresses glued
+# together in the source data), dropped for every outreach pipeline.
+BLOCKED_EMAILS = {
+    "cofc.eduokhalimonchuk2@unl.edu",  # ABC PMID:42001949; real: okhalimonchuk2@unl.edu
+}
+
 _last_ncbi_request_time = 0.0
 
 
@@ -101,7 +107,7 @@ def normalize_email(raw):
 
 
 def is_acceptable_email(email):
-    if "@" not in email:
+    if "@" not in email or email in BLOCKED_EMAILS:
         return False
     try:
         email.encode("ascii")
