@@ -1,17 +1,17 @@
 #! /bin/sh
-# Weekly disease author outreach emails, Mondays 6 PM Pacific -- an hour
-# before the regulation run (7 PM), two before phenotype (8 PM) and ahead of
-# the GO run at the end of go_update.sh (Tue 03:30 UTC), so they never share
-# the email-resolver cache at once;
+# Weekly disease author outreach emails, Mondays 7:30 PM Pacific -- right
+# after the regulation run (7 PM, done within a minute) and before phenotype
+# (8 PM) and the GO run at the end of go_update.sh (Tue 03:30 UTC), so they
+# never share the email-resolver cache at once;
 # see scripts/dumping/outreach/disease_weekly_email_pipeline.sh
 #
 # The host clock is UTC and cron cannot follow daylight saving time, so the
-# crontab fires this at both 01:00 and 02:00 UTC on Tuesday:
-#   0 1 * * 2 /bin/bash .../system_config/cron/disease_outreach_email.sh
-#   0 2 * * 2 /bin/bash .../system_config/cron/disease_outreach_email.sh
-# and only the run that lands on Monday 18:00 in Los Angeles proceeds (the
+# crontab fires this at both 02:30 and 03:30 UTC on Tuesday:
+#   30 2 * * 2 /bin/bash .../system_config/cron/disease_outreach_email.sh
+#   30 3 * * 2 /bin/bash .../system_config/cron/disease_outreach_email.sh
+# and only the run that lands on Monday 19:30 in Los Angeles proceeds (the
 # other exits silently, so cron mails nothing for it).
-if [ "$(TZ=America/Los_Angeles date +%u%H)" != "118" ]; then
+if [ "$(TZ=America/Los_Angeles date +%u%H)" != "119" ]; then
     exit 0
 fi
 

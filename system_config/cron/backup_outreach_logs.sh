@@ -6,7 +6,7 @@
 # without this copy a lost checkout would re-send every past email.
 #
 # Runs Wednesday 12:00 UTC, after the phenotype (Tue 03:00/04:00 UTC),
-# regulation (Tue 02:00/03:00 UTC), disease (Tue 01:00/02:00 UTC) and GO (go_update.sh, Tue/Wed 03:30 UTC) runs:
+# regulation (Tue 02:00/03:00 UTC), disease (Tue 02:30/03:30 UTC) and GO (go_update.sh, Tue/Wed 03:30 UTC) runs:
 #   0 12 * * 3 /bin/bash /data/www/SGDBackend-Nex2/system_config/cron/backup_outreach_logs.sh
 #
 # Each file goes to latest/ (overwritten) and to a dated folder. The bucket
