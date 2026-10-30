@@ -32,6 +32,10 @@
            {
                "name": "go",
                "description": "This represents endpoints for all the GO ontology related pages"
+           },
+           {
+               "name": "gene list",
+               "description": "Gene list tools: identifier mapping and enrichment analysis"
            }
     ],
 
@@ -449,6 +453,352 @@
                     }
                 }
             }
+        },
+        "/gene_list/resolve": {
+            "post": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "map gene identifiers to current SGD genes",
+                "description": "Resolves a list of identifiers (systematic or standard gene names, aliases, protein names such as Act1p, SGDIDs with or without the SGD: prefix, UniProtKB accessions, NCBI Gene IDs, RefSeq protein/nucleotide IDs, retired names, and names of merged genes) to current SGD loci. Each input is reported as matched, ambiguous, retired or not_found. At most 5000 identifiers.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "description": "identifiers as a list, or a single string separated by whitespace, commas or semicolons",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "identifiers"
+                            ],
+                            "properties": {
+                                "identifiers": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "ACT1",
+                                        "YBR160W",
+                                        "S000001855",
+                                        "P38111",
+                                        "Cdc28p",
+                                        "YBR100W"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "resolution of each identifier",
+                        "schema": {
+                            "$ref": "#/definitions/gene_list_resolution"
+                        }
+                    },
+                    "400": {
+                        "description": "missing identifiers or more than 5000 identifiers"
+                    }
+                }
+            }
+        },
+        "/gene_list/enrichment": {
+            "post": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "enrichment of a gene list in regulators, phenotypes, complexes, pathways, domains, diseases and GO",
+                "description": "Hypergeometric test with Benjamini-Hochberg FDR. For each category the default background is all genes with at least one annotation in that category; a custom background may be supplied. GO categories (go_process, go_function, go_component) are computed by GO Term Finder with its own background and corrected p-values, and are not run unless requested.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "description": "pass either genes (any identifiers accepted by /gene_list/resolve) or bioent_ids",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "GAL1",
+                                        "GAL7",
+                                        "GAL10",
+                                        "GAL2",
+                                        "GAL3",
+                                        "GAL80",
+                                        "MET3",
+                                        "MET14",
+                                        "MET16",
+                                        "PRE1",
+                                        "PRE2",
+                                        "PRE3",
+                                        "PUP1",
+                                        "PUP2"
+                                    ]
+                                },
+                                "bioent_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    },
+                                    "description": "SGD locus dbentity ids (resolved_ids from /gene_list/resolve)"
+                                },
+                                "categories": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "regulator",
+                                            "phenotype",
+                                            "complex",
+                                            "pathway",
+                                            "domain",
+                                            "disease",
+                                            "go_process",
+                                            "go_function",
+                                            "go_component"
+                                        ]
+                                    },
+                                    "description": "default: regulator, phenotype, complex, pathway, domain, disease"
+                                },
+                                "background_genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "optional custom background (identifiers)"
+                                },
+                                "background_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    },
+                                    "description": "optional custom background (dbentity ids)"
+                                },
+                                "fdr_cutoff": {
+                                    "type": "number",
+                                    "default": 0.05
+                                },
+                                "min_overlap": {
+                                    "type": "integer",
+                                    "default": 2,
+                                    "description": "minimum number of list genes annotated to a term"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "significant terms per category",
+                        "schema": {
+                            "$ref": "#/definitions/gene_list_enrichment"
+                        }
+                    },
+                    "400": {
+                        "description": "no genes, unknown category, or invalid parameters"
+                    }
+                }
+            }
+        },
+        "/gene_list/enrichment_categories": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "categories available to /gene_list/enrichment",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of categories",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/gene_list/annotations": {
+            "post": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "download one type of SGD annotation for a gene list",
+                "description": "Returns one data type for up to 5000 genes, as JSON {columns, rows} or, with \"format\": \"tsv\", as a tab-separated file. Where SGD publishes a genome-wide download file for the data type (phenotype_data.tab, interaction_data.tab, posttranslational_modifications.tab, protein_properties.tab, gene_literature.tab, regulation and disease files) the columns are the same. At most 200,000 rows are returned per request (truncated=true beyond that). GET /gene_list/annotation_types lists the columns of each type.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json",
+                    "text/tab-separated-values"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "description": "pass either genes (any identifiers accepted by /gene_list/resolve) or bioent_ids",
+                        "schema": {
+                            "type": "object",
+                            "required": [
+                                "data_type"
+                            ],
+                            "properties": {
+                                "data_type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "gene_info",
+                                        "go",
+                                        "phenotype",
+                                        "interaction",
+                                        "regulation",
+                                        "disease",
+                                        "ptm",
+                                        "protein_properties",
+                                        "protein_abundance",
+                                        "complex",
+                                        "pathway",
+                                        "homolog",
+                                        "literature"
+                                    ]
+                                },
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "ACT1",
+                                        "CDC28",
+                                        "GAL4"
+                                    ]
+                                },
+                                "bioent_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "format": {
+                                    "type": "string",
+                                    "enum": [
+                                        "json",
+                                        "tsv"
+                                    ],
+                                    "default": "json"
+                                },
+                                "interaction_scope": {
+                                    "type": "string",
+                                    "enum": [
+                                        "any",
+                                        "within"
+                                    ],
+                                    "default": "any",
+                                    "description": "interaction only: \"within\" keeps interactions between list genes"
+                                },
+                                "homolog_species": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "Homo sapiens"
+                                    ],
+                                    "description": "homolog only: restrict to these species"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the annotation rows",
+                        "schema": {
+                            "$ref": "#/definitions/gene_list_annotations"
+                        }
+                    },
+                    "400": {
+                        "description": "unknown data_type, no genes, or invalid options"
+                    }
+                }
+            }
+        },
+        "/gene_list/annotation_types": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "data types available to /gene_list/annotations, with their columns",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of data types",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "columns": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "source_file": {
+                                        "type": "string",
+                                        "description": "SGD download file with the same columns, if any"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -472,6 +822,276 @@
         },
         "regulation_annotation": {
             "type": "object"
+        },
+        "gene_list_locus": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "description": "SGD dbentity id"
+                },
+                "sgdid": {
+                    "type": "string",
+                    "example": "S000001855"
+                },
+                "systematic_name": {
+                    "type": "string",
+                    "example": "YFL039C"
+                },
+                "gene_name": {
+                    "type": "string",
+                    "example": "ACT1"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "qualifier": {
+                    "type": "string",
+                    "example": "Verified"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string",
+                    "example": "/locus/S000001855"
+                }
+            }
+        },
+        "gene_list_resolution": {
+            "type": "object",
+            "properties": {
+                "summary": {
+                    "type": "object",
+                    "properties": {
+                        "total": {
+                            "type": "integer"
+                        },
+                        "matched": {
+                            "type": "integer"
+                        },
+                        "ambiguous": {
+                            "type": "integer"
+                        },
+                        "retired": {
+                            "type": "integer"
+                        },
+                        "not_found": {
+                            "type": "integer"
+                        },
+                        "unique_loci": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "resolved_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "unique dbentity ids of matched genes, in input order"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "input": {
+                                "type": "string"
+                            },
+                            "status": {
+                                "type": "string",
+                                "enum": [
+                                    "matched",
+                                    "ambiguous",
+                                    "retired",
+                                    "not_found"
+                                ]
+                            },
+                            "match_type": {
+                                "type": "string",
+                                "description": "e.g. gene name, systematic name, SGDID, protein name, alias, retired name, merged into, UniProtKB ID, NCBI Gene ID, RefSeq protein ID; for retired inputs: deleted or merged"
+                            },
+                            "loci": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/gene_list_locus"
+                                },
+                                "description": "one locus when matched, the candidates when ambiguous"
+                            },
+                            "also_alias_of": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/gene_list_locus"
+                                },
+                                "description": "other genes that use this name as an alias"
+                            },
+                            "retired": {
+                                "type": "object",
+                                "description": "present for retired inputs: status, systematic_name, sgdid"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "gene_list_enrichment": {
+            "type": "object",
+            "properties": {
+                "gene_count": {
+                    "type": "integer"
+                },
+                "background": {
+                    "type": "string"
+                },
+                "fdr_cutoff": {
+                    "type": "number"
+                },
+                "min_overlap": {
+                    "type": "integer"
+                },
+                "resolution_summary": {
+                    "type": "object",
+                    "description": "present when genes were passed as identifiers"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string"
+                            },
+                            "label": {
+                                "type": "string"
+                            },
+                            "list_annotated": {
+                                "type": "integer",
+                                "description": "list genes with an annotation in this category"
+                            },
+                            "list_unannotated": {
+                                "type": "integer"
+                            },
+                            "background_total": {
+                                "type": "integer"
+                            },
+                            "terms_tested": {
+                                "type": "integer"
+                            },
+                            "truncated": {
+                                "type": "boolean",
+                                "description": "true when more than 200 terms were significant"
+                            },
+                            "note": {
+                                "type": "string"
+                            },
+                            "results": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "term": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "link": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "list_count": {
+                                            "type": "integer"
+                                        },
+                                        "list_total": {
+                                            "type": "integer"
+                                        },
+                                        "background_count": {
+                                            "type": "integer"
+                                        },
+                                        "background_total": {
+                                            "type": "integer"
+                                        },
+                                        "fold_enrichment": {
+                                            "type": "number"
+                                        },
+                                        "pvalue": {
+                                            "type": "number"
+                                        },
+                                        "fdr": {
+                                            "type": "number"
+                                        },
+                                        "genes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "display_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "systematic_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "link": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "gene_list_annotations": {
+            "type": "object",
+            "properties": {
+                "data_type": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "source_file": {
+                    "type": "string"
+                },
+                "gene_count": {
+                    "type": "integer"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "row_count": {
+                    "type": "integer"
+                },
+                "truncated": {
+                    "type": "boolean"
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "resolution_summary": {
+                    "type": "object",
+                    "description": "present when genes were passed as identifiers"
+                }
+            }
         }
     },
     "externalDocs": {

@@ -157,6 +157,11 @@ def main(global_config, **settings):
     config.add_route('contig_sequence_details', '/contig/{id}/sequence_details', request_method='GET')
 
     config.add_route('bioentity_list', '/bioentity_list', request_method='POST')
+    config.add_route('gene_list_resolve', '/gene_list/resolve', request_method='POST')
+    config.add_route('gene_list_enrichment', '/gene_list/enrichment', request_method='POST')
+    config.add_route('gene_list_enrichment_categories', '/gene_list/enrichment_categories', request_method='GET')
+    config.add_route('gene_list_annotations', '/gene_list/annotations', request_method='POST')
+    config.add_route('gene_list_annotation_types', '/gene_list/annotation_types', request_method='GET')
 
     config.add_route('dataset', '/dataset/{id}', request_method='GET')
     config.add_route('keyword', '/keyword/{id}', request_method='GET')

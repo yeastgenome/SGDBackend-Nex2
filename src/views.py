@@ -1,4 +1,4 @@
-from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound
+from pyramid.httpexceptions import HTTPBadRequest, HTTPForbidden, HTTPOk, HTTPNotFound, HTTPInternalServerError
 from pyramid.response import Response, FileResponse
 from pyramid.view import view_config
 from pyramid.compat import escape
@@ -25,6 +25,8 @@ from .models_helpers import ModelsHelper
 from .models import SGD_SOURCE_ID, TAXON_ID
 from .models import run_batter_enrichment
 from .variant_helpers import get_variant_data, get_all_variant_data
+from .gene_list_helpers import resolve_identifiers, run_list_enrichment, list_enrichment_categories
+from .gene_list_annotations import get_list_annotations, list_annotation_types, annotations_to_tsv
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -2397,6 +2399,78 @@ def analyze(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+def _gene_list_body(request):
+    try:
+        body = request.json_body
+    except ValueError:
+        raise HTTPBadRequest(body=json.dumps({'error': 'Invalid JSON format in body request'}))
+    if not isinstance(body, dict):
+        raise HTTPBadRequest(body=json.dumps({'error': 'Request body must be a JSON object'}))
+    return body
+
+@view_config(route_name='gene_list_resolve', renderer='json', request_method='POST')
+def gene_list_resolve(request):
+    # Map pasted identifiers (names, aliases, SGDIDs, UniProt/NCBI/RefSeq IDs,
+    # retired or merged names) to current SGD loci.
+    body = _gene_list_body(request)
+    if not body.get('identifiers'):
+        return HTTPBadRequest(body=json.dumps({'error': 'Key "identifiers" missing or empty'}))
+    try:
+        return resolve_identifiers(body['identifiers'])
+    except ValueError as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        log.exception(e)
+        return HTTPInternalServerError(body=json.dumps({'error': 'Gene list resolution failed'}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='gene_list_enrichment', renderer='json', request_method='POST')
+def gene_list_enrichment(request):
+    # Regulator / phenotype / complex / pathway / domain / disease (and GO)
+    # enrichment for a gene list.
+    body = _gene_list_body(request)
+    try:
+        return run_list_enrichment(body)
+    except (ValueError, TypeError) as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        log.exception(e)
+        return HTTPInternalServerError(body=json.dumps({'error': 'Gene list enrichment failed'}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='gene_list_enrichment_categories', renderer='json', request_method='GET')
+def gene_list_enrichment_categories(request):
+    return list_enrichment_categories()
+
+@view_config(route_name='gene_list_annotations', renderer='json', request_method='POST')
+def gene_list_annotations(request):
+    # One annotation data type (GO, phenotype, interaction, ...) for a gene
+    # list, as JSON {columns, rows} or, with "format": "tsv", as a TSV file.
+    body = _gene_list_body(request)
+    try:
+        result = get_list_annotations(body)
+        if body.get('format') == 'tsv':
+            return Response(body=annotations_to_tsv(result).encode('utf-8'),
+                            content_type='text/tab-separated-values', charset='utf-8',
+                            content_disposition='attachment; filename="sgd_%s.tsv"' % result['data_type'])
+        return result
+    except (ValueError, TypeError) as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        log.exception(e)
+        return HTTPInternalServerError(body=json.dumps({'error': 'Gene list annotation download failed'}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='gene_list_annotation_types', renderer='json', request_method='GET')
+def gene_list_annotation_types(request):
+    return list_annotation_types()
 
 @view_config(route_name='dataset', renderer='json', request_method='GET')
 def dataset(request):
