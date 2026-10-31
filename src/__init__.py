@@ -162,6 +162,7 @@ def main(global_config, **settings):
     config.add_route('gene_list_enrichment_categories', '/gene_list/enrichment_categories', request_method='GET')
     config.add_route('gene_list_annotations', '/gene_list/annotations', request_method='POST')
     config.add_route('gene_list_annotation_types', '/gene_list/annotation_types', request_method='GET')
+    config.add_route('gene_list_expression', '/gene_list/expression', request_method='POST')
 
     config.add_route('dataset', '/dataset/{id}', request_method='GET')
     config.add_route('keyword', '/keyword/{id}', request_method='GET')

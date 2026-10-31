@@ -799,6 +799,76 @@
                     }
                 }
             }
+        },
+        "/gene_list/expression": {
+            "post": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "expression heatmap data (log2 ratios) for a gene list",
+                "description": "log2 expression ratios for up to 100 genes across the samples of the datasets where the genes respond most (excess per-gene standard deviation over the dataset's typical gene; datasets of up to 60 samples, at most 400 columns) or of one chosen dataset, with all datasets ranked for the list, a category per dataset (from its keywords) and average-linkage clustering orders (1 - Pearson) for genes and samples.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "description": "pass either genes (any identifiers accepted by /gene_list/resolve) or bioent_ids",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "PHO84",
+                                        "PHO5",
+                                        "PHO89",
+                                        "SPL2",
+                                        "VTC1",
+                                        "VTC3",
+                                        "PHO11",
+                                        "PHO12"
+                                    ]
+                                },
+                                "bioent_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "dataset_id": {
+                                    "type": "integer",
+                                    "description": "show this dataset instead of the top-ranked ones"
+                                },
+                                "top_datasets": {
+                                    "type": "integer",
+                                    "default": 12,
+                                    "description": "1-50"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "heatmap data",
+                        "schema": {
+                            "$ref": "#/definitions/gene_list_expression"
+                        }
+                    },
+                    "400": {
+                        "description": "no genes, unknown dataset_id, or invalid options"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1090,6 +1160,84 @@
                 "resolution_summary": {
                     "type": "object",
                     "description": "present when genes were passed as identifiers"
+                }
+            }
+        },
+        "gene_list_expression": {
+            "type": "object",
+            "properties": {
+                "genes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "rows: id, display_name, systematic_name, link, description"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "sample_id, label, dataset_id"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "description": "log2 ratios, genes x columns; null = no data"
+                },
+                "gene_order": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "clustered row order"
+                },
+                "genes_without_data": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "genes left out of the grid: index into genes, reason"
+                },
+                "column_order": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "column order with samples clustered within each dataset (datasets stay contiguous)"
+                },
+                "shown_datasets": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "ranked_datasets": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "id, name, accession, link, category, keywords, sample_count, genes_measured, score (excess SD), mean_sd, flattened (true when most stored log2 ratios are exactly 0; such datasets are ranked last and left out of the default view)"
+                },
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "genes_truncated": {
+                    "type": "boolean"
+                },
+                "columns_truncated": {
+                    "type": "boolean"
+                },
+                "value_type": {
+                    "type": "string"
                 }
             }
         }
