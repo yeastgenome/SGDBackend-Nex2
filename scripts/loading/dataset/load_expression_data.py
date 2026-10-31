@@ -19,11 +19,29 @@ Samples that already have expression rows are skipped (use
 --include-loaded-samples to fill gaps in them), and inserts use ON CONFLICT DO
 NOTHING on (datasetsample_id, dbentity_id), so re-running is safe.
 
-Values follow the 2017 load:
+Values (see expression_value_scale.py; each PCL file's scale is detected
+from its values):
   - 2-channel: normalized_expression_value = log_ratio_value = SPELL value
-  - 1-channel: normalized_expression_value = SPELL value,
-               log_ratio_value = log2(value / mean of the positive values in the
-               gene's PCL row), rounded to 2 decimals; 0 when the value is <= 0
+  - 1-channel: normalized_expression_value = SPELL value, and log_ratio_value,
+    rounded to 2 decimals, is
+      * ratio files (every sample centred on 0): the value itself
+      * log-scale files (log2 intensities): value - mean of the gene's PCL row
+      * linear files: log2(value / mean of the positive values in the row); 0
+        when the value is <= 0
+    The 2017 load used the linear rule for every 1-channel file, taking log2 of
+    log2 values; fix_log_scale_log_ratios.py and --recompute-log-ratios repair
+    those rows.
+
+--recompute-log-ratios updates log_ratio_value of existing 1-channel rows from
+the dump instead of inserting: each PCL file's scale and row means are used,
+and only rows whose stored normalized_expression_value equals the dump value
+are touched (so a condition mapped differently than in the original load is
+never overwritten). Use it for datasets built from several PCL files, which
+fix_log_scale_log_ratios.py (per dataset) cannot treat file by file. A sample
+in several PCL files was not always loaded from the largest one; with
+--all-pcls every file containing it is tried, and the value check keeps only
+the file the stored values came from (run it per file, with --only, when the
+files share identical values for a sample).
 When a sample is in more than one PCL file (e.g. GSE7820_set0 + _set1 + the
 combined _setA), it is loaded from the PCL with the most conditions, as in 2017.
 Datasets with no channel_count are reported and skipped.
@@ -41,7 +59,6 @@ usage (from the repo root, with the env script sourced):
 import argparse
 import collections
 import logging
-import math
 import os
 import re
 import unicodedata
@@ -50,6 +67,7 @@ from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, text
 
 from scripts.loading.database_session import get_session
+from scripts.loading.dataset.expression_value_scale import LINEAR, ValueScale, log_ratio, row_mean
 
 __author__ = 'sweng66'
 
@@ -61,6 +79,17 @@ CREATED_BY = os.environ['DEFAULT_USER']
 TAXID = 'TAX:4932'  # taxonomy used by all existing expressionannotation rows
 REPORT_FILE = 'scripts/loading/dataset/data/load_expression_report.tsv'
 BATCH_SIZE = 5000
+
+RECOMPUTE_SQL = """
+    UPDATE nex.expressionannotation e
+    SET log_ratio_value = v.log_ratio_value
+    FROM (VALUES %s) AS v(datasetsample_id, dbentity_id, value, log_ratio_value)
+    WHERE e.datasetsample_id = v.datasetsample_id
+      AND e.dbentity_id = v.dbentity_id
+      AND abs(e.normalized_expression_value - v.value) < 1e-6
+      AND e.log_ratio_value IS DISTINCT FROM v.log_ratio_value
+"""
+RECOMPUTE_TEMPLATE = '(%s::bigint, %s::bigint, %s::float8, %s::float8)'
 
 INSERT_SQL = """
     INSERT INTO nex.expressionannotation
@@ -176,15 +205,6 @@ def map_conditions(data, dataset_ids, conditions):
     return mapped, methods
 
 
-def log_ratio(value, row_mean, channel_count):
-
-    if channel_count == 2:
-        return value
-    if value <= 0 or row_mean <= 0:
-        return 0.0
-    return round(math.log(value / row_mean, 2), 2)
-
-
 def parse_value(value):
 
     value = value.strip()
@@ -204,6 +224,7 @@ class PclState:
         self.problem = ''
         self.mapped = [None] * len(conditions)
         self.channel_count = None
+        self.scale = LINEAR
         self.in_larger_pcl = 0
         self.methods = collections.Counter()
         self.skipped_loaded = 0
@@ -272,15 +293,23 @@ def read_dump(infile, only):
             yield pmid, pcl, conditions, values, systematic_name.strip()
 
 
-def map_pcl_files(data, infile, only, include_loaded):
-    """First pass: map every PCL file's conditions to samples."""
+def map_pcl_files(data, infile, only, include_loaded, all_pcls=False):
+    """First pass: map every PCL file's conditions to samples and detect the
+    scale of its values (ratio, log or linear)."""
 
     states = {}
     order = []
-    for pmid, pcl, conditions, _, _ in read_dump(infile, only):
+    scales = collections.defaultdict(ValueScale)
+    for pmid, pcl, conditions, values, _ in read_dump(infile, only):
         if pcl not in states:
             states[pcl] = PclState(data, pmid, pcl, split_conditions(conditions), include_loaded)
             order.append(pcl)
+        scales[pcl].add_row([parse_value(x) for x in values.split(',')])
+    for pcl in order:
+        states[pcl].scale = scales[pcl].kind()
+
+    if all_pcls:
+        return states, order
 
     # a sample in several PCL files is loaded from the one with the most conditions
     owner = {}
@@ -297,7 +326,7 @@ def map_pcl_files(data, infile, only, include_loaded):
     return states, order
 
 
-def load_data(infile, do_load, only, include_loaded):
+def load_data(infile, do_load, only, include_loaded, recompute=False, all_pcls=False):
 
     nex_session = get_session()
     log.info("Reading datasets, samples, genes and references...")
@@ -307,7 +336,8 @@ def load_data(infile, do_load, only, include_loaded):
     only = set(only) if only else None
 
     log.info("Mapping PCL files to datasets and samples...")
-    states, order = map_pcl_files(data, infile, only, include_loaded)
+    # recomputing needs the samples that already have rows
+    states, order = map_pcl_files(data, infile, only, include_loaded or recompute, all_pcls and recompute)
 
     nex_session.close()
 
@@ -321,7 +351,10 @@ def load_data(infile, do_load, only, include_loaded):
     def flush():
         nonlocal inserted, batch
         if batch and cursor is not None:
-            execute_values(cursor, INSERT_SQL, batch, page_size=BATCH_SIZE)
+            if recompute:
+                execute_values(cursor, RECOMPUTE_SQL, batch, template=RECOMPUTE_TEMPLATE, page_size=BATCH_SIZE)
+            else:
+                execute_values(cursor, INSERT_SQL, batch, page_size=BATCH_SIZE)
             inserted += cursor.rowcount
         batch = []
 
@@ -333,7 +366,7 @@ def load_data(infile, do_load, only, include_loaded):
             if do_load:
                 flush()
                 connection.commit()
-        if state.problem or not any(state.mapped):
+        if state.problem or not any(state.mapped) or (recompute and state.channel_count != 1):
             continue
 
         dbentity_id = data['locus'].get(systematic_name)
@@ -346,8 +379,7 @@ def load_data(infile, do_load, only, include_loaded):
             log.info("Skipping %s %s: %d values for %d conditions",
                      pcl, systematic_name, len(values), len(state.conditions))
             continue
-        positive = [x for x in values if x is not None and x > 0]
-        row_mean = sum(positive) / len(positive) if positive else 0
+        mean = row_mean(values, state.scale)
 
         for datasetsample_id, value in zip(state.mapped, values):
             if datasetsample_id is None:
@@ -356,10 +388,12 @@ def load_data(infile, do_load, only, include_loaded):
                 state.na_values += 1
                 continue
             state.rows += 1
-            if do_load:
+            ratio = log_ratio(value, mean, state.channel_count, state.scale)
+            if do_load and recompute:
+                batch.append((datasetsample_id, dbentity_id, value, ratio))
+            elif do_load:
                 batch.append((dbentity_id, data['source_id'], data['taxonomy_id'], state.reference_id,
-                              datasetsample_id, value, log_ratio(value, row_mean, state.channel_count),
-                              CREATED_BY))
+                              datasetsample_id, value, ratio, CREATED_BY))
                 if len(batch) >= BATCH_SIZE:
                     flush()
 
@@ -369,27 +403,29 @@ def load_data(infile, do_load, only, include_loaded):
         connection.close()
 
     write_report(data, states, order)
-    summarize(data, states, order, do_load, inserted)
+    summarize(data, states, order, do_load, inserted, recompute)
 
 
 def write_report(data, states, order):
 
     os.makedirs(os.path.dirname(REPORT_FILE), exist_ok=True)
     with open(REPORT_FILE, 'w') as fw:
-        fw.write('\t'.join(['pcl', 'pmid', 'datasets', 'conditions', 'exact', 'normalized', 'order',
+        fw.write('\t'.join(['pcl', 'pmid', 'datasets', 'channels', 'scale', 'conditions', 'exact',
+                            'normalized', 'order',
                             'already_loaded', 'in_larger_pcl', 'unmapped', 'rows_to_add', 'unknown_genes', 'na_values',
                             'reference_id', 'problem', 'unmapped_conditions']) + '\n')
         for pcl in order:
             s = states[pcl]
             unmapped = [] if s.problem else s.unmapped_conditions
             fw.write('\t'.join(str(x) for x in [
-                pcl, s.pmid, s.datasets(data), len(s.conditions), s.methods['exact'], s.methods['normalized'],
+                pcl, s.pmid, s.datasets(data), s.channel_count or '', s.scale, len(s.conditions),
+                s.methods['exact'], s.methods['normalized'],
                 s.methods['order'], s.skipped_loaded, s.in_larger_pcl, s.unmapped(), s.rows, s.unknown_genes,
                 s.na_values, s.reference_id or '', s.problem, ' ~ '.join(unmapped)]) + '\n')
     log.info("Per-PCL report: %s", REPORT_FILE)
 
 
-def summarize(data, states, order, do_load, inserted):
+def summarize(data, states, order, do_load, inserted, recompute=False):
 
     by_dataset = collections.Counter()
     for pcl in order:
@@ -409,7 +445,8 @@ def summarize(data, states, order, do_load, inserted):
         totals['pcl files with rows to add'] += bool(s.rows)
 
     log.info("")
-    log.info("Datasets with rows to add:")
+    log.info("Datasets with log ratios to recompute (1-channel rows in the dump):" if recompute
+             else "Datasets with rows to add:")
     for name, rows in sorted(by_dataset.items()):
         log.info("  %-40s %10d", name, rows)
     log.info("")
@@ -417,7 +454,11 @@ def summarize(data, states, order, do_load, inserted):
                 'already loaded', 'unmapped', 'rows']:
         log.info("%-28s %d", key, totals[key])
     if do_load:
-        log.info("Inserted %d rows (rest already present)", inserted)
+        if recompute:
+            log.info("Updated %d log ratios (rows already correct, or whose stored value differs from the dump, "
+                     "were left alone)", inserted)
+        else:
+            log.info("Inserted %d rows (rest already present)", inserted)
         if inserted:
             # expression pages read precomputed S3 JSON, not the database
             log.info("")
@@ -426,7 +467,7 @@ def summarize(data, states, order, do_load, inserted):
             log.info("  some loci:     python scripts/loading/dataset/upload_expression_details.py S000001855 ...")
             log.info("  Run it with the same environment (NEX2_URI) as this load; a full run takes hours.")
     else:
-        log.info("Dry run: nothing written. Re-run with --load to insert.")
+        log.info("Dry run: nothing written. Re-run with --load to %s.", 'update' if recompute else 'insert')
 
 
 if __name__ == '__main__':
@@ -437,6 +478,11 @@ if __name__ == '__main__':
     parser.add_argument('--only', help='comma-separated PCL file prefixes to process, e.g. GSE86358,GSE24681')
     parser.add_argument('--include-loaded-samples', action='store_true',
                         help='also fill missing genes in samples that already have rows')
+    parser.add_argument('--recompute-log-ratios', action='store_true',
+                        help='update log_ratio_value of existing 1-channel rows instead of inserting')
+    parser.add_argument('--all-pcls', action='store_true',
+                        help='with --recompute-log-ratios: try every PCL file a sample is in, not just the largest')
     args = parser.parse_args()
 
-    load_data(args.infile, args.load, args.only.split(',') if args.only else None, args.include_loaded_samples)
+    load_data(args.infile, args.load, args.only.split(',') if args.only else None, args.include_loaded_samples,
+              recompute=args.recompute_log_ratios, all_pcls=args.all_pcls)
