@@ -21,7 +21,9 @@ NOTHING on (datasetsample_id, dbentity_id), so re-running is safe.
 
 Values (see expression_value_scale.py; each PCL file's scale is detected
 from its values):
-  - 2-channel: normalized_expression_value = log_ratio_value = SPELL value
+  - 2-channel: normalized_expression_value = log_ratio_value = SPELL value,
+    except files that hold intensities instead of ratios (no negative values,
+    median >= 5): value - mean of the gene's PCL row
   - 1-channel: normalized_expression_value = SPELL value, and log_ratio_value,
     rounded to 2 decimals, is
       * ratio files (every sample centred on 0): the value itself
@@ -32,7 +34,7 @@ from its values):
     log2 values; fix_log_scale_log_ratios.py and --recompute-log-ratios repair
     those rows.
 
---recompute-log-ratios updates log_ratio_value of existing 1-channel rows from
+--recompute-log-ratios updates log_ratio_value of existing rows from
 the dump instead of inserting: each PCL file's scale and row means are used,
 and only rows whose stored normalized_expression_value equals the dump value
 are touched (so a condition mapped differently than in the original load is
@@ -306,7 +308,7 @@ def map_pcl_files(data, infile, only, include_loaded, all_pcls=False):
             order.append(pcl)
         scales[pcl].add_row([parse_value(x) for x in values.split(',')])
     for pcl in order:
-        states[pcl].scale = scales[pcl].kind()
+        states[pcl].scale = scales[pcl].kind(states[pcl].channel_count or 1)
 
     if all_pcls:
         return states, order
@@ -366,7 +368,7 @@ def load_data(infile, do_load, only, include_loaded, recompute=False, all_pcls=F
             if do_load:
                 flush()
                 connection.commit()
-        if state.problem or not any(state.mapped) or (recompute and state.channel_count != 1):
+        if state.problem or not any(state.mapped):
             continue
 
         dbentity_id = data['locus'].get(systematic_name)
@@ -445,7 +447,7 @@ def summarize(data, states, order, do_load, inserted, recompute=False):
         totals['pcl files with rows to add'] += bool(s.rows)
 
     log.info("")
-    log.info("Datasets with log ratios to recompute (1-channel rows in the dump):" if recompute
+    log.info("Datasets with log ratios to recompute (rows in the dump):" if recompute
              else "Datasets with rows to add:")
     for name, rows in sorted(by_dataset.items()):
         log.info("  %-40s %10d", name, rows)
@@ -479,7 +481,7 @@ if __name__ == '__main__':
     parser.add_argument('--include-loaded-samples', action='store_true',
                         help='also fill missing genes in samples that already have rows')
     parser.add_argument('--recompute-log-ratios', action='store_true',
-                        help='update log_ratio_value of existing 1-channel rows instead of inserting')
+                        help='update log_ratio_value of existing rows instead of inserting')
     parser.add_argument('--all-pcls', action='store_true',
                         help='with --recompute-log-ratios: try every PCL file a sample is in, not just the largest')
     args = parser.parse_args()

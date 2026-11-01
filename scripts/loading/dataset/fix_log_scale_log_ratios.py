@@ -1,4 +1,4 @@
-"""Recompute log_ratio_value for single-channel datasets that are not linear.
+"""Recompute log_ratio_value for datasets whose values are not handled by the 2017 rule.
 
 The 2017 load (and the 2026 SPELL load, which reproduced it) computed every
 1-channel log ratio as log2(value / row mean), 0 for values <= 0. That only
@@ -10,6 +10,9 @@ expression_value_scale.py) and sets
                          values in the dataset, 2)
     ratio datasets:      log_ratio_value = value (already log ratios)
     linear datasets:     unchanged
+    2-channel datasets holding intensities instead of ratios (no negative
+    values, median >= 5) get the log-scale treatment; other 2-channel
+    datasets are left alone (their values are already stored as is).
 
 The loader centres on the gene's PCL row; a dataset is one PCL file except for
 a few built from several, which must be excluded here (--exclude) and redone
@@ -45,7 +48,8 @@ import time
 
 from sqlalchemy import create_engine, text
 
-from scripts.loading.dataset.expression_value_scale import LINEAR, LOG, LOG_SCALE_MEDIAN, RATIO, ValueScale
+from scripts.loading.dataset.expression_value_scale import (
+    LINEAR, LOG, LOG_SCALE_MEDIAN, RATIO, TWO_CHANNEL_INTENSITY_MEDIAN, ValueScale)
 
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
 log = logging.getLogger('fix_log_ratios')
@@ -53,16 +57,17 @@ log = logging.getLogger('fix_log_ratios')
 REPORT_FILE = 'scripts/loading/dataset/data/fix_log_scale_log_ratios_report.tsv'
 
 STATS_SQL = """
-    SELECT d.dataset_id, d.format_name, count(*) AS n,
+    SELECT d.dataset_id, d.format_name, d.channel_count, count(*) AS n,
            sum((e.normalized_expression_value < 0)::int) AS negative,
            sum((e.normalized_expression_value >= :median)::int) AS at_least_median,
+           sum((e.normalized_expression_value >= :intensity)::int) AS at_least_intensity,
            max(e.normalized_expression_value) AS maximum,
            stddev(e.log_ratio_value) AS sd
     FROM nex.expressionannotation e
     JOIN nex.datasetsample ds ON ds.datasetsample_id = e.datasetsample_id
     JOIN nex.dataset d ON d.dataset_id = ds.dataset_id
-    WHERE d.channel_count = 1
-    GROUP BY d.dataset_id, d.format_name
+    WHERE d.channel_count IN (1, 2)
+    GROUP BY d.dataset_id, d.format_name, d.channel_count
     ORDER BY d.format_name
 """
 
@@ -135,9 +140,10 @@ def audit_trigger_installed(engine):
 
 
 def classify(engine, only, exclude):
-    """[(dataset_id, accession, n, scale, sd)] for single-channel datasets."""
+    """[(dataset_id, accession, n, scale, sd, channel_count)] for 1- and 2-channel datasets."""
     with engine.connect() as conn:
-        rows = conn.execute(text(STATS_SQL), {'median': LOG_SCALE_MEDIAN}).fetchall()
+        rows = conn.execute(text(STATS_SQL), {'median': LOG_SCALE_MEDIAN,
+                                              'intensity': TWO_CHANNEL_INTENSITY_MEDIAN}).fetchall()
         sample_means = {}
         for dataset_id, mean in conn.execute(text(SAMPLE_MEANS_SQL)):
             sample_means.setdefault(dataset_id, []).append(float(mean))
@@ -147,11 +153,12 @@ def classify(engine, only, exclude):
             continue
         if exclude and (r.format_name in exclude or str(r.dataset_id) in exclude):
             continue
-        scale = ValueScale(r.n, r.negative, r.at_least_median, r.maximum, sample_means=sample_means[r.dataset_id],
-                           gene_spread=1.0)
-        out.append((r.dataset_id, r.format_name, r.n, scale, float(r.sd or 0)))
-    # the gene-level test is only needed (and only computed) for centred candidates
-    candidates = [d[0] for d in out if d[3].kind() == RATIO]
+        scale = ValueScale(r.n, r.negative, r.at_least_median, r.maximum,
+                           sample_means=sample_means.get(r.dataset_id, []), gene_spread=1.0,
+                           at_least_intensity=r.at_least_intensity)
+        out.append((r.dataset_id, r.format_name, r.n, scale, float(r.sd or 0), r.channel_count))
+    # the gene-level test is only needed (and only computed) for centred 1-channel candidates
+    candidates = [d[0] for d in out if d[5] == 1 and d[3].kind() == RATIO]
     if candidates:
         with engine.connect() as conn:
             spreads = dict(conn.execute(text(GENE_SPREAD_SQL), {'ids': candidates}).fetchall())
@@ -175,18 +182,19 @@ def apply_fix(engine, datasets, backup_dir):
     start = time.time()
     try:
         with gzip.open(backup_file, 'wt') as fw:
-            for n, (dataset_id, accession, _, scale, _) in enumerate(datasets, 1):
+            for n, (dataset_id, accession, _, scale, _, channels) in enumerate(datasets, 1):
+                kind = scale.kind(channels)
                 backup(raw, dataset_id, fw)
                 cursor = raw.cursor()
-                cursor.execute(RATIO_UPDATE_SQL if scale.kind() == RATIO else UPDATE_SQL, {'dataset_id': dataset_id})
+                cursor.execute(RATIO_UPDATE_SQL if kind == RATIO else UPDATE_SQL, {'dataset_id': dataset_id})
                 updated = cursor.rowcount
                 cursor.execute(SD_SQL, {'dataset_id': dataset_id})
                 sd_after = float(cursor.fetchone()[0] or 0)
                 raw.commit()
                 cursor.close()
                 results[dataset_id] = (updated, sd_after)
-                log.info('%d/%d %s (%s): %d rows updated, log ratio SD now %.3f (%.0fs)',
-                         n, len(datasets), accession, scale.kind(), updated, sd_after, time.time() - start)
+                log.info('%d/%d %s (%d-channel %s): %d rows updated, log ratio SD now %.3f (%.0fs)',
+                         n, len(datasets), accession, channels, kind, updated, sd_after, time.time() - start)
     finally:
         raw.close()
     log.info('backup of the previous values: %s', backup_file)
@@ -213,16 +221,17 @@ def restore(engine, backup_file):
 def write_report(datasets, results):
     os.makedirs(os.path.dirname(REPORT_FILE), exist_ok=True)
     with open(REPORT_FILE, 'w') as fw:
-        fw.write('\t'.join(['dataset_id', 'accession', 'values', 'pct_negative', 'pct_at_least_median', 'max',
+        fw.write('\t'.join(['dataset_id', 'accession', 'channels', 'values', 'pct_negative', 'pct_at_least_median',
+                            'max',
                             'median_abs_sample_mean', 'gene_spread', 'scale', 'log_ratio_sd_before', 'rows_updated',
                             'log_ratio_sd_after']) + '\n')
-        for dataset_id, accession, n, scale, sd in datasets:
+        for dataset_id, accession, n, scale, sd, channels in datasets:
             updated, sd_after = results.get(dataset_id, ('', ''))
+            means = sorted(abs(m) for m in scale.sample_means()) or [0.0]
             fw.write('\t'.join(str(x) for x in [
-                dataset_id, accession, n, round(100.0 * scale.negative / n, 1),
+                dataset_id, accession, channels, n, round(100.0 * scale.negative / n, 1),
                 round(100.0 * scale.at_least_median / n, 1), round(scale.max, 2),
-                round(sorted(abs(m) for m in scale.sample_means())[len(scale.sample_means()) // 2], 3),
-                round(scale.gene_spread(), 2), scale.kind(), round(sd, 3),
+                round(means[len(means) // 2], 3), round(scale.gene_spread(), 2), scale.kind(channels), round(sd, 3),
                 updated, round(sd_after, 3) if sd_after != '' else '']) + '\n')
     log.info('report: %s', REPORT_FILE)
 
@@ -251,10 +260,14 @@ def main():
     only = set(args.only.split(',')) if args.only else None
     exclude = set(args.exclude.split(',')) if args.exclude else None
     datasets = classify(engine, only, exclude)
-    kinds = [d[3].kind() for d in datasets]
-    to_fix = [d for d, k in zip(datasets, kinds) if k in (LOG, RATIO)]
-    log.info('%d single-channel datasets: %d log-scale, %d ratio (%d values to check), %d linear',
-             len(datasets), kinds.count(LOG), kinds.count(RATIO), sum(d[2] for d in to_fix), kinds.count(LINEAR))
+    kinds = [d[3].kind(d[5]) for d in datasets]
+    # 2-channel ratio datasets already store the value itself: nothing to do
+    to_fix = [d for d, k in zip(datasets, kinds) if k == LOG or (k == RATIO and d[5] == 1)]
+    one = [k for d, k in zip(datasets, kinds) if d[5] == 1]
+    two = [k for d, k in zip(datasets, kinds) if d[5] == 2]
+    log.info('%d single-channel datasets: %d log-scale, %d ratio, %d linear; %d two-channel: %d ratio, %d '
+             'intensities (log-scale); %d datasets (%d values) to check', len(one), one.count(LOG), one.count(RATIO),
+             one.count(LINEAR), len(two), two.count(RATIO), two.count(LOG), len(to_fix), sum(d[2] for d in to_fix))
     results = apply_fix(engine, to_fix, args.backup_dir) if args.apply else {}
     write_report(datasets, results)
     if args.apply:

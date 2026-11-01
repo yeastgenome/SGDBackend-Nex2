@@ -67,6 +67,28 @@ class ValueScaleTest(unittest.TestCase):
         self.assertEqual(ValueScale(100, 45, 10, 5.3, sample_means=[0.19, -0.2, 0.25], gene_spread=0.95).kind(), LOG)
 
 
+class TwoChannelTest(unittest.TestCase):
+
+    def test_ratio_files(self):
+        scale = ValueScale()
+        for row in [[-1.2, 0.4], [0.3, -0.2], [2.1, 1.7], [-0.5, 0.1]]:
+            scale.add_row(row)
+        self.assertEqual(scale.kind(2), RATIO)
+
+    def test_intensity_files(self):
+        # e.g. GSE26617: 2-channel file holding intensities (values 22-31)
+        scale = ValueScale()
+        for row in [[28.2, 27.9], [23.2, 24.0], [30.1, 29.8]]:
+            scale.add_row(row)
+        self.assertEqual(scale.kind(2), LOG)
+        self.assertEqual(ValueScale(100, 0, 100, 30.6, at_least_intensity=100).kind(2), LOG)
+        self.assertEqual(ValueScale(100, 3, 60, 16.6, at_least_intensity=1).kind(2), RATIO)
+
+    def test_log_ratio_for_two_channel(self):
+        self.assertEqual(log_ratio(-1.234, 5.0, 2, RATIO), -1.234)
+        self.assertEqual(log_ratio(28.5, 28.0, 2, LOG), 0.5)
+
+
 class LogRatioTest(unittest.TestCase):
 
     def test_two_channel_and_ratio_values_are_kept(self):

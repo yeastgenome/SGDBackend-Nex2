@@ -1,7 +1,11 @@
 """log2 ratios for expression values, shared by load_expression_data.py and
 fix_log_scale_log_ratios.py.
 
-2-channel PCL files hold log2 ratios. 1-channel PCL files hold one of:
+2-channel PCL files hold log2 ratios ('ratio'), except a few that hold
+intensities instead ('log': no negative values and a median >=
+TWO_CHANNEL_INTENSITY_MEDIAN; the 3 such datasets in SGD, GSE26617, GSE26618
+and GSE33971, have medians 27-28, while all 366 ratio datasets have
+|median| <= 1.62). 1-channel PCL files hold one of:
   - 'ratio':  log ratios already (each sample against a reference): stored
               as is, like 2-channel values
   - 'log':    log2 intensities (or rates): ratio = value - mean of the gene's
@@ -33,6 +37,7 @@ LOG_SCALE_MEDIAN = 1.5
 LOG_SCALE_NEGATIVE = 0.01
 RATIO_CENTER = 0.1
 RATIO_GENE_SPREAD = 0.7
+TWO_CHANNEL_INTENSITY_MEDIAN = 5
 
 RATIO = 'ratio'
 LOG = 'log'
@@ -45,10 +50,11 @@ class ValueScale:
     recognise files that are already centred ratios."""
 
     def __init__(self, count=0, negative=0, at_least_median=0, maximum=float('-inf'), sample_means=None,
-                 gene_spread=None):
+                 gene_spread=None, at_least_intensity=0):
         self.count = count
         self.negative = negative
         self.at_least_median = at_least_median
+        self.at_least_intensity = at_least_intensity
         self.max = maximum
         self._sample_means = sample_means
         self._gene_spread = gene_spread
@@ -71,6 +77,7 @@ class ValueScale:
             self.count += 1
             self.negative += v < 0
             self.at_least_median += v >= LOG_SCALE_MEDIAN
+            self.at_least_intensity += v >= TWO_CHANNEL_INTENSITY_MEDIAN
             self.max = max(self.max, v)
             self.column_sums[i] += v
             self.column_counts[i] += 1
@@ -90,7 +97,11 @@ class ValueScale:
         variance = self.total_squares / self.count - (self.total / self.count) ** 2
         return math.sqrt(self.within_gene_squares / self.count / variance) if variance > 0 else 0.0
 
-    def kind(self):
+    def kind(self, channel_count=1):
+        if channel_count == 2:
+            intensities = (self.count and self.negative < LOG_SCALE_NEGATIVE * self.count
+                           and 2 * self.at_least_intensity >= self.count)
+            return LOG if intensities else RATIO
         if not self.count:
             return LINEAR
         if self.negative >= LOG_SCALE_NEGATIVE * self.count:
@@ -114,8 +125,10 @@ def row_mean(values, scale):
 
 
 def log_ratio(value, mean, channel_count, scale):
-    """log2 ratio of a value, rounded to 2 decimals (see the module docstring)."""
-    if channel_count == 2 or scale == RATIO:
+    """log2 ratio of a value, rounded to 2 decimals (see the module docstring).
+    channel_count only matters for callers that do not classify 2-channel
+    files: their values are then taken as ratios."""
+    if scale == RATIO or (channel_count == 2 and scale != LOG):
         return value
     if scale == LOG:
         return round(value - mean, 2)
