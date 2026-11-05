@@ -44,6 +44,20 @@ APO_ANNOTATIONS = {101: {'abnormal': {1}, None: {2}},
                    102: {'decreased': {3}, 'normal': {4}},
                    103: {'normal rate': {1}}}
 
+# 200 cancer -> 201 carcinoma; 202 unannotated disease
+DISEASES = {200: {'id': 'DOID:162', 'display_name': 'cancer', 'link': '/disease/DOID:162'},
+            201: {'id': 'DOID:305', 'display_name': 'carcinoma', 'link': '/disease/DOID:305'},
+            202: {'id': 'DOID:4', 'display_name': 'disease', 'link': '/disease/DOID:4'}}
+DISEASE_CHILDREN = {200: [201]}
+DISEASE_ANNOTATIONS = {200: {1}, 201: {2, 3}}
+
+# regulator sets keyed by regulator dbentity id, domains by InterPro id
+REGULATORS = ({50: {'id': 50, 'display_name': 'GCN4', 'link': '/locus/GCN4'},
+               51: {'id': 51, 'display_name': 'GCR1', 'link': '/locus/GCR1'}},
+              {50: frozenset({1, 2}), 51: frozenset({4})}, frozenset({1, 2, 4}))
+DOMAINS = ({'IPR000001': {'id': 'IPR000001', 'display_name': 'Kringle', 'link': 'https://www.ebi.ac.uk/'}},
+           {'IPR000001': frozenset({3})}, frozenset({3}))
+
 
 class TermGenesTest(unittest.TestCase):
 
@@ -51,6 +65,10 @@ class TermGenesTest(unittest.TestCase):
         patchers = [mock.patch.object(glt, 'get_lookup', return_value=(LOCI, {}, {})),
                     mock.patch.object(glt, 'get_go', return_value=(GO_TERMS, GO_BY_ID, GO_CHILDREN, GO_ANNOTATIONS)),
                     mock.patch.object(glt, 'get_observables', return_value=(APO_TERMS, APO_CHILDREN, APO_ANNOTATIONS)),
+                    mock.patch.object(glt, 'get_diseases',
+                                      return_value=(DISEASES, DISEASE_CHILDREN, DISEASE_ANNOTATIONS)),
+                    mock.patch.object(glt, 'get_annotation_sets',
+                                      side_effect=lambda c: {'regulator': REGULATORS, 'domain': DOMAINS}[c]),
                     mock.patch.object(glt, '_cached', side_effect=lambda key, builder: builder())]
         for patcher in patchers:
             patcher.start()
@@ -118,6 +136,40 @@ class TermGenesTest(unittest.TestCase):
         self.assertEqual([(t['display_name'], t['depth'], t['gene_count']) for t in tree['terms']],
                          [('cell morphology', 0, 3), ('cell shape', 1, 1), ('growth', 0, 0)])
         self.assertEqual(tree['qualifiers'], ['abnormal', 'decreased', 'normal', 'normal rate'])
+
+
+    def test_disease_with_and_without_descendants(self):
+        result = glt.category_term_genes('disease', 'DOID:162')
+        self.assertEqual(result['term']['display_name'], 'cancer')
+        self.assertEqual(result['term_count'], 2)
+        self.assertEqual(self.names(result), ['YFL039C', 'YBR160W', 'YJL030W'])
+        self.assertEqual(self.names(glt.category_term_genes('disease', 'Cancer', include_descendants=False)),
+                         ['YFL039C'])
+        self.assertEqual(self.names(glt.category_term_genes('disease', 'doid162', include_descendants=False)),
+                         ['YFL039C'])
+
+    def test_flat_categories(self):
+        result = glt.category_term_genes('regulator', 'gcn4')
+        self.assertFalse(result['include_descendants'])
+        self.assertEqual(self.names(result), ['YFL039C', 'YBR160W'])
+        # the frontend sends back the suggestion key (the term id)
+        self.assertEqual(self.names(glt.category_term_genes('regulator', '51')), ['YAR000W'])
+        self.assertEqual(self.names(glt.category_term_genes('domain', 'ipr000001')), ['YJL030W'])
+        with self.assertRaises(LookupError):
+            glt.category_term_genes('regulator', 'nope')
+        with self.assertRaises(ValueError):
+            glt.category_term_genes('go', 'GO:0005991')
+
+    def test_search_category_terms(self):
+        hits = glt.search_category_terms('disease', 'c')
+        self.assertEqual(hits, [])
+        hits = glt.search_category_terms('disease', 'ca')
+        # unannotated terms are left out; counts include descendants
+        self.assertEqual([(t['display_name'], t['gene_count']) for t in hits], [('cancer', 3), ('carcinoma', 2)])
+        self.assertEqual(hits[0]['key'], '200')
+        self.assertEqual(glt.search_category_terms('disease', 'doid:305')[0]['display_name'], 'carcinoma')
+        self.assertEqual([t['accession'] for t in glt.search_category_terms('domain', 'IPR000001')], ['IPR000001'])
+        self.assertEqual([t['accession'] for t in glt.search_category_terms('regulator', 'gc')], [None, None])
 
 
 if __name__ == '__main__':

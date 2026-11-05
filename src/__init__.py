@@ -167,6 +167,8 @@ def main(global_config, **settings):
     config.add_route('gene_list_go_term_genes', '/gene_list/go_term_genes', request_method='GET')
     config.add_route('gene_list_phenotype_terms', '/gene_list/phenotype_terms', request_method='GET')
     config.add_route('gene_list_phenotype_genes', '/gene_list/phenotype_genes', request_method='GET')
+    config.add_route('gene_list_category_terms', '/gene_list/category_terms', request_method='GET')
+    config.add_route('gene_list_category_term_genes', '/gene_list/category_term_genes', request_method='GET')
 
     config.add_route('dataset', '/dataset/{id}', request_method='GET')
     config.add_route('keyword', '/keyword/{id}', request_method='GET')

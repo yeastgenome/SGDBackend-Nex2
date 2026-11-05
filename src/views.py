@@ -28,7 +28,8 @@ from .variant_helpers import get_variant_data, get_all_variant_data
 from .gene_list_helpers import resolve_identifiers, run_list_enrichment, list_enrichment_categories
 from .gene_list_annotations import get_list_annotations, list_annotation_types, annotations_to_tsv
 from .gene_list_expression import get_list_expression
-from .gene_list_terms import go_term_genes, search_go_terms, phenotype_terms, phenotype_genes
+from .gene_list_terms import go_term_genes, search_go_terms, phenotype_terms, phenotype_genes, \
+    search_category_terms, category_term_genes
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -2540,6 +2541,20 @@ def gene_list_phenotype_genes(request):
         include_descendants=_flag(request, 'include_descendants'),
         qualifier=request.params.get('qualifier') or None,
         include_normal=_flag(request, 'include_normal', default=False)), 'Loading genes for the phenotype failed')
+
+@view_config(route_name='gene_list_category_terms', renderer='json', request_method='GET')
+def gene_list_category_terms(request):
+    # Term suggestions for a list category (?category=disease|regulator|complex|pathway|domain&q=...)
+    return _gene_list_source(request, lambda: {'terms': search_category_terms(
+        request.params.get('category', ''), request.params.get('q', ''))}, 'Term search failed')
+
+@view_config(route_name='gene_list_category_term_genes', renderer='json', request_method='GET')
+def gene_list_category_term_genes(request):
+    # Genes of one term in a list category (?category=...&term=...), disease
+    # optionally with its descendant terms
+    return _gene_list_source(request, lambda: category_term_genes(
+        request.params.get('category', ''), request.params.get('term', ''),
+        include_descendants=_flag(request, 'include_descendants')), 'Loading genes for the term failed')
 
 @view_config(route_name='dataset', renderer='json', request_method='GET')
 def dataset(request):

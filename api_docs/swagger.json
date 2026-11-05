@@ -1066,6 +1066,151 @@
                     }
                 }
             }
+        },
+        "/gene_list/category_terms": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "term suggestions for building a gene list from a disease, regulator, complex, pathway or domain",
+                "description": "Terms of the category whose name contains the query (or whose DOID / InterPro ID matches it), exact matches first, with the number of genes (for disease including descendant terms). At most 20.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "category",
+                        "type": "string",
+                        "required": true,
+                        "enum": [
+                            "disease",
+                            "regulator",
+                            "complex",
+                            "pathway",
+                            "domain"
+                        ],
+                        "description": "disease (Disease Ontology), regulator (targets of a transcriptional regulator), complex (subunits), pathway (YeastPathways) or domain (InterPro)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "type": "string",
+                        "required": true,
+                        "description": "at least 2 characters, e.g. cancer, GCN4, proteasome, IPR001611"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the term, options and genes; also qualifier and include_normal",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "source": {
+                                    "type": "string"
+                                },
+                                "term": {
+                                    "type": "object",
+                                    "description": "id, display_name, link (and namespace for GO)"
+                                },
+                                "include_descendants": {
+                                    "type": "boolean"
+                                },
+                                "term_count": {
+                                    "type": "integer",
+                                    "description": "number of terms included (the term plus descendants)"
+                                },
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    },
+                                    "description": "loci as in /gene_list/resolve: id, sgdid, systematic_name, gene_name, display_name, qualifier, description, link"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "unknown term, unknown option, or the term covers more than 5000 genes (JSON {error})"
+                    }
+                }
+            }
+        },
+        "/gene_list/category_term_genes": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "genes of a disease, regulator, complex, pathway or domain, for a gene list",
+                "description": "Current SGD genes for one term: genes associated with a human disease (by default including descendant terms; NOT annotations left out), targets of a transcriptional regulator, subunits of a complex, genes of a pathway or proteins with an InterPro domain. Apart from disease these are the gene sets the enrichment tests use.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "category",
+                        "type": "string",
+                        "required": true,
+                        "enum": [
+                            "disease",
+                            "regulator",
+                            "complex",
+                            "pathway",
+                            "domain"
+                        ],
+                        "description": "disease (Disease Ontology), regulator (targets of a transcriptional regulator), complex (subunits), pathway (YeastPathways) or domain (InterPro)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "term",
+                        "type": "string",
+                        "required": true,
+                        "description": "term name, DOID or InterPro ID, or the key returned by category_terms, e.g. DOID:162, GCN4, IPR001611"
+                    },
+                    {
+                        "in": "query",
+                        "name": "include_descendants",
+                        "type": "boolean",
+                        "required": false,
+                        "description": "disease only: include genes annotated to descendant terms (default true)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the term, options and genes; also qualifier and include_normal",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "source": {
+                                    "type": "string"
+                                },
+                                "term": {
+                                    "type": "object",
+                                    "description": "id, display_name, link (and namespace for GO)"
+                                },
+                                "include_descendants": {
+                                    "type": "boolean"
+                                },
+                                "term_count": {
+                                    "type": "integer",
+                                    "description": "number of terms included (the term plus descendants)"
+                                },
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    },
+                                    "description": "loci as in /gene_list/resolve: id, sgdid, systematic_name, gene_name, display_name, qualifier, description, link"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "unknown term, unknown option, or the term covers more than 5000 genes (JSON {error})"
+                    }
+                }
+            }
         }
     },
     "definitions": {

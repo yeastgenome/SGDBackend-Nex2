@@ -10,6 +10,12 @@ phenotype_genes() lists the genes annotated to a phenotype observable
 (APO term) and, optionally, its descendants. By default results with a
 "normal" qualifier (the mutant showed no phenotype) are left out.
 
+category_term_genes() lists the genes of one term in another annotation
+category: a human disease (Disease Ontology, optionally with descendants),
+the targets of a transcriptional regulator, the subunits of a complex, the
+genes of a pathway or the proteins with an InterPro domain. Apart from
+disease these are the same gene sets the enrichment tests use.
+
 The GO / APO graphs and the annotations are cached per process like the
 other gene list tables (see gene_list_helpers._cached).
 """
@@ -18,14 +24,17 @@ from collections import defaultdict
 
 from sqlalchemy import text
 
-from .gene_list_helpers import MAX_INPUT_IDENTIFIERS, _cached, get_lookup
-from .models import DBSession, Go
+from .gene_list_helpers import MAX_INPUT_IDENTIFIERS, _cached, get_annotation_sets, get_lookup
+from .models import DBSession, Disease, Go
 
 GO_ANNOTATION_TYPES = ['manually curated', 'high-throughput', 'computational']
 OBSERVABLE_ROOT = 'APO:0000017'
 GOID_RE = re.compile(r'^GO:?(\d{7})$', re.IGNORECASE)
 APOID_RE = re.compile(r'^APO:?(\d{7})$', re.IGNORECASE)
 MAX_SUGGESTIONS = 20
+DOID_RE = re.compile(r'^DOID:?(\d+)$', re.IGNORECASE)
+# enrichment categories a list can be built from (phenotype and GO have their own sources)
+LIST_CATEGORIES = ('disease', 'regulator', 'complex', 'pathway', 'domain')
 
 
 def _walk(focus_id, children):
@@ -290,5 +299,116 @@ def phenotype_genes(term, include_descendants=True, qualifier=None, include_norm
         'term_count': len(term_ids),
         'qualifier': qualifier or None,
         'include_normal': bool(include_normal) and not qualifier,
+        'genes': _locus_list(locus_ids),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Human disease and the other enrichment categories
+
+def _build_diseases():
+    """Return (terms, children, annotations) for the Disease Ontology like
+    _build_go: terms maps disease_id -> {id (DOID), display_name, link};
+    annotations maps disease_id -> set of active locus ids (NOT excluded; most
+    annotations have no qualifier)."""
+    terms = {}
+    for disease_id, doid, name, link in DBSession.execute(text(
+            "SELECT disease_id, doid, display_name, obj_url FROM nex.disease WHERE is_obsolete = false")):
+        terms[disease_id] = {'id': doid, 'display_name': name, 'link': link}
+
+    children = defaultdict(list)
+    for parent_id, child_id in DBSession.execute(text(
+            "SELECT parent_id, child_id FROM nex.disease_relation WHERE ro_id IN :ro"),
+            {'ro': tuple(Disease.allowed_relationships)}):
+        if parent_id in terms and child_id in terms:
+            children[parent_id].append(child_id)
+
+    loci = get_lookup()[0]
+    annotations = defaultdict(set)
+    for disease_id, locus_id in DBSession.execute(text(
+            "SELECT disease_id, dbentity_id FROM nex.diseaseannotation "
+            "WHERE disease_qualifier IS NULL OR disease_qualifier NOT LIKE '%NOT%'")):
+        if locus_id in loci:
+            annotations[disease_id].add(locus_id)
+    return terms, dict(children), dict(annotations)
+
+
+def get_diseases():
+    return _cached('disease_terms', _build_diseases)
+
+
+def _category_sets(category):
+    """(terms, children, annotations) for a list category; only disease has
+    a hierarchy."""
+    if category not in LIST_CATEGORIES:
+        raise ValueError('Unknown category: %s' % category)
+    if category == 'disease':
+        return get_diseases()
+    terms, term_genes, _ = get_annotation_sets(category)
+    return terms, {}, term_genes
+
+
+def _term_label(category, term):
+    # the regulator, complex and pathway terms are named, not numbered
+    return term['id'] if category in ('disease', 'domain') else None
+
+
+def _find_category_term(category, term):
+    terms, _, _ = _category_sets(category)
+    query = (term or '').strip()
+    lowered = query.lower()
+    m = DOID_RE.match(query)
+    if m:
+        lowered = 'doid:' + m.group(1)
+    for term_id, t in terms.items():
+        if str(term_id) == query or t['display_name'].lower() == lowered or str(t['id']).lower() == lowered:
+            return term_id
+    raise LookupError('Term not found: %s' % query)
+
+
+def search_category_terms(category, query):
+    """Term suggestions for a category, ranked like search_go_terms, with the
+    number of genes (for disease including descendant terms)."""
+    terms, children, annotations = _category_sets(category)
+    q = (query or '').strip().lower()
+    if len(q) < 2:
+        return []
+    hits = []
+    for term_id, t in terms.items():
+        name = t['display_name'].lower()
+        pos = name.find(q)
+        if pos < 0 and q != str(t['id']).lower():
+            continue
+        rank = 0 if name == q or q == str(t['id']).lower() else 1 if pos == 0 else 2
+        hits.append((rank, len(name), name, term_id))
+    hits.sort()
+    out = []
+    for _, _, _, term_id in hits:
+        locus_ids = set()
+        for i in _walk(term_id, children):
+            locus_ids |= annotations.get(i, set())
+        if locus_ids:
+            out.append(dict(terms[term_id], key=str(term_id), accession=_term_label(category, terms[term_id]),
+                            gene_count=len(locus_ids)))
+        if len(out) == MAX_SUGGESTIONS:
+            break
+    return out
+
+
+def category_term_genes(category, term, include_descendants=True):
+    """Genes of one term in a list category (disease term by DOID or name;
+    regulator, complex or pathway by name; domain by InterPro ID or name)."""
+    terms, children, annotations = _category_sets(category)
+    term_id = _find_category_term(category, term)
+    include_descendants = include_descendants and bool(children)
+    term_ids = _walk(term_id, children) if include_descendants else {term_id}
+    locus_ids = set()
+    for i in term_ids:
+        locus_ids |= annotations.get(i, set())
+    return {
+        'source': category,
+        'term': dict(terms[term_id], key=str(term_id), accession=_term_label(category, terms[term_id])),
+        'include_descendants': include_descendants,
+        'term_count': len(term_ids),
         'genes': _locus_list(locus_ids),
     }
