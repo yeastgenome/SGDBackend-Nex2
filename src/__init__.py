@@ -163,6 +163,10 @@ def main(global_config, **settings):
     config.add_route('gene_list_annotations', '/gene_list/annotations', request_method='POST')
     config.add_route('gene_list_annotation_types', '/gene_list/annotation_types', request_method='GET')
     config.add_route('gene_list_expression', '/gene_list/expression', request_method='POST')
+    config.add_route('gene_list_go_terms', '/gene_list/go_terms', request_method='GET')
+    config.add_route('gene_list_go_term_genes', '/gene_list/go_term_genes', request_method='GET')
+    config.add_route('gene_list_phenotype_terms', '/gene_list/phenotype_terms', request_method='GET')
+    config.add_route('gene_list_phenotype_genes', '/gene_list/phenotype_genes', request_method='GET')
 
     config.add_route('dataset', '/dataset/{id}', request_method='GET')
     config.add_route('keyword', '/keyword/{id}', request_method='GET')

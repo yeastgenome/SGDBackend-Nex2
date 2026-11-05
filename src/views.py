@@ -28,6 +28,7 @@ from .variant_helpers import get_variant_data, get_all_variant_data
 from .gene_list_helpers import resolve_identifiers, run_list_enrichment, list_enrichment_categories
 from .gene_list_annotations import get_list_annotations, list_annotation_types, annotations_to_tsv
 from .gene_list_expression import get_list_expression
+from .gene_list_terms import go_term_genes, search_go_terms, phenotype_terms, phenotype_genes
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -2488,6 +2489,57 @@ def gene_list_expression(request):
     finally:
         if DBSession:
             DBSession.remove()
+
+def _flag(request, name, default=True):
+    value = request.params.get(name)
+    if value is None or value == '':
+        return default
+    return value.lower() not in ('0', 'false', 'no', 'off')
+
+def _gene_list_source(request, builder, failure):
+    # an unknown term is a 400, not a 404: the frontend /backend proxy passes
+    # a 400's error message through but turns a 404 into a bare 'null'
+    try:
+        return builder()
+    except (LookupError, ValueError, TypeError) as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        log.exception(e)
+        return HTTPInternalServerError(body=json.dumps({'error': failure}))
+    finally:
+        if DBSession:
+            DBSession.remove()
+
+@view_config(route_name='gene_list_go_terms', renderer='json', request_method='GET')
+def gene_list_go_terms(request):
+    # GO term suggestions (name or GO ID) for building a gene list from a term
+    return _gene_list_source(request, lambda: {'terms': search_go_terms(request.params.get('q', ''))},
+                             'GO term search failed')
+
+@view_config(route_name='gene_list_go_term_genes', renderer='json', request_method='GET')
+def gene_list_go_term_genes(request):
+    # Genes annotated to a GO term (?term=GO ID or name), optionally with its
+    # descendant terms and limited to some annotation types
+    types = [t for t in request.params.getall('annotation_type') if t]
+    return _gene_list_source(request, lambda: go_term_genes(
+        request.params.get('term', ''),
+        include_descendants=_flag(request, 'include_descendants'),
+        annotation_types=types or None), 'Loading genes for the GO term failed')
+
+@view_config(route_name='gene_list_phenotype_terms', renderer='json', request_method='GET')
+def gene_list_phenotype_terms(request):
+    # The phenotype observable tree with gene counts, for the term picker
+    return _gene_list_source(request, phenotype_terms, 'Loading phenotype terms failed')
+
+@view_config(route_name='gene_list_phenotype_genes', renderer='json', request_method='GET')
+def gene_list_phenotype_genes(request):
+    # Genes annotated to a phenotype observable (?term=APO ID or name),
+    # optionally with its descendants and one qualifier
+    return _gene_list_source(request, lambda: phenotype_genes(
+        request.params.get('term', ''),
+        include_descendants=_flag(request, 'include_descendants'),
+        qualifier=request.params.get('qualifier') or None,
+        include_normal=_flag(request, 'include_normal', default=False)), 'Loading genes for the phenotype failed')
 
 @view_config(route_name='dataset', renderer='json', request_method='GET')
 def dataset(request):

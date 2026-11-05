@@ -869,6 +869,203 @@
                     }
                 }
             }
+        },
+        "/gene_list/go_terms": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "GO term suggestions for building a gene list",
+                "description": "Search GO term names (at least 3 characters) or look up a GO ID. Exact matches come first, then names starting with the query, then other names containing it, shorter names first. Only terms with annotations to the term or a descendant are returned (at most 20).",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "type": "string",
+                        "required": true,
+                        "description": "term name text or GO ID, e.g. trehalose or GO:0005991"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{terms: [{id, display_name, namespace, link}]}"
+                    }
+                }
+            }
+        },
+        "/gene_list/go_term_genes": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "genes annotated to a GO term, for a gene list",
+                "description": "Current SGD genes annotated to a GO term and, by default, its descendant terms (is a, part of and regulates relations, as on the GO term pages). NOT annotations are left out.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "term",
+                        "type": "string",
+                        "required": true,
+                        "description": "GO ID or exact term name, e.g. GO:0005991"
+                    },
+                    {
+                        "in": "query",
+                        "name": "include_descendants",
+                        "type": "boolean",
+                        "required": false,
+                        "description": "include genes annotated to descendant terms (default true)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "annotation_type",
+                        "type": "array",
+                        "collectionFormat": "multi",
+                        "required": false,
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "manually curated",
+                                "high-throughput",
+                                "computational"
+                            ]
+                        },
+                        "description": "repeat to allow several types (default: all three)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the term, options and genes; also annotation_types",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "source": {
+                                    "type": "string"
+                                },
+                                "term": {
+                                    "type": "object",
+                                    "description": "id, display_name, link (and namespace for GO)"
+                                },
+                                "include_descendants": {
+                                    "type": "boolean"
+                                },
+                                "term_count": {
+                                    "type": "integer",
+                                    "description": "number of terms included (the term plus descendants)"
+                                },
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    },
+                                    "description": "loci as in /gene_list/resolve: id, sgdid, systematic_name, gene_name, display_name, qualifier, description, link"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "unknown term, unknown option, or the term covers more than 5000 genes (JSON {error})"
+                    }
+                }
+            }
+        },
+        "/gene_list/phenotype_terms": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "phenotype (observable) terms for building a gene list",
+                "description": "The Yeast Phenotype Ontology observable tree, depth first and sorted by name, with the number of genes annotated to each term or its descendants (excluding \"normal\" results), and the phenotype qualifiers in use.",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{terms: [{id, display_name, link, depth, gene_count}], qualifiers: [string]}"
+                    }
+                }
+            }
+        },
+        "/gene_list/phenotype_genes": {
+            "get": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "genes with a phenotype, for a gene list",
+                "description": "Current SGD genes annotated to a phenotype observable and, by default, its descendant terms. Results with a \"normal\" qualifier (no phenotype observed) are left out unless include_normal is set or that qualifier is requested; annotations without a qualifier are kept.",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "term",
+                        "type": "string",
+                        "required": true,
+                        "description": "APO ID or exact observable name, e.g. APO:0000199 or chitin deposition"
+                    },
+                    {
+                        "in": "query",
+                        "name": "include_descendants",
+                        "type": "boolean",
+                        "required": false,
+                        "description": "include genes annotated to descendant terms (default true)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "qualifier",
+                        "type": "string",
+                        "required": false,
+                        "description": "only this qualifier, e.g. decreased"
+                    },
+                    {
+                        "in": "query",
+                        "name": "include_normal",
+                        "type": "boolean",
+                        "required": false,
+                        "description": "include \"normal\" results (default false)"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the term, options and genes; also qualifier and include_normal",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "source": {
+                                    "type": "string"
+                                },
+                                "term": {
+                                    "type": "object",
+                                    "description": "id, display_name, link (and namespace for GO)"
+                                },
+                                "include_descendants": {
+                                    "type": "boolean"
+                                },
+                                "term_count": {
+                                    "type": "integer",
+                                    "description": "number of terms included (the term plus descendants)"
+                                },
+                                "genes": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    },
+                                    "description": "loci as in /gene_list/resolve: id, sgdid, systematic_name, gene_name, display_name, qualifier, description, link"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "unknown term, unknown option, or the term covers more than 5000 genes (JSON {error})"
+                    }
+                }
+            }
         }
     },
     "definitions": {
