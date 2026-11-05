@@ -1,3 +1,4 @@
+import threading
 import unittest
 from fractions import Fraction
 from math import comb
@@ -130,6 +131,56 @@ class EnrichmentTest(unittest.TestCase):
         out = glh.run_list_enrichment({'genes': 'ACT1 CDC28 MAD2', 'categories': ['phenotype'], 'fdr_cutoff': 1})
         self.assertEqual(out['resolution_summary']['unique_loci'], 3)
         self.assertEqual(out['categories'][0]['results'][0]['term']['id'], 'T1')
+
+
+class CachedTest(unittest.TestCase):
+
+    def setUp(self):
+        patcher = mock.patch.dict(glh._cache, clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_builds_once_and_rebuilds_after_ttl(self):
+        calls = []
+        builder = lambda: calls.append(1) or len(calls)  # noqa: E731
+        self.assertEqual(glh._cached('k', builder), 1)
+        self.assertEqual(glh._cached('k', builder), 1)
+        glh._cache['k'] = (0, 1)  # expired
+        self.assertEqual(glh._cached('k', builder), 2)
+
+    def test_slow_build_does_not_block_other_keys(self):
+        started, release = threading.Event(), threading.Event()
+
+        def slow():
+            started.set()
+            release.wait(5)
+            return 'slow'
+
+        worker = threading.Thread(target=glh._cached, args=('slow', slow))
+        worker.start()
+        self.assertTrue(started.wait(5))
+        # another table builds while 'slow' is still building
+        self.assertEqual(glh._cached('fast', lambda: 'fast'), 'fast')
+        release.set()
+        worker.join(5)
+        self.assertEqual(glh._cache['slow'][1], 'slow')
+
+    def test_expired_value_served_while_rebuilding(self):
+        glh._cache['k'] = (0, 'old')
+        started, release = threading.Event(), threading.Event()
+
+        def rebuild():
+            started.set()
+            release.wait(5)
+            return 'new'
+
+        worker = threading.Thread(target=glh._cached, args=('k', rebuild))
+        worker.start()
+        self.assertTrue(started.wait(5))
+        self.assertEqual(glh._cached('k', lambda: 'unused'), 'old')
+        release.set()
+        worker.join(5)
+        self.assertEqual(glh._cached('k', lambda: 'unused'), 'new')
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ and diseases (hypergeometric test + Benjamini-Hochberg FDR, computed here from
 the database), plus GO via the existing termfinder (BATTER) service.
 
 Lookup tables and annotation sets only change on data loads, so they are built
-once per process and cached for GENE_LIST_CACHE_TTL seconds.
+once per process and cached for GENE_LIST_CACHE_TTL seconds (see _cached).
 """
 import logging
 import re
@@ -31,7 +31,10 @@ MAX_BACKGROUND_IDS = 20000
 MAX_RESULTS_PER_CATEGORY = 200
 
 _cache = {}
-_cache_lock = threading.RLock()
+# one lock per cache key, so a slow build (GO graph, expression baseline)
+# doesn't hold up requests that need a different table
+_key_locks = defaultdict(threading.Lock)
+_key_locks_lock = threading.Lock()
 
 # Alias types usable as gene identifiers, in order of precedence. Homolog IDs
 # (CGD, FungiDB, PomBase, Alliance) and shared accessions (PDB, DNA accession)
@@ -69,16 +72,25 @@ VERSION_RE = re.compile(r'^(.+)\.\d+$')
 
 
 def _cached(key, builder):
+    """builder() once per GENE_LIST_CACHE_TTL per process. Different keys
+    build in parallel; once a value has expired, one request rebuilds it while
+    the others keep using the old value instead of waiting."""
     entry = _cache.get(key)
     if entry and time.time() - entry[0] < GENE_LIST_CACHE_TTL:
         return entry[1]
-    with _cache_lock:
+    with _key_locks_lock:
+        lock = _key_locks[key]
+    if not lock.acquire(blocking=entry is None):
+        return entry[1]
+    try:
         entry = _cache.get(key)
         if entry and time.time() - entry[0] < GENE_LIST_CACHE_TTL:
             return entry[1]
         value = builder()
         _cache[key] = (time.time(), value)
         return value
+    finally:
+        lock.release()
 
 
 def split_identifiers(raw):

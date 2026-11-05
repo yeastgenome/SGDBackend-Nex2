@@ -28,6 +28,7 @@ from .variant_helpers import get_variant_data, get_all_variant_data
 from .gene_list_helpers import resolve_identifiers, run_list_enrichment, list_enrichment_categories
 from .gene_list_annotations import get_list_annotations, list_annotation_types, annotations_to_tsv
 from .gene_list_expression import get_list_expression
+from .gene_list_network import get_list_network
 from .gene_list_terms import go_term_genes, search_go_terms, phenotype_terms, phenotype_genes, \
     search_category_terms, category_term_genes
 
@@ -2474,6 +2475,21 @@ def gene_list_annotations(request):
 @view_config(route_name='gene_list_annotation_types', renderer='json', request_method='GET')
 def gene_list_annotation_types(request):
     return list_annotation_types()
+
+@view_config(route_name='gene_list_network', renderer='json', request_method='POST')
+def gene_list_network(request):
+    # Interaction / regulation / co-expression / shared-GO network of a gene list
+    body = _gene_list_body(request)
+    try:
+        return get_list_network(body)
+    except (ValueError, TypeError) as e:
+        return HTTPBadRequest(body=json.dumps({'error': str(e)}))
+    except Exception as e:
+        log.exception(e)
+        return HTTPInternalServerError(body=json.dumps({'error': 'Gene list network failed'}))
+    finally:
+        if DBSession:
+            DBSession.remove()
 
 @view_config(route_name='gene_list_expression', renderer='json', request_method='POST')
 def gene_list_expression(request):

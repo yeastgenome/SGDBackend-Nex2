@@ -870,6 +870,95 @@
                 }
             }
         },
+        "/gene_list/network": {
+            "post": {
+                "tags": [
+                    "gene list"
+                ],
+                "summary": "network of a gene list",
+                "description": "Genes of the list and the edges between them: physical and genetic interactions (BioGRID; one edge per gene pair with the number of records and references), regulation (regulator -> target), co-expression (one gene among the other's top co-expressed genes; lists of up to 500 genes) and shared GO annotations (manually curated or high-throughput annotations to GO terms with at most 100 genes). Optionally adds the genes outside the list that connect the most list genes. Networks over max_edges are cut by raising the evidence threshold, then keeping the strongest edges of each type; notes say what was left out.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                                                        "properties": {
+                                "bioent_ids": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "integer"
+                                    },
+                                    "description": "locus dbentity ids (as returned by /gene_list/resolve), at most 5000"
+                                },
+                                "genes": {
+                                    "type": "string",
+                                    "description": "gene identifiers, resolved like /gene_list/resolve (instead of bioent_ids)"
+                                },
+                                "edge_types": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "physical",
+                                            "genetic",
+                                            "regulation",
+                                            "coexpression",
+                                            "shared_go"
+                                        ]
+                                    },
+                                    "description": "default physical and regulation"
+                                },
+                                "min_evidence": {
+                                    "type": "integer",
+                                    "description": "minimum records per interaction / regulation edge; default 1 for lists under 100 genes, else 2"
+                                },
+                                "neighbors": {
+                                    "type": "integer",
+                                    "description": "add up to this many genes outside the list that connect at least 2 list genes (0-100, default 0)"
+                                },
+                                "go_min_shared": {
+                                    "type": "integer",
+                                    "description": "shared GO terms needed for a shared_go edge (default 2)"
+                                },
+                                "max_nodes": {
+                                    "type": "integer",
+                                    "description": "default 300 (limits added neighbors)"
+                                },
+                                "max_edges": {
+                                    "type": "integer",
+                                    "description": "default 2000, at most 5000"
+                                }
+                            }
+                        },
+                        "example": {
+                            "genes": "PET9 TIM22 COX12 MIX17 ISU1 ISU2",
+                            "edge_types": [
+                                "physical",
+                                "regulation",
+                                "coexpression"
+                            ],
+                            "neighbors": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "nodes (id, name, systematic_name, link, description, in_list, degree), edges (type, source, target, weight and type-specific evidence), edge_types, list_size, neighbors_added, min_evidence, min_evidence_used, total_edges, shown_edges, edge_counts, notes"
+                    },
+                    "400": {
+                        "description": "invalid input"
+                    }
+                }
+            }
+        },
         "/gene_list/go_terms": {
             "get": {
                 "tags": [
@@ -1097,7 +1186,7 @@
                         "name": "q",
                         "type": "string",
                         "required": true,
-                        "description": "at least 2 characters, e.g. cancer, GCN4, proteasome, IPR001611"
+                        "description": "at least 2 characters, e.g. myopathy, GCN4, proteasome, IPR001611"
                     }
                 ],
                 "responses": {
@@ -1166,7 +1255,7 @@
                         "name": "term",
                         "type": "string",
                         "required": true,
-                        "description": "term name, DOID or InterPro ID, or the key returned by category_terms, e.g. DOID:162, GCN4, IPR001611"
+                        "description": "term name, DOID or InterPro ID, or the key returned by category_terms, e.g. DOID:699, GCN4, IPR001611"
                     },
                     {
                         "in": "query",
