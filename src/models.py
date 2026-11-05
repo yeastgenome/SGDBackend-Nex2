@@ -15,6 +15,8 @@ import re
 import traceback
 import transaction
 import logging
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from itertools import groupby
 import hashlib
@@ -35,6 +37,42 @@ register(DBSession)
 ESearch = Elasticsearch(os.environ['ES_URI'], retry_on_timeout=True)
 
 ALLIANCE_API_BASE_URL = "https://www.alliancegenome.org/api/gene/"
+
+# HGNC id -> human gene symbol, cached for the life of the process
+_human_gene_symbols = {}
+
+
+def _fetch_human_gene_symbol(hgnc_id):
+    try:
+        data = requests.get(ALLIANCE_API_BASE_URL + hgnc_id, timeout=10).json()
+        # current API: {"gene": {"geneSymbol": {"displayText": ...}}}; older API: {"symbol": ...}
+        return data.get('symbol') or data['gene']['geneSymbol']['displayText']
+    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def human_gene_symbols(hgnc_ids):
+    """Map HGNC ids to gene symbols from the Alliance API. Ids not cached yet
+    are fetched in parallel (DOID:162 cancer alone has ~180); an id that can't
+    be resolved maps to itself and is retried on the next call."""
+    hgnc_ids = set(hgnc_ids)
+    missing = [i for i in hgnc_ids if i not in _human_gene_symbols]
+    if missing:
+        with ThreadPoolExecutor(max_workers=10) as pool:
+            for hgnc_id, symbol in zip(missing, pool.map(_fetch_human_gene_symbol, missing)):
+                if symbol:
+                    _human_gene_symbols[hgnc_id] = symbol
+    return {i: _human_gene_symbols.get(i, i) for i in hgnc_ids}
+
+
+def set_human_gene_symbols(annotations):
+    """Replace the HGNC ids shown for human genes in disease annotation dicts
+    (bioentity properties) with gene symbols."""
+    entries = [y['bioentity'] for x in annotations for y in x.get('properties', []) if 'bioentity' in y]
+    symbols = human_gene_symbols(e['display_name'] for e in entries)
+    for entry in entries:
+        entry['display_name'] = symbols[entry['display_name']]
+    return annotations
 
 _http = requests.Session()
 
@@ -3140,10 +3178,9 @@ class Referencedbentity(Dbentity):
 
         gos = DBSession.query(Goannotation).filter_by(reference_id=self.dbentity_id).all()
 
-        for go_annotation in gos:
-            for annotation in go_annotation.to_dict():
-                if annotation not in obj:
-                    obj.append(annotation)
+        for annotation in Goannotation.batch_to_dict([(a, None) for a in gos]):
+            if annotation not in obj:
+                obj.append(annotation)
 
         return obj
 
@@ -3170,25 +3207,7 @@ class Referencedbentity(Dbentity):
             for annotation in do_annotation.to_dict():
                 if annotation not in obj:
                     obj.append(annotation)
-        # get human gene symbols from Alliance API
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
-        for x in obj:
-            try:
-                for y in x['properties']:
-                    if 'bioentity' in list(y.keys()):
-                        entry = y['bioentity']
-                        hgnc_id = entry['display_name']
-                        if hgnc_id in list(human_gene_ids_to_symbols.keys()):
-                            entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
-                        else:
-                            url = ALLIANCE_API_BASE_URL + hgnc_id
-                            symbol = requests.request('GET', url).json()['symbol']
-                            entry['display_name'] = symbol
-                            human_gene_ids_to_symbols[hgnc_id] = symbol
-            except Exception as e:
-                traceback.print_exc()
-        return obj
+        return set_human_gene_symbols(obj)
 
     def regulation_to_dict(self):
         obj = []
@@ -4512,10 +4531,9 @@ class Locusdbentity(Dbentity):
 
         obj = []
 
-        for go_annotation in go_annotations:
-            for annotation in go_annotation.to_dict():
-                if annotation not in obj:
-                    obj.append(annotation)
+        for annotation in Goannotation.batch_to_dict([(a, None) for a in go_annotations]):
+            if annotation not in obj:
+                obj.append(annotation)
 
         return obj
 
@@ -4528,26 +4546,7 @@ class Locusdbentity(Dbentity):
             for annotation in do_annotation.to_dict():
                 if annotation not in obj:
                     obj.append(annotation)
-        # get human gene symbols from Alliance API
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
-        for x in obj:
-            try:
-                for y in x['properties']:
-                    if 'bioentity' in list(y.keys()):
-                        entry = y['bioentity']
-                        hgnc_id = entry['display_name']
-                        if hgnc_id in list(human_gene_ids_to_symbols.keys()):
-                            entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
-                        else:
-                            url = ALLIANCE_API_BASE_URL + hgnc_id
-                            if "symbol" in requests.request('GET', url).json():
-                                symbol = requests.request('GET', url).json()['symbol']                            
-                                entry['display_name'] = symbol
-                                human_gene_ids_to_symbols[hgnc_id] = symbol
-            except Exception as e:
-                traceback.print_exc()
-        return obj
+        return set_human_gene_symbols(obj)
 
     def literature_graph(self):
         main_gene_lit_annotations = DBSession.query(Literatureannotation).filter((Literatureannotation.dbentity_id==self.dbentity_id) & (Literatureannotation.topic == "Primary Literature")).all()
@@ -5004,13 +5003,7 @@ class Locusdbentity(Dbentity):
             disease_ids_to_names[x[0]] = x[1]
             disease_ids_to_urls[x[0]] = x[2]
         # get human gene symbols from Alliance API
-        for x in all_human_gene_ids:
-            try:
-                url = ALLIANCE_API_BASE_URL + x
-                symbol = requests.request('GET', url).json()['symbol']
-                human_gene_ids_to_names[x] = symbol
-            except Exception as e:
-                human_gene_ids_to_names[x] = x
+        human_gene_ids_to_names.update(human_gene_symbols(all_human_gene_ids))
         all_node_ids = [self.dbentity_id]
         all_edge_slugs = []
         nodes = [{
@@ -7576,53 +7569,19 @@ class Disease(Base):
     def annotations_to_dict(self):
         annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=self.disease_id).all()
         annotations_dict = []
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
 
         for a in annotations:
-            annotation = a.to_dict(disease=self)
-            try:
-                for y in annotation[0]['properties']:
-                    if 'bioentity' in list(y.keys()):
-                        entry = y['bioentity']
-                        hgnc_id = entry['display_name']
-                        if hgnc_id in list(human_gene_ids_to_symbols.keys()):
-                            entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
-                        else:
-                            url = ALLIANCE_API_BASE_URL + hgnc_id
-                            symbol = requests.request('GET', url).json()['symbol']
-                            entry['display_name'] = symbol
-                            human_gene_ids_to_symbols[hgnc_id] = symbol
-            except Exception as e:
-                traceback.print_exc()
-            annotations_dict += annotation
-        return annotations_dict
+            annotations_dict += a.to_dict(disease=self)
+        return set_human_gene_symbols(annotations_dict)
 
     def annotations_and_children_to_dict(self):
 
         annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=self.disease_id).all()
 
         annotations_dict = []
-        #human_gene_ids_to_symbols = {}
-        human_gene_ids_to_symbols = {'display name' : 'TEST1'}
 
         for a in annotations:
-            annotation = a.to_dict(disease=self)
-            try:
-                for y in annotation[0]['properties']:
-                    if 'bioentity' in list(y.keys()):
-                        entry = y['bioentity']
-                        hgnc_id = entry['display_name']
-                        if hgnc_id in list(human_gene_ids_to_symbols.keys()):
-                            entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
-                        else:
-                            url = ALLIANCE_API_BASE_URL + hgnc_id
-                            symbol = requests.request('GET', url).json()['symbol']
-                            entry['display_name'] = symbol
-                            human_gene_ids_to_symbols[hgnc_id] = symbol
-            except Exception as e:
-                traceback.print_exc()
-            annotations_dict += annotation
+            annotations_dict += a.to_dict(disease=self)
 
         children_relation = DBSession.query(DiseaseRelation).filter(
             and_(DiseaseRelation.parent_id == self.disease_id, DiseaseRelation.ro_id.in_(Disease.allowed_relationships))).all()
@@ -7633,22 +7592,7 @@ class Disease(Base):
             annotations = DBSession.query(Diseaseannotation).filter_by(disease_id=child.disease_id).all()
 
             for a in annotations:
-                annotation = a.to_dict(disease=child)
-                try:
-                    for y in annotation[0]['properties']:
-                        if 'bioentity' in list(y.keys()):
-                            entry = y['bioentity']
-                            hgnc_id = entry['display_name']
-                            if hgnc_id in list(human_gene_ids_to_symbols.keys()):
-                                entry['display_name'] = human_gene_ids_to_symbols[hgnc_id]
-                            else:
-                                url = ALLIANCE_API_BASE_URL + hgnc_id
-                                symbol = requests.request('GET', url).json()['symbol']
-                                entry['display_name'] = symbol
-                                human_gene_ids_to_symbols[hgnc_id] = symbol
-                except Exception as e:
-                    traceback.print_exc()
-                annotations_dict += annotation
+                annotations_dict += a.to_dict(disease=child)
 
             children_relation = DBSession.query(DiseaseRelation).filter(
                 and_(DiseaseRelation.parent_id == child.disease_id, DiseaseRelation.ro_id.in_(Disease.allowed_relationships))).all()
@@ -7657,7 +7601,7 @@ class Disease(Base):
                     children.append(c.child)
                     children_ids.append(c.child_id)
 
-        return annotations_dict
+        return set_human_gene_symbols(annotations_dict)
 
     def get_base_url(self):
         return self.obj_url
@@ -8909,29 +8853,17 @@ class Go(Base):
 
     def annotations_to_dict(self):
         annotations = DBSession.query(Goannotation).filter_by(go_id=self.go_id).all()
-
-        annotations_dict = []
-        for a in annotations:
-            annotations_dict += a.to_dict(go=self)
-
-        return annotations_dict
+        return Goannotation.batch_to_dict([(a, self) for a in annotations])
 
     def annotations_and_children_to_dict(self):
-        annotations_dict = []
-
-        annotations = DBSession.query(Goannotation).filter_by(go_id=self.go_id).all()
-        for a in annotations:
-            annotations_dict += a.to_dict(go=self)
+        annotations = [(a, self) for a in DBSession.query(Goannotation).filter_by(go_id=self.go_id).all()]
 
         children_relation = DBSession.query(GoRelation).filter(and_(GoRelation.parent_id == self.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
         children = [c.child for c in children_relation]
         children_ids = [c.child_id for c in children_relation]
 
         for child in children:
-            annotations = DBSession.query(Goannotation).filter_by(go_id=child.go_id).all()
-
-            for a in annotations:
-                annotations_dict += a.to_dict(go=child)
+            annotations += [(a, child) for a in DBSession.query(Goannotation).filter_by(go_id=child.go_id).all()]
 
             children_relation = DBSession.query(GoRelation).filter(and_(GoRelation.parent_id == child.go_id, GoRelation.ro_id.in_(Go.allowed_relationships))).all()
             for c in children_relation:
@@ -8939,7 +8871,7 @@ class Go(Base):
                     children.append(c.child)
                     children_ids.append(c.child_id)
 
-        return annotations_dict
+        return Goannotation.batch_to_dict(annotations)
 
     def get_base_url(self):
         return self.obj_url
@@ -9131,33 +9063,25 @@ class Goannotation(Base):
 
     # a Go annotation can be duplicated based on the Gosupportingevidence group id
     # so its to_dict method must return an array of dictionaries
-    def to_dict(self, go=None):
+    @staticmethod
+    def batch_to_dict(annotations):
+        """to_dict for many (annotation, go) pairs, loading what it needs in a
+        few queries (GO:0005634 nucleus has ~12k annotations; one at a time
+        that was ~8 queries per annotation)."""
+        lookups = GoAnnotationLookups([a for a, _ in annotations])
+        annotations_dict = []
+        for a, go in annotations:
+            annotations_dict += a.to_dict(go=go, lookups=lookups)
+        return annotations_dict
+
+    def to_dict(self, go=None, lookups=None):
         if go == None:
             go = self.go
+        if lookups is None:
+            lookups = GoAnnotationLookups([self])
 
-        alias = DBSession.query(EcoAlias).filter_by(eco_id=self.eco_id).all()
+        experiment_name, experiment_url = lookups.experiment(self.eco)
 
-        experiment_name = None
-        if len(alias) > 0:
-            experiment_name = alias[0].display_name
-
-        for alia in alias:
-            if len(experiment_name) > len(alia.display_name):
-                experiment_name = alia.display_name
-
-        if experiment_name is None and self.eco.display_name.startswith('biological system reconstruction evidence'):
-            experiment_name = 'BSR'
-                
-        alias_url = DBSession.query(EcoUrl).filter_by(eco_id=self.eco_id).all()
-
-        experiment_url = None
-        for url in alias_url:
-            if url.display_name not in ['BioPortal', 'OLS', 'Ontobee']:
-                experiment_url = url.obj_url
-                break
-        if experiment_url == None and len(alias_url) > 1:
-            experiment_url = alias_url[1].obj_url
-            
         date_created = self.date_created
         if self.annotation_type == 'computational':
             date_created = self.date_assigned
@@ -9168,15 +9092,15 @@ class Goannotation(Base):
         # carries the citation, so pull it there rather than off self.reference.
         citation = None
         if "pathway" in reference_link:
-            pathwayObj = DBSession.query(Pathwaydbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
-            if pathwayObj:
-                reference_link = "https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=" + pathwayObj.biocyc_id + "&detail-level=2"
-                pmid = "SGD_PWY:" + pathwayObj.biocyc_id
+            biocyc_id = lookups.pathways.get(self.reference_id)
+            if biocyc_id:
+                reference_link = ("https://pathway.yeastgenome.org/YEAST/new-image?type=PATHWAY&object=" + biocyc_id +
+                                  "&detail-level=2")
+                pmid = "SGD_PWY:" + biocyc_id
                 experiment_name = 'IEA'
         else:
-            refObj = DBSession.query(Referencedbentity).filter_by(dbentity_id=self.reference_id).one_or_none()
-            pmid = "PMID:" + str(refObj.pmid)
-            citation = refObj.citation if refObj else None
+            ref_pmid, citation = lookups.references.get(self.reference_id, (None, None))
+            pmid = "PMID:" + str(ref_pmid)
         go_obj = {
             "id": self.annotation_id,
             "annotation_type": self.annotation_type,
@@ -9213,20 +9137,18 @@ class Goannotation(Base):
 
         properties = []
 
-        extensions = DBSession.query(Goextension).filter_by(annotation_id=self.annotation_id).all()
         extension_groups = {}
-        for extension in extensions:
-            extension_dict = extension.to_dict()
+        for extension in lookups.extensions.get(self.annotation_id, []):
+            extension_dict = extension.to_dict(lookups)
             if extension_dict:
                 if extension.group_id not in extension_groups:
                     extension_groups[extension.group_id] = [extension_dict]
                 else:
                     extension_groups[extension.group_id].append(extension_dict)
 
-        supporting_evidences = DBSession.query(Gosupportingevidence).filter_by(annotation_id=self.annotation_id).all()
         se_groups = {}
-        for se in supporting_evidences:
-            evidence_dict = se.to_dict()
+        for se in lookups.supporting_evidences.get(self.annotation_id, []):
+            evidence_dict = se.to_dict(lookups)
             if evidence_dict:
                 if se.group_id not in se_groups:
                     se_groups[se.group_id] = [evidence_dict]
@@ -9258,6 +9180,129 @@ class Goannotation(Base):
         return final_obj
 
 
+def _in_chunks(ids, size=5000):
+    ids = list(ids)
+    for i in range(0, len(ids), size):
+        yield ids[i:i + size]
+
+
+class GoAnnotationLookups(object):
+    """What Goannotation.to_dict reads besides the annotation row (evidence
+    names, references, extensions, supporting evidence and the SGD / GO /
+    ChEBI ids they point to), loaded for many annotations at once."""
+
+    def __init__(self, annotations, dbxref_ids=()):
+        annotation_ids = [a.annotation_id for a in annotations]
+        reference_ids = {a.reference_id for a in annotations}
+
+        # Load the related rows once so a.dbentity / a.reference / a.source /
+        # a.eco / extension.ro come from the session instead of a query each.
+        # The identity map holds objects weakly, so keep them referenced.
+        self._loaded = []
+        for chunk in _in_chunks({a.dbentity_id for a in annotations} | reference_ids):
+            self._loaded += DBSession.query(Dbentity).filter(Dbentity.dbentity_id.in_(chunk)).all()
+        self._loaded += DBSession.query(Source).filter(Source.source_id.in_({a.source_id for a in annotations})).all()
+        self._loaded += DBSession.query(Eco).filter(Eco.eco_id.in_({a.eco_id for a in annotations})).all()
+
+        self.references = {}
+        self.pathways = {}
+        for chunk in _in_chunks(reference_ids):
+            for ref_id, pmid, citation in DBSession.query(
+                    Referencedbentity.dbentity_id, Referencedbentity.pmid, Referencedbentity.citation).filter(
+                    Referencedbentity.dbentity_id.in_(chunk)):
+                self.references[ref_id] = (pmid, citation)
+            self.pathways.update(DBSession.query(Pathwaydbentity.dbentity_id, Pathwaydbentity.biocyc_id).filter(
+                Pathwaydbentity.dbentity_id.in_(chunk)).all())
+
+        self.extensions = defaultdict(list)
+        self.supporting_evidences = defaultdict(list)
+        for chunk in _in_chunks(annotation_ids):
+            for row in DBSession.query(Goextension).filter(Goextension.annotation_id.in_(chunk)).order_by(
+                    Goextension.goextension_id):
+                self.extensions[row.annotation_id].append(row)
+            for row in DBSession.query(Gosupportingevidence).filter(
+                    Gosupportingevidence.annotation_id.in_(chunk)).order_by(
+                    Gosupportingevidence.gosupportingevidence_id):
+                self.supporting_evidences[row.annotation_id].append(row)
+        extensions = [row for rows in self.extensions.values() for row in rows]
+        self._loaded += DBSession.query(Ro).filter(Ro.ro_id.in_({row.ro_id for row in extensions})).all()
+
+        dbxref_ids = set(dbxref_ids)
+        for rows in list(self.extensions.values()) + list(self.supporting_evidences.values()):
+            dbxref_ids.update(row.dbxref_id for row in rows)
+        self.targets = self._load_targets(dbxref_ids)
+        self._experiments = {}
+
+    @staticmethod
+    def _load_targets(dbxref_ids):
+        """bioentity dicts for the SGD, GO and ChEBI ids among dbxref_ids."""
+        by_prefix = defaultdict(set)
+        for dbxref_id in dbxref_ids:
+            by_prefix[dbxref_id.split(':')[0]].add(dbxref_id)
+        targets = {}
+        sgdids = {i.split(':')[1]: i for i in by_prefix['SGD']}
+        for chunk in _in_chunks(sgdids):
+            for sgdid, name, link, subclass in DBSession.query(
+                    Dbentity.sgdid, Dbentity.display_name, Dbentity.obj_url, Dbentity.subclass).filter(
+                    Dbentity.sgdid.in_(chunk)):
+                targets[sgdids[sgdid]] = {"display_name": name, "link": link, "class_type": subclass}
+        for chunk in _in_chunks(by_prefix['GO']):
+            for goid, name, link in DBSession.query(Go.goid, Go.display_name, Go.obj_url).filter(Go.goid.in_(chunk)):
+                targets[goid] = {"display_name": name, "link": link}
+        for chunk in _in_chunks(by_prefix['CHEBI']):
+            for chebiid, name, link in DBSession.query(Chebi.chebiid, Chebi.display_name, Chebi.obj_url).filter(
+                    Chebi.chebiid.in_(chunk)):
+                targets[chebiid] = {"display_name": name, "link": link}
+        return targets
+
+    def experiment(self, eco):
+        """(display name, link) for an evidence code: its shortest alias (or
+        BSR) and its first URL that isn't an ontology browser."""
+        if eco.eco_id not in self._experiments:
+            alias = DBSession.query(EcoAlias).filter_by(eco_id=eco.eco_id).all()
+
+            experiment_name = None
+            if len(alias) > 0:
+                experiment_name = alias[0].display_name
+
+            for alia in alias:
+                if len(experiment_name) > len(alia.display_name):
+                    experiment_name = alia.display_name
+
+            if experiment_name is None and eco.display_name.startswith('biological system reconstruction evidence'):
+                experiment_name = 'BSR'
+
+            alias_url = DBSession.query(EcoUrl).filter_by(eco_id=eco.eco_id).all()
+
+            experiment_url = None
+            for url in alias_url:
+                if url.display_name not in ['BioPortal', 'OLS', 'Ontobee']:
+                    experiment_url = url.obj_url
+                    break
+            if experiment_url == None and len(alias_url) > 1:
+                experiment_url = alias_url[1].obj_url
+            self._experiments[eco.eco_id] = (experiment_name, experiment_url)
+        return self._experiments[eco.eco_id]
+
+
+def go_property_bioentity(dbxref_id, obj_url, lookups=None):
+    """The bioentity shown for a GO extension or supporting evidence: SGD, GO
+    and ChEBI ids are looked up (None if not found), other ids shown as is."""
+    source_id = dbxref_id.split(":")
+    if source_id[0] in ('SGD', 'GO', 'CHEBI'):
+        targets = lookups.targets if lookups else GoAnnotationLookups._load_targets([dbxref_id])
+        target = targets.get(dbxref_id)
+        return dict(target) if target else None
+
+    display_name = source_id[1]
+    if display_name in ['MGI', 'locus']:
+        display_name = display_name + ":" + source_id[2]
+    return {
+        "display_name": display_name,
+        "link": obj_url
+    }
+
+
 class Goextension(Base):
     __tablename__ = 'goextension'
     __table_args__ = (
@@ -9277,54 +9322,13 @@ class Goextension(Base):
     annotation = relationship('Goannotation')
     ro = relationship('Ro')
 
-    def to_dict(self):
-        source_id = self.dbxref_id.split(":")
-
-        if source_id[0] == "SGD":
-            sgdid = source_id[1]
-            dbentity = DBSession.query(Dbentity).filter_by(sgdid=sgdid).one_or_none()
+    def to_dict(self, lookups=None):
+        bioentity = go_property_bioentity(self.dbxref_id, self.obj_url, lookups)
+        if bioentity:
             return {
-                "bioentity": {
-                    "display_name": dbentity.display_name,
-                    "link": dbentity.obj_url,
-                    "class_type": dbentity.subclass
-                },
+                "bioentity": bioentity,
                 "role": self.ro.display_name
             }
-        elif source_id[0] == "GO":
-            go_evidence = DBSession.query(Go).filter_by(goid=self.dbxref_id).one_or_none()
-            if go_evidence:
-                return {
-                    "bioentity": {
-                        "display_name": go_evidence.display_name,
-                        "link": go_evidence.obj_url
-                    },
-                    "role": self.ro.display_name
-                }
-        elif source_id[0] == "CHEBI":
-            chebi = DBSession.query(Chebi).filter_by(chebiid=self.dbxref_id).one_or_none()
-            if chebi:
-                return {
-                    "bioentity": {
-                        "display_name": chebi.display_name,
-                        "link": chebi.obj_url
-                    },
-                    "role": self.ro.display_name
-                }
-        else:
-
-            dbxref_id = source_id[1]
-            if dbxref_id in ['MGI', 'locus']:
-                dbxref_id = dbxref_id + ":" + source_id[2]
-                
-            return {
-                "bioentity": {
-                    "display_name": dbxref_id,
-                    "link": self.obj_url
-                },
-                "role": self.ro.display_name
-            }
-
         return None
 
 
@@ -9415,56 +9419,13 @@ class Gosupportingevidence(Base):
 
     annotation = relationship('Goannotation')
 
-    def to_dict(self):
-        source_id = self.dbxref_id.split(":")
-
-        # the frontend expects a capitalized "role" to place the evidence in the right column of the annotation table
-
-        if source_id[0] == "SGD":
-            sgdid = source_id[1]
-            dbentity = DBSession.query(Dbentity).filter_by(sgdid=sgdid).one_or_none()
+    def to_dict(self, lookups=None):
+        bioentity = go_property_bioentity(self.dbxref_id, self.obj_url, lookups)
+        if bioentity:
             return {
-                "bioentity": {
-                    "display_name": dbentity.display_name,
-                    "link": dbentity.obj_url,
-                    "class_type": dbentity.subclass
-                },
+                "bioentity": bioentity,
                 "role": self.evidence_type.capitalize()
             }
-        elif source_id[0] == "GO":
-            go_evidence = DBSession.query(Go).filter_by(goid=self.dbxref_id).one_or_none()
-            if go_evidence:
-                return {
-                    "bioentity": {
-                        "display_name": go_evidence.display_name,
-                        "link": go_evidence.obj_url
-                    },
-                    "role": self.evidence_type.capitalize()
-                }
-        elif source_id[0] == "CHEBI":
-            chebi = DBSession.query(Chebi).filter_by(chebiid=self.dbxref_id).one_or_none()
-            if chebi:
-                return {
-                    "bioentity": {
-                        "display_name": chebi.display_name,
-                        "link": chebi.obj_url
-                    },
-                    "role": self.evidence_type.capitalize()
-                }
-        else:
-
-            dbxref_id = source_id[1]
-            if dbxref_id in ['MGI', 'locus']:
-                dbxref_id = dbxref_id + ":" + source_id[2]
-
-            return {
-                "bioentity": {
-                    "display_name": dbxref_id,
-                    "link": self.obj_url
-                },
-                "role": self.evidence_type.capitalize()
-            }
-
         return None
 
 class Journal(Base):
