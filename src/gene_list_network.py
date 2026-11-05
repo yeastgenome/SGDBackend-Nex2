@@ -19,12 +19,9 @@ keeping the strongest edges of each type; the response says what was left
 out.
 """
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
-
-import requests
 from sqlalchemy import text
 
-from .gene_list_helpers import MAX_INPUT_IDENTIFIERS, get_lookup, resolve_identifiers
+from .gene_list_helpers import MAX_INPUT_IDENTIFIERS, coexpression_partners, get_lookup, resolve_identifiers
 from .gene_list_terms import get_go
 from .models import DBSession
 
@@ -40,13 +37,8 @@ MAX_EDGES_LIMIT = 5000
 MAX_COEXPRESSION_GENES = 500
 GO_MAX_TERM_GENES = 100
 GO_ANNOTATION_TYPES = ('manually curated', 'high-throughput')
-COEXPRESSION_URL = 'https://sgd-prod-expression-details.s3.us-west-2.amazonaws.com/coexpression/%s.json'
 
 INTERACTION_TABLES = {'physical': 'physinteractionannotation', 'genetic': 'geninteractionannotation'}
-
-# SGDID -> [(partner SGDID, score, rank)], per process; the files only change
-# when co-expression is recomputed
-_coexpression = {}
 
 
 def default_min_evidence(list_size):
@@ -99,28 +91,13 @@ def _regulation_edges(ids, both_in_list):
     return edges
 
 
-def _fetch_coexpression(sgdid):
-    try:
-        response = requests.get(COEXPRESSION_URL % sgdid, timeout=10)
-        if response.status_code != 200:
-            return sgdid, []
-        return sgdid, [(p['sgdid'], p['score'], p['rank']) for p in response.json().get('partners', [])]
-    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):
-        return sgdid, None  # not cached: retried on the next request
-
-
 def _coexpression_edges(ids, loci):
     sgdids = [loci[i]['sgdid'] for i in ids]
-    missing = [s for s in sgdids if s not in _coexpression]
-    if missing:
-        with ThreadPoolExecutor(max_workers=16) as pool:
-            for sgdid, partners in pool.map(_fetch_coexpression, missing):
-                if partners is not None:
-                    _coexpression[sgdid] = partners
+    partners_by_gene = coexpression_partners(sgdids)
     by_sgdid = {loci[i]['sgdid']: i for i in ids}
     edges = {}
     for sgdid in sgdids:
-        for partner, score, rank in _coexpression.get(sgdid, []):
+        for partner, score, rank in partners_by_gene[sgdid]:
             if partner not in by_sgdid or partner == sgdid:
                 continue
             g1, g2 = sorted((by_sgdid[sgdid], by_sgdid[partner]))

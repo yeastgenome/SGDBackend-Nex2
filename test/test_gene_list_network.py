@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 
+from src import gene_list_helpers as glh
 from src import gene_list_network as gln
 
 
@@ -48,7 +49,7 @@ class NetworkTest(unittest.TestCase):
                     mock.patch.object(gln, '_interaction_edges', side_effect=_interactions),
                     mock.patch.object(gln, '_regulation_edges', side_effect=lambda ids, both: dict(REGULATION)),
                     mock.patch.object(gln, 'get_go', return_value=(GO_TERMS, {}, {}, GO_ANNOTATIONS)),
-                    mock.patch.dict(gln._coexpression, clear=True)]
+                    mock.patch.dict(glh._coexpression, clear=True)]
         for patcher in patchers:
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -92,7 +93,7 @@ class NetworkTest(unittest.TestCase):
     def test_coexpression(self):
         files = {'S000000001': [('S000000002', 0.8, 1), ('S000000005', 0.7, 2)],
                  'S000000002': [('S000000001', 0.8, 3)], 'S000000003': [], 'S000000004': None}
-        with mock.patch.object(gln, '_fetch_coexpression', side_effect=lambda s: (s, files[s])) as fetch:
+        with mock.patch.object(glh, '_fetch_coexpression', side_effect=lambda s: (s, files[s])) as fetch:
             net = gln.get_list_network({'bioent_ids': [1, 2, 3, 4], 'edge_types': ['coexpression']})
             self.assertEqual(self.pairs(net), [('A', 'B')])
             self.assertEqual(net['edges'][0]['rank'], 1)

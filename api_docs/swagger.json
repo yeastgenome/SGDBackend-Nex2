@@ -1162,7 +1162,7 @@
                     "gene list"
                 ],
                 "summary": "term suggestions for building a gene list from a disease, regulator, complex, pathway or domain",
-                "description": "Terms of the category whose name contains the query (or whose DOID / InterPro ID matches it), exact matches first, with the number of genes (for disease including descendant terms). At most 20.",
+                "description": "Terms of the category whose name contains the query (or whose DOID / InterPro ID matches it), exact matches first, with the number of genes (for disease including descendant terms). At most 20. For goslim an empty q lists every term; for paper q is a PMID, SGDID or citation words (4+ characters); for coexpression q is the start of a gene name.",
                 "produces": [
                     "application/json"
                 ],
@@ -1177,9 +1177,13 @@
                             "regulator",
                             "complex",
                             "pathway",
-                            "domain"
+                            "domain",
+                            "goslim",
+                            "chemical",
+                            "paper",
+                            "coexpression"
                         ],
-                        "description": "disease (Disease Ontology), regulator (targets of a transcriptional regulator), complex (subunits), pathway (YeastPathways) or domain (InterPro)"
+                        "description": "disease (Disease Ontology), regulator (targets of a transcriptional regulator), complex (subunits), pathway (YeastPathways), domain (InterPro), goslim (Yeast GO-Slim), chemical (genes with a mutant phenotype under it; ChEBI synonyms accepted), paper (Literature Guide genes) or coexpression (a gene and its top co-expressed genes)"
                     },
                     {
                         "in": "query",
@@ -1246,16 +1250,20 @@
                             "regulator",
                             "complex",
                             "pathway",
-                            "domain"
+                            "domain",
+                            "goslim",
+                            "chemical",
+                            "paper",
+                            "coexpression"
                         ],
-                        "description": "disease (Disease Ontology), regulator (targets of a transcriptional regulator), complex (subunits), pathway (YeastPathways) or domain (InterPro)"
+                        "description": "disease (Disease Ontology), regulator (targets of a transcriptional regulator), complex (subunits), pathway (YeastPathways), domain (InterPro), goslim (Yeast GO-Slim), chemical (genes with a mutant phenotype under it; ChEBI synonyms accepted), paper (Literature Guide genes) or coexpression (a gene and its top co-expressed genes)"
                     },
                     {
                         "in": "query",
                         "name": "term",
                         "type": "string",
                         "required": true,
-                        "description": "term name, DOID or InterPro ID, or the key returned by category_terms, e.g. DOID:699, GCN4, IPR001611"
+                        "description": "term name, DOID, InterPro ID, GO ID (goslim), chemical name / synonym / ChEBI ID, PMID or SGDID (paper), gene name (coexpression), or the key returned by category_terms, e.g. DOID:699, GCN4, IPR001611, rapamycin, 12140549, HSP12"
                     },
                     {
                         "in": "query",
@@ -1263,6 +1271,32 @@
                         "type": "boolean",
                         "required": false,
                         "description": "disease only: include genes annotated to descendant terms (default true)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "topic",
+                        "type": "string",
+                        "required": false,
+                        "enum": [
+                            "Primary Literature",
+                            "Additional Literature",
+                            "Reviews",
+                            "Omics"
+                        ],
+                        "description": "paper only: only genes linked to the paper under this literature topic"
+                    },
+                    {
+                        "in": "query",
+                        "name": "top",
+                        "type": "integer",
+                        "required": false,
+                        "enum": [
+                            10,
+                            25,
+                            50,
+                            100
+                        ],
+                        "description": "coexpression only: number of top co-expressed genes added to the gene (default 25)"
                     }
                 ],
                 "responses": {

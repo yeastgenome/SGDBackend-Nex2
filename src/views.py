@@ -2560,17 +2560,20 @@ def gene_list_phenotype_genes(request):
 
 @view_config(route_name='gene_list_category_terms', renderer='json', request_method='GET')
 def gene_list_category_terms(request):
-    # Term suggestions for a list category (?category=disease|regulator|complex|pathway|domain&q=...)
+    # Term suggestions for a list category (?category=...&q=...; for goslim an empty q lists all terms)
     return _gene_list_source(request, lambda: {'terms': search_category_terms(
         request.params.get('category', ''), request.params.get('q', ''))}, 'Term search failed')
 
 @view_config(route_name='gene_list_category_term_genes', renderer='json', request_method='GET')
 def gene_list_category_term_genes(request):
     # Genes of one term in a list category (?category=...&term=...), disease
-    # optionally with its descendant terms
+    # optionally with its descendant terms, a paper optionally for one
+    # literature topic, co-expression with the number of top partners
     return _gene_list_source(request, lambda: category_term_genes(
         request.params.get('category', ''), request.params.get('term', ''),
-        include_descendants=_flag(request, 'include_descendants')), 'Loading genes for the term failed')
+        include_descendants=_flag(request, 'include_descendants'),
+        topic=request.params.get('topic') or None,
+        top=request.params.get('top') or 25), 'Loading genes for the term failed')
 
 @view_config(route_name='dataset', renderer='json', request_method='GET')
 def dataset(request):

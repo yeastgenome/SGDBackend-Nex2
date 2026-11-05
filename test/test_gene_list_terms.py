@@ -172,5 +172,60 @@ class TermGenesTest(unittest.TestCase):
         self.assertEqual([t['accession'] for t in glt.search_category_terms('regulator', 'gc')], [None, None])
 
 
+    def test_goslim_browse_and_genes(self):
+        slim = ({7: {'id': 'GO:0005739', 'display_name': 'mitochondrion', 'link': '/go/GO:0005739'},
+                 8: {'id': 'GO:0005618', 'display_name': 'cell wall', 'link': '/go/GO:0005618'},
+                 9: {'id': 'GO:0000001', 'display_name': 'empty term', 'link': '/go/GO:0000001'}},
+                {}, {7: {1, 2}, 8: {3}})
+        with mock.patch.object(glt, '_build_goslim', return_value=slim):
+            # an empty query lists every term with genes, by name
+            self.assertEqual([(t['display_name'], t['gene_count']) for t in glt.search_category_terms('goslim', '')],
+                             [('cell wall', 1), ('mitochondrion', 2)])
+            self.assertEqual(glt.search_category_terms('disease', ''), [])
+            self.assertEqual(self.names(glt.category_term_genes('goslim', 'GO:0005739')), ['YFL039C', 'YBR160W'])
+            self.assertEqual(self.names(glt.category_term_genes('goslim', '8')), ['YJL030W'])
+
+    def test_chemical(self):
+        chemicals = ({'sirolimus': {'id': 'CHEBI:9168', 'display_name': 'sirolimus', 'link': '/chemical/CHEBI:9168'}},
+                     {}, {'sirolimus': {1, 4}})
+        with mock.patch.object(glt, '_build_chemicals', return_value=chemicals), \
+                mock.patch.object(glt, '_build_chemical_synonyms', return_value={'rapamycin': 'sirolimus'}):
+            self.assertEqual(self.names(glt.category_term_genes('chemical', 'Sirolimus')), ['YFL039C', 'YAR000W'])
+            self.assertEqual(self.names(glt.category_term_genes('chemical', 'chebi:9168')), ['YFL039C', 'YAR000W'])
+            self.assertEqual(self.names(glt.category_term_genes('chemical', 'Rapamycin')), ['YFL039C', 'YAR000W'])
+            self.assertEqual(glt.search_category_terms('chemical', 'siro')[0]['accession'], 'CHEBI:9168')
+            hit = glt.search_category_terms('chemical', 'rapa')[0]
+            self.assertEqual((hit['display_name'], hit['synonym']), ('sirolimus', 'rapamycin'))
+
+    def test_coexpressed_genes(self):
+        index = {'ACT1': {(1, 'gene name')}, 'YFL039C': {(1, 'systematic name')}, 'SHARED': {(2, 'alias')}}
+        partners = {'S000000001': [('S000000003', 0.9, 1), ('S999999999', 0.8, 2), ('S000000002', 0.7, 3)]}
+        with mock.patch.object(glt, 'get_lookup', return_value=(LOCI, index, {})), \
+                mock.patch.object(glt, 'coexpression_partners', side_effect=lambda s: {s[0]: partners.get(s[0], [])}):
+            result = glt.category_term_genes('coexpression', 'act1', top=10)
+            # the gene itself plus its partners that are current loci
+            self.assertEqual(self.names(result), ['YFL039C', 'YBR160W', 'YJL030W'])
+            self.assertEqual(result['top'], 10)
+            self.assertEqual(self.names(glt.category_term_genes('coexpression', 'S000000001', top=10)),
+                             ['YFL039C', 'YBR160W', 'YJL030W'])
+            with self.assertRaises(LookupError):
+                glt.category_term_genes('coexpression', 'shared')  # an alias, not a gene name
+            with self.assertRaises(LookupError):
+                glt.category_term_genes('coexpression', 'CDC28')  # no co-expression file
+            with self.assertRaises(ValueError):
+                glt.category_term_genes('coexpression', 'ACT1', top=7)
+            self.assertEqual([g['display_name'] for g in glt.search_category_terms('coexpression', 'yf')], ['ACT1'])
+
+    def test_paper_input(self):
+        with self.assertRaises(ValueError):
+            glt.category_term_genes('paper', 'PMID:1', topic='Gossip')
+        with self.assertRaises(LookupError):
+            glt.category_term_genes('paper', 'some title words')
+        self.assertEqual(glt.search_category_terms('paper', 'ab'), [])
+        self.assertEqual(glt._paper_where('PMID: 123')[1], {'pmid': 123})
+        self.assertEqual(glt._paper_where('sgd:s000123456')[1], {'sgdid': 'S000123456'})
+        self.assertEqual(glt._paper_where('50%_done')[1], {'text': '%50\\_done%'})
+
+
 if __name__ == '__main__':
     unittest.main()

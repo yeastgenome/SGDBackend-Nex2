@@ -17,8 +17,10 @@ import re
 import threading
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from math import exp, lgamma
 
+import requests
 from sqlalchemy import text
 
 from .models import DBSession, run_batter_enrichment
@@ -193,6 +195,36 @@ def _build_lookup():
 
 def get_lookup():
     return _cached('lookup', _build_lookup)
+
+
+# Co-expression partners: the per-gene JSON on S3 written by
+# scripts/loading/dataset/compute_coexpression.py (top co-expressed genes,
+# best first), cached per process; the files only change when co-expression
+# is recomputed
+COEXPRESSION_URL = 'https://sgd-prod-expression-details.s3.us-west-2.amazonaws.com/coexpression/%s.json'
+_coexpression = {}
+
+
+def _fetch_coexpression(sgdid):
+    try:
+        response = requests.get(COEXPRESSION_URL % sgdid, timeout=10)
+        if response.status_code != 200:
+            return sgdid, []
+        return sgdid, [(p['sgdid'], p['score'], p['rank']) for p in response.json().get('partners', [])]
+    except (requests.exceptions.RequestException, ValueError, KeyError, TypeError):
+        return sgdid, None  # not cached: retried on the next request
+
+
+def coexpression_partners(sgdids):
+    """{sgdid: [(partner sgdid, score, rank)]} for the given genes ([] if a
+    gene has no co-expression file)."""
+    missing = [s for s in sgdids if s not in _coexpression]
+    if missing:
+        with ThreadPoolExecutor(max_workers=16) as pool:
+            for sgdid, partners in pool.map(_fetch_coexpression, missing):
+                if partners is not None:
+                    _coexpression[sgdid] = partners
+    return {s: _coexpression.get(s, []) for s in sgdids}
 
 
 def resolve_identifiers(raw_identifiers):
