@@ -60,6 +60,7 @@ def main(global_config, **settings):
 
     config.add_route('reference_this_week', '/references/this_week', request_method='GET')
     config.add_route('reference_by_pmids', '/references/by_pmids', request_method='GET')
+    config.add_route('references_created_in_sgd', '/references/created_in_sgd', request_method='GET')
     config.add_route('references_with_entities', '/references_with_entities/days_added={days_added}', request_method='GET')
     config.add_route('references_with_entities_default', '/references_with_entities', request_method='GET')
     config.add_route('phenotype_this_week', '/phenotypes/this_week', request_method='GET')
