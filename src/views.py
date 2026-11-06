@@ -762,6 +762,47 @@ def reference_this_week(request):
         if DBSession:
             DBSession.remove()
 
+@view_config(route_name='references_created_in_sgd', renderer='json', request_method='GET')
+def references_created_in_sgd(request):
+    # References created in SGD itself in the last ?days= days (default 7), so ABC
+    # can add them with the same SGD ID. SGD mints SGD:S000... IDs and ABC mints
+    # SGD:S100..., so an S000 reference was created here (by a loader such as
+    # load_complex, or the curation UI), not loaded from ABC. ABC also sends back
+    # some older S000 IDs it reactivated; it already has those, so they are no-ops.
+    # URL: /references/created_in_sgd?days=7
+    try:
+        try:
+            days = int(request.params.get('days', 7))
+        except (TypeError, ValueError):
+            days = 0
+        if days < 1:
+            return HTTPBadRequest(body=json.dumps({'error': 'days must be a positive integer. Example: /references/created_in_sgd?days=7'}), content_type='text/json')
+        end_date = datetime.datetime.today()
+        start_date = end_date - datetime.timedelta(days=days)
+        rows = DBSession.query(Referencedbentity.sgdid, Referencedbentity.pmid, Referencedbentity.doi,
+                               Referencedbentity.display_name, Referencedbentity.date_created,
+                               Referencedbentity.created_by).filter(
+            Referencedbentity.sgdid.like('S000%'),
+            Referencedbentity.date_created >= start_date).order_by(Referencedbentity.date_created).all()
+        return {
+            'start': start_date.strftime("%Y-%m-%d"),
+            'end': end_date.strftime("%Y-%m-%d"),
+            'days': days,
+            'references': [{
+                'sgdid': 'SGD:' + x.sgdid,
+                'pmid': 'PMID:' + str(x.pmid) if x.pmid else None,
+                'doi': x.doi,
+                'display_name': x.display_name,
+                'date_created': x.date_created.strftime("%Y-%m-%d %H:%M:%S"),
+                'created_by': x.created_by
+            } for x in rows]
+        }
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='reference_by_pmids', renderer='json', request_method='GET')
 def reference_by_pmids(request):
     # References for a list of PubMed IDs (?pmids=123,456 or space-separated), in

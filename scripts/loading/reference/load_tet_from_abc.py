@@ -45,8 +45,12 @@ def load_data():
     # all primary and additional display tags need an entity
     taxon_to_taxonomy_id = {}
     for tag in newTags:
-        if not topic_atp_to_curation_tag.get(tag['topic']) and tag['topic'] != tag['entity_type'] and tag['topic_name'] != 'topic tag':
-            # print("The '" + tag['topic_name'] + "' is not allowed 'curation_tag'")
+        # an entity tag whose topic is a display tag (e.g. 'primary display') is
+        # handled like an entity-only tag: it only sets the literature topic
+        if not topic_atp_to_curation_tag.get(tag['topic']) and tag['topic'] != tag['entity_type'] \
+                and tag['topic_name'] != 'topic tag' and tag['topic'] not in display_tag_to_lit_topic:
+            print("Skipping TET " + str(tag['topic_entity_tag_id']) + " for " + tag['curie'] + ": topic '" +
+                  str(tag['topic_name']) + "' (" + str(tag['topic']) + ") is not an allowed curation_tag")
             continue
         taxon = tag['species'].replace("NCBITaxon:", "TAX:")
         taxonomy_id = taxon_to_taxonomy_id.get(taxon)

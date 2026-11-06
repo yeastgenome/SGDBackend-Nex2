@@ -75,7 +75,9 @@ def is_paper_in_db(nex_session, cross_references):
     sgdid = None
     pmid = None
     for x in cross_references:
-        if x['curie'].startswith('SGD:S1') and x['is_obsolete'] is False:
+        # any SGD reference ID: ABC can reactivate an older SGD:S0... ID when a
+        # paper returns to the SGD corpus (SCRUM-6830), not only mint SGD:S1...
+        if x['curie'].startswith('SGD:S') and x['is_obsolete'] is False:
             sgdid = x['curie'].replace('SGD:', '')
         elif x['curie'].startswith('PMID') and x['is_obsolete'] is False:
             pmid = x['curie'].replace('PMID:', '')
