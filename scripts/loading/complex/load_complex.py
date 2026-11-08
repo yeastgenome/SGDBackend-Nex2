@@ -13,7 +13,6 @@ from src.models import Source, Psimi, Dbentity, Go, Taxonomy, Eco, Referencedben
        Interactor, LocusAlias, Complexbindingannotation, Literatureannotation, \
        Goannotation, Goslimannotation
 from scripts.loading.database_session import get_session
-from scripts.loading.reference.promote_reference_triage import add_paper
 
 __author__ = 'sweng66'
 
@@ -104,7 +103,7 @@ def load_complex():
 
 
     interactor_added = {}
-    pmid_added = {}
+    pmid_not_in_db = {}
     annotation_data = []
 
     found = {}
@@ -190,15 +189,15 @@ def load_complex():
             print("PMID:", pmid, "reference_id:", reference_id)
 
             if reference_id is None:
-                reference_id = pmid_added.get(pmid)
-                if reference_id is None:
-                    print("Adding PMID:", pmid, " into the database.")
-                    (reference_id, sgdid) = add_paper(pmid, CREATED_BY)
-                    if reference_id is None:
-                        print("The pmid ", pmid, " is not in the database.")
-                        continue
-                    else:
-                        pmid_added[pmid] = reference_id
+                # Don't add the paper here: ABC's load_complex_papers.py puts
+                # every Complex Portal paper into the SGD corpus and gives it
+                # its SGD ID, and the paper reaches SGD through
+                # load_new_references_from_abc.py. Adding it here minted a
+                # second, SGD-only ID (SCRUM-6830). The paper is linked on the
+                # next run, once it is in SGD.
+                print("The PMID:", pmid, "is not in the REFERENCEDBENTITY table yet; skipped.")
+                pmid_not_in_db.setdefault(pmid, []).append(complexAC)
+                continue
             if reference_id not in reference_id_list:
                 reference_id_list.append(reference_id)
             
@@ -322,6 +321,11 @@ def load_complex():
             #    print ("DELETE ", complexAC)
             delete_complex(nex_session, complexAC)
             
+    if pmid_not_in_db:
+        print("\n" + str(len(pmid_not_in_db)) + " PMID(s) not in SGD yet; their complex links were skipped:")
+        for pmid in sorted(pmid_not_in_db, key=int):
+            print("PMID:" + pmid + " (" + ", ".join(pmid_not_in_db[pmid]) + ")")
+
     fw.close()
     # nex_session.rollback()
     nex_session.commit()
