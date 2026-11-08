@@ -9,7 +9,6 @@ import importlib
 importlib.reload(sys)  # Reload does the trick!
 from src.models import Psimi, Taxonomy, Dbentity, Complexbindingannotation, Interactor
 from scripts.loading.database_session import get_session
-from scripts.loading.reference.promote_reference_triage import add_paper
 
 __author__ = 'sweng66'
 
