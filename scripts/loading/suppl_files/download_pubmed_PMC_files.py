@@ -398,7 +398,7 @@ def download_files():
         pmcid = ref.pmcid
 
         pmid_dir = path_join(pmcFileDir, str(pmid))
-        if path.exists(pmid_dir) and listdir(pmid_dir):
+        if path.exists(path_join(pmcFileDir, f"{pmid}.tar.gz")) or (path.exists(pmid_dir) and listdir(pmid_dir)):
             log.info(f"[{idx}/{total}] PMID:{pmid} - Already downloaded, skipping")
             continue
 
@@ -412,8 +412,10 @@ def download_files():
                 download_count += 1
                 log.info(f"[{idx}/{total}] PMID:{pmid} PMCID:{pmcid} - Download successful")
 
-                # Gzip and upload to SGD S3
-                create_tarball_and_upload(pmid, pmcid, pmid_dir)
+                # Gzip and upload to SGD S3; load_data() only needs the tarball,
+                # so drop the unpacked copy
+                if create_tarball_and_upload(pmid, pmcid, pmid_dir):
+                    shutil.rmtree(pmid_dir)
             else:
                 log.warning(f"[{idx}/{total}] PMID:{pmid} PMCID:{pmcid} - Not found in S3")
                 if path.exists(pmid_dir) and not listdir(pmid_dir):
@@ -444,3 +446,9 @@ if __name__ == "__main__":
 
     download_files()
     load_data()
+
+    # everything is on S3 and in the database now; don't leave the packages
+    # filling the disk until next week's run (kept if load_data() fails)
+    shutil.rmtree(pmcFileDir)
+    makedirs(pmcFileDir)
+    log.info(f"Removed the downloaded packages from {pmcFileDir}")
