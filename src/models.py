@@ -839,7 +839,43 @@ class Chebi(Base):
         obj["network_graph"] = self.chemical_network()
 
         return obj
-    
+
+    def overview_to_dict(self):
+        # Lightweight payload for the chemical page. to_dict() builds every
+        # phenotype/GO/protein-abundance annotation plus the network graph, which
+        # for heavily annotated chemicals (hydroxyurea, ethanol, MMS) takes longer
+        # than the frontend's backend timeout and surfaces as a 404. The page
+        # loads those lists separately via the *_details / network_graph
+        # endpoints, so here we only return counts used to decide which sections
+        # to render.
+        urls = DBSession.query(ChebiUrl).filter_by(chebi_id=self.chebi_id).all()
+        synonyms = DBSession.query(ChebiAlia).filter_by(chebi_id=self.chebi_id).filter(ChebiAlia.alias_type.in_(['EXACT', 'RELATED', 'IUPAC name'])).all()
+
+        phenotype_count = DBSession.query(PhenotypeannotationCond.annotation_id).filter_by(
+            condition_class='chemical', condition_name=self.display_name).distinct().count()
+        go_count = DBSession.query(Goextension.annotation_id).filter_by(
+            dbxref_id=self.chebiid).distinct().count()
+        protein_abundance_count = DBSession.query(Proteinabundanceannotation).filter_by(
+            chemical_id=self.chebi_id).count()
+
+        return {
+            "id": self.chebi_id,
+            "display_name": self.display_name,
+            "link": self.obj_url,
+            "chebi_id": self.chebiid,
+            "is_ntr": 1 if self.chebiid.startswith("NTR:") else 0,
+            "definition": self.description,
+            "synonyms": [synonym.to_dict() for synonym in synonyms],
+            "urls": [url.to_dict() for url in urls],
+            "complexes": self.complex_to_dict(),
+            "pathways": self.pathway_to_dict(),
+            "structure_image_url": self.get_structure_url(),
+            "pharmGKB_link_url": self.get_pharmGKB_url(),
+            "phenotype_count": phenotype_count,
+            "go_count": go_count,
+            "protein_abundance_count": protein_abundance_count
+        }
+
     def phenotype_to_dict(self):
         conditions = DBSession.query(PhenotypeannotationCond).filter_by(condition_name=self.display_name).all()
 

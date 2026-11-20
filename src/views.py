@@ -1659,6 +1659,21 @@ def chemical(request):
         if DBSession:
             DBSession.remove()
             
+@view_config(route_name='chemical_overview', renderer='json', request_method='GET')
+def chemical_overview(request):
+    try:
+        id = extract_id_request(request, 'chebi')
+        chebi = DBSession.query(Chebi).filter_by(chebi_id=id).one_or_none()
+        if chebi:
+            return chebi.overview_to_dict()
+        else:
+            return HTTPNotFound()
+    except Exception as e:
+        log.error(e)
+    finally:
+        if DBSession:
+            DBSession.remove()
+
 @view_config(route_name='chemical_phenotype_details', renderer='json', request_method='GET')
 def chemical_phenotype_details(request):
     try:
